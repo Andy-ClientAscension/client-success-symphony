@@ -57,7 +57,7 @@ export default function Renewals() {
               <h1 className="text-2xl font-bold">Client Renewals</h1>
               <p className="text-muted-foreground">Track and manage upcoming client contract renewals.</p>
             </div>
-            <Button asChild variant="outline" className="gap-2">
+            <Button asChild variant="destructive" className="gap-2">
               <Link to="/">
                 <Home className="h-4 w-4" />
                 Back to Dashboard
