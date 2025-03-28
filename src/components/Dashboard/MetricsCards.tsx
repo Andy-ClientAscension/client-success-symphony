@@ -8,10 +8,13 @@ import {
   CreditCard,
   TrendingUp,
   TrendingDown,
-  Building
+  Building,
+  Phone,
+  BarChart2,
+  DollarSign
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { getClientsCountByStatus, getAverageNPS } from "@/lib/data";
+import { getClientsCountByStatus, getAverageNPS, getClientMetricsByTeam } from "@/lib/data";
 
 const MetricCard = ({ 
   title, 
@@ -58,6 +61,7 @@ const MetricCard = ({
 export function MetricsCards() {
   const clientCounts = getClientsCountByStatus();
   const averageNPS = getAverageNPS();
+  const companyMetrics = getClientMetricsByTeam();
   
   const metrics = [
     { 
@@ -102,7 +106,7 @@ export function MetricsCards() {
     },
     { 
       title: "Total MRR", 
-      value: "$5,700",
+      value: `$${companyMetrics.totalMRR}`,
       icon: CreditCard, 
       trend: 'up' as const, 
       trendValue: "+5% from last month",
@@ -114,6 +118,22 @@ export function MetricsCards() {
       icon: TrendingUp, 
       trend: 'up' as const, 
       trendValue: "+0.5 this quarter",
+      iconColor: "text-success-600"
+    },
+    { 
+      title: "Total Calls Booked", 
+      value: companyMetrics.totalCallsBooked,
+      icon: Phone, 
+      trend: 'up' as const, 
+      trendValue: "+12 this month",
+      iconColor: "text-red-600"
+    },
+    { 
+      title: "Total Deals Closed", 
+      value: companyMetrics.totalDealsClosed,
+      icon: BarChart2, 
+      trend: 'up' as const, 
+      trendValue: "+3 this month",
       iconColor: "text-success-600"
     }
   ];

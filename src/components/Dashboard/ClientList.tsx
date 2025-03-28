@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { MoreHorizontal, ChevronRight, PlusCircle } from "lucide-react";
+import { MoreHorizontal, ChevronRight, PlusCircle, Phone, BarChart2, DollarSign } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import {
@@ -76,8 +77,10 @@ export function ClientList() {
                 <TableHead>Status</TableHead>
                 <TableHead>Progress</TableHead>
                 <TableHead>End Date</TableHead>
-                <TableHead>Last Communication</TableHead>
-                <TableHead>Last Payment</TableHead>
+                <TableHead>CSM</TableHead>
+                <TableHead>Calls Booked</TableHead>
+                <TableHead>Deals Closed</TableHead>
+                <TableHead>MRR</TableHead>
                 <TableHead>NPS</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -104,11 +107,23 @@ export function ClientList() {
                       <span className="text-xs text-muted-foreground">{getDaysRemaining(client.endDate)}</span>
                     </div>
                   </TableCell>
-                  <TableCell>{format(new Date(client.lastCommunication), 'MMM dd, yyyy')}</TableCell>
+                  <TableCell>{client.csm || 'Unassigned'}</TableCell>
                   <TableCell>
-                    <div className="flex flex-col">
-                      <span>${client.lastPayment.amount}</span>
-                      <span className="text-xs text-muted-foreground">{format(new Date(client.lastPayment.date), 'MMM dd, yyyy')}</span>
+                    <div className="flex items-center">
+                      <Phone className="h-3 w-3 mr-1 text-red-600" />
+                      <span>{client.callsBooked}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <BarChart2 className="h-3 w-3 mr-1 text-red-600" />
+                      <span>{client.dealsClosed}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <DollarSign className="h-3 w-3 mr-1 text-red-600" />
+                      <span>${client.mrr}</span>
                     </div>
                   </TableCell>
                   <TableCell>

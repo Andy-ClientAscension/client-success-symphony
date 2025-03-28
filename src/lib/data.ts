@@ -29,6 +29,10 @@ export interface Client {
     count: number;
     names: string[];
   };
+  csm?: string;
+  callsBooked: number;
+  dealsClosed: number;
+  mrr: number;
 }
 
 export interface Communication {
@@ -98,7 +102,11 @@ export const MOCK_CLIENTS: Client[] = [
     referrals: {
       count: 3,
       names: ['TechStart Inc', 'Global Enterprises', 'MediaGroup Co.']
-    }
+    },
+    csm: 'Sarah Johnson',
+    callsBooked: 12,
+    dealsClosed: 3,
+    mrr: 1200
   },
   {
     id: '2',
@@ -136,7 +144,11 @@ export const MOCK_CLIENTS: Client[] = [
     referrals: {
       count: 0,
       names: []
-    }
+    },
+    csm: 'Michael Chen',
+    callsBooked: 5,
+    dealsClosed: 1,
+    mrr: 850
   },
   {
     id: '3',
@@ -174,7 +186,11 @@ export const MOCK_CLIENTS: Client[] = [
     referrals: {
       count: 5,
       names: ['Startup Vision', 'TechCorp', 'InnovateX', 'FutureTech', 'DataFlow']
-    }
+    },
+    csm: 'Sarah Johnson',
+    callsBooked: 18,
+    dealsClosed: 5,
+    mrr: 2400
   },
   {
     id: '4',
@@ -212,7 +228,11 @@ export const MOCK_CLIENTS: Client[] = [
     referrals: {
       count: 0,
       names: []
-    }
+    },
+    csm: 'Alex Rodriguez',
+    callsBooked: 2,
+    dealsClosed: 0,
+    mrr: 500
   },
   {
     id: '5',
@@ -250,7 +270,11 @@ export const MOCK_CLIENTS: Client[] = [
     referrals: {
       count: 0,
       names: []
-    }
+    },
+    csm: 'Emma Watson',
+    callsBooked: 3,
+    dealsClosed: 0,
+    mrr: 0
   }
 ];
 
@@ -306,4 +330,27 @@ export const getChurnData = (): ChurnData[] => {
 
 export const getNPSData = (): NPSData[] => {
   return MOCK_NPS_DATA;
+};
+
+export const getClientMetricsByTeam = (csmName?: string) => {
+  const clients = csmName 
+    ? MOCK_CLIENTS.filter(client => client.csm === csmName)
+    : MOCK_CLIENTS;
+  
+  return {
+    totalCallsBooked: clients.reduce((total, client) => total + client.callsBooked, 0),
+    totalDealsClosed: clients.reduce((total, client) => total + client.dealsClosed, 0),
+    totalMRR: clients.reduce((total, client) => total + client.mrr, 0)
+  };
+};
+
+export const getCSMList = () => {
+  const csmSet = new Set<string>();
+  MOCK_CLIENTS.forEach(client => {
+    if (client.csm) {
+      csmSet.add(client.csm);
+    }
+  });
+  
+  return Array.from(csmSet);
 };
