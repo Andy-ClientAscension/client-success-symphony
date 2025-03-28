@@ -4,7 +4,7 @@ import { NPSChart } from "@/components/Dashboard/NPSChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowLeft, RefreshCw, LineChart, Users, Clock, TrendingUp } from "lucide-react";
+import { ArrowLeft, RefreshCw, LineChart, Users, Clock, TrendingUp, Home } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -63,15 +63,24 @@ export default function Analytics() {
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Analytics Dashboard</h2>
           </div>
           
-          <Button 
-            variant="outline" 
-            onClick={handleRefreshData}
-            disabled={isRefreshing}
-            className="w-full sm:w-auto"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-            {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleRefreshData}
+              disabled={isRefreshing}
+              className="w-full sm:w-auto"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+            </Button>
+            
+            <Button asChild variant="destructive" className="gap-2 text-white bg-red-600 hover:bg-red-700 text-base px-6 py-2 w-full sm:w-auto">
+              <Link to="/">
+                <Home className="h-5 w-5" />
+                Return to Home
+              </Link>
+            </Button>
+          </div>
         </div>
         
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">

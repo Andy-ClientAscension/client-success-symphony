@@ -5,6 +5,9 @@ import { Sidebar } from "@/components/Layout/Sidebar";
 import { Header } from "@/components/Layout/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClientForm } from "@/components/Dashboard/ClientForm";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { Home } from "lucide-react";
 
 const AddClient = () => {
   const navigate = useNavigate();
@@ -31,6 +34,12 @@ const AddClient = () => {
           <div className="max-w-3xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
               <h1 className="text-3xl font-bold tracking-tight">Add New Client</h1>
+              <Button asChild variant="destructive" className="gap-2 text-white bg-red-600 hover:bg-red-700 text-base px-6 py-2">
+                <Link to="/">
+                  <Home className="h-5 w-5" />
+                  Return to Home
+                </Link>
+              </Button>
             </div>
             
             <Card>

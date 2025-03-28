@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Layout } from "@/components/Layout/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ExternalLink, FileText, Link as LinkIcon, Phone, Users } from "lucide-react";
+import { ExternalLink, FileText, Link as LinkIcon, Phone, Users, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { CommunicationLog } from "@/components/Dashboard/CommunicationLog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MOCK_CLIENTS } from "@/lib/data";
+import { Link } from "react-router-dom";
 
 const allCommunications = MOCK_CLIENTS.flatMap(client => 
   client.communicationLog.map(comm => ({
@@ -143,9 +144,17 @@ export default function Communications() {
   return (
     <Layout>
       <div className="container py-6 max-w-6xl">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">Communications</h1>
-          <p className="text-muted-foreground">Manage all your communication links and recent communications.</p>
+        <div className="mb-6 flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold">Communications</h1>
+            <p className="text-muted-foreground">Manage all your communication links and recent communications.</p>
+          </div>
+          <Button asChild variant="destructive" className="gap-2 text-white bg-red-600 hover:bg-red-700 text-base px-6 py-2">
+            <Link to="/">
+              <Home className="h-5 w-5" />
+              Return to Home
+            </Link>
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
