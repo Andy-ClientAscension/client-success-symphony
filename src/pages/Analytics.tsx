@@ -4,8 +4,8 @@ import { NPSChart } from "@/components/Dashboard/NPSChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowLeft, RefreshCw } from "lucide-react";
-import { useCallback } from "react";
+import { ArrowLeft, RefreshCw, LineChart, Users, Clock, TrendingUp } from "lucide-react";
+import { useCallback, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingState } from "@/components/LoadingState";
@@ -15,23 +15,40 @@ import { ValidationError } from "@/components/ValidationError";
 export default function Analytics() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const isRefreshing = queryClient.isFetching({queryKey: ['nps-data']}) > 0;
+  const [isRefetching, setIsRefetching] = useState(false);
+  const isRefreshing = queryClient.isFetching({queryKey: ['nps-data']}) > 0 || isRefetching;
 
   const handleRefreshData = useCallback(() => {
     if (isRefreshing) return;
+    
+    setIsRefetching(true);
     
     // Invalidate and refetch all relevant queries
     queryClient.invalidateQueries({
       queryKey: ['nps-data'],
       refetchType: 'active',
+    }).then(() => {
+      toast({
+        title: "Refreshing data",
+        description: "Your analytics data is being updated.",
+        duration: 3000,
+      });
+    }).catch(error => {
+      toast({
+        title: "Error refreshing data",
+        description: error instanceof Error ? error.message : "An error occurred refreshing the data.",
+        variant: "destructive",
+        duration: 5000,
+      });
+    }).finally(() => {
+      setIsRefetching(false);
     });
     
-    toast({
-      title: "Refreshing data",
-      description: "Your analytics data is being updated.",
-      duration: 3000,
-    });
   }, [isRefreshing, queryClient, toast]);
+
+  const handleNPSErrorReset = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['nps-data'] });
+  }, [queryClient]);
 
   return (
     <Layout>
@@ -57,43 +74,63 @@ export default function Analytics() {
           </Button>
         </div>
         
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <ErrorBoundary 
-            fallback={
-              <Card className="min-h-[300px] flex items-center justify-center">
-                <CardContent>
-                  <ValidationError 
-                    message="Something went wrong loading the NPS chart. Please try refreshing the data." 
-                    type="error"
-                  />
-                </CardContent>
-              </Card>
-            }
-          >
-            <NPSChart />
-          </ErrorBoundary>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <ErrorBoundary 
+              fallback={
+                <Card className="min-h-[300px] flex items-center justify-center">
+                  <CardContent>
+                    <ValidationError 
+                      message="Something went wrong loading the NPS chart. Please try refreshing the data." 
+                      type="error"
+                    />
+                  </CardContent>
+                </Card>
+              }
+              onReset={handleNPSErrorReset}
+            >
+              <NPSChart />
+            </ErrorBoundary>
+          </div>
           
           <Card>
             <CardHeader>
               <CardTitle>Analytics Overview</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground mb-4">
+              <p className="text-muted-foreground mb-6">
                 This dashboard provides detailed analytics about your client relationships and satisfaction metrics.
                 Track your Net Promoter Score (NPS) and other key performance indicators.
               </p>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Client Retention Rate</span>
-                  <span className="font-semibold text-green-600">87%</span>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card/50">
+                  <div className="p-2 rounded-md bg-green-100 dark:bg-green-900/30">
+                    <Users className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">Client Retention Rate</div>
+                    <div className="font-semibold text-green-600">87%</div>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Average Response Time</span>
-                  <span className="font-semibold">4.2 hours</span>
+                
+                <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card/50">
+                  <div className="p-2 rounded-md bg-blue-100 dark:bg-blue-900/30">
+                    <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">Average Response Time</div>
+                    <div className="font-semibold">4.2 hours</div>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Client Growth Rate</span>
-                  <span className="font-semibold text-green-600">+12%</span>
+                
+                <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card/50">
+                  <div className="p-2 rounded-md bg-green-100 dark:bg-green-900/30">
+                    <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">Client Growth Rate</div>
+                    <div className="font-semibold text-green-600">+12%</div>
+                  </div>
                 </div>
               </div>
             </CardContent>

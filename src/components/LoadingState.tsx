@@ -1,5 +1,7 @@
 
 import { Loader2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { useState, useEffect } from "react";
 
 interface LoadingStateProps {
   message?: string;
@@ -7,6 +9,8 @@ interface LoadingStateProps {
   className?: string;
   fullPage?: boolean;
   color?: "default" | "primary" | "destructive";
+  showProgress?: boolean;
+  progressValue?: number;
 }
 
 type SizeClasses = {
@@ -22,8 +26,30 @@ export function LoadingState({
   size = "md",
   className = "",
   fullPage = false,
-  color = "primary"
+  color = "primary",
+  showProgress = false,
+  progressValue
 }: LoadingStateProps) {
+  const [progress, setProgress] = useState(0);
+  
+  useEffect(() => {
+    if (showProgress && progressValue === undefined) {
+      // If showing progress but no value provided, simulate progress
+      const interval = setInterval(() => {
+        setProgress((prev) => {
+          // Slow down as it approaches 90%
+          const increment = prev < 30 ? 10 : prev < 60 ? 5 : prev < 85 ? 2 : 0.5;
+          const newValue = Math.min(prev + increment, 90);
+          return newValue;
+        });
+      }, 500);
+      
+      return () => clearInterval(interval);
+    } else if (progressValue !== undefined) {
+      setProgress(progressValue);
+    }
+  }, [showProgress, progressValue]);
+
   const sizeClasses: SizeClasses = {
     sm: "h-4 w-4 min-w-4",
     md: "h-8 w-8 min-w-8",
@@ -47,6 +73,18 @@ export function LoadingState({
         aria-hidden="true"
       />
       <p className="text-muted-foreground text-sm">{message}</p>
+      
+      {showProgress && (
+        <div className="w-full max-w-xs mt-2">
+          <Progress value={progress} className="h-2" />
+          {progressValue !== undefined && (
+            <p className="text-xs text-center mt-1 text-muted-foreground">
+              {Math.round(progress)}%
+            </p>
+          )}
+        </div>
+      )}
+      
       <span className="sr-only">{message}</span>
     </div>
   );

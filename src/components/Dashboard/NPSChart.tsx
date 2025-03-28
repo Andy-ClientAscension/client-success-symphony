@@ -21,6 +21,8 @@ import { useToast } from "@/hooks/use-toast";
 import { LoadingState } from "@/components/LoadingState";
 import { useQuery } from "@tanstack/react-query";
 import { ValidationError } from "@/components/ValidationError";
+import { RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function NPSChart() {
   const [activeTab, setActiveTab] = useState("distribution");
@@ -33,7 +35,9 @@ export function NPSChart() {
     data, 
     isLoading, 
     isError, 
-    refetch 
+    error,
+    refetch,
+    isFetching
   } = useQuery({
     queryKey: ['nps-data'],
     queryFn: async () => {
@@ -55,14 +59,15 @@ export function NPSChart() {
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 2,
-    // Remove the onError property and use meta for error handling
     meta: {
-      errorHandler: () => {
-        toast({
-          title: "Error Loading Data",
-          description: "Failed to load data from Google Sheets. Using backup data.",
-          variant: "destructive",
-        });
+      onSettled: (data, error) => {
+        if (error) {
+          toast({
+            title: "Error Loading Data",
+            description: "Failed to load data from Google Sheets. Using backup data.",
+            variant: "destructive",
+          });
+        }
       }
     }
   });
@@ -70,17 +75,25 @@ export function NPSChart() {
   const distributionData = data?.distributionData || [];
   const trendData = data?.trendData || [];
   
+  const errorMessage = error instanceof Error 
+    ? error.message 
+    : "Failed to load NPS data. Using backup data.";
+  
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>NPS Tracking</CardTitle>
-        {isError && (
-          <button 
+        {(isError || isFetching) && (
+          <Button 
             onClick={() => refetch()} 
-            className="text-xs text-red-600 hover:text-red-800 underline"
+            variant="outline"
+            size="sm"
+            disabled={isFetching}
+            className="text-xs"
           >
-            Retry
-          </button>
+            <RefreshCw className={`h-3 w-3 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
+            {isFetching ? 'Loading...' : 'Retry'}
+          </Button>
         )}
       </CardHeader>
       <CardContent>
@@ -90,68 +103,88 @@ export function NPSChart() {
             <TabsTrigger value="trend" className="flex-1">Monthly Trend</TabsTrigger>
           </TabsList>
           
-          {isLoading ? (
+          {isLoading || isFetching ? (
             <div className="h-[300px]">
-              <LoadingState message="Loading NPS data..." />
+              <LoadingState message="Loading NPS data..." color="primary" />
             </div>
           ) : isError ? (
-            <div className="h-[300px] flex items-center justify-center">
-              <div className="text-center">
-                <p className="text-red-600 mb-2">Failed to load NPS data</p>
-                <p className="text-sm text-muted-foreground">Using backup data instead</p>
-              </div>
+            <div className="h-[300px] flex flex-col items-center justify-center">
+              <ValidationError 
+                message={errorMessage} 
+                type="error" 
+                className="mb-4 max-w-md text-center"
+              />
+              <p className="text-sm text-muted-foreground mb-4">Using backup data instead</p>
             </div>
           ) : (
             <>
               <TabsContent value="distribution" className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={distributionData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {distributionData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value) => [`${value}%`, 'Percentage']} 
+                {distributionData.length === 0 ? (
+                  <div className="h-full flex items-center justify-center">
+                    <ValidationError 
+                      message="No distribution data available" 
+                      type="info"
                     />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={distributionData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {distributionData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value) => [`${value}%`, 'Percentage']} 
+                      />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
               </TabsContent>
               
               <TabsContent value="trend" className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={trendData}
-                    margin={{
-                      top: 5,
-                      right: 30,
-                      left: 20,
-                      bottom: 5,
-                    }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis domain={[0, 10]} />
-                    <Tooltip />
-                    <Line
-                      type="monotone"
-                      dataKey="score"
-                      stroke="#FF0000"
-                      strokeWidth={2}
-                      activeDot={{ r: 8 }}
+                {trendData.length === 0 ? (
+                  <div className="h-full flex items-center justify-center">
+                    <ValidationError 
+                      message="No trend data available" 
+                      type="info"
                     />
-                  </LineChart>
-                </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={trendData}
+                      margin={{
+                        top: 5,
+                        right: 30,
+                        left: 20,
+                        bottom: 5,
+                      }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis domain={[0, 10]} />
+                      <Tooltip />
+                      <Line
+                        type="monotone"
+                        dataKey="score"
+                        stroke="#FF0000"
+                        strokeWidth={2}
+                        activeDot={{ r: 8 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
               </TabsContent>
             </>
           )}

@@ -6,6 +6,7 @@ interface ValidationErrorProps {
   type?: "error" | "warning" | "info";
   className?: string;
   showIcon?: boolean;
+  title?: string;
 }
 
 type IconMapping = {
@@ -20,7 +21,8 @@ export function ValidationError({
   message, 
   type = "error",
   className = "",
-  showIcon = true
+  showIcon = true,
+  title
 }: ValidationErrorProps) {
   if (!message) return null;
   
@@ -37,13 +39,18 @@ export function ValidationError({
   };
   
   return (
-    <div className={`flex items-start ${colorClasses[type]} text-sm mt-1 ${className}`}>
-      {showIcon && (
-        <div className="shrink-0 mt-0.5">
-          {icons[type]}
+    <div className={`${colorClasses[type]} text-sm ${className}`}>
+      <div className="flex items-start">
+        {showIcon && (
+          <div className="shrink-0 mt-0.5">
+            {icons[type]}
+          </div>
+        )}
+        <div className="flex-1">
+          {title && <p className="font-medium">{title}</p>}
+          <p className={title ? "mt-1" : ""}>{message}</p>
         </div>
-      )}
-      <span className="flex-1">{message}</span>
+      </div>
     </div>
   );
 }
