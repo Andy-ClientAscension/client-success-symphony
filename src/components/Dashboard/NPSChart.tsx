@@ -80,59 +80,59 @@ export function NPSChart() {
     : "Failed to load NPS data. Using backup data.";
   
   return (
-    <Card className="h-full">
-      <CardHeader className="p-0">
+    <Card className="h-full w-[90%] mx-auto">
+      <CardHeader className="p-1">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-[0.6rem]">NPS Tracking</CardTitle>
+          <CardTitle className="text-xs">NPS Tracking</CardTitle>
           {(isError || isFetching) && (
             <Button 
               onClick={() => refetch()} 
               variant="outline"
               size="sm"
               disabled={isFetching}
-              className="h-3 text-[6px] px-0.5 py-0"
+              className="h-6 text-[8px] px-1 py-0"
             >
-              <RefreshCw className={`h-1.5 w-1.5 mr-0.5 ${isFetching ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-3 w-3 mr-1 ${isFetching ? 'animate-spin' : ''}`} />
               {isFetching ? 'Loading...' : 'Retry'}
             </Button>
           )}
         </div>
       </CardHeader>
-      <CardContent className="p-0 pt-0">
+      <CardContent className="p-1 pt-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-0 w-full h-4">
-            <TabsTrigger value="distribution" className="flex-1 h-3 text-[6px]">
-              <ChartPie className="mr-0.5 h-1.5 w-1.5" />
+          <TabsList className="mb-1 w-full h-6">
+            <TabsTrigger value="distribution" className="flex-1 h-5 text-[8px]">
+              <ChartPie className="mr-1 h-3 w-3" />
               Distribution
             </TabsTrigger>
-            <TabsTrigger value="trend" className="flex-1 h-3 text-[6px]">
-              <TrendingUp className="mr-0.5 h-1.5 w-1.5" />
+            <TabsTrigger value="trend" className="flex-1 h-5 text-[8px]">
+              <TrendingUp className="mr-1 h-3 w-3" />
               Monthly Trend
             </TabsTrigger>
           </TabsList>
           
           {isLoading || isFetching ? (
-            <div className="h-[70px]">
+            <div className="h-[100px]">
               <LoadingState message="Loading NPS data..." color="primary" />
             </div>
           ) : isError ? (
-            <div className="h-[70px] flex flex-col items-center justify-center">
+            <div className="h-[100px] flex flex-col items-center justify-center">
               <ValidationError 
                 message={errorMessage} 
                 type="error" 
-                className="mb-0.5 max-w-md text-center text-[6px]"
+                className="mb-1 max-w-md text-center text-[8px]"
               />
-              <p className="text-[6px] text-muted-foreground">Using backup data instead</p>
+              <p className="text-[8px] text-muted-foreground">Using backup data instead</p>
             </div>
           ) : (
             <>
-              <TabsContent value="distribution" className="h-[70px] mt-0">
+              <TabsContent value="distribution" className="h-[100px] mt-0">
                 {distributionData.length === 0 ? (
                   <div className="h-full flex items-center justify-center">
                     <ValidationError 
                       message="No distribution data available" 
                       type="info"
-                      className="text-[6px]"
+                      className="text-[8px]"
                     />
                   </div>
                 ) : (
@@ -143,7 +143,7 @@ export function NPSChart() {
                         cx="50%"
                         cy="40%"
                         labelLine={false}
-                        outerRadius={20}
+                        outerRadius={30}
                         fill="#8884d8"
                         dataKey="value"
                         label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
@@ -152,20 +152,20 @@ export function NPSChart() {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Legend layout="horizontal" verticalAlign="bottom" align="center" wrapperStyle={{ fontSize: "5px" }} />
-                      <Tooltip formatter={(value) => [`${value}%`, 'Percentage']} wrapperStyle={{ fontSize: "5px" }} />
+                      <Legend layout="horizontal" verticalAlign="bottom" align="center" wrapperStyle={{ fontSize: "8px" }} />
+                      <Tooltip formatter={(value) => [`${value}%`, 'Percentage']} wrapperStyle={{ fontSize: "8px" }} />
                     </PieChart>
                   </ResponsiveContainer>
                 )}
               </TabsContent>
               
-              <TabsContent value="trend" className="h-[70px] mt-0">
+              <TabsContent value="trend" className="h-[100px] mt-0">
                 {trendData.length === 0 ? (
                   <div className="h-full flex items-center justify-center">
                     <ValidationError 
                       message="No trend data available" 
                       type="info"
-                      className="text-[6px]"
+                      className="text-[8px]"
                     />
                   </div>
                 ) : (
@@ -173,23 +173,23 @@ export function NPSChart() {
                     <LineChart
                       data={trendData}
                       margin={{
-                        top: 0,
-                        right: 0,
+                        top: 5,
+                        right: 5,
                         left: 0,
-                        bottom: 0,
+                        bottom: 5,
                       }}
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke="#eee" strokeWidth={0.5} />
-                      <XAxis dataKey="month" tick={{ fontSize: 5 }} tickSize={2} axisLine={{ strokeWidth: 0.5 }} />
-                      <YAxis domain={[0, 10]} tick={{ fontSize: 5 }} tickSize={2} axisLine={{ strokeWidth: 0.5 }} />
-                      <Tooltip contentStyle={{ fontSize: "5px" }} />
+                      <XAxis dataKey="month" tick={{ fontSize: 8 }} tickSize={3} axisLine={{ strokeWidth: 0.5 }} />
+                      <YAxis domain={[0, 10]} tick={{ fontSize: 8 }} tickSize={3} axisLine={{ strokeWidth: 0.5 }} />
+                      <Tooltip contentStyle={{ fontSize: "8px" }} />
                       <Line
                         type="monotone"
                         dataKey="score"
                         stroke="#FF0000"
-                        strokeWidth={0.8}
-                        activeDot={{ r: 2 }}
-                        dot={{ r: 1 }}
+                        strokeWidth={1.5}
+                        activeDot={{ r: 4 }}
+                        dot={{ r: 2 }}
                       />
                     </LineChart>
                   </ResponsiveContainer>

@@ -1,4 +1,3 @@
-
 import { Bell, Search, HelpCircle, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -123,7 +122,7 @@ export function Header() {
         {/* Import Dialog */}
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" className="bg-blue-500 hover:bg-blue-600">
+            <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white">
               <Upload className="h-3.5 w-3.5 mr-1" /> Import
             </Button>
           </DialogTrigger>
@@ -235,7 +234,7 @@ export function Header() {
           </DialogContent>
         </Dialog>
         
-        <Button size="sm" className="bg-red-600 hover:bg-red-700">
+        <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white">
           Connect API
         </Button>
       </div>

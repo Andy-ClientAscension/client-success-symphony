@@ -13,18 +13,18 @@ export default function Index() {
 
   return (
     <Layout>
-      <div className="flex-1 space-y-0 p-0 overflow-auto">
-        <div className="flex items-center justify-between mb-0">
-          <h2 className="text-[8px] font-bold tracking-tight pl-0">Dashboard</h2>
+      <div className="flex-1 space-y-4 p-2 overflow-auto">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-lg font-bold tracking-tight pl-0">Dashboard</h2>
         </div>
         
-        <div className="grid grid-cols-12 gap-0">
+        <div className="grid grid-cols-12 gap-4">
           <div className="col-span-12">
             <MetricsCards />
           </div>
         </div>
         
-        <div className="grid grid-cols-3 gap-0 mt-0">
+        <div className="grid grid-cols-3 gap-4 mt-4">
           <div className="col-span-1">
             <ChurnChart />
           </div>
@@ -42,10 +42,10 @@ export default function Index() {
 
         {isMobile && (
           <>
-            <div className="pt-0">
+            <div className="pt-4">
               <ClientList />
             </div>
-            <div className="pt-0">
+            <div className="pt-4">
               <KanbanBoard />
             </div>
           </>
