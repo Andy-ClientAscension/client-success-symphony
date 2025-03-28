@@ -22,6 +22,7 @@ import Payments from "./pages/Payments";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
+import SignUp from "./pages/SignUp";
 
 // Apply polyfills immediately for older browsers
 if (typeof window !== 'undefined') {
@@ -68,8 +69,9 @@ const App = () => {
             <BrowserRouter>
               <AuthProvider>
                 <Routes>
-                  {/* Public route */}
+                  {/* Public routes */}
                   <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<SignUp />} />
                 
                   {/* Protected routes */}
                   <Route element={<ProtectedRoute />}>

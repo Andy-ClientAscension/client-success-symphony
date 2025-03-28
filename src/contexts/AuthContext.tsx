@@ -11,6 +11,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
+  register: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -48,6 +49,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const register = async (email: string, password: string): Promise<boolean> => {
+    try {
+      // This is a simple mock registration
+      // In a real app, you would register the user with a backend
+      if (password.length < 6) {
+        return false;
+      }
+
+      // In a real implementation, we would check if the user already exists
+      // For this mock implementation, we'll just create the user
+      const user = { email };
+      setUser(user);
+      localStorage.setItem("user", JSON.stringify(user));
+      return true;
+    } catch (error) {
+      console.error("Registration error:", error);
+      return false;
+    }
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
@@ -61,6 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: !!user,
         isLoading,
         login,
+        register,
         logout,
       }}
     >

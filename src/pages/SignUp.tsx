@@ -7,23 +7,42 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { BarChart2, Lock, Mail } from "lucide-react";
+import { BarChart2, Lock, Mail, ArrowLeft } from "lucide-react";
 
-export default function Login() {
+export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
+    if (!email || !password || !confirmPassword) {
       toast({
         title: "Error",
         description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Passwords do not match",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (password.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters",
         variant: "destructive",
       });
       return;
@@ -32,18 +51,18 @@ export default function Login() {
     setIsLoading(true);
     
     try {
-      const success = await login(email, password);
+      const success = await register(email, password);
       
       if (success) {
         toast({
           title: "Success",
-          description: "You have successfully logged in",
+          description: "Your account has been created successfully",
         });
         navigate("/");
       } else {
         toast({
           title: "Error",
-          description: "Invalid credentials. Password must be at least 6 characters.",
+          description: "Failed to create account",
           variant: "destructive",
         });
       }
@@ -67,9 +86,9 @@ export default function Login() {
               <BarChart2 className="h-10 w-10 text-red-600" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-center">SSC Dashboard</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
           <CardDescription className="text-center">
-            Enter your credentials to access the dashboard
+            Register to access the SSC Dashboard
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -104,20 +123,35 @@ export default function Login() {
                 />
               </div>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Logging in..." : "Log in"}
+              {isLoading ? "Creating account..." : "Sign Up"}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <div className="text-sm text-center">
-            Don't have an account?{" "}
-            <Link to="/signup" className="text-primary hover:underline">
-              Sign up
+            Already have an account?{" "}
+            <Link to="/login" className="text-primary hover:underline">
+              Log in
             </Link>
           </div>
           <p className="text-xs text-center text-muted-foreground">
-            <span className="font-medium">Demo Credentials:</span> Any email and password (min 6 characters)
+            <span className="font-medium">Demo Note:</span> Any email and password (min 6 characters) will work
           </p>
         </CardFooter>
       </Card>
