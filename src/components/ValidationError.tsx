@@ -5,6 +5,7 @@ interface ValidationErrorProps {
   message: string;
   type?: "error" | "warning" | "info";
   className?: string;
+  showIcon?: boolean;
 }
 
 type IconMapping = {
@@ -18,7 +19,8 @@ type ColorMapping = {
 export function ValidationError({ 
   message, 
   type = "error",
-  className = "" 
+  className = "",
+  showIcon = true
 }: ValidationErrorProps) {
   if (!message) return null;
   
@@ -36,9 +38,11 @@ export function ValidationError({
   
   return (
     <div className={`flex items-start ${colorClasses[type]} text-sm mt-1 ${className}`}>
-      <div className="shrink-0 mt-0.5">
-        {icons[type]}
-      </div>
+      {showIcon && (
+        <div className="shrink-0 mt-0.5">
+          {icons[type]}
+        </div>
+      )}
       <span className="flex-1">{message}</span>
     </div>
   );

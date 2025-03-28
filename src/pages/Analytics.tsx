@@ -23,11 +23,13 @@ export default function Analytics() {
     // Invalidate and refetch all relevant queries
     queryClient.invalidateQueries({
       queryKey: ['nps-data'],
+      refetchType: 'active',
     });
     
     toast({
       title: "Refreshing data",
       description: "Your analytics data is being updated.",
+      duration: 3000,
     });
   }, [isRefreshing, queryClient, toast]);
 
@@ -60,7 +62,10 @@ export default function Analytics() {
             fallback={
               <Card className="min-h-[300px] flex items-center justify-center">
                 <CardContent>
-                  <ValidationError message="Something went wrong loading the NPS chart. Please try refreshing the data." />
+                  <ValidationError 
+                    message="Something went wrong loading the NPS chart. Please try refreshing the data." 
+                    type="error"
+                  />
                 </CardContent>
               </Card>
             }
