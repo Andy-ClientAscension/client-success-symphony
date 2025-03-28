@@ -15,6 +15,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [showAlert, setShowAlert] = useState(false);
@@ -31,6 +32,15 @@ export default function Login() {
     }
   }, [password]);
 
+  // Validate email when it changes
+  useEffect(() => {
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailError("Please enter a valid email address");
+    } else {
+      setEmailError("");
+    }
+  }, [email]);
+
   // Reset login attempts after 5 minutes
   useEffect(() => {
     if (loginAttempts > 0) {
@@ -43,22 +53,37 @@ export default function Login() {
     }
   }, [loginAttempts]);
 
+  const validateForm = () => {
+    let isValid = true;
+    
+    // Check email
+    if (!email) {
+      setEmailError("Email is required");
+      isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailError("Please enter a valid email address");
+      isValid = false;
+    }
+    
+    // Check password
+    if (!password) {
+      setPasswordError("Password is required");
+      isValid = false;
+    } else if (password.length < 6) {
+      setPasswordError("Password must be at least 6 characters");
+      isValid = false;
+    }
+    
+    return isValid;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
+    if (!validateForm()) {
       toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (password.length < 6) {
-      toast({
-        title: "Error",
-        description: "Password must be at least 6 characters",
+        title: "Validation Error",
+        description: "Please fix the errors in the form",
         variant: "destructive",
       });
       return;
@@ -138,10 +163,11 @@ export default function Login() {
                   placeholder="name@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
+                  className={`pl-10 ${emailError ? "border-destructive" : ""}`}
                   required
                 />
               </div>
+              {emailError && <ValidationError message={emailError} />}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
@@ -159,7 +185,11 @@ export default function Login() {
               </div>
               {passwordError && <ValidationError message={passwordError} />}
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading || !!passwordError && password.length > 0}>
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isLoading || !!passwordError || !!emailError}
+            >
               {isLoading ? "Logging in..." : "Log in"}
             </Button>
           </form>
