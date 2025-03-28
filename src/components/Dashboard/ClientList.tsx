@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { MoreHorizontal, ChevronRight, PlusCircle, Phone, BarChart2, DollarSign, Edit } from "lucide-react";
+import { MoreHorizontal, ChevronRight, PlusCircle, Phone, BarChart2, DollarSign, Edit, TrendingUp } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import {
@@ -23,12 +23,14 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client, getAllClients } from "@/lib/data";
 import { ClientMetricsForm } from "./ClientMetricsForm";
+import { NPSUpdateForm } from "./NPSUpdateForm";
 import { useToast } from "@/hooks/use-toast";
 
 export function ClientList() {
   const [clients, setClients] = useState<Client[]>(getAllClients());
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [metricsModalOpen, setMetricsModalOpen] = useState(false);
+  const [npsModalOpen, setNpsModalOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -66,6 +68,11 @@ export function ClientList() {
   const handleEditMetrics = (client: Client) => {
     setSelectedClient(client);
     setMetricsModalOpen(true);
+  };
+
+  const handleUpdateNPS = (client: Client) => {
+    setSelectedClient(client);
+    setNpsModalOpen(true);
   };
 
   const handleMetricsUpdate = (data: { callsBooked: number; dealsClosed: number; mrr: number }) => {
@@ -156,17 +163,28 @@ export function ClientList() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {client.npsScore !== null ? (
-                      <Badge className={
-                        client.npsScore >= 8 ? "bg-success-100 text-success-800" :
-                        client.npsScore >= 6 ? "bg-warning-100 text-warning-800" :
-                        "bg-danger-100 text-danger-800"
-                      }>
-                        {client.npsScore}
-                      </Badge>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">N/A</span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {client.npsScore !== null ? (
+                        <Badge className={
+                          client.npsScore >= 8 ? "bg-success-100 text-success-800" :
+                          client.npsScore >= 6 ? "bg-warning-100 text-warning-800" :
+                          "bg-danger-100 text-danger-800"
+                        }>
+                          {client.npsScore}
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">N/A</span>
+                      )}
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6"
+                        onClick={() => handleUpdateNPS(client)}
+                        title="Update NPS"
+                      >
+                        <TrendingUp className="h-3 w-3 text-muted-foreground" />
+                      </Button>
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
@@ -194,6 +212,9 @@ export function ClientList() {
                           <DropdownMenuItem onClick={() => handleEditMetrics(client)}>
                             <Edit className="h-4 w-4 mr-2" /> Edit Metrics
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleUpdateNPS(client)}>
+                            <TrendingUp className="h-4 w-4 mr-2" /> Update NPS
+                          </DropdownMenuItem>
                           <DropdownMenuItem>Edit Information</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -218,6 +239,17 @@ export function ClientList() {
             dealsClosed: selectedClient.dealsClosed || 0,
             mrr: selectedClient.mrr || 0
           }}
+        />
+      )}
+      
+      {/* NPS update modal */}
+      {selectedClient && npsModalOpen && (
+        <NPSUpdateForm
+          isOpen={npsModalOpen}
+          onClose={() => setNpsModalOpen(false)}
+          clientId={selectedClient.id}
+          clientName={selectedClient.name}
+          currentScore={selectedClient.npsScore}
         />
       )}
     </Card>

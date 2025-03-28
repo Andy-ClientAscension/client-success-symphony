@@ -14,6 +14,10 @@ export interface Client {
     status: 'paid' | 'pending' | 'failed';
   };
   npsScore: number | null;
+  monthlyNpsScores?: Array<{
+    month: string; // Format: 'YYYY-MM'
+    score: number;
+  }>;
   communicationLog: Communication[];
   trustPilotReview?: {
     date: string | null;
@@ -56,6 +60,11 @@ export interface ChurnData {
 export interface NPSData {
   label: string;
   value: number;
+}
+
+export interface NPSMonthlyTrend {
+  month: string;
+  score: number;
 }
 
 export const MOCK_CLIENTS: Client[] = [
@@ -278,6 +287,26 @@ export const MOCK_CLIENTS: Client[] = [
   }
 ];
 
+MOCK_CLIENTS.forEach(client => {
+  if (client.status !== 'new' && client.npsScore !== null) {
+    client.monthlyNpsScores = [];
+    
+    for (let i = 5; i >= 0; i--) {
+      const date = subDays(new Date(), i * 30);
+      const monthKey = format(date, 'yyyy-MM');
+      
+      const baseScore = client.npsScore || 7;
+      const randomVariation = Math.floor(Math.random() * 5) - 2;
+      const monthlyScore = Math.max(0, Math.min(10, baseScore + randomVariation));
+      
+      client.monthlyNpsScores.push({
+        month: monthKey,
+        score: monthlyScore
+      });
+    }
+  }
+});
+
 export const MOCK_CHURN_DATA: ChurnData[] = [
   { month: 'Jan', rate: 2.1 },
   { month: 'Feb', rate: 1.8 },
@@ -330,6 +359,63 @@ export const getChurnData = (): ChurnData[] => {
 
 export const getNPSData = (): NPSData[] => {
   return MOCK_NPS_DATA;
+};
+
+export const getNPSMonthlyTrend = (): NPSMonthlyTrend[] => {
+  const monthlyScores: { [key: string]: { total: number; count: number } } = {};
+  
+  MOCK_CLIENTS.forEach(client => {
+    if (client.monthlyNpsScores) {
+      client.monthlyNpsScores.forEach(monthData => {
+        if (!monthlyScores[monthData.month]) {
+          monthlyScores[monthData.month] = { total: 0, count: 0 };
+        }
+        monthlyScores[monthData.month].total += monthData.score;
+        monthlyScores[monthData.month].count += 1;
+      });
+    }
+  });
+  
+  return Object.entries(monthlyScores)
+    .map(([month, data]) => ({
+      month: format(new Date(`${month}-01`), 'MMM yyyy'),
+      score: Math.round((data.total / data.count) * 10) / 10
+    }))
+    .sort((a, b) => {
+      const dateA = new Date(a.month);
+      const dateB = new Date(b.month);
+      return dateA.getTime() - dateB.getTime();
+    });
+};
+
+export const updateClientNPSScore = (clientId: string, score: number): boolean => {
+  const client = MOCK_CLIENTS.find(c => c.id === clientId);
+  if (!client) return false;
+  
+  client.npsScore = score;
+  
+  const currentMonth = format(new Date(), 'yyyy-MM');
+  
+  if (!client.monthlyNpsScores) {
+    client.monthlyNpsScores = [];
+  }
+  
+  const existingIndex = client.monthlyNpsScores.findIndex(m => m.month === currentMonth);
+  
+  if (existingIndex >= 0) {
+    client.monthlyNpsScores[existingIndex].score = score;
+  } else {
+    client.monthlyNpsScores.push({
+      month: currentMonth,
+      score: score
+    });
+  }
+  
+  client.monthlyNpsScores.sort((a, b) => {
+    return new Date(a.month).getTime() - new Date(b.month).getTime();
+  });
+  
+  return true;
 };
 
 export const getClientMetricsByTeam = (csmName?: string) => {
