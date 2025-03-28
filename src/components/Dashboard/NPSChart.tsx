@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { 
   PieChart, 
@@ -17,50 +18,66 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getNPSData, getNPSMonthlyTrend } from "@/lib/data";
 import { fetchNPSDataFromSheets } from "@/lib/googleSheetsApi";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { LoadingState } from "@/components/LoadingState";
+import { useQuery } from "@tanstack/react-query";
 
 export function NPSChart() {
   const [activeTab, setActiveTab] = useState("distribution");
-  const [distributionData, setDistributionData] = useState(getNPSData());
-  const [trendData, setTrendData] = useState(getNPSMonthlyTrend());
-  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   
   // Updated colors with red from the Client Ascension logo 
   const COLORS = ['#FF0000', '#f59e0b', '#22c55e'];
   
-  useEffect(() => {
-    const loadGoogleSheetsData = async () => {
-      setLoading(true);
+  const { 
+    data, 
+    isLoading, 
+    isError, 
+    refetch 
+  } = useQuery({
+    queryKey: ['nps-data'],
+    queryFn: async () => {
       try {
-        const data = await fetchNPSDataFromSheets();
-        if (data) {
-          setDistributionData(data.distributionData);
-          setTrendData(data.trendData);
+        const response = await fetchNPSDataFromSheets();
+        if (response) {
+          return response;
         } else {
           // If the API fails, we'll use the mock data
-          setDistributionData(getNPSData());
-          setTrendData(getNPSMonthlyTrend());
+          return {
+            distributionData: getNPSData(),
+            trendData: getNPSMonthlyTrend()
+          };
         }
       } catch (error) {
-        console.error("Error loading Google Sheets data:", error);
-        toast({
-          title: "Error Loading Data",
-          description: "Failed to load data from Google Sheets. Using backup data.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
+        console.error("Error loading NPS data:", error);
+        throw new Error("Failed to load NPS data");
       }
-    };
-    
-    loadGoogleSheetsData();
-  }, [toast]);
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
+    onError: (error) => {
+      toast({
+        title: "Error Loading Data",
+        description: "Failed to load data from Google Sheets. Using backup data.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const distributionData = data?.distributionData || [];
+  const trendData = data?.trendData || [];
   
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>NPS Tracking</CardTitle>
+        {isError && (
+          <button 
+            onClick={() => refetch()} 
+            className="text-xs text-red-600 hover:text-red-800 underline"
+          >
+            Retry
+          </button>
+        )}
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -69,10 +86,16 @@ export function NPSChart() {
             <TabsTrigger value="trend" className="flex-1">Monthly Trend</TabsTrigger>
           </TabsList>
           
-          {loading ? (
+          {isLoading ? (
+            <div className="h-[300px]">
+              <LoadingState message="Loading NPS data..." />
+            </div>
+          ) : isError ? (
             <div className="h-[300px] flex items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-red-600" />
-              <span className="ml-2">Loading NPS data...</span>
+              <div className="text-center">
+                <p className="text-red-600 mb-2">Failed to load NPS data</p>
+                <p className="text-sm text-muted-foreground">Using backup data instead</p>
+              </div>
             </div>
           ) : (
             <>

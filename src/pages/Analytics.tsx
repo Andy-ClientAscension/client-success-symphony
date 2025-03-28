@@ -5,29 +5,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowLeft, RefreshCw } from "lucide-react";
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingState } from "@/components/LoadingState";
+import { useQueryClient } from "@tanstack/react-query";
+import { ValidationError } from "@/components/ValidationError";
 
 export default function Analytics() {
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const queryClient = useQueryClient();
   const { toast } = useToast();
+  const isRefreshing = queryClient.isFetching(['nps-data']) > 0;
 
   const handleRefreshData = useCallback(() => {
     if (isRefreshing) return;
     
-    setIsRefreshing(true);
+    // Invalidate and refetch all relevant queries
+    queryClient.invalidateQueries({
+      queryKey: ['nps-data'],
+    });
     
-    // Simulate data refresh
-    setTimeout(() => {
-      setIsRefreshing(false);
-      toast({
-        title: "Data refreshed",
-        description: "Your analytics data has been updated.",
-      });
-    }, 1500);
-  }, [isRefreshing, toast]);
+    toast({
+      title: "Refreshing data",
+      description: "Your analytics data is being updated.",
+    });
+  }, [isRefreshing, queryClient, toast]);
 
   return (
     <Layout>
@@ -54,14 +56,16 @@ export default function Analytics() {
         </div>
         
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <ErrorBoundary>
-            {isRefreshing ? (
+          <ErrorBoundary 
+            fallback={
               <Card className="min-h-[300px] flex items-center justify-center">
-                <LoadingState message="Refreshing NPS data..." />
+                <CardContent>
+                  <ValidationError message="Something went wrong loading the NPS chart. Please try refreshing the data." />
+                </CardContent>
               </Card>
-            ) : (
-              <NPSChart />
-            )}
+            }
+          >
+            <NPSChart />
           </ErrorBoundary>
           
           <Card>

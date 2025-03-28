@@ -21,12 +21,21 @@ export const fetchNPSDataFromSheets = async (): Promise<{
     // 2. Call that endpoint from the frontend
     // 3. Or use Google Sheets API v4 via direct REST calls with an API key
     
+    // Check network connectivity first
+    if (!navigator.onLine) {
+      throw new Error('You are currently offline. Please check your internet connection.');
+    }
+    
+    // Simulate network latency and potential errors
+    const shouldFail = Math.random() < 0.1; // 10% chance of failure for testing error handling
+    
     // Simulating API delay
     await new Promise(resolve => setTimeout(resolve, 800));
     
-    // This is where we'd normally make the API call to Google Sheets
-    // Since googleapis doesn't work directly in browser, we'll use mock data
-    // that represents what would come from your sheet
+    if (shouldFail) {
+      // Simulate a network or API error
+      throw new Error('API Error: Could not connect to Google Sheets (simulated failure)');
+    }
     
     // Mock API response
     const mockResponse: GoogleSheetsResponse = {
@@ -116,12 +125,20 @@ export const fetchNPSDataFromSheets = async (): Promise<{
     return { distributionData, trendData };
   } catch (error) {
     console.error('Error fetching NPS data from Google Sheets:', error);
+    
+    // Provide more specific error messaging
+    const errorMessage = error instanceof Error 
+      ? error.message 
+      : "Unknown error occurred while fetching data";
+    
     toast({
       title: "Error fetching NPS data",
-      description: "Could not fetch data from Google Sheets. Using mock data instead.",
+      description: errorMessage,
       variant: "destructive",
     });
-    return null;
+    
+    // Important: Throw the error so that React Query's retry and error handling can work
+    throw error;
   }
 };
 
@@ -139,13 +156,37 @@ export const updateNPSScoreInSheets = async (
   clientId: string, 
   score: number
 ): Promise<boolean> => {
-  console.log(`Would update NPS score for client ${clientId} to ${score} in Google Sheets`);
-  
-  // Simulate success
-  toast({
-    title: "NPS Score Updated",
-    description: `Score of ${score} recorded for client ${clientId}`,
-  });
-  
-  return true;
+  try {
+    console.log(`Would update NPS score for client ${clientId} to ${score} in Google Sheets`);
+    
+    // Check network connectivity first
+    if (!navigator.onLine) {
+      throw new Error('You are currently offline. Please check your internet connection.');
+    }
+    
+    // Simulate API delay and potential errors
+    await new Promise(resolve => setTimeout(resolve, 600));
+    
+    // Simulate successful update
+    toast({
+      title: "NPS Score Updated",
+      description: `Score of ${score} recorded for client ${clientId}`,
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error updating NPS score:', error);
+    
+    const errorMessage = error instanceof Error 
+      ? error.message 
+      : "Failed to update NPS score. Please try again.";
+    
+    toast({
+      title: "Error Updating Score",
+      description: errorMessage,
+      variant: "destructive",
+    });
+    
+    throw error;
+  }
 };
