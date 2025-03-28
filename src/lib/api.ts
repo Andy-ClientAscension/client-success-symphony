@@ -7,11 +7,25 @@ export interface ApiResponse<T> {
   error?: string;
 }
 
+interface SlackMessage {
+  messageId: string;
+}
+
+interface AirtableRecord {
+  id: string;
+}
+
+interface StripeCustomer {
+  id: string;
+  name: string;
+  email: string;
+}
+
 // Mock API integrations that can be replaced with actual implementations later
 export const apiIntegrations = {
   // Slack integration example
   slack: {
-    sendMessage: async (channelId: string, message: string): Promise<ApiResponse<{messageId: string}>> => {
+    sendMessage: async (channelId: string, message: string): Promise<ApiResponse<SlackMessage>> => {
       // Mocked response
       console.log(`Sending message to Slack channel ${channelId}: ${message}`);
       return {
@@ -25,15 +39,15 @@ export const apiIntegrations = {
   
   // Airtable integration example
   airtable: {
-    getRecords: async (table: string): Promise<ApiResponse<any[]>> => {
+    getRecords: async <T>(table: string): Promise<ApiResponse<T[]>> => {
       console.log(`Fetching records from Airtable table: ${table}`);
       return {
         success: true,
-        data: []
+        data: [] as T[]
       };
     },
     
-    createRecord: async (table: string, data: any): Promise<ApiResponse<{id: string}>> => {
+    createRecord: async <T>(table: string, data: T): Promise<ApiResponse<AirtableRecord>> => {
       console.log(`Creating record in Airtable table ${table}:`, data);
       return {
         success: true,
@@ -46,7 +60,7 @@ export const apiIntegrations = {
   
   // Stripe integration example
   stripe: {
-    getCustomer: async (customerId: string): Promise<ApiResponse<any>> => {
+    getCustomer: async (customerId: string): Promise<ApiResponse<StripeCustomer>> => {
       console.log(`Fetching Stripe customer: ${customerId}`);
       return {
         success: true,
@@ -58,11 +72,11 @@ export const apiIntegrations = {
       };
     },
     
-    getPayments: async (customerId: string): Promise<ApiResponse<any[]>> => {
+    getPayments: async <T>(customerId: string): Promise<ApiResponse<T[]>> => {
       console.log(`Fetching payments for Stripe customer: ${customerId}`);
       return {
         success: true,
-        data: []
+        data: [] as T[]
       };
     }
   }
@@ -89,7 +103,7 @@ export const createApiClient = (token: string) => {
       }
     },
     
-    post: async <T>(url: string, body: any): Promise<ApiResponse<T>> => {
+    post: async <T, U = unknown>(url: string, body: U): Promise<ApiResponse<T>> => {
       try {
         const response = await fetch(url, {
           method: 'POST',

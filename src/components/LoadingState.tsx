@@ -8,13 +8,17 @@ interface LoadingStateProps {
   fullPage?: boolean;
 }
 
+type SizeClasses = {
+  [key in LoadingStateProps["size"]]: string;
+};
+
 export function LoadingState({ 
   message = "Loading...", 
   size = "md",
   className = "",
   fullPage = false
 }: LoadingStateProps) {
-  const sizeClasses = {
+  const sizeClasses: SizeClasses = {
     sm: "h-4 w-4 min-w-4",
     md: "h-8 w-8 min-w-8",
     lg: "h-12 w-12 min-w-12"

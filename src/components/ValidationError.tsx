@@ -7,6 +7,14 @@ interface ValidationErrorProps {
   className?: string;
 }
 
+type IconMapping = {
+  [key in ValidationErrorProps["type"]]: JSX.Element;
+};
+
+type ColorMapping = {
+  [key in ValidationErrorProps["type"]]: string;
+};
+
 export function ValidationError({ 
   message, 
   type = "error",
@@ -14,13 +22,13 @@ export function ValidationError({
 }: ValidationErrorProps) {
   if (!message) return null;
   
-  const icons = {
+  const icons: IconMapping = {
     error: <XCircle className="h-4 w-4 min-w-4 mr-1" />,
     warning: <AlertTriangle className="h-4 w-4 min-w-4 mr-1" />,
     info: <AlertCircle className="h-4 w-4 min-w-4 mr-1" />
   };
   
-  const colorClasses = {
+  const colorClasses: ColorMapping = {
     error: "text-destructive",
     warning: "text-warning-600",
     info: "text-blue-600"

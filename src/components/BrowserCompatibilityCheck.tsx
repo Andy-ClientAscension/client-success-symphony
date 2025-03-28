@@ -18,7 +18,7 @@ export function BrowserCompatibilityCheck() {
   if (isCompatible || !showWarning) return null;
 
   return (
-    <Alert variant="warning" className="fixed bottom-4 left-4 max-w-md z-50 bg-amber-50 border-amber-200">
+    <Alert variant="destructive" className="fixed bottom-4 left-4 max-w-md z-50 bg-amber-50 border-amber-200">
       <AlertTitle className="flex items-center">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
           <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
