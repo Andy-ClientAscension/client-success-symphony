@@ -130,7 +130,7 @@ export function KanbanBoard() {
     <Card className="mt-4">
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center gap-2">
-          <KanbanSquare className="h-5 w-5 text-brand-600" />
+          <KanbanSquare className="h-5 w-5 text-red-600" />
           <CardTitle>Student Tracking</CardTitle>
         </div>
         <Button size="sm">
@@ -148,7 +148,7 @@ export function KanbanBoard() {
                 <div key={column.id} className="flex flex-col bg-secondary/50 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-medium">{column.title}</h3>
-                    <Badge>{students.length}</Badge>
+                    <Badge variant="brand">{students.length}</Badge>
                   </div>
                   <Droppable droppableId={column.id}>
                     {(provided) => (
@@ -164,7 +164,7 @@ export function KanbanBoard() {
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
-                                className="mb-2 bg-background rounded-md p-3 shadow-sm hover:shadow-md transition-shadow"
+                                className="mb-2 bg-background rounded-md p-3 shadow-sm hover:shadow-md transition-shadow border border-gray-100"
                               >
                                 <div className="flex items-center justify-between">
                                   <span className="font-medium">{student.name}</span>
@@ -185,7 +185,7 @@ export function KanbanBoard() {
                                   <div className="text-xs text-muted-foreground mb-1">Progress</div>
                                   <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
                                     <div 
-                                      className={`h-full ${student.progress >= 70 ? 'bg-success-500' : student.progress >= 40 ? 'bg-warning-500' : 'bg-danger-500'}`}
+                                      className={`h-full ${student.progress >= 70 ? 'bg-success-500' : student.progress >= 40 ? 'bg-warning-500' : 'bg-red-600'}`}
                                       style={{ width: `${student.progress}%` }} 
                                     />
                                   </div>

@@ -6,7 +6,7 @@ import { getNPSData } from "@/lib/data";
 export function NPSChart() {
   const data = getNPSData();
   
-  // Updated colors to match the red from the logo for detractors
+  // Updated colors with red from the Client Ascension logo 
   const COLORS = ['#FF0000', '#f59e0b', '#22c55e'];
   
   return (

@@ -28,10 +28,10 @@ const MetricCard = ({
   iconColor: string
 }) => {
   const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : null;
-  const trendColorClass = trend === 'up' ? 'text-success-600' : trend === 'down' ? 'text-danger-600' : '';
+  const trendColorClass = trend === 'up' ? 'text-success-600' : trend === 'down' ? 'text-red-600' : '';
   
   return (
-    <Card>
+    <Card className="border border-red-100">
       <CardContent className="p-6">
         <div className="flex justify-between items-start">
           <div>
@@ -65,7 +65,7 @@ export function MetricsCards() {
       icon: Users, 
       trend: 'up' as const, 
       trendValue: "+2 this month",
-      iconColor: "text-brand-600"
+      iconColor: "text-red-600"
     },
     { 
       title: "At Risk", 
@@ -81,7 +81,7 @@ export function MetricsCards() {
       icon: UserMinus, 
       trend: 'down' as const, 
       trendValue: "-0.3% from last month",
-      iconColor: "text-danger-600"
+      iconColor: "text-red-600"
     },
     { 
       title: "Upcoming Renewals", 
@@ -89,7 +89,7 @@ export function MetricsCards() {
       icon: Calendar, 
       trend: 'neutral' as const, 
       trendValue: "Next in 22 days",
-      iconColor: "text-brand-600"
+      iconColor: "text-red-600"
     },
     { 
       title: "Comm. Pending", 
@@ -97,7 +97,7 @@ export function MetricsCards() {
       icon: MessageSquare, 
       trend: 'up' as const, 
       trendValue: "+3 this week",
-      iconColor: "text-brand-600"
+      iconColor: "text-red-600"
     },
     { 
       title: "Revenue MRR", 

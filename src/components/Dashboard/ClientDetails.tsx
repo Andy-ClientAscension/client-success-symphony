@@ -56,7 +56,7 @@ export function ClientDetails({ client }: ClientDetailsProps) {
   };
   
   return (
-    <Card>
+    <Card className="border-red-100">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Client Details</CardTitle>
         <Badge className={getStatusColor(client.status)}>
@@ -102,33 +102,33 @@ export function ClientDetails({ client }: ClientDetailsProps) {
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="border rounded-lg p-3">
+            <div className="border border-red-100 rounded-lg p-3">
               <div className="flex items-center gap-2 mb-2">
-                <Calendar className="h-4 w-4 text-brand-600" />
+                <Calendar className="h-4 w-4 text-red-600" />
                 <span className="font-medium">End Date</span>
               </div>
               <p>{format(new Date(client.endDate), 'MMM dd, yyyy')}</p>
             </div>
             
-            <div className="border rounded-lg p-3">
+            <div className="border border-red-100 rounded-lg p-3">
               <div className="flex items-center gap-2 mb-2">
-                <MessageSquare className="h-4 w-4 text-brand-600" />
+                <MessageSquare className="h-4 w-4 text-red-600" />
                 <span className="font-medium">Last Communication</span>
               </div>
               <p>{format(new Date(client.lastCommunication), 'MMM dd, yyyy')}</p>
             </div>
             
-            <div className="border rounded-lg p-3">
+            <div className="border border-red-100 rounded-lg p-3">
               <div className="flex items-center gap-2 mb-2">
-                <CreditCard className="h-4 w-4 text-brand-600" />
+                <CreditCard className="h-4 w-4 text-red-600" />
                 <span className="font-medium">Last Payment</span>
               </div>
               <p>${client.lastPayment.amount} • {format(new Date(client.lastPayment.date), 'MMM dd, yyyy')}</p>
             </div>
             
-            <div className="border rounded-lg p-3">
+            <div className="border border-red-100 rounded-lg p-3">
               <div className="flex items-center gap-2 mb-2">
-                <BarChart className="h-4 w-4 text-brand-600" />
+                <BarChart className="h-4 w-4 text-red-600" />
                 <span className="font-medium">Lifetime Value</span>
               </div>
               <p>${client.lastPayment.amount * 12}</p>
@@ -136,13 +136,13 @@ export function ClientDetails({ client }: ClientDetailsProps) {
           </div>
           
           {/* New Sections */}
-          <div className="border rounded-lg p-4 space-y-4">
+          <div className="border border-red-100 rounded-lg p-4 space-y-4">
             <h3 className="text-lg font-medium">Additional Information</h3>
             
             {/* TrustPilot Review Section */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Star className="h-5 w-5 text-brand-600" />
+                <Star className="h-5 w-5 text-red-600" />
                 <h4 className="font-medium">TrustPilot Review</h4>
               </div>
               {client.trustPilotReview?.date ? (
@@ -171,7 +171,7 @@ export function ClientDetails({ client }: ClientDetailsProps) {
             {/* Case Study Interview Section */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-brand-600" />
+                <FileText className="h-5 w-5 text-red-600" />
                 <h4 className="font-medium">Case Study Interview</h4>
               </div>
               <div className="ml-7 space-y-1">
@@ -194,7 +194,7 @@ export function ClientDetails({ client }: ClientDetailsProps) {
             {/* Referrals Section */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Award className="h-5 w-5 text-brand-600" />
+                <Award className="h-5 w-5 text-red-600" />
                 <h4 className="font-medium">Referrals</h4>
               </div>
               <div className="ml-7">
@@ -221,9 +221,9 @@ export function ClientDetails({ client }: ClientDetailsProps) {
           </div>
           
           <div className="flex flex-wrap gap-2">
-            <Button>Contact</Button>
-            <Button variant="outline">View History</Button>
-            <Button variant="outline">Add Note</Button>
+            <Button className="bg-red-600 hover:bg-red-700">Contact</Button>
+            <Button variant="outline" className="border-red-200 hover:bg-red-50 hover:text-red-600">View History</Button>
+            <Button variant="outline" className="border-red-200 hover:bg-red-50 hover:text-red-600">Add Note</Button>
           </div>
         </div>
       </CardContent>

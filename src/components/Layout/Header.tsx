@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 
 export function Header() {
   return (
-    <header className="border-b bg-white h-16 flex items-center justify-between px-6">
+    <header className="border-b bg-white h-16 flex items-center justify-between px-6 shadow-sm">
       <div className="flex items-center gap-4">
         <div className="flex items-center">
           <img 
@@ -35,7 +35,7 @@ export function Header() {
           <Bell className="h-5 w-5" />
           <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-600 rounded-full" />
         </Button>
-        <Button size="sm" className="ml-2">
+        <Button size="sm" className="ml-2 bg-red-600 hover:bg-red-700">
           Connect API
         </Button>
       </div>
