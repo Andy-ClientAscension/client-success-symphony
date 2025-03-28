@@ -11,6 +11,7 @@ import { CommunicationLog } from "@/components/Dashboard/CommunicationLog";
 import { ClientDetails } from "@/components/Dashboard/ClientDetails";
 import { KanbanBoard } from "@/components/Dashboard/KanbanBoard";
 import { getAllClients } from "@/lib/data";
+import { Building } from "lucide-react";
 
 const Dashboard = () => {
   const [activeClient] = useState(getAllClients()[0]);
@@ -32,7 +33,10 @@ const Dashboard = () => {
         <main className="flex-1 overflow-y-auto p-6 bg-background">
           <div className="max-w-7xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+              <h1 className="text-3xl font-bold tracking-tight flex items-center">
+                <Building className="h-7 w-7 mr-2 text-red-600" />
+                Company Dashboard
+              </h1>
               <div className="flex items-center gap-4">
                 <Tabs defaultValue="overview" className="w-[400px]">
                   <TabsList className="grid w-full grid-cols-2">
@@ -45,7 +49,7 @@ const Dashboard = () => {
             
             <Tabs defaultValue="overview" className="w-full">
               <TabsList className="mb-4">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="overview">Company Overview</TabsTrigger>
                 <TabsTrigger value="kanban">Student Tracking</TabsTrigger>
                 <TabsTrigger value="client">Client Details</TabsTrigger>
               </TabsList>

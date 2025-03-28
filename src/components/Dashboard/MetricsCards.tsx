@@ -7,7 +7,8 @@ import {
   MessageSquare, 
   CreditCard,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  Building
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { getClientsCountByStatus, getAverageNPS } from "@/lib/data";
@@ -60,7 +61,7 @@ export function MetricsCards() {
   
   const metrics = [
     { 
-      title: "Active Clients", 
+      title: "Total Active Clients", 
       value: clientCounts.active,
       icon: Users, 
       trend: 'up' as const, 
@@ -68,7 +69,7 @@ export function MetricsCards() {
       iconColor: "text-red-600"
     },
     { 
-      title: "At Risk", 
+      title: "At Risk Clients", 
       value: clientCounts["at-risk"],
       icon: AlertTriangle, 
       trend: 'down' as const, 
@@ -76,7 +77,7 @@ export function MetricsCards() {
       iconColor: "text-warning-600"
     },
     { 
-      title: "Churn Rate", 
+      title: "Company Churn Rate", 
       value: "2.1%",
       icon: UserMinus, 
       trend: 'down' as const, 
@@ -92,7 +93,7 @@ export function MetricsCards() {
       iconColor: "text-red-600"
     },
     { 
-      title: "Comm. Pending", 
+      title: "Pending Communications", 
       value: 8,
       icon: MessageSquare, 
       trend: 'up' as const, 
@@ -100,7 +101,7 @@ export function MetricsCards() {
       iconColor: "text-red-600"
     },
     { 
-      title: "Revenue MRR", 
+      title: "Total MRR", 
       value: "$5,700",
       icon: CreditCard, 
       trend: 'up' as const, 
@@ -108,7 +109,7 @@ export function MetricsCards() {
       iconColor: "text-success-600"
     },
     { 
-      title: "NPS Score", 
+      title: "Company NPS Score", 
       value: averageNPS,
       icon: TrendingUp, 
       trend: 'up' as const, 
@@ -118,18 +119,24 @@ export function MetricsCards() {
   ];
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {metrics.map((metric, index) => (
-        <MetricCard 
-          key={index}
-          title={metric.title}
-          value={metric.value}
-          icon={metric.icon}
-          trend={metric.trend}
-          trendValue={metric.trendValue}
-          iconColor={metric.iconColor}
-        />
-      ))}
+    <div>
+      <h2 className="text-xl font-semibold mb-4 flex items-center">
+        <Building className="h-5 w-5 mr-2 text-red-600" />
+        Company Overview (All Teams)
+      </h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {metrics.map((metric, index) => (
+          <MetricCard 
+            key={index}
+            title={metric.title}
+            value={metric.value}
+            icon={metric.icon}
+            trend={metric.trend}
+            trendValue={metric.trendValue}
+            iconColor={metric.iconColor}
+          />
+        ))}
+      </div>
     </div>
   );
 }
