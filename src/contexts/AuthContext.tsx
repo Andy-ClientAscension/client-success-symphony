@@ -27,36 +27,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already logged in
-    const savedUser = localStorage.getItem("user");
-    
-    // Check for saved credentials with remember me
-    const savedCredentials = localStorage.getItem("savedCredentials");
-    
-    if (savedCredentials) {
-      const credentials = JSON.parse(savedCredentials);
-      
-      // Check if credentials have expired
-      if (credentials.expiry && new Date().getTime() > credentials.expiry) {
-        // Expired, remove the saved credentials
-        localStorage.removeItem("savedCredentials");
-      } else if (!savedUser) {
-        // Auto-login if credentials are valid and not expired
-        login(credentials.email, credentials.password)
-          .then(success => {
-            if (!success) {
-              localStorage.removeItem("savedCredentials");
-            }
-          })
-          .catch(() => {
+    const initAuth = async () => {
+      setIsLoading(true);
+      try {
+        // Check if user is already logged in
+        const savedUser = localStorage.getItem("user");
+        
+        // Check for saved credentials with remember me
+        const savedCredentials = localStorage.getItem("savedCredentials");
+        
+        if (savedCredentials) {
+          const credentials = JSON.parse(savedCredentials);
+          
+          // Check if credentials have expired
+          if (credentials.expiry && new Date().getTime() > credentials.expiry) {
+            // Expired, remove the saved credentials
             localStorage.removeItem("savedCredentials");
-          });
+          } else if (!savedUser) {
+            // Auto-login if credentials are valid and not expired
+            await login(credentials.email, credentials.password)
+              .then(success => {
+                if (!success) {
+                  localStorage.removeItem("savedCredentials");
+                }
+              })
+              .catch(() => {
+                localStorage.removeItem("savedCredentials");
+              });
+          }
+        } else if (savedUser) {
+          setUser(JSON.parse(savedUser));
+        }
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+      } finally {
+        setIsLoading(false);
       }
-    } else if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
+    };
     
-    setIsLoading(false);
+    initAuth();
   }, []);
 
   const validateInviteCode = async (code: string): Promise<boolean> => {
@@ -66,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      setIsLoading(true);
       // This is a simple mock authentication
       // In a real app, you would validate credentials against a backend
       if (password.length < 6) {
@@ -79,11 +89,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Login error:", error);
       return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const register = async (email: string, password: string, inviteCode: string): Promise<{ success: boolean; message: string }> => {
     try {
+      setIsLoading(true);
       // Validate invite code first
       const isValidCode = await validateInviteCode(inviteCode);
       
@@ -118,6 +131,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         success: false, 
         message: "An error occurred during registration. Please try again." 
       };
+    } finally {
+      setIsLoading(false);
     }
   };
 

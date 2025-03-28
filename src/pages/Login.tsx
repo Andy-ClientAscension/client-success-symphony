@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +10,7 @@ import { BarChart2, Lock, Mail, AlertCircle } from "lucide-react";
 import { ValidationError } from "@/components/ValidationError";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
+import { LoadingState } from "@/components/LoadingState";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -25,7 +25,6 @@ export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Check for saved credentials on component mount
   useEffect(() => {
     const savedCredentials = localStorage.getItem("savedCredentials");
     if (savedCredentials) {
@@ -36,7 +35,6 @@ export default function Login() {
     }
   }, []);
 
-  // Validate password when it changes
   useEffect(() => {
     if (password && password.length < 6) {
       setPasswordError("Password must be at least 6 characters");
@@ -45,7 +43,6 @@ export default function Login() {
     }
   }, [password]);
 
-  // Validate email when it changes
   useEffect(() => {
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setEmailError("Please enter a valid email address");
@@ -54,13 +51,12 @@ export default function Login() {
     }
   }, [email]);
 
-  // Reset login attempts after 5 minutes
   useEffect(() => {
     if (loginAttempts > 0) {
       const timer = setTimeout(() => {
         setLoginAttempts(0);
         setShowAlert(false);
-      }, 5 * 60 * 1000); // 5 minutes
+      }, 5 * 60 * 1000);
       
       return () => clearTimeout(timer);
     }
@@ -69,7 +65,6 @@ export default function Login() {
   const validateForm = () => {
     let isValid = true;
     
-    // Check email
     if (!email) {
       setEmailError("Email is required");
       isValid = false;
@@ -78,7 +73,6 @@ export default function Login() {
       isValid = false;
     }
     
-    // Check password
     if (!password) {
       setPasswordError("Password is required");
       isValid = false;
@@ -108,13 +102,11 @@ export default function Login() {
       const success = await login(email, password);
       
       if (success) {
-        // If remember me is checked, save credentials for 30 days
         if (rememberMe) {
           const credentials = { email, password };
           const expiryDate = new Date();
-          expiryDate.setDate(expiryDate.getDate() + 30); // 30 days from now
+          expiryDate.setDate(expiryDate.getDate() + 30);
           
-          // Store credentials with expiration
           const dataToStore = {
             ...credentials,
             expiry: expiryDate.getTime(),
@@ -122,7 +114,6 @@ export default function Login() {
           
           localStorage.setItem("savedCredentials", JSON.stringify(dataToStore));
         } else {
-          // If not checked, remove any previously saved credentials
           localStorage.removeItem("savedCredentials");
         }
         
@@ -135,7 +126,6 @@ export default function Login() {
       } else {
         setLoginAttempts(prevAttempts => prevAttempts + 1);
         
-        // Different messages based on number of attempts
         let errorMessage = "Invalid email or password. Please try again.";
         
         if (loginAttempts >= 2) {
@@ -183,57 +173,68 @@ export default function Login() {
               </AlertDescription>
             </Alert>
           )}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={`pl-10 ${emailError ? "border-destructive" : ""}`}
-                  required
-                />
-              </div>
-              {emailError && <ValidationError message={emailError} />}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={`pl-10 ${passwordError ? "border-destructive" : ""}`}
-                  required
-                />
-              </div>
-              {passwordError && <ValidationError message={passwordError} />}
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="remember-me" 
-                checked={rememberMe} 
-                onCheckedChange={(checked) => setRememberMe(checked as boolean)} 
+          {isLoading ? (
+            <div className="py-8">
+              <LoadingState 
+                message="Authenticating..." 
+                size="md" 
+                color="primary" 
+                showProgress={true}
               />
-              <Label htmlFor="remember-me" className="text-sm font-medium leading-none cursor-pointer">
-                Remember me for 30 days
-              </Label>
             </div>
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={isLoading || !!passwordError || !!emailError}
-            >
-              {isLoading ? "Logging in..." : "Log in"}
-            </Button>
-          </form>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={`pl-10 ${emailError ? "border-destructive" : ""}`}
+                    required
+                  />
+                </div>
+                {emailError && <ValidationError message={emailError} />}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={`pl-10 ${passwordError ? "border-destructive" : ""}`}
+                    required
+                  />
+                </div>
+                {passwordError && <ValidationError message={passwordError} />}
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="remember-me" 
+                  checked={rememberMe} 
+                  onCheckedChange={(checked) => setRememberMe(checked as boolean)} 
+                />
+                <Label htmlFor="remember-me" className="text-sm font-medium leading-none cursor-pointer">
+                  Remember me for 30 days
+                </Label>
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isLoading || !!passwordError || !!emailError}
+              >
+                {isLoading ? "Logging in..." : "Log in"}
+              </Button>
+            </form>
+          )}
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <div className="text-sm text-center">
