@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,14 +8,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { BarChart2, Lock, Mail } from "lucide-react";
+import { ValidationError } from "@/components/ValidationError";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Validate password when it changes
+  useEffect(() => {
+    if (password && password.length < 6) {
+      setPasswordError("Password must be at least 6 characters");
+    } else {
+      setPasswordError("");
+    }
+  }, [password]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +35,15 @@ export default function Login() {
       toast({
         title: "Error",
         description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (password.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters",
         variant: "destructive",
       });
       return;
@@ -43,7 +63,7 @@ export default function Login() {
       } else {
         toast({
           title: "Error",
-          description: "Invalid credentials. Password must be at least 6 characters.",
+          description: "Invalid credentials. Please try again.",
           variant: "destructive",
         });
       }
@@ -99,12 +119,13 @@ export default function Login() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
+                  className={`pl-10 ${passwordError ? "border-destructive" : ""}`}
                   required
                 />
               </div>
+              {passwordError && <ValidationError message={passwordError} />}
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading || !!passwordError && password.length > 0}>
               {isLoading ? "Logging in..." : "Log in"}
             </Button>
           </form>
