@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Layout } from "@/components/Layout/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,7 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { CommunicationLog } from "@/components/Dashboard/CommunicationLog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Communications as CommunicationsData } from "@/lib/data";
+import { MOCK_CLIENTS } from "@/lib/data";
+
+const allCommunications = MOCK_CLIENTS.flatMap(client => 
+  client.communicationLog.map(comm => ({
+    ...comm,
+    clientName: client.name
+  }))
+).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
 interface ResourceLink {
   id: string;
@@ -151,7 +157,7 @@ export default function Communications() {
               </TabsList>
               
               <TabsContent value="recent">
-                <CommunicationLog communications={CommunicationsData} />
+                <CommunicationLog communications={allCommunications} />
               </TabsContent>
               
               <TabsContent value="resources" className="space-y-6">
