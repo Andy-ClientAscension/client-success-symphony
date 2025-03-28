@@ -57,49 +57,52 @@ export function PaymentAlerts() {
   }, []);
 
   return (
-    <Card className="border border-red-100">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-xl flex items-center">
-          <DollarSign className="h-5 w-5 mr-2 text-red-600" />
-          Payment Alerts
-        </CardTitle>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={checkPayments} 
-          disabled={isLoading}
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+    <Card className="h-full">
+      <CardHeader className="p-0">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-[0.6rem] flex items-center">
+            <DollarSign className="h-1.5 w-1.5 mr-0.5 text-red-600" />
+            Payment Alerts
+          </CardTitle>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={checkPayments} 
+            disabled={isLoading}
+            className="h-3 text-[6px] px-0.5 py-0"
+          >
+            <RefreshCw className={`h-1.5 w-1.5 mr-0.5 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0 pt-0">
         {overduePayments.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-0.5 text-[5px]">
             {overduePayments.map((payment) => (
-              <Alert key={payment.clientId} variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle className="flex items-center justify-between">
+              <Alert key={payment.clientId} variant="destructive" className="p-0.5">
+                <AlertTriangle className="h-1.5 w-1.5" />
+                <AlertTitle className="flex items-center justify-between text-[6px]">
                   <span>{payment.clientName}</span>
-                  <Badge variant="destructive">{payment.daysOverdue} days overdue</Badge>
+                  <Badge variant="destructive" className="text-[5px] px-0.5 py-0">{payment.daysOverdue} days</Badge>
                 </AlertTitle>
-                <AlertDescription className="flex justify-between items-center mt-2">
+                <AlertDescription className="flex justify-between items-center mt-0.5 text-[5px]">
                   <span>
-                    Last payment: {payment.lastPaymentDate 
+                    Last: {payment.lastPaymentDate 
                       ? new Date(payment.lastPaymentDate).toLocaleDateString() 
                       : 'No record'}
                   </span>
                   <span className="font-semibold">
-                    ${payment.amountDue?.toFixed(2)} due
+                    ${payment.amountDue?.toFixed(2)}
                   </span>
                 </AlertDescription>
               </Alert>
             ))}
           </div>
         ) : (
-          <div className="text-center py-6 text-muted-foreground">
+          <div className="text-center py-1 text-[6px] text-muted-foreground">
             <p>All client payments are up to date</p>
-            <p className="text-sm mt-1">Last checked: {new Date().toLocaleString()}</p>
+            <p className="text-[5px] mt-0.5">Last checked: {new Date().toLocaleString()}</p>
           </div>
         )}
       </CardContent>

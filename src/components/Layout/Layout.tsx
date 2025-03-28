@@ -17,7 +17,9 @@ export function Layout({ children }: LayoutProps) {
         <Header />
         <main className="flex-1 w-full overflow-auto max-h-[calc(100vh-3rem)]">
           <ErrorBoundary>
-            {children}
+            <div className="p-0.5">
+              {children}
+            </div>
           </ErrorBoundary>
         </main>
       </div>

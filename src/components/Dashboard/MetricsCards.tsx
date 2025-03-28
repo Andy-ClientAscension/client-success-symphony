@@ -37,22 +37,22 @@ const MetricCard = ({
   const isMobile = useIsMobile();
   
   return (
-    <Card className="border border-red-100">
-      <CardContent className={isMobile ? "p-3" : "p-4"}>
+    <Card className="border-0 shadow-sm">
+      <CardContent className="p-1">
         <div className="flex justify-between items-start">
           <div>
-            <p className="text-xs font-medium text-muted-foreground">{title}</p>
-            <h3 className="text-xl font-bold mt-0.5">{value}</h3>
+            <p className="text-[6px] font-medium text-muted-foreground">{title}</p>
+            <h3 className="text-xs font-bold mt-0">{value}</h3>
             
             {trend && trendValue && (
-              <div className={`flex items-center mt-1 text-xs ${trendColorClass}`}>
-                {TrendIcon && <TrendIcon className="h-3 w-3 mr-1" />}
+              <div className={`flex items-center mt-0 text-[5px] ${trendColorClass}`}>
+                {TrendIcon && <TrendIcon className="h-1.5 w-1.5 mr-0.5" />}
                 <span>{trendValue}</span>
               </div>
             )}
           </div>
-          <div className={`${iconColor} rounded-full p-1.5 bg-opacity-15`}>
-            <Icon className={`h-4 w-4 ${iconColor}`} />
+          <div className={`${iconColor} rounded-full p-0.5 bg-opacity-15`}>
+            <Icon className={`h-2 w-2 ${iconColor}`} />
           </div>
         </div>
       </CardContent>
@@ -135,11 +135,11 @@ export function MetricsCards() {
   
   return (
     <div>
-      <h2 className="text-sm font-semibold mb-2 flex items-center">
-        <Building className="h-4 w-4 mr-1 text-red-600" />
+      <h2 className="text-[8px] font-semibold mb-0.5 flex items-center">
+        <Building className="h-2 w-2 mr-0.5 text-red-600" />
         Company Overview (All Teams)
       </h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-0.5">
         {metrics.map((metric, index) => (
           <MetricCard 
             key={index}

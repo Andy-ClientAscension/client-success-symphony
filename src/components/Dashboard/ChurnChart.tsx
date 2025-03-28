@@ -17,38 +17,39 @@ export function ChurnChart() {
   
   return (
     <Card className="h-full">
-      <CardHeader className="p-0.5">
+      <CardHeader className="p-0">
         <div className="flex items-center">
-          <TrendingDown className="h-2 w-2 mr-0.5 text-red-500" />
-          <CardTitle className="text-xs">Churn Rate</CardTitle>
+          <TrendingDown className="h-1.5 w-1.5 mr-0.5 text-red-500" />
+          <CardTitle className="text-[0.6rem]">Churn Rate</CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="p-0.5 pt-0">
-        <div className="h-[100px]">
+      <CardContent className="p-0 pt-0">
+        <div className="h-[70px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={data}
               margin={{
-                top: 2,
-                right: 4,
+                top: 0,
+                right: 0,
                 left: 0,
-                bottom: 2,
+                bottom: 0,
               }}
             >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" tick={{ fontSize: 6 }} />
-              <YAxis tickFormatter={(value) => `${value}%`} tick={{ fontSize: 6 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#eee" strokeWidth={0.5} />
+              <XAxis dataKey="month" tick={{ fontSize: 5 }} tickSize={2} axisLine={{ strokeWidth: 0.5 }} />
+              <YAxis tickFormatter={(value) => `${value}%`} tick={{ fontSize: 5 }} tickSize={2} axisLine={{ strokeWidth: 0.5 }} />
               <Tooltip 
                 formatter={(value) => [`${value}%`, 'Churn Rate']} 
                 labelFormatter={(label) => `Month: ${label}`}
-                contentStyle={{ fontSize: "6px" }}
+                contentStyle={{ fontSize: "5px" }}
               />
               <Line
                 type="monotone"
                 dataKey="rate"
                 stroke="#f87171"
-                strokeWidth={1}
-                activeDot={{ r: 3 }}
+                strokeWidth={0.8}
+                activeDot={{ r: 2 }}
+                dot={{ r: 1 }}
               />
             </LineChart>
           </ResponsiveContainer>

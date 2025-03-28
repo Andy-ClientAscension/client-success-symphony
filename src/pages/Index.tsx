@@ -14,28 +14,28 @@ export default function Index() {
 
   return (
     <Layout>
-      <div className="flex-1 space-y-0.5 p-0.5 pt-0.5 overflow-auto">
-        <div className="flex items-center justify-between mb-0.5">
-          <h2 className="text-sm font-bold tracking-tight pl-0.5">Dashboard</h2>
+      <div className="flex-1 space-y-0 p-0 overflow-auto">
+        <div className="flex items-center justify-between mb-0">
+          <h2 className="text-[8px] font-bold tracking-tight pl-0">Dashboard</h2>
         </div>
         
-        <div className="grid grid-cols-1 gap-0.5 md:grid-cols-12">
-          <div className="md:col-span-11">
+        <div className="grid grid-cols-12 gap-0">
+          <div className="col-span-11">
             <MetricsCards />
           </div>
-          <div className="md:col-span-1">
+          <div className="col-span-1">
             <ImportData />
           </div>
         </div>
         
-        <div className="grid grid-cols-1 gap-0.5 md:grid-cols-6">
-          <div className="md:col-span-2">
+        <div className="grid grid-cols-3 gap-0 mt-0">
+          <div className="col-span-1">
             <ChurnChart />
           </div>
-          <div className="md:col-span-2">
+          <div className="col-span-1">
             <NPSChart />
           </div>
-          <div className="md:col-span-2">
+          <div className="col-span-1">
             <PaymentAlerts />
           </div>
         </div>
@@ -46,10 +46,10 @@ export default function Index() {
 
         {isMobile && (
           <>
-            <div className="pt-0.5">
+            <div className="pt-0">
               <ClientList />
             </div>
-            <div className="pt-0.5">
+            <div className="pt-0">
               <KanbanBoard />
             </div>
           </>
