@@ -15,6 +15,9 @@ import AddClient from "./pages/AddClient";
 import Analytics from "./pages/Analytics";
 import Communications from "./pages/Communications";
 import Help from "./pages/Help";
+import Renewals from "./pages/Renewals";
+import Payments from "./pages/Payments";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 // Apply polyfills immediately for older browsers
@@ -65,6 +68,9 @@ const App = () => {
                 <Route path="/add-client" element={<AddClient />} />
                 <Route path="/analytics" element={<Analytics />} />
                 <Route path="/communications" element={<Communications />} />
+                <Route path="/renewals" element={<Renewals />} />
+                <Route path="/payments" element={<Payments />} />
+                <Route path="/settings" element={<Settings />} />
                 <Route path="/help" element={<Help />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
