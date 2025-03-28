@@ -9,6 +9,7 @@ import { ChurnChart } from "@/components/Dashboard/ChurnChart";
 import { NPSChart } from "@/components/Dashboard/NPSChart";
 import { CommunicationLog } from "@/components/Dashboard/CommunicationLog";
 import { ClientDetails } from "@/components/Dashboard/ClientDetails";
+import { KanbanBoard } from "@/components/Dashboard/KanbanBoard";
 import { getAllClients } from "@/lib/data";
 
 const Dashboard = () => {
@@ -43,6 +44,12 @@ const Dashboard = () => {
             </div>
             
             <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="kanban">Student Tracking</TabsTrigger>
+                <TabsTrigger value="client">Client Details</TabsTrigger>
+              </TabsList>
+              
               <TabsContent value="overview" className="space-y-6">
                 <MetricsCards />
                 
@@ -66,6 +73,10 @@ const Dashboard = () => {
                     }))} 
                   />
                 </div>
+              </TabsContent>
+              
+              <TabsContent value="kanban" className="space-y-6">
+                <KanbanBoard />
               </TabsContent>
               
               <TabsContent value="client" className="space-y-6">

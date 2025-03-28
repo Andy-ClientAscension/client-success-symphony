@@ -6,7 +6,8 @@ import { getNPSData } from "@/lib/data";
 export function NPSChart() {
   const data = getNPSData();
   
-  const COLORS = ['#ef4444', '#f59e0b', '#22c55e'];
+  // Updated colors to match the red from the logo for detractors
+  const COLORS = ['#FF0000', '#f59e0b', '#22c55e'];
   
   return (
     <Card>

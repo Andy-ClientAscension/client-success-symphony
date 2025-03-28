@@ -43,6 +43,19 @@
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 217 33% 18%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    
+    /* Updated brand colors to match the Client Ascension red */
+    --brand-50: 0 100% 98%;
+    --brand-100: 0 100% 95%;
+    --brand-200: 0 100% 89%;
+    --brand-300: 0 100% 80%;
+    --brand-400: 0 100% 70%;
+    --brand-500: 0 100% 60%;
+    --brand-600: 0 100% 50%; /* Client Ascension Red */
+    --brand-700: 0 100% 40%;
+    --brand-800: 0 100% 30%;
+    --brand-900: 0 100% 25%;
+    --brand-950: 0 100% 15%;
   }
 }
 
