@@ -36,54 +36,54 @@ export default function Index() {
 
   return (
     <Layout>
-      <div className="p-6 space-y-6">
+      <div className="p-3 space-y-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Performance Report</h1>
-          <div className="flex items-center gap-4">
-            <Button className="bg-red-600 hover:bg-red-700">
-              <PlusCircle className="mr-2 h-4 w-4" /> Add Chart
+          <h1 className="text-xl font-bold">Performance Report</h1>
+          <div className="flex items-center gap-2">
+            <Button className="bg-red-600 hover:bg-red-700 h-8 text-xs">
+              <PlusCircle className="mr-1 h-3 w-3" /> Add Chart
             </Button>
-            <div className="border rounded-md px-4 py-2 text-sm">
+            <div className="border rounded-md px-2 py-1 text-xs">
               Period: Last 30 Days ▼
             </div>
           </div>
         </div>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full justify-start border-b mb-6 bg-transparent p-0">
+          <TabsList className="w-full justify-start border-b mb-4 bg-transparent p-0">
             <TabsTrigger 
               value="overview" 
-              className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-6 py-2 bg-transparent"
+              className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-4 py-1 bg-transparent text-xs"
             >
               Overview
             </TabsTrigger>
             <TabsTrigger 
               value="clients" 
-              className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-6 py-2 bg-transparent"
+              className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-4 py-1 bg-transparent text-xs"
             >
               Clients
             </TabsTrigger>
             <TabsTrigger 
               value="agents" 
-              className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-6 py-2 bg-transparent"
+              className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-4 py-1 bg-transparent text-xs"
             >
               Agents
             </TabsTrigger>
             <TabsTrigger 
               value="deals" 
-              className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-6 py-2 bg-transparent"
+              className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-4 py-1 bg-transparent text-xs"
             >
               Deals
             </TabsTrigger>
             <TabsTrigger 
               value="commissions" 
-              className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-6 py-2 bg-transparent"
+              className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-4 py-1 bg-transparent text-xs"
             >
               Commissions
             </TabsTrigger>
             <TabsTrigger 
               value="tags" 
-              className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-6 py-2 bg-transparent"
+              className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-4 py-1 bg-transparent text-xs"
             >
               Tags
             </TabsTrigger>
@@ -93,7 +93,7 @@ export default function Index() {
             <div>
               <MetricsCards />
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-3">
                 <div className="col-span-1">
                   <ChurnChart />
                 </div>
@@ -102,31 +102,18 @@ export default function Index() {
                 </div>
               </div>
               
-              <div className="mt-6">
+              <div className="mt-3">
                 <ClientList />
               </div>
               
-              {!isMobile && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                  <div className="col-span-1">
-                    <KanbanBoard />
-                  </div>
-                  <div className="col-span-1">
-                    <PaymentAlerts />
-                  </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-3">
+                <div className="col-span-1">
+                  <KanbanBoard />
                 </div>
-              )}
-              
-              {isMobile && (
-                <>
-                  <div className="mt-6">
-                    <KanbanBoard />
-                  </div>
-                  <div className="mt-6">
-                    <PaymentAlerts />
-                  </div>
-                </>
-              )}
+                <div className="col-span-1">
+                  <PaymentAlerts />
+                </div>
+              </div>
             </div>
           </TabsContent>
           

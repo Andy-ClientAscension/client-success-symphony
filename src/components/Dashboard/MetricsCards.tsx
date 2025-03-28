@@ -51,7 +51,7 @@ export function MetricsCards() {
   
   return (
     <div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3">
         {metrics.map((metric, index) => (
           <MetricCard 
             key={index}
@@ -98,15 +98,15 @@ const MetricCard = ({
   
   return (
     <Card className="border shadow-sm">
-      <CardContent className="p-6">
+      <CardContent className="p-3">
         <div className="flex flex-col">
-          <p className="text-sm text-gray-600">{title}</p>
-          <div className="flex items-center justify-between mt-2">
-            <h3 className="text-2xl font-bold">{value}</h3>
+          <p className="text-xs text-gray-600">{title}</p>
+          <div className="flex items-center justify-between mt-1">
+            <h3 className="text-lg font-bold">{value}</h3>
             {secondaryText && (
               <div className={`flex items-center ${trendColor}`}>
-                {TrendIcon && <TrendIcon className="h-4 w-4 mr-1" />}
-                <span className="text-sm font-medium">{secondaryText}</span>
+                {TrendIcon && <TrendIcon className="h-3 w-3 mr-1" />}
+                <span className="text-xs font-medium">{secondaryText}</span>
               </div>
             )}
           </div>
