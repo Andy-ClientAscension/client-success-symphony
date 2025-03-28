@@ -6,7 +6,6 @@ import { ChurnChart } from "@/components/Dashboard/ChurnChart";
 import { NPSChart } from "@/components/Dashboard/NPSChart";
 import { KanbanBoard } from "@/components/Dashboard/KanbanBoard";
 import { PaymentAlerts } from "@/components/Dashboard/PaymentAlerts";
-import { ImportData } from "@/components/Dashboard/ImportData";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Index() {
@@ -20,11 +19,8 @@ export default function Index() {
         </div>
         
         <div className="grid grid-cols-12 gap-0">
-          <div className="col-span-11">
+          <div className="col-span-12">
             <MetricsCards />
-          </div>
-          <div className="col-span-1">
-            <ImportData />
           </div>
         </div>
         

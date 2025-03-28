@@ -1,8 +1,9 @@
 
-import { Bell, Search, HelpCircle } from "lucide-react";
+import { Bell, Search, HelpCircle, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { ImportDataButton } from "@/components/Dashboard/ImportDataButton";
 
 export function Header() {
   return (
@@ -37,6 +38,7 @@ export function Header() {
           <Bell className="h-5 w-5" />
           <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-600 rounded-full" />
         </Button>
+        <ImportDataButton />
         <Button size="sm" className="hidden sm:inline-flex ml-2 bg-red-600 hover:bg-red-700">
           Connect API
         </Button>
