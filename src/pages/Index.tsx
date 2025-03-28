@@ -7,17 +7,20 @@ import { NPSChart } from "@/components/Dashboard/NPSChart";
 import { KanbanBoard } from "@/components/Dashboard/KanbanBoard";
 import { PaymentAlerts } from "@/components/Dashboard/PaymentAlerts";
 import { ImportData } from "@/components/Dashboard/ImportData";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Index() {
+  const isMobile = useIsMobile();
+
   return (
     <Layout>
-      <div className="flex-1 space-y-4 p-8 pt-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+      <div className="flex-1 space-y-3 p-4 pt-3 overflow-auto">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
         </div>
         
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
+          <div className="lg:col-span-3">
             <MetricsCards />
           </div>
           <div>
@@ -25,15 +28,26 @@ export default function Index() {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
           <ChurnChart />
           <NPSChart />
           <PaymentAlerts />
         </div>
         
-        <ClientList />
+        {!isMobile && <ClientList />}
         
-        <KanbanBoard />
+        {!isMobile && <KanbanBoard />}
+
+        {isMobile && (
+          <>
+            <div className="pt-2">
+              <ClientList />
+            </div>
+            <div className="pt-2">
+              <KanbanBoard />
+            </div>
+          </>
+        )}
       </div>
     </Layout>
   );
