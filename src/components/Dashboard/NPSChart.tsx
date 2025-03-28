@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { 
   PieChart, 
@@ -38,10 +37,6 @@ export function NPSChart() {
         if (data) {
           setDistributionData(data.distributionData);
           setTrendData(data.trendData);
-          toast({
-            title: "NPS Data Loaded",
-            description: "Successfully loaded NPS data from Google Sheets",
-          });
         } else {
           // If the API fails, we'll use the mock data
           setDistributionData(getNPSData());

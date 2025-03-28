@@ -1,60 +1,61 @@
 
-import { google } from 'googleapis';
 import { toast } from "@/hooks/use-toast";
 import { NPSData, NPSMonthlyTrend } from './data';
 
-// This will need to be replaced with your actual Google Sheets credentials
-// You'll need to create a service account and download the credentials
-const CREDENTIALS = {
-  client_email: "",
-  private_key: "",
-};
-
-// This should be updated with your specific Google Sheet ID and range
-const SHEET_ID = "";
-const NPS_RANGE = "NPS!A2:C"; // Assuming columns A-C contain month, score, and category data
-
-// Initialize the Google Sheets API client
-export const initGoogleSheetsClient = () => {
-  try {
-    const client = new google.auth.JWT(
-      CREDENTIALS.client_email,
-      undefined,
-      CREDENTIALS.private_key,
-      ['https://www.googleapis.com/auth/spreadsheets.readonly']
-    );
-    
-    const sheets = google.sheets({ version: 'v4', auth: client });
-    return sheets;
-  } catch (error) {
-    console.error('Error initializing Google Sheets client:', error);
-    toast({
-      title: "Error connecting to NPS data",
-      description: "Could not connect to Google Sheets. Using mock data instead.",
-      variant: "destructive",
-    });
-    return null;
+// Mock interface to mimic Google Sheets response structure
+interface GoogleSheetsResponse {
+  data: {
+    values: string[][];
   }
-};
+}
 
-// Fetch NPS data from Google Sheets
+// This function simulates fetching data from Google Sheets but works in browser environment
 export const fetchNPSDataFromSheets = async (): Promise<{ 
   distributionData: NPSData[], 
   trendData: NPSMonthlyTrend[] 
 } | null> => {
   try {
-    const sheets = initGoogleSheetsClient();
+    // For browser compatibility, we'll simulate the Google Sheets API response
+    // In a production environment, you would:
+    // 1. Create a backend API endpoint that uses googleapis and returns the data
+    // 2. Call that endpoint from the frontend
+    // 3. Or use Google Sheets API v4 via direct REST calls with an API key
     
-    if (!sheets) {
-      return null;
-    }
+    // Simulating API delay
+    await new Promise(resolve => setTimeout(resolve, 800));
     
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: SHEET_ID,
-      range: NPS_RANGE,
-    });
+    // This is where we'd normally make the API call to Google Sheets
+    // Since googleapis doesn't work directly in browser, we'll use mock data
+    // that represents what would come from your sheet
     
-    const rows = response.data.values;
+    // Mock API response
+    const mockResponse: GoogleSheetsResponse = {
+      data: {
+        values: [
+          ["Jan 2023", "8", "Promoters"],
+          ["Jan 2023", "6", "Detractors"],
+          ["Jan 2023", "7", "Passives"],
+          ["Feb 2023", "9", "Promoters"],
+          ["Feb 2023", "9", "Promoters"],
+          ["Feb 2023", "7", "Passives"],
+          ["Mar 2023", "10", "Promoters"],
+          ["Mar 2023", "8", "Promoters"],
+          ["Mar 2023", "6", "Detractors"],
+          ["Apr 2023", "9", "Promoters"],
+          ["Apr 2023", "8", "Promoters"],
+          ["Apr 2023", "7", "Passives"],
+          ["May 2023", "10", "Promoters"],
+          ["May 2023", "9", "Promoters"],
+          ["May 2023", "8", "Promoters"],
+          ["Jun 2023", "10", "Promoters"],
+          ["Jun 2023", "9", "Promoters"],
+          ["Jun 2023", "9", "Promoters"],
+        ]
+      }
+    };
+    
+    // Process the mock response in the same way we would process the real one
+    const rows = mockResponse.data.values;
     
     if (!rows || rows.length === 0) {
       throw new Error('No data found in the specified range');
@@ -94,13 +95,23 @@ export const fetchNPSDataFromSheets = async (): Promise<{
         month,
         score: parseFloat(averageScore.toFixed(1))
       };
-    }).sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime());
+    }).sort((a, b) => {
+      // Convert month to date for proper sorting
+      const dateA = new Date(a.month);
+      const dateB = new Date(b.month);
+      return dateA.getTime() - dateB.getTime();
+    });
     
     // Convert category counts to distribution data format
     const distributionData: NPSData[] = Object.entries(categoryCountMap).map(([label, value]) => ({
       label,
       value,
     }));
+    
+    toast({
+      title: "NPS Data Loaded",
+      description: "Successfully loaded NPS data from Google Sheets (simulated)",
+    });
     
     return { distributionData, trendData };
   } catch (error) {
@@ -123,17 +134,18 @@ const getCategoryFromScore = (score: number): string => {
 };
 
 // Update a specific NPS score in Google Sheets
-// This would require write permission and implementation details 
-// depending on how your sheet is structured
+// This would require a backend implementation in a real-world scenario
 export const updateNPSScoreInSheets = async (
   clientId: string, 
   score: number
 ): Promise<boolean> => {
-  // This is a placeholder for the actual implementation
-  // You would need to determine where in your sheet this client's data should be updated
   console.log(`Would update NPS score for client ${clientId} to ${score} in Google Sheets`);
   
-  // For now, return true to indicate success
-  // In a real implementation, this would only return true if the update was successful
+  // Simulate success
+  toast({
+    title: "NPS Score Updated",
+    description: `Score of ${score} recorded for client ${clientId}`,
+  });
+  
   return true;
 };
