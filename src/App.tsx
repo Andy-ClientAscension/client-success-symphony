@@ -11,17 +11,6 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useEffect } from "react";
 import { applyPolyfills } from "@/utils/browserCompatibility";
-import Index from "./pages/Index";
-import AddClient from "./pages/AddClient";
-import Analytics from "./pages/Analytics";
-import Communications from "./pages/Communications";
-import Help from "./pages/Help";
-import Renewals from "./pages/Renewals";
-import Payments from "./pages/Payments";
-import Settings from "./pages/Settings";
-import NotFound from "./pages/NotFound";
-import Login from "./pages/Login";
-import SignUp from "./pages/SignUp";
 
 // Apply polyfills immediately for older browsers
 if (typeof window !== 'undefined') {

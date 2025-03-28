@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   BarChart,
@@ -36,7 +35,7 @@ export function NPSChart() {
   ];
   
   return (
-    <Card className="h-full w-full shadow-sm">
+    <Card className="w-full shadow-sm">
       <CardHeader className="p-2 flex flex-row items-center justify-between">
         <div>
           <CardTitle className="text-xs font-semibold">NPS Tracking</CardTitle>
@@ -50,7 +49,7 @@ export function NPSChart() {
           </TabsList>
           
           <TabsContent value="distribution" className="mt-0">
-            <div className="h-[120px]">
+            <div className="h-[90px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -88,7 +87,7 @@ export function NPSChart() {
           </TabsContent>
           
           <TabsContent value="monthly" className="mt-0">
-            <div className="h-[120px]">
+            <div className="h-[90px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={barData.slice(0, 3)} // Show fewer bars to fit in smaller space

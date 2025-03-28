@@ -43,7 +43,7 @@ export function ChurnChart() {
   const churnDifference = Math.abs(currentChurn - previousChurn).toFixed(1);
   
   return (
-    <Card className="h-full w-full shadow-sm">
+    <Card className="w-full shadow-sm">
       <CardHeader className="p-1 px-2 flex flex-row items-center justify-between">
         <div>
           <CardTitle className="text-xs font-semibold">Company Churn Rate</CardTitle>
@@ -61,7 +61,7 @@ export function ChurnChart() {
         </div>
       </CardHeader>
       <CardContent className="p-1 pt-0">
-        <div className="h-[100px]">
+        <div className="h-[90px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={data}

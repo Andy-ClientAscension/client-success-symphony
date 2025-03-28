@@ -11,6 +11,7 @@ import { ValidationError } from "@/components/ValidationError";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { LoadingState } from "@/components/LoadingState";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -169,115 +170,117 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 overflow-auto">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <div className="flex justify-center mb-4">
-            <div className="rounded-full bg-black p-3 flex items-center justify-center">
-              <BarChart2 className="h-10 w-10 text-red-600" />
+      <ScrollArea className="w-full max-w-md">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1">
+            <div className="flex justify-center mb-4">
+              <div className="rounded-full bg-black p-3 flex items-center justify-center">
+                <BarChart2 className="h-10 w-10 text-red-600" />
+              </div>
             </div>
-          </div>
-          <CardTitle className="text-2xl font-bold text-center">SSC Dashboard</CardTitle>
-          <CardDescription className="text-center">
-            Enter your credentials to access the dashboard
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {showAlert && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Multiple login failures detected. If you've forgotten your password, please contact the administrator.
-              </AlertDescription>
-            </Alert>
-          )}
-          {isLoading ? (
-            <div className="py-8">
-              <LoadingState 
-                message="Authenticating..." 
-                size="md" 
-                color="primary" 
-                showProgress={true}
-              />
+            <CardTitle className="text-2xl font-bold text-center">SSC Dashboard</CardTitle>
+            <CardDescription className="text-center">
+              Enter your credentials to access the dashboard
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {showAlert && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Multiple login failures detected. If you've forgotten your password, please contact the administrator.
+                </AlertDescription>
+              </Alert>
+            )}
+            {isLoading ? (
+              <div className="py-8">
+                <LoadingState 
+                  message="Authenticating..." 
+                  size="md" 
+                  color="primary" 
+                  showProgress={true}
+                />
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="name@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className={`pl-10 ${emailError ? "border-destructive" : ""}`}
+                      required
+                    />
+                  </div>
+                  {emailError && <ValidationError message={emailError} />}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className={`pl-10 ${passwordError ? "border-destructive" : ""}`}
+                      required
+                    />
+                  </div>
+                  {passwordError && <ValidationError message={passwordError} />}
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="remember-me" 
+                      checked={rememberMe} 
+                      onCheckedChange={(checked) => setRememberMe(checked as boolean)} 
+                    />
+                    <Label htmlFor="remember-me" className="text-sm font-medium leading-none cursor-pointer">
+                      Remember me for 30 days
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="remember-session" 
+                      checked={rememberSession} 
+                      onCheckedChange={(checked) => setRememberSession(checked as boolean)} 
+                    />
+                    <Label htmlFor="remember-session" className="text-sm font-medium leading-none cursor-pointer flex items-center">
+                      <Save className="h-3 w-3 mr-1 text-red-600" />
+                      Save dashboard data between sessions
+                    </Label>
+                  </div>
+                </div>
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={isLoading || !!passwordError || !!emailError}
+                >
+                  {isLoading ? "Logging in..." : "Log in"}
+                </Button>
+              </form>
+            )}
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4">
+            <div className="text-sm text-center">
+              Don't have an account?{" "}
+              <Link to="/signup" className="text-primary hover:underline">
+                Sign up with invitation code
+              </Link>
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="name@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className={`pl-10 ${emailError ? "border-destructive" : ""}`}
-                    required
-                  />
-                </div>
-                {emailError && <ValidationError message={emailError} />}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className={`pl-10 ${passwordError ? "border-destructive" : ""}`}
-                    required
-                  />
-                </div>
-                {passwordError && <ValidationError message={passwordError} />}
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="remember-me" 
-                    checked={rememberMe} 
-                    onCheckedChange={(checked) => setRememberMe(checked as boolean)} 
-                  />
-                  <Label htmlFor="remember-me" className="text-sm font-medium leading-none cursor-pointer">
-                    Remember me for 30 days
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="remember-session" 
-                    checked={rememberSession} 
-                    onCheckedChange={(checked) => setRememberSession(checked as boolean)} 
-                  />
-                  <Label htmlFor="remember-session" className="text-sm font-medium leading-none cursor-pointer flex items-center">
-                    <Save className="h-3 w-3 mr-1 text-red-600" />
-                    Save dashboard data between sessions
-                  </Label>
-                </div>
-              </div>
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isLoading || !!passwordError || !!emailError}
-              >
-                {isLoading ? "Logging in..." : "Log in"}
-              </Button>
-            </form>
-          )}
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
-          <div className="text-sm text-center">
-            Don't have an account?{" "}
-            <Link to="/signup" className="text-primary hover:underline">
-              Sign up with invitation code
-            </Link>
-          </div>
-          <p className="text-xs text-center text-muted-foreground">
-            <span className="font-medium">Note:</span> This is an invite-only application
-          </p>
-        </CardFooter>
-      </Card>
+            <p className="text-xs text-center text-muted-foreground">
+              <span className="font-medium">Note:</span> This is an invite-only application
+            </p>
+          </CardFooter>
+        </Card>
+      </ScrollArea>
     </div>
   );
 }

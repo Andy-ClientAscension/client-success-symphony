@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/Layout/Layout";
 import { MetricsCards } from "@/components/Dashboard/MetricsCards";
 import { ClientList } from "@/components/Dashboard/ClientList";
@@ -16,6 +17,7 @@ import {
 } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Import } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function Index() {
   const isMobile = useIsMobile();
@@ -35,7 +37,7 @@ export default function Index() {
 
   return (
     <Layout>
-      <div className="p-2 space-y-2 max-w-full">
+      <div className="space-y-2 max-w-full">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="text-lg font-bold">Performance Report</div>
           <div className="flex items-center gap-2">
@@ -50,7 +52,7 @@ export default function Index() {
         </div>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="w-full overflow-x-auto pb-1">
+          <ScrollArea className="w-full pb-1" orientation="horizontal">
             <TabsList className="w-full md:w-auto justify-start border-b mb-2 bg-transparent p-0 flex-nowrap">
               <TabsTrigger 
                 value="overview" 
@@ -89,7 +91,7 @@ export default function Index() {
                 Tags
               </TabsTrigger>
             </TabsList>
-          </div>
+          </ScrollArea>
           
           <TabsContent value="overview" className="m-0">
             <div className="space-y-2">
