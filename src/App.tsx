@@ -8,6 +8,8 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { OfflineDetector } from "@/components/OfflineDetector";
 import { BrowserCompatibilityCheck } from "@/components/BrowserCompatibilityCheck";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useEffect } from "react";
 import { applyPolyfills } from "@/utils/browserCompatibility";
 import Index from "./pages/Index";
@@ -19,6 +21,7 @@ import Renewals from "./pages/Renewals";
 import Payments from "./pages/Payments";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
 
 // Apply polyfills immediately for older browsers
 if (typeof window !== 'undefined') {
@@ -63,18 +66,27 @@ const App = () => {
             <OfflineDetector />
             <BrowserCompatibilityCheck />
             <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/add-client" element={<AddClient />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/communications" element={<Communications />} />
-                <Route path="/renewals" element={<Renewals />} />
-                <Route path="/payments" element={<Payments />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/help" element={<Help />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <AuthProvider>
+                <Routes>
+                  {/* Public route */}
+                  <Route path="/login" element={<Login />} />
+                
+                  {/* Protected routes */}
+                  <Route element={<ProtectedRoute />}>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/add-client" element={<AddClient />} />
+                    <Route path="/analytics" element={<Analytics />} />
+                    <Route path="/communications" element={<Communications />} />
+                    <Route path="/renewals" element={<Renewals />} />
+                    <Route path="/payments" element={<Payments />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/help" element={<Help />} />
+                  </Route>
+                
+                  {/* Catch-all route */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </AuthProvider>
             </BrowserRouter>
           </ErrorBoundary>
         </TooltipProvider>

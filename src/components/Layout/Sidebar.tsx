@@ -11,16 +11,19 @@ import {
   Settings, 
   HelpCircle, 
   Menu, 
-  X
+  X,
+  LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function Sidebar() {
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(!isMobile);
   const location = useLocation();
+  const { logout, user } = useAuth();
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
@@ -36,6 +39,10 @@ export function Sidebar() {
     { icon: Settings, label: "Settings", href: "/settings" },
     { icon: HelpCircle, label: "Help", href: "/help" }
   ];
+
+  const handleLogout = () => {
+    logout();
+  };
 
   return (
     <>
@@ -100,12 +107,22 @@ export function Sidebar() {
         <div className="p-4 border-t border-zinc-800">
           <div className="flex items-center gap-3 px-2 sm:px-4 py-2">
             <div className="rounded-full bg-zinc-800 h-9 w-9 flex items-center justify-center">
-              <span className="text-white font-medium">JD</span>
+              <span className="text-white font-medium">
+                {user?.email ? user.email.charAt(0).toUpperCase() : "U"}
+              </span>
             </div>
-            <div>
-              <div className="text-sm font-medium">John Doe</div>
+            <div className="flex-1 overflow-hidden">
+              <div className="text-sm font-medium truncate">{user?.email || "User"}</div>
               <div className="text-xs text-white/70">Administrator</div>
             </div>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-white hover:bg-red-600/20"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-5 w-5" />
+            </Button>
           </div>
         </div>
       </div>
