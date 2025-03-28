@@ -44,24 +44,24 @@ export function ChurnChart() {
   
   return (
     <Card className="h-full w-full shadow-sm">
-      <CardHeader className="p-3 flex flex-row items-center justify-between">
+      <CardHeader className="p-2 flex flex-row items-center justify-between">
         <div>
-          <CardTitle className="text-sm font-semibold">Company Churn Rate</CardTitle>
+          <CardTitle className="text-xs font-semibold">Company Churn Rate</CardTitle>
           <div className="flex items-center space-x-2">
-            <p className="text-xl font-bold">{currentChurn}%</p>
+            <p className="text-lg font-bold">{currentChurn}%</p>
             <div className={`flex items-center ${isChurnDecreasing ? 'text-green-600' : 'text-red-600'}`}>
               {isChurnDecreasing ? (
-                <TrendingDown className="h-3.5 w-3.5 mr-1" />
+                <TrendingDown className="h-3 w-3 mr-1" />
               ) : (
-                <TrendingUp className="h-3.5 w-3.5 mr-1" />
+                <TrendingUp className="h-3 w-3 mr-1" />
               )}
               <span className="text-xs">{isChurnDecreasing ? '-' : '+'}{churnDifference}% from last month</span>
             </div>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-3 pt-0">
-        <div className="h-[140px]">
+      <CardContent className="p-2 pt-0">
+        <div className="h-[120px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={data}
@@ -72,18 +72,18 @@ export function ChurnChart() {
                 dataKey="month" 
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 10 }}
+                tick={{ fontSize: 9 }}
               />
               <YAxis 
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 10 }}
+                tick={{ fontSize: 9 }}
                 tickFormatter={(value) => `${value}%`}
                 domain={['dataMin - 0.5', 'dataMax + 0.5']}
               />
               <Tooltip 
                 formatter={(value) => [`${value}%`, 'Churn Rate']}
-                contentStyle={{ fontSize: '10px', padding: '8px' }}
+                contentStyle={{ fontSize: '9px', padding: '6px' }}
                 labelStyle={{ fontWeight: 'bold' }}
               />
               <ReferenceLine y={2} stroke="#ccc" strokeDasharray="3 3" />
@@ -92,13 +92,13 @@ export function ChurnChart() {
                 dataKey="rate" 
                 stroke="#8884d8" 
                 strokeWidth={2}
-                dot={{ r: 2 }}
-                activeDot={{ r: 4 }}
+                dot={{ r: 1.5 }}
+                activeDot={{ r: 3 }}
               />
             </LineChart>
           </ResponsiveContainer>
         </div>
-        <div className="mt-1 text-[10px] text-muted-foreground">
+        <div className="mt-1 text-[9px] text-muted-foreground">
           <p>Industry average: <span className="font-medium">2.0%</span></p>
         </div>
       </CardContent>

@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout/Layout";
 import { MetricsCards } from "@/components/Dashboard/MetricsCards";
 import { ClientList } from "@/components/Dashboard/ClientList";
@@ -36,69 +35,71 @@ export default function Index() {
 
   return (
     <Layout>
-      <div className="p-2 space-y-2">
-        <div className="flex items-center justify-between">
+      <div className="p-2 space-y-2 max-w-full">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="text-lg font-bold">Performance Report</div>
           <div className="flex items-center gap-2">
-            <div className="flex flex-col">
+            <div className="hidden sm:flex flex-col">
               <div className="text-xs font-medium">Import Data</div>
               <div className="text-xs text-muted-foreground">Import client data</div>
             </div>
-            <Button className="bg-red-600 hover:bg-red-700 h-8">
+            <Button className="bg-red-600 hover:bg-red-700 h-7 text-xs">
               <Import className="mr-1 h-3 w-3" /> Import
             </Button>
           </div>
         </div>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full justify-start border-b mb-2 bg-transparent p-0">
-            <TabsTrigger 
-              value="overview" 
-              className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-4 py-1 bg-transparent text-xs"
-            >
-              Overview
-            </TabsTrigger>
-            <TabsTrigger 
-              value="clients" 
-              className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-4 py-1 bg-transparent text-xs"
-            >
-              Clients
-            </TabsTrigger>
-            <TabsTrigger 
-              value="agents" 
-              className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-4 py-1 bg-transparent text-xs"
-            >
-              Agents
-            </TabsTrigger>
-            <TabsTrigger 
-              value="deals" 
-              className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-4 py-1 bg-transparent text-xs"
-            >
-              Deals
-            </TabsTrigger>
-            <TabsTrigger 
-              value="commissions" 
-              className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-4 py-1 bg-transparent text-xs"
-            >
-              Commissions
-            </TabsTrigger>
-            <TabsTrigger 
-              value="tags" 
-              className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-4 py-1 bg-transparent text-xs"
-            >
-              Tags
-            </TabsTrigger>
-          </TabsList>
+          <div className="w-full overflow-x-auto pb-1">
+            <TabsList className="w-full md:w-auto justify-start border-b mb-2 bg-transparent p-0 flex-nowrap">
+              <TabsTrigger 
+                value="overview" 
+                className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-3 py-1 bg-transparent text-xs whitespace-nowrap"
+              >
+                Overview
+              </TabsTrigger>
+              <TabsTrigger 
+                value="clients" 
+                className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-3 py-1 bg-transparent text-xs whitespace-nowrap"
+              >
+                Clients
+              </TabsTrigger>
+              <TabsTrigger 
+                value="agents" 
+                className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-3 py-1 bg-transparent text-xs whitespace-nowrap"
+              >
+                Agents
+              </TabsTrigger>
+              <TabsTrigger 
+                value="deals" 
+                className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-3 py-1 bg-transparent text-xs whitespace-nowrap"
+              >
+                Deals
+              </TabsTrigger>
+              <TabsTrigger 
+                value="commissions" 
+                className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-3 py-1 bg-transparent text-xs whitespace-nowrap"
+              >
+                Commissions
+              </TabsTrigger>
+              <TabsTrigger 
+                value="tags" 
+                className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-3 py-1 bg-transparent text-xs whitespace-nowrap"
+              >
+                Tags
+              </TabsTrigger>
+            </TabsList>
+          </div>
           
           <TabsContent value="overview" className="m-0">
             <div className="space-y-2">
               <MetricsCards />
               
-              <div className="grid grid-cols-3 gap-2">
-                <div className="col-span-3 md:col-span-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div className="col-span-1 sm:col-span-2">
                   <ChurnChart />
                 </div>
-                <div className="col-span-3 md:col-span-1">
+                <div className="col-span-1">
                   <NPSChart />
                 </div>
               </div>
