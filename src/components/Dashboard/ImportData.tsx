@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -11,18 +11,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Upload, FileUp, AlertCircle } from "lucide-react";
 
 type ImportFormat = "csv" | "json" | "xlsx";
-
-interface ImportedClient {
-  name: string;
-  status: string;
-  progress: number;
-  endDate: string;
-  csm?: string;
-  callsBooked?: number;
-  dealsClosed?: number;
-  mrr?: number;
-  npsScore?: number | null;
-}
 
 export function ImportData() {
   const [open, setOpen] = useState(false);
@@ -100,123 +88,128 @@ export function ImportData() {
   };
 
   return (
-    <Card className="mb-4">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>Import Data</CardTitle>
-          <CardDescription>Import client data from external sources</CardDescription>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="w-full">
-              <Upload className="mr-2 h-4 w-4" /> Import Clients
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Import Client Data</DialogTitle>
-              <DialogDescription>
-                Upload a file to import client data into your dashboard.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="format">Format</Label>
-                <div className="flex space-x-2">
-                  <Button 
-                    type="button" 
-                    variant={format === "csv" ? "default" : "outline"}
-                    onClick={() => setFormat("csv")}
-                    className={format === "csv" ? "bg-red-600 hover:bg-red-700" : ""}
-                  >
-                    CSV
-                  </Button>
-                  <Button 
-                    type="button" 
-                    variant={format === "json" ? "default" : "outline"}
-                    onClick={() => setFormat("json")}
-                    className={format === "json" ? "bg-red-600 hover:bg-red-700" : ""}
-                  >
-                    JSON
-                  </Button>
-                  <Button 
-                    type="button" 
-                    variant={format === "xlsx" ? "default" : "outline"}
-                    onClick={() => setFormat("xlsx")}
-                    className={format === "xlsx" ? "bg-red-600 hover:bg-red-700" : ""}
-                  >
-                    Excel
-                  </Button>
+    <Card className="border border-red-100 h-full">
+      <CardHeader className="py-3 px-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-medium">Import Data</h3>
+            <p className="text-xs text-muted-foreground">Import client data</p>
+          </div>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="px-3 py-1 h-8 bg-red-600 hover:bg-red-700">
+                <Upload className="h-3.5 w-3.5 mr-1" /> Import
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Import Client Data</DialogTitle>
+                <DialogDescription>
+                  Upload a file to import client data into your dashboard.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="format">Format</Label>
+                  <div className="flex space-x-2">
+                    <Button 
+                      type="button" 
+                      variant={format === "csv" ? "default" : "outline"}
+                      onClick={() => setFormat("csv")}
+                      className={format === "csv" ? "bg-red-600 hover:bg-red-700" : ""}
+                      size="sm"
+                    >
+                      CSV
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant={format === "json" ? "default" : "outline"}
+                      onClick={() => setFormat("json")}
+                      className={format === "json" ? "bg-red-600 hover:bg-red-700" : ""}
+                      size="sm"
+                    >
+                      JSON
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant={format === "xlsx" ? "default" : "outline"}
+                      onClick={() => setFormat("xlsx")}
+                      className={format === "xlsx" ? "bg-red-600 hover:bg-red-700" : ""}
+                      size="sm"
+                    >
+                      Excel
+                    </Button>
+                  </div>
                 </div>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="file">File</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="file"
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    accept={format === "csv" 
-                      ? ".csv" 
-                      : format === "json" 
-                        ? ".json" 
-                        : ".xlsx,.xls"}
-                    className={fileSelected ? "file:text-green-600" : ""}
-                  />
+                <div className="grid gap-2">
+                  <Label htmlFor="file">File</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="file"
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      accept={format === "csv" 
+                        ? ".csv" 
+                        : format === "json" 
+                          ? ".json" 
+                          : ".xlsx,.xls"}
+                      className={fileSelected ? "file:text-green-600" : ""}
+                    />
+                  </div>
+                  {fileName && (
+                    <p className="text-sm text-muted-foreground flex items-center mt-1">
+                      <FileUp className="h-3 w-3 mr-1" /> {fileName}
+                    </p>
+                  )}
+                  {error && (
+                    <ValidationError message={error} type="error" />
+                  )}
                 </div>
-                {fileName && (
-                  <p className="text-sm text-muted-foreground flex items-center mt-1">
-                    <FileUp className="h-3 w-3 mr-1" /> {fileName}
-                  </p>
-                )}
-                {error && (
-                  <ValidationError message={error} type="error" />
-                )}
-              </div>
-              <div className="bg-muted p-3 rounded-md">
-                <div className="flex items-start">
-                  <AlertCircle className="h-5 w-5 text-muted-foreground mr-2 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium">File Format Requirements</p>
-                    <ul className="text-xs text-muted-foreground list-disc pl-5 mt-1 space-y-1">
-                      <li>Include headers: name, status, progress, endDate</li>
-                      <li>Optional fields: csm, callsBooked, dealsClosed, mrr, npsScore</li>
-                      <li>Dates should be in YYYY-MM-DD format</li>
-                      <li>Status values: active, at-risk, churned, new</li>
-                    </ul>
+                <div className="bg-muted p-3 rounded-md">
+                  <div className="flex items-start">
+                    <AlertCircle className="h-5 w-5 text-muted-foreground mr-2 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium">File Format Requirements</p>
+                      <ul className="text-xs text-muted-foreground list-disc pl-5 mt-1 space-y-1">
+                        <li>Include headers: name, status, progress, endDate</li>
+                        <li>Optional fields: csm, callsBooked, dealsClosed, mrr, npsScore</li>
+                        <li>Dates should be in YYYY-MM-DD format</li>
+                        <li>Status values: active, at-risk, churned, new</li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <DialogFooter className="sm:justify-between">
-              {isLoading ? (
-                <LoadingState message="Importing..." size="sm" />
-              ) : (
-                <>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="button" 
-                    onClick={handleImport}
-                    disabled={!fileSelected}
-                    className="bg-red-600 hover:bg-red-700"
-                  >
-                    Import
-                  </Button>
-                </>
-              )}
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </CardContent>
+              <DialogFooter className="sm:justify-between">
+                {isLoading ? (
+                  <LoadingState message="Importing..." size="sm" />
+                ) : (
+                  <>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setOpen(false)}
+                      size="sm"
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="button" 
+                      onClick={handleImport}
+                      disabled={!fileSelected}
+                      className="bg-red-600 hover:bg-red-700"
+                      size="sm"
+                    >
+                      Import
+                    </Button>
+                  </>
+                )}
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </CardHeader>
     </Card>
   );
 }
