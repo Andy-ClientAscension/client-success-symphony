@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { BarChart2, Lock, Mail, AlertCircle } from "lucide-react";
 import { ValidationError } from "@/components/ValidationError";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -19,9 +20,21 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [showAlert, setShowAlert] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Check for saved credentials on component mount
+  useEffect(() => {
+    const savedCredentials = localStorage.getItem("savedCredentials");
+    if (savedCredentials) {
+      const credentials = JSON.parse(savedCredentials);
+      setEmail(credentials.email);
+      setPassword(credentials.password);
+      setRememberMe(true);
+    }
+  }, []);
 
   // Validate password when it changes
   useEffect(() => {
@@ -95,6 +108,24 @@ export default function Login() {
       const success = await login(email, password);
       
       if (success) {
+        // If remember me is checked, save credentials for 30 days
+        if (rememberMe) {
+          const credentials = { email, password };
+          const expiryDate = new Date();
+          expiryDate.setDate(expiryDate.getDate() + 30); // 30 days from now
+          
+          // Store credentials with expiration
+          const dataToStore = {
+            ...credentials,
+            expiry: expiryDate.getTime(),
+          };
+          
+          localStorage.setItem("savedCredentials", JSON.stringify(dataToStore));
+        } else {
+          // If not checked, remove any previously saved credentials
+          localStorage.removeItem("savedCredentials");
+        }
+        
         toast({
           title: "Success",
           description: "You have successfully logged in",
@@ -184,6 +215,16 @@ export default function Login() {
                 />
               </div>
               {passwordError && <ValidationError message={passwordError} />}
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="remember-me" 
+                checked={rememberMe} 
+                onCheckedChange={(checked) => setRememberMe(checked as boolean)} 
+              />
+              <Label htmlFor="remember-me" className="text-sm font-medium leading-none cursor-pointer">
+                Remember me for 30 days
+              </Label>
             </div>
             <Button 
               type="submit" 

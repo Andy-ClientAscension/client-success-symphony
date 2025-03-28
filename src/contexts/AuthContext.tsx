@@ -29,9 +29,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Check if user is already logged in
     const savedUser = localStorage.getItem("user");
-    if (savedUser) {
+    
+    // Check for saved credentials with remember me
+    const savedCredentials = localStorage.getItem("savedCredentials");
+    
+    if (savedCredentials) {
+      const credentials = JSON.parse(savedCredentials);
+      
+      // Check if credentials have expired
+      if (credentials.expiry && new Date().getTime() > credentials.expiry) {
+        // Expired, remove the saved credentials
+        localStorage.removeItem("savedCredentials");
+      } else if (!savedUser) {
+        // Auto-login if credentials are valid and not expired
+        login(credentials.email, credentials.password)
+          .then(success => {
+            if (!success) {
+              localStorage.removeItem("savedCredentials");
+            }
+          })
+          .catch(() => {
+            localStorage.removeItem("savedCredentials");
+          });
+      }
+    } else if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
+    
     setIsLoading(false);
   }, []);
 
@@ -100,6 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
+    // Don't remove savedCredentials on logout if using remember me
     navigate("/login");
   };
 
