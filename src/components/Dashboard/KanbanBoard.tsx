@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { KanbanSquare, Plus, MoreVertical, Calendar } from "lucide-react";
+import { KanbanSquare, Plus, MoreVertical, Calendar, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,11 +12,19 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { StudentDateModal } from "./StudentDateModal";
 
-// Enhanced student type with dates
+// Enhanced student type with dates and CSM
 interface Student {
   id: string;
   name: string;
@@ -25,9 +33,19 @@ interface Student {
   endDate?: string;
   contractDuration?: "6months" | "1year";
   churnDate?: string;
+  csm?: string; // Added CSM field
 }
 
-// Mock data for student tracking
+// CSM Team data
+const CSM_TEAMS = [
+  { id: "all", name: "All Teams" },
+  { id: "team1", name: "Team Alpha" },
+  { id: "team2", name: "Team Beta" },
+  { id: "team3", name: "Team Gamma" },
+  { id: "team4", name: "Team Delta" },
+];
+
+// Mock data for student tracking, adding CSM information
 const INITIAL_DATA = {
   columns: {
     'active': {
@@ -63,7 +81,8 @@ const INITIAL_DATA = {
       progress: 75, 
       startDate: format(new Date(2023, 5, 15), 'yyyy-MM-dd'),
       contractDuration: "6months" as const,
-      endDate: format(addMonths(new Date(2023, 5, 15), 6), 'yyyy-MM-dd')
+      endDate: format(addMonths(new Date(2023, 5, 15), 6), 'yyyy-MM-dd'),
+      csm: "team1"
     },
     's2': { 
       id: 's2', 
@@ -71,7 +90,8 @@ const INITIAL_DATA = {
       progress: 60,
       startDate: format(new Date(2023, 8, 10), 'yyyy-MM-dd'),
       contractDuration: "1year" as const,
-      endDate: format(addYears(new Date(2023, 8, 10), 1), 'yyyy-MM-dd')
+      endDate: format(addYears(new Date(2023, 8, 10), 1), 'yyyy-MM-dd'),
+      csm: "team2"
     },
     's3': { 
       id: 's3', 
@@ -79,7 +99,8 @@ const INITIAL_DATA = {
       progress: 80,
       startDate: format(new Date(2023, 10, 5), 'yyyy-MM-dd'),
       contractDuration: "6months" as const,
-      endDate: format(addMonths(new Date(2023, 10, 5), 6), 'yyyy-MM-dd')
+      endDate: format(addMonths(new Date(2023, 10, 5), 6), 'yyyy-MM-dd'),
+      csm: "team1"
     },
     's4': { 
       id: 's4', 
@@ -87,7 +108,8 @@ const INITIAL_DATA = {
       progress: 45,
       startDate: format(new Date(2023, 3, 12), 'yyyy-MM-dd'),
       contractDuration: "6months" as const,
-      endDate: format(addMonths(new Date(2023, 3, 12), 6), 'yyyy-MM-dd')
+      endDate: format(addMonths(new Date(2023, 3, 12), 6), 'yyyy-MM-dd'),
+      csm: "team3"
     },
     's5': { 
       id: 's5', 
@@ -95,7 +117,8 @@ const INITIAL_DATA = {
       progress: 50,
       startDate: format(new Date(2023, 7, 20), 'yyyy-MM-dd'),
       contractDuration: "1year" as const,
-      endDate: format(addYears(new Date(2023, 7, 20), 1), 'yyyy-MM-dd')
+      endDate: format(addYears(new Date(2023, 7, 20), 1), 'yyyy-MM-dd'),
+      csm: "team2"
     },
     's6': { 
       id: 's6', 
@@ -103,7 +126,8 @@ const INITIAL_DATA = {
       progress: 70,
       startDate: format(new Date(2023, 9, 3), 'yyyy-MM-dd'),
       contractDuration: "1year" as const,
-      endDate: format(addYears(new Date(2023, 9, 3), 1), 'yyyy-MM-dd')
+      endDate: format(addYears(new Date(2023, 9, 3), 1), 'yyyy-MM-dd'),
+      csm: "team4"
     },
     's7': { 
       id: 's7', 
@@ -112,7 +136,8 @@ const INITIAL_DATA = {
       startDate: format(new Date(2023, 2, 8), 'yyyy-MM-dd'),
       contractDuration: "6months" as const,
       endDate: format(addMonths(new Date(2023, 2, 8), 6), 'yyyy-MM-dd'),
-      churnDate: format(new Date(2023, 4, 15), 'yyyy-MM-dd')
+      churnDate: format(new Date(2023, 4, 15), 'yyyy-MM-dd'),
+      csm: "team3"
     },
     's8': { 
       id: 's8', 
@@ -120,7 +145,8 @@ const INITIAL_DATA = {
       progress: 100,
       startDate: format(new Date(2023, 0, 15), 'yyyy-MM-dd'),
       contractDuration: "6months" as const,
-      endDate: format(addMonths(new Date(2023, 0, 15), 6), 'yyyy-MM-dd')
+      endDate: format(addMonths(new Date(2023, 0, 15), 6), 'yyyy-MM-dd'),
+      csm: "team4"
     },
     's9': { 
       id: 's9', 
@@ -128,7 +154,8 @@ const INITIAL_DATA = {
       progress: 100,
       startDate: format(new Date(2023, 1, 22), 'yyyy-MM-dd'),
       contractDuration: "1year" as const,
-      endDate: format(addYears(new Date(2023, 1, 22), 1), 'yyyy-MM-dd')
+      endDate: format(addYears(new Date(2023, 1, 22), 1), 'yyyy-MM-dd'),
+      csm: "team1"
     }
   },
   columnOrder: ['active', 'backend', 'olympia', 'churned', 'graduated']
@@ -139,7 +166,35 @@ export function KanbanBoard() {
   const [dateModalOpen, setDateModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [dateModalType, setDateModalType] = useState<"churn" | "other">("churn");
+  const [selectedTeam, setSelectedTeam] = useState<string>("all");
+  const [filteredData, setFilteredData] = useState(INITIAL_DATA);
   const { toast } = useToast();
+  
+  // Filter data by selected team
+  useEffect(() => {
+    if (selectedTeam === "all") {
+      setFilteredData(data);
+      return;
+    }
+    
+    // Create a copy of the data
+    const newData = { ...data };
+    const filteredStudentIds = Object.keys(data.students).filter(
+      id => data.students[id].csm === selectedTeam
+    );
+    
+    // Filter each column's studentIds
+    Object.keys(newData.columns).forEach(columnId => {
+      newData.columns[columnId] = {
+        ...data.columns[columnId],
+        studentIds: data.columns[columnId].studentIds.filter(
+          id => filteredStudentIds.includes(id)
+        )
+      };
+    });
+    
+    setFilteredData(newData);
+  }, [selectedTeam, data]);
   
   useEffect(() => {
     // Check for students whose contracts have ended - should be moved to backend
@@ -290,11 +345,36 @@ export function KanbanBoard() {
           {student.startDate && <div>Start: {format(new Date(student.startDate), 'MMM d, yyyy')}</div>}
           {student.endDate && <div>End: {format(new Date(student.endDate), 'MMM d, yyyy')}</div>}
           {student.churnDate && <div className="text-red-500">Churned: {format(new Date(student.churnDate), 'MMM d, yyyy')}</div>}
+          {student.csm && <div className="font-semibold mt-1">{CSM_TEAMS.find(team => team.id === student.csm)?.name}</div>}
         </div>
       );
     }
     return null;
   };
+  
+  // Calculate stats for the selected team
+  const teamStats = () => {
+    if (selectedTeam === "all") {
+      return {
+        total: Object.keys(data.students).length,
+        active: data.columns.active.studentIds.length,
+        graduated: data.columns.graduated.studentIds.length,
+        churned: data.columns.churned.studentIds.length,
+      };
+    }
+    
+    const teamStudents = Object.values(data.students).filter(student => student.csm === selectedTeam);
+    const teamIds = teamStudents.map(student => student.id);
+    
+    return {
+      total: teamStudents.length,
+      active: data.columns.active.studentIds.filter(id => teamIds.includes(id)).length,
+      graduated: data.columns.graduated.studentIds.filter(id => teamIds.includes(id)).length,
+      churned: data.columns.churned.studentIds.filter(id => teamIds.includes(id)).length,
+    };
+  };
+  
+  const stats = teamStats();
   
   return (
     <Card className="mt-4">
@@ -303,15 +383,59 @@ export function KanbanBoard() {
           <KanbanSquare className="h-5 w-5 text-red-600" />
           <CardTitle>Student Tracking</CardTitle>
         </div>
-        <Button size="sm" className="bg-red-600 hover:bg-red-700">
-          <Plus className="h-4 w-4 mr-1" /> Add Student
-        </Button>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center">
+            <Users className="h-5 w-5 mr-2 text-red-600" />
+            <Select value={selectedTeam} onValueChange={setSelectedTeam}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select Team" />
+              </SelectTrigger>
+              <SelectContent>
+                {CSM_TEAMS.map(team => (
+                  <SelectItem key={team.id} value={team.id}>
+                    {team.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button size="sm" className="bg-red-600 hover:bg-red-700">
+            <Plus className="h-4 w-4 mr-1" /> Add Student
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
+        {/* Team Stats Section */}
+        {selectedTeam !== "all" && (
+          <div className="mb-4 p-4 bg-slate-100 rounded-lg">
+            <h3 className="font-medium text-lg mb-2">
+              {CSM_TEAMS.find(team => team.id === selectedTeam)?.name} Stats
+            </h3>
+            <div className="grid grid-cols-4 gap-4">
+              <div className="bg-white p-3 rounded-md shadow-sm">
+                <div className="text-sm text-gray-500">Total Students</div>
+                <div className="text-2xl font-bold">{stats.total}</div>
+              </div>
+              <div className="bg-white p-3 rounded-md shadow-sm">
+                <div className="text-sm text-gray-500">Active</div>
+                <div className="text-2xl font-bold text-green-600">{stats.active}</div>
+              </div>
+              <div className="bg-white p-3 rounded-md shadow-sm">
+                <div className="text-sm text-gray-500">Graduated</div>
+                <div className="text-2xl font-bold text-blue-600">{stats.graduated}</div>
+              </div>
+              <div className="bg-white p-3 rounded-md shadow-sm">
+                <div className="text-sm text-gray-500">Churned</div>
+                <div className="text-2xl font-bold text-red-600">{stats.churned}</div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {data.columnOrder.map(columnId => {
-              const column = data.columns[columnId];
+              const column = filteredData.columns[columnId];
               const students = column.studentIds.map(studentId => data.students[studentId]);
               
               return (
@@ -349,6 +473,7 @@ export function KanbanBoard() {
                                       <DropdownMenuItem onClick={() => handleViewDates(student)}>
                                         <Calendar className="h-3 w-3 mr-2" /> View Dates
                                       </DropdownMenuItem>
+                                      <DropdownMenuSeparator />
                                       <DropdownMenuItem>Edit Student</DropdownMenuItem>
                                       <DropdownMenuItem>Contact</DropdownMenuItem>
                                     </DropdownMenuContent>
