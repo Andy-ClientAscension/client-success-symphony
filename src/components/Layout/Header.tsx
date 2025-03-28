@@ -2,10 +2,11 @@
 import { Bell, Search, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function Header() {
   return (
-    <header className="border-b bg-white h-16 flex items-center justify-between px-4 md:px-6 shadow-sm">
+    <header className="border-b bg-card h-16 flex items-center justify-between px-4 md:px-6 shadow-sm">
       <div className="flex items-center gap-2 md:gap-4 w-full">
         <div className="flex items-center">
           <img 
@@ -28,6 +29,7 @@ export function Header() {
       </div>
       
       <div className="flex items-center gap-2">
+        <ThemeToggle />
         <Button variant="outline" size="icon" className="hidden sm:inline-flex">
           <HelpCircle className="h-5 w-5" />
         </Button>

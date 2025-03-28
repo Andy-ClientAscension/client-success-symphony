@@ -5,14 +5,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowLeft, RefreshCw } from "lucide-react";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { LoadingState } from "@/components/LoadingState";
 
 export default function Analytics() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
 
-  const handleRefreshData = () => {
+  const handleRefreshData = useCallback(() => {
+    if (isRefreshing) return;
+    
     setIsRefreshing(true);
     
     // Simulate data refresh
@@ -23,7 +27,7 @@ export default function Analytics() {
         description: "Your analytics data has been updated.",
       });
     }, 1500);
-  };
+  }, [isRefreshing, toast]);
 
   return (
     <Layout>
@@ -50,7 +54,15 @@ export default function Analytics() {
         </div>
         
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <NPSChart />
+          <ErrorBoundary>
+            {isRefreshing ? (
+              <Card className="min-h-[300px] flex items-center justify-center">
+                <LoadingState message="Refreshing NPS data..." />
+              </Card>
+            ) : (
+              <NPSChart />
+            )}
+          </ErrorBoundary>
           
           <Card>
             <CardHeader>
