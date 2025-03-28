@@ -39,6 +39,9 @@ export function ThemeProvider({
     }
 
     root.classList.add(theme);
+    
+    // Log theme changes to help with debugging
+    console.log(`Theme set to: ${theme}`);
   }, [theme]);
 
   const value = {
