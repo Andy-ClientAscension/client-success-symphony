@@ -37,7 +37,7 @@ export default function Index() {
 
   return (
     <Layout>
-      <div className="space-y-2 max-w-full">
+      <div className="space-y-2 max-w-full pb-8">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="text-lg font-bold">Performance Report</div>
           <div className="flex items-center gap-2">
@@ -52,7 +52,7 @@ export default function Index() {
         </div>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="overflow-x-auto scrollbar-hidden pb-1">
+          <div className="overflow-x-auto pb-1">
             <TabsList className="w-full md:w-auto justify-start border-b mb-2 bg-transparent p-0 flex-nowrap">
               <TabsTrigger 
                 value="overview" 
@@ -94,7 +94,7 @@ export default function Index() {
           </div>
           
           <TabsContent value="overview" className="m-0">
-            <div className="space-y-2">
+            <div className="space-y-4">
               <MetricsCards />
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">

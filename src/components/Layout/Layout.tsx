@@ -16,8 +16,8 @@ export function Layout({ children }: LayoutProps) {
       <Sidebar />
       <div className="flex-1 flex flex-col w-full overflow-hidden">
         <Header />
-        <div className="flex-1 overflow-hidden">
-          <ScrollArea className="h-full max-h-[calc(100vh-64px)]">
+        <div className="flex-1 overflow-auto">
+          <ScrollArea className="h-full w-full" type="always">
             <div className="p-4">
               <ErrorBoundary>
                 {children}
