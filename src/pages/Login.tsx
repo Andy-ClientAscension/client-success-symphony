@@ -113,11 +113,11 @@ export default function Login() {
           <div className="text-sm text-center">
             Don't have an account?{" "}
             <Link to="/signup" className="text-primary hover:underline">
-              Sign up
+              Sign up with invitation code
             </Link>
           </div>
           <p className="text-xs text-center text-muted-foreground">
-            <span className="font-medium">Demo Credentials:</span> Any email and password (min 6 characters)
+            <span className="font-medium">Note:</span> This is an invite-only application
           </p>
         </CardFooter>
       </Card>

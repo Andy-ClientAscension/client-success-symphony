@@ -7,12 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { BarChart2, Lock, Mail, ArrowLeft } from "lucide-react";
+import { BarChart2, Lock, Mail, Key, ArrowLeft } from "lucide-react";
 
 export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ export default function SignUp() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password || !confirmPassword) {
+    if (!email || !password || !confirmPassword || !inviteCode) {
       toast({
         title: "Error",
         description: "Please fill in all fields",
@@ -51,9 +52,9 @@ export default function SignUp() {
     setIsLoading(true);
     
     try {
-      const success = await register(email, password);
+      const result = await register(email, password, inviteCode);
       
-      if (success) {
+      if (result.success) {
         toast({
           title: "Success",
           description: "Your account has been created successfully",
@@ -62,7 +63,7 @@ export default function SignUp() {
       } else {
         toast({
           title: "Error",
-          description: "Failed to create account",
+          description: result.message,
           variant: "destructive",
         });
       }
@@ -88,7 +89,7 @@ export default function SignUp() {
           </div>
           <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
           <CardDescription className="text-center">
-            Register to access the SSC Dashboard
+            Register with an invitation code to access the SSC Dashboard
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -138,6 +139,21 @@ export default function SignUp() {
                 />
               </div>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="inviteCode">Invitation Code</Label>
+              <div className="relative">
+                <Key className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="inviteCode"
+                  type="text"
+                  placeholder="Enter your invitation code"
+                  value={inviteCode}
+                  onChange={(e) => setInviteCode(e.target.value)}
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Creating account..." : "Sign Up"}
             </Button>
@@ -151,7 +167,7 @@ export default function SignUp() {
             </Link>
           </div>
           <p className="text-xs text-center text-muted-foreground">
-            <span className="font-medium">Demo Note:</span> Any email and password (min 6 characters) will work
+            <span className="font-medium">Demo Note:</span> Use invite codes: SSC2024, AGENT007, or WELCOME1
           </p>
         </CardFooter>
       </Card>

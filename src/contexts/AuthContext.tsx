@@ -11,9 +11,13 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (email: string, password: string) => Promise<boolean>;
+  register: (email: string, password: string, inviteCode: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
+  validateInviteCode: (code: string) => Promise<boolean>;
 }
+
+// Valid invitation codes (in a real app, these would be stored in a database)
+const VALID_INVITE_CODES = ["SSC2024", "AGENT007", "WELCOME1"];
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -30,6 +34,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setIsLoading(false);
   }, []);
+
+  const validateInviteCode = async (code: string): Promise<boolean> => {
+    // In a real app, this would verify the code against a database
+    return VALID_INVITE_CODES.includes(code);
+  };
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -49,23 +58,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const register = async (email: string, password: string): Promise<boolean> => {
+  const register = async (email: string, password: string, inviteCode: string): Promise<{ success: boolean; message: string }> => {
     try {
-      // This is a simple mock registration
-      // In a real app, you would register the user with a backend
+      // Validate invite code first
+      const isValidCode = await validateInviteCode(inviteCode);
+      
+      if (!isValidCode) {
+        return { 
+          success: false, 
+          message: "Invalid invitation code. Please check your code and try again." 
+        };
+      }
+      
+      // Password validation
       if (password.length < 6) {
-        return false;
+        return { 
+          success: false, 
+          message: "Password must be at least 6 characters." 
+        };
       }
 
-      // In a real implementation, we would check if the user already exists
+      // In a real implementation, we would register the user with a backend
       // For this mock implementation, we'll just create the user
       const user = { email };
       setUser(user);
       localStorage.setItem("user", JSON.stringify(user));
-      return true;
+      
+      return { 
+        success: true, 
+        message: "Registration successful!" 
+      };
     } catch (error) {
       console.error("Registration error:", error);
-      return false;
+      return { 
+        success: false, 
+        message: "An error occurred during registration. Please try again." 
+      };
     }
   };
 
@@ -84,6 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
+        validateInviteCode,
       }}
     >
       {children}
