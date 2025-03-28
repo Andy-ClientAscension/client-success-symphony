@@ -7,22 +7,17 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell
+  ReferenceLine
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getChurnData } from "@/lib/data";
-import { ChevronDown, Filter, Maximize } from "lucide-react";
+import { TrendingUp, TrendingDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { STORAGE_KEYS, saveData, loadData } from "@/utils/persistence";
-import { Button } from "@/components/ui/button";
 
 export function ChurnChart() {
   const defaultData = getChurnData();
   const [data, setData] = useState(defaultData);
-  const [isHovered, setIsHovered] = useState(false);
-  const [view, setView] = useState<'pie' | 'line'>('pie');
   
   // Load saved data if available
   useEffect(() => {
@@ -41,89 +36,71 @@ export function ChurnChart() {
     }
   }, [data]);
   
-  const totalCost = 120640.50;
-  const pieData = [
-    { name: "Cost in time frame", value: 34, amount: 41017.77 },
-    { name: "Cost per application", value: 48, amount: 57907.44 },
-    { name: "Cost per sale", value: 18, amount: 21715.29 }
-  ];
-  
-  const COLORS = ['#8884d8', '#82ca9d', '#ffc658'];
+  // Calculate if churn is trending up or down
+  const currentChurn = data[data.length - 1]?.rate || 0;
+  const previousChurn = data[data.length - 2]?.rate || 0;
+  const isChurnDecreasing = currentChurn < previousChurn;
+  const churnDifference = Math.abs(currentChurn - previousChurn).toFixed(1);
   
   return (
-    <Card 
-      className="h-full w-full shadow-sm"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <Card className="h-full w-full shadow-sm">
       <CardHeader className="p-4 flex flex-row items-center justify-between">
         <div>
-          <CardTitle className="text-base font-semibold">Costs</CardTitle>
-          <p className="text-sm text-muted-foreground">${totalCost.toLocaleString()} Total costs</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="h-8 text-xs">
-            <Filter className="h-3 w-3 mr-1" />
-            Filter
-          </Button>
-          <Button variant="outline" size="sm" className="h-8 text-xs">
-            <Maximize className="h-3 w-3 mr-1" />
-            Expand
-          </Button>
-          <Button variant="outline" size="sm" className="h-8 text-xs">
-            <ChevronDown className="h-3 w-3 mr-1" />
-            More
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="p-4">
-        <div className="h-[300px] relative">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={pieData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                fill="#8884d8"
-                paddingAngle={2}
-                dataKey="value"
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-              >
-                <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle">
-                  <tspan x="50%" dy="-0.5em" fontSize="16" fontWeight="bold">${totalCost.toLocaleString()}</tspan>
-                  <tspan x="50%" dy="1.5em" fontSize="12" fill="#666">Total costs</tspan>
-                </text>
-                {pieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip 
-                formatter={(value, name, props) => {
-                  const entry = pieData.find(item => item.name === name);
-                  return [`$${entry?.amount.toLocaleString()}`, name];
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-          
-          <div className="absolute bottom-0 left-0 w-full">
-            <div className="grid grid-cols-3 gap-2">
-              {pieData.map((entry, index) => (
-                <div key={index} className="flex items-center">
-                  <div 
-                    className="w-3 h-3 rounded-full mr-1" 
-                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                  />
-                  <div className="text-xs">
-                    <p className="font-medium">{entry.name}</p>
-                    <p className="text-muted-foreground">${entry.amount.toLocaleString()} ({entry.value}%)</p>
-                  </div>
-                </div>
-              ))}
+          <CardTitle className="text-base font-semibold">Customer Churn</CardTitle>
+          <div className="flex items-center space-x-2">
+            <p className="text-2xl font-bold">{currentChurn}%</p>
+            <div className={`flex items-center ${isChurnDecreasing ? 'text-green-600' : 'text-red-600'}`}>
+              {isChurnDecreasing ? (
+                <TrendingDown className="h-4 w-4 mr-1" />
+              ) : (
+                <TrendingUp className="h-4 w-4 mr-1" />
+              )}
+              <span className="text-sm">{churnDifference}%</span>
             </div>
           </div>
+        </div>
+      </CardHeader>
+      <CardContent className="p-4 pt-0">
+        <div className="h-[200px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={data}
+              margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis 
+                dataKey="month" 
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis 
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12 }}
+                tickFormatter={(value) => `${value}%`}
+                domain={['dataMin - 0.5', 'dataMax + 0.5']}
+              />
+              <Tooltip 
+                formatter={(value) => [`${value}%`, 'Churn Rate']}
+                contentStyle={{ fontSize: '12px', padding: '8px' }}
+                labelStyle={{ fontWeight: 'bold' }}
+              />
+              <ReferenceLine y={2} stroke="#ccc" strokeDasharray="3 3" />
+              <Line 
+                type="monotone" 
+                dataKey="rate" 
+                stroke="#8884d8" 
+                strokeWidth={2}
+                dot={{ r: 3 }}
+                activeDot={{ r: 5 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="mt-2 text-xs text-muted-foreground">
+          <p>Monthly churn rate over the last 6 months.</p>
+          <p>Industry average: <span className="font-medium">2.0%</span></p>
         </div>
       </CardContent>
     </Card>
