@@ -36,7 +36,7 @@ export default function Index() {
 
   return (
     <Layout>
-      <div className="p-2 space-y-3">
+      <div className="p-2 space-y-2">
         <div className="flex items-center justify-between">
           <div className="text-lg font-bold">Performance Report</div>
           <div className="flex items-center gap-2">
@@ -91,23 +91,23 @@ export default function Index() {
           </TabsList>
           
           <TabsContent value="overview" className="m-0">
-            <div>
+            <div className="space-y-2">
               <MetricsCards />
               
-              <div className="grid grid-cols-3 gap-2 mt-2">
-                <div className="col-span-2">
+              <div className="grid grid-cols-3 gap-2">
+                <div className="col-span-3 md:col-span-2">
                   <ChurnChart />
                 </div>
-                <div className="col-span-1">
+                <div className="col-span-3 md:col-span-1">
                   <NPSChart />
                 </div>
               </div>
               
-              <div className="mt-2">
+              <div>
                 <ClientList />
               </div>
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mt-2">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
                 <div className="col-span-1">
                   <KanbanBoard />
                 </div>
