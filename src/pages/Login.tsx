@@ -7,14 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { BarChart2, Lock, Mail } from "lucide-react";
+import { BarChart2, Lock, Mail, AlertCircle } from "lucide-react";
 import { ValidationError } from "@/components/ValidationError";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [showAlert, setShowAlert] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -27,6 +30,18 @@ export default function Login() {
       setPasswordError("");
     }
   }, [password]);
+
+  // Reset login attempts after 5 minutes
+  useEffect(() => {
+    if (loginAttempts > 0) {
+      const timer = setTimeout(() => {
+        setLoginAttempts(0);
+        setShowAlert(false);
+      }, 5 * 60 * 1000); // 5 minutes
+      
+      return () => clearTimeout(timer);
+    }
+  }, [loginAttempts]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,11 +74,22 @@ export default function Login() {
           title: "Success",
           description: "You have successfully logged in",
         });
+        setLoginAttempts(0);
         navigate("/");
       } else {
+        setLoginAttempts(prevAttempts => prevAttempts + 1);
+        
+        // Different messages based on number of attempts
+        let errorMessage = "Invalid email or password. Please try again.";
+        
+        if (loginAttempts >= 2) {
+          setShowAlert(true);
+          errorMessage = "Multiple login failures detected. Please check your credentials carefully.";
+        }
+        
         toast({
-          title: "Error",
-          description: "Invalid credentials. Please try again.",
+          title: "Login Failed",
+          description: errorMessage,
           variant: "destructive",
         });
       }
@@ -93,6 +119,14 @@ export default function Login() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {showAlert && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Multiple login failures detected. If you've forgotten your password, please contact the administrator.
+              </AlertDescription>
+            </Alert>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
