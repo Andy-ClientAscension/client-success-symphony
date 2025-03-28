@@ -7,14 +7,16 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Calendar, Clock } from "lucide-react";
 import { MOCK_CLIENTS } from "@/lib/data";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
-// Calculate dummy renewal dates based on client ID (since createdAt doesn't exist in Client type)
+// Calculate dummy renewal dates based on client ID
 const renewals = MOCK_CLIENTS.map(client => {
   // Create a renewal date based on client ID (for demo purposes)
   const randomDaysOffset = parseInt(client.id) * 30;
   const today = new Date();
-  const renewalDate = new Date(today);
-  renewalDate.setDate(today.getDate() + randomDaysOffset);
+  
+  // Create the renewalDate safely
+  const renewalDate = new Date(today.getTime() + randomDaysOffset * 24 * 60 * 60 * 1000);
   
   // Calculate days until renewal
   const daysUntil = Math.ceil((renewalDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
@@ -46,98 +48,100 @@ export default function Renewals() {
   
   return (
     <Layout>
-      <div className="container py-6 max-w-6xl">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">Client Renewals</h1>
-          <p className="text-muted-foreground">Track and manage upcoming client contract renewals.</p>
-        </div>
-        
-        <div className="flex gap-2 mb-6">
-          <Badge 
-            variant={filter === "all" ? "default" : "outline"} 
-            className="cursor-pointer"
-            onClick={() => setFilter("all")}
-          >
-            All
-          </Badge>
-          <Badge 
-            variant={filter === "soon" ? "default" : "outline"} 
-            className="cursor-pointer"
-            onClick={() => setFilter("soon")}
-          >
-            Due Soon
-          </Badge>
-          <Badge 
-            variant={filter === "upcoming" ? "default" : "outline"} 
-            className="cursor-pointer"
-            onClick={() => setFilter("upcoming")}
-          >
-            Upcoming
-          </Badge>
-          <Badge 
-            variant={filter === "overdue" ? "default" : "outline"} 
-            className="cursor-pointer"
-            onClick={() => setFilter("overdue")}
-          >
-            Overdue
-          </Badge>
-        </div>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Client Renewals</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Renewal Date</TableHead>
-                  <TableHead>Time Remaining</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Price</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredRenewals.map((renewal) => (
-                  <TableRow key={renewal.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{renewal.clientName}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                        {format(renewal.renewalDate, "MMM d, yyyy")}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                        {renewal.daysUntil < 0 
-                          ? `${Math.abs(renewal.daysUntil)} days overdue` 
-                          : `${renewal.daysUntil} days remaining`}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={
-                        renewal.status === "overdue" ? "destructive" : 
-                        renewal.status === "soon" ? "outline" : 
-                        "secondary"
-                      }>
-                        {renewal.status === "soon" ? "Due Soon" : 
-                         renewal.status === "overdue" ? "Overdue" : "Upcoming"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">{renewal.price}</TableCell>
+      <ErrorBoundary>
+        <div className="container py-6 max-w-6xl">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold">Client Renewals</h1>
+            <p className="text-muted-foreground">Track and manage upcoming client contract renewals.</p>
+          </div>
+          
+          <div className="flex gap-2 mb-6">
+            <Badge 
+              variant={filter === "all" ? "default" : "outline"} 
+              className="cursor-pointer"
+              onClick={() => setFilter("all")}
+            >
+              All
+            </Badge>
+            <Badge 
+              variant={filter === "soon" ? "default" : "outline"} 
+              className="cursor-pointer"
+              onClick={() => setFilter("soon")}
+            >
+              Due Soon
+            </Badge>
+            <Badge 
+              variant={filter === "upcoming" ? "default" : "outline"} 
+              className="cursor-pointer"
+              onClick={() => setFilter("upcoming")}
+            >
+              Upcoming
+            </Badge>
+            <Badge 
+              variant={filter === "overdue" ? "default" : "outline"} 
+              className="cursor-pointer"
+              onClick={() => setFilter("overdue")}
+            >
+              Overdue
+            </Badge>
+          </div>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Client Renewals</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Client</TableHead>
+                    <TableHead>Renewal Date</TableHead>
+                    <TableHead>Time Remaining</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Price</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
+                </TableHeader>
+                <TableBody>
+                  {filteredRenewals.map((renewal) => (
+                    <TableRow key={renewal.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{renewal.clientName}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                          {format(renewal.renewalDate, "MMM d, yyyy")}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                          {renewal.daysUntil < 0 
+                            ? `${Math.abs(renewal.daysUntil)} days overdue` 
+                            : `${renewal.daysUntil} days remaining`}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={
+                          renewal.status === "overdue" ? "destructive" : 
+                          renewal.status === "soon" ? "outline" : 
+                          "secondary"
+                        }>
+                          {renewal.status === "soon" ? "Due Soon" : 
+                           renewal.status === "overdue" ? "Overdue" : "Upcoming"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">{renewal.price}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
+      </ErrorBoundary>
     </Layout>
   );
 }
