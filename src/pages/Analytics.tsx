@@ -15,7 +15,7 @@ import { ValidationError } from "@/components/ValidationError";
 export default function Analytics() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const isRefreshing = queryClient.isFetching(['nps-data']) > 0;
+  const isRefreshing = queryClient.isFetching({queryKey: ['nps-data']}) > 0;
 
   const handleRefreshData = useCallback(() => {
     if (isRefreshing) return;

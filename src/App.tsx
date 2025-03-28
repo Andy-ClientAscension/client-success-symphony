@@ -7,10 +7,18 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { OfflineDetector } from "@/components/OfflineDetector";
+import { BrowserCompatibilityCheck } from "@/components/BrowserCompatibilityCheck";
+import { useEffect } from "react";
+import { applyPolyfills } from "@/utils/browserCompatibility";
 import Index from "./pages/Index";
 import AddClient from "./pages/AddClient";
 import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
+
+// Apply polyfills immediately for older browsers
+if (typeof window !== 'undefined') {
+  applyPolyfills();
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,27 +30,47 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <TooltipProvider>
-        <ErrorBoundary>
-          <Toaster />
-          <Sonner />
-          <OfflineDetector />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/add-client" element={<AddClient />} />
-              <Route path="/analytics" element={<Analytics />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </ErrorBoundary>
-      </TooltipProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  useEffect(() => {
+    // Add support for passive event listeners to improve performance on mobile
+    try {
+      const opts = Object.defineProperty({}, 'passive', {
+        get: function() {
+          // This proves the browser supports passive events
+          return true;
+        }
+      });
+      window.addEventListener('testPassive', null as any, opts);
+      window.removeEventListener('testPassive', null as any, opts);
+      console.log("Passive event listeners are supported");
+    } catch (e) {
+      console.log("Passive event listeners are not supported");
+    }
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <TooltipProvider>
+          <ErrorBoundary>
+            <Toaster />
+            <Sonner />
+            <OfflineDetector />
+            <BrowserCompatibilityCheck />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/add-client" element={<AddClient />} />
+                <Route path="/analytics" element={<Analytics />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </ErrorBoundary>
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

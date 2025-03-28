@@ -15,9 +15,9 @@ export function ValidationError({
   if (!message) return null;
   
   const icons = {
-    error: <XCircle className="h-4 w-4 mr-1" />,
-    warning: <AlertTriangle className="h-4 w-4 mr-1" />,
-    info: <AlertCircle className="h-4 w-4 mr-1" />
+    error: <XCircle className="h-4 w-4 min-w-4 mr-1" />,
+    warning: <AlertTriangle className="h-4 w-4 min-w-4 mr-1" />,
+    info: <AlertCircle className="h-4 w-4 min-w-4 mr-1" />
   };
   
   const colorClasses = {
@@ -27,9 +27,11 @@ export function ValidationError({
   };
   
   return (
-    <div className={`flex items-center ${colorClasses[type]} text-sm mt-1 ${className}`}>
-      {icons[type]}
-      <span>{message}</span>
+    <div className={`flex items-start ${colorClasses[type]} text-sm mt-1 ${className}`}>
+      <div className="shrink-0 mt-0.5">
+        {icons[type]}
+      </div>
+      <span className="flex-1">{message}</span>
     </div>
   );
 }

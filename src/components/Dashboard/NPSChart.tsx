@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { 
   PieChart, 
   Pie, 
@@ -20,6 +20,7 @@ import { fetchNPSDataFromSheets } from "@/lib/googleSheetsApi";
 import { useToast } from "@/hooks/use-toast";
 import { LoadingState } from "@/components/LoadingState";
 import { useQuery } from "@tanstack/react-query";
+import { ValidationError } from "@/components/ValidationError";
 
 export function NPSChart() {
   const [activeTab, setActiveTab] = useState("distribution");
@@ -49,17 +50,20 @@ export function NPSChart() {
         }
       } catch (error) {
         console.error("Error loading NPS data:", error);
-        throw new Error("Failed to load NPS data");
+        throw error;
       }
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 2,
-    onError: (error) => {
-      toast({
-        title: "Error Loading Data",
-        description: "Failed to load data from Google Sheets. Using backup data.",
-        variant: "destructive",
-      });
+    // Remove the onError property and use meta for error handling
+    meta: {
+      errorHandler: () => {
+        toast({
+          title: "Error Loading Data",
+          description: "Failed to load data from Google Sheets. Using backup data.",
+          variant: "destructive",
+        });
+      }
     }
   });
   
