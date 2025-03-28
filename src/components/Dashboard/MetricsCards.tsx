@@ -21,7 +21,7 @@ export function MetricsCards() {
       secondaryText: "+3.5%",
       trend: 'up' as const,
       icon: Users,
-      color: "success"
+      color: "success" as const
     },
     { 
       title: "At Risk Clients", 
@@ -29,7 +29,7 @@ export function MetricsCards() {
       secondaryText: "-15%",
       trend: 'down' as const,
       icon: AlertTriangle,
-      color: "danger" 
+      color: "danger" as const
     },
     { 
       title: "Total Applications", 
@@ -37,7 +37,7 @@ export function MetricsCards() {
       secondaryText: "",
       trend: 'neutral' as const,
       icon: Calendar,
-      color: "neutral"
+      color: "neutral" as const
     },
     { 
       title: "Total Sales", 
@@ -45,7 +45,7 @@ export function MetricsCards() {
       secondaryText: "+2%",
       trend: 'up' as const,
       icon: Users,
-      color: "success"
+      color: "success" as const
     }
   ];
   
