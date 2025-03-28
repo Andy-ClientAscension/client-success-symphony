@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { MoreHorizontal, ChevronRight, PlusCircle, Phone, BarChart2, DollarSign } from "lucide-react";
+import { MoreHorizontal, ChevronRight, PlusCircle, Phone, BarChart2, DollarSign, Edit } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import {
@@ -16,15 +16,21 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client, getAllClients } from "@/lib/data";
+import { ClientMetricsForm } from "./ClientMetricsForm";
+import { useToast } from "@/hooks/use-toast";
 
 export function ClientList() {
-  const [clients] = useState<Client[]>(getAllClients());
+  const [clients, setClients] = useState<Client[]>(getAllClients());
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [metricsModalOpen, setMetricsModalOpen] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   const getStatusBadge = (status: Client['status']) => {
     switch (status) {
@@ -55,6 +61,29 @@ export function ClientList() {
   
   const handleAddNewClient = () => {
     navigate("/add-client");
+  };
+
+  const handleEditMetrics = (client: Client) => {
+    setSelectedClient(client);
+    setMetricsModalOpen(true);
+  };
+
+  const handleMetricsUpdate = (data: { callsBooked: number; dealsClosed: number; mrr: number }) => {
+    if (!selectedClient) return;
+
+    // Update client with new metrics
+    const updatedClients = clients.map(client => 
+      client.id === selectedClient.id
+        ? { ...client, callsBooked: data.callsBooked, dealsClosed: data.dealsClosed, mrr: data.mrr }
+        : client
+    );
+
+    setClients(updatedClients);
+    
+    toast({
+      title: "Metrics Updated",
+      description: `${selectedClient.name}'s metrics have been updated successfully.`,
+    });
   };
   
   return (
@@ -141,6 +170,14 @@ export function ClientList() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleEditMetrics(client)}
+                        title="Edit metrics"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
                       <Button variant="ghost" size="icon">
                         <ChevronRight className="h-4 w-4" />
                       </Button>
@@ -153,6 +190,10 @@ export function ClientList() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem>View Details</DropdownMenuItem>
                           <DropdownMenuItem>Contact Client</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleEditMetrics(client)}>
+                            <Edit className="h-4 w-4 mr-2" /> Edit Metrics
+                          </DropdownMenuItem>
                           <DropdownMenuItem>Edit Information</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -164,6 +205,21 @@ export function ClientList() {
           </Table>
         </div>
       </CardContent>
+      
+      {/* Metrics edit modal */}
+      {selectedClient && metricsModalOpen && (
+        <ClientMetricsForm
+          isOpen={metricsModalOpen}
+          onClose={() => setMetricsModalOpen(false)}
+          onSubmit={handleMetricsUpdate}
+          clientName={selectedClient.name}
+          initialData={{
+            callsBooked: selectedClient.callsBooked || 0,
+            dealsClosed: selectedClient.dealsClosed || 0,
+            mrr: selectedClient.mrr || 0
+          }}
+        />
+      )}
     </Card>
   );
 }
