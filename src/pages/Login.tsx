@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { BarChart2, Lock, Mail, AlertCircle } from "lucide-react";
+import { BarChart2, Lock, Mail, AlertCircle, Save } from "lucide-react";
 import { ValidationError } from "@/components/ValidationError";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,6 +22,7 @@ export default function Login() {
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [showAlert, setShowAlert] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [rememberSession, setRememberSession] = useState(true);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -108,6 +110,7 @@ export default function Login() {
       const success = await login(email, password);
       
       if (success) {
+        // Handle remember me for credentials
         if (rememberMe) {
           const credentials = { email, password };
           const expiryDate = new Date();
@@ -121,6 +124,17 @@ export default function Login() {
           localStorage.setItem("savedCredentials", JSON.stringify(dataToStore));
         } else {
           localStorage.removeItem("savedCredentials");
+        }
+        
+        // Store the session persistence preference
+        if (rememberSession) {
+          localStorage.setItem("persistDashboard", "true");
+          toast({
+            title: "Session Data Will Be Saved",
+            description: "Your dashboard changes will be automatically saved between sessions",
+          });
+        } else {
+          localStorage.removeItem("persistDashboard");
         }
         
         toast({
@@ -222,15 +236,28 @@ export default function Login() {
                 </div>
                 {passwordError && <ValidationError message={passwordError} />}
               </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="remember-me" 
-                  checked={rememberMe} 
-                  onCheckedChange={(checked) => setRememberMe(checked as boolean)} 
-                />
-                <Label htmlFor="remember-me" className="text-sm font-medium leading-none cursor-pointer">
-                  Remember me for 30 days
-                </Label>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="remember-me" 
+                    checked={rememberMe} 
+                    onCheckedChange={(checked) => setRememberMe(checked as boolean)} 
+                  />
+                  <Label htmlFor="remember-me" className="text-sm font-medium leading-none cursor-pointer">
+                    Remember me for 30 days
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="remember-session" 
+                    checked={rememberSession} 
+                    onCheckedChange={(checked) => setRememberSession(checked as boolean)} 
+                  />
+                  <Label htmlFor="remember-session" className="text-sm font-medium leading-none cursor-pointer flex items-center">
+                    <Save className="h-3 w-3 mr-1 text-red-600" />
+                    Save dashboard data between sessions
+                  </Label>
+                </div>
               </div>
               <Button 
                 type="submit" 

@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MoreHorizontal, ChevronRight, PlusCircle, Phone, BarChart2, DollarSign, Edit, TrendingUp } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
@@ -25,14 +24,31 @@ import { Client, getAllClients } from "@/lib/data";
 import { ClientMetricsForm } from "./ClientMetricsForm";
 import { NPSUpdateForm } from "./NPSUpdateForm";
 import { useToast } from "@/hooks/use-toast";
+import { STORAGE_KEYS, saveData, loadData } from "@/utils/persistence";
 
 export function ClientList() {
-  const [clients, setClients] = useState<Client[]>(getAllClients());
+  const defaultClients = getAllClients();
+  const [clients, setClients] = useState<Client[]>(defaultClients);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [metricsModalOpen, setMetricsModalOpen] = useState(false);
   const [npsModalOpen, setNpsModalOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  useEffect(() => {
+    const persistEnabled = localStorage.getItem("persistDashboard") === "true";
+    if (persistEnabled) {
+      const savedClients = loadData(STORAGE_KEYS.CLIENTS, defaultClients);
+      setClients(savedClients);
+    }
+  }, []);
+  
+  useEffect(() => {
+    const persistEnabled = localStorage.getItem("persistDashboard") === "true";
+    if (persistEnabled && clients !== defaultClients) {
+      saveData(STORAGE_KEYS.CLIENTS, clients);
+    }
+  }, [clients]);
   
   const getStatusBadge = (status: Client['status']) => {
     switch (status) {
@@ -78,7 +94,6 @@ export function ClientList() {
   const handleMetricsUpdate = (data: { callsBooked: number; dealsClosed: number; mrr: number }) => {
     if (!selectedClient) return;
 
-    // Update client with new metrics
     const updatedClients = clients.map(client => 
       client.id === selectedClient.id
         ? { ...client, callsBooked: data.callsBooked, dealsClosed: data.dealsClosed, mrr: data.mrr }
@@ -227,7 +242,6 @@ export function ClientList() {
         </div>
       </CardContent>
       
-      {/* Metrics edit modal */}
       {selectedClient && metricsModalOpen && (
         <ClientMetricsForm
           isOpen={metricsModalOpen}
@@ -242,7 +256,6 @@ export function ClientList() {
         />
       )}
       
-      {/* NPS update modal */}
       {selectedClient && npsModalOpen && (
         <NPSUpdateForm
           isOpen={npsModalOpen}

@@ -25,6 +25,7 @@ import { StudentDateModal } from "./StudentDateModal";
 import { StudentNotes } from "./StudentNotes";
 import { StudentPaymentAlert } from "./StudentPaymentAlert";
 import { checkStudentPaymentStatus, PaymentStatus } from "@/lib/payment-monitor";
+import { STORAGE_KEYS, saveData, loadData } from "@/utils/persistence";
 
 // Note type for student comments
 interface Note {
@@ -209,21 +210,41 @@ export function KanbanBoard() {
   const { toast } = useToast();
   
   useEffect(() => {
-    // Check payments for all students
+    const persistEnabled = localStorage.getItem("persistDashboard") === "true";
+    if (persistEnabled) {
+      const savedData = loadData(STORAGE_KEYS.KANBAN, INITIAL_DATA);
+      setData(savedData);
+    }
+  }, []);
+  
+  useEffect(() => {
+    const persistEnabled = localStorage.getItem("persistDashboard") === "true";
+    if (persistEnabled && data !== INITIAL_DATA) {
+      saveData(STORAGE_KEYS.KANBAN, data);
+      
+      if (Math.random() < 0.2) {
+        toast({
+          title: "Changes Saved",
+          description: "Your student tracking board has been saved",
+        });
+      }
+    }
+  }, [data]);
+  
+  useEffect(() => {
     const checkAllStudentPayments = async () => {
       const updatedStudents = { ...data.students };
       let hasPaymentIssues = false;
       
       for (const studentId in updatedStudents) {
         const student = updatedStudents[studentId];
-        // Only check active students
         if (data.columns.active.studentIds.includes(studentId) || 
             data.columns.backend.studentIds.includes(studentId) ||
             data.columns.olympia.studentIds.includes(studentId)) {
           const paymentStatus = await checkStudentPaymentStatus(
             student.id, 
             student.name,
-            28 // Alert after 28 days
+            28
           );
           
           if (paymentStatus.isOverdue) {
@@ -251,29 +272,24 @@ export function KanbanBoard() {
       }
     };
     
-    // Initial check
     checkAllStudentPayments();
     
-    // Check payments every 12 hours
     const intervalId = setInterval(checkAllStudentPayments, 12 * 60 * 60 * 1000);
     
     return () => clearInterval(intervalId);
   }, []);
   
   useEffect(() => {
-    // Filter data by selected team
     if (selectedTeam === "all") {
       setFilteredData(data);
       return;
     }
     
-    // Create a copy of the data
     const newData = { ...data };
     const filteredStudentIds = Object.keys(data.students).filter(
       id => data.students[id].csm === selectedTeam
     );
     
-    // Filter each column's studentIds
     Object.keys(newData.columns).forEach(columnId => {
       newData.columns[columnId] = {
         ...data.columns[columnId],
@@ -287,7 +303,6 @@ export function KanbanBoard() {
   }, [selectedTeam, data]);
   
   useEffect(() => {
-    // Check for students whose contracts have ended - should be moved to backend
     const today = new Date();
     const updatedData = { ...data };
     let hasChanges = false;
@@ -297,16 +312,13 @@ export function KanbanBoard() {
       if (student.endDate && !student.churnDate) {
         const endDate = new Date(student.endDate);
         if (endDate <= today) {
-          // Only move if student is in active column and not already in backend
           if (
             data.columns.active.studentIds.includes(studentId) && 
             !data.columns.backend.studentIds.includes(studentId)
           ) {
-            // Remove from active
             updatedData.columns.active.studentIds = 
               updatedData.columns.active.studentIds.filter(id => id !== studentId);
             
-            // Add to backend
             updatedData.columns.backend.studentIds.push(studentId);
             
             hasChanges = true;
@@ -327,12 +339,10 @@ export function KanbanBoard() {
   const onDragEnd = (result) => {
     const { destination, source, draggableId } = result;
     
-    // Dropped outside the list
     if (!destination) {
       return;
     }
     
-    // Dropped in the same position
     if (
       destination.droppableId === source.droppableId &&
       destination.index === source.index
@@ -340,14 +350,12 @@ export function KanbanBoard() {
       return;
     }
     
-    // If moving to churned column, trigger date modal
     if (destination.droppableId === 'churned' && source.droppableId !== 'churned') {
       setSelectedStudent(data.students[draggableId]);
       setDateModalType("churn");
       setDateModalOpen(true);
     }
     
-    // Moving within the same column
     if (destination.droppableId === source.droppableId) {
       const column = data.columns[source.droppableId];
       const newStudentIds = Array.from(column.studentIds);
@@ -370,7 +378,6 @@ export function KanbanBoard() {
       return;
     }
     
-    // Moving from one column to another
     const sourceColumn = data.columns[source.droppableId];
     const destinationColumn = data.columns[destination.droppableId];
     const sourceStudentIds = Array.from(sourceColumn.studentIds);
@@ -401,7 +408,6 @@ export function KanbanBoard() {
 
   const handleChurnDateConfirm = (date: Date) => {
     if (selectedStudent) {
-      // Update the student with churn date
       const updatedStudents = {
         ...data.students,
         [selectedStudent.id]: {

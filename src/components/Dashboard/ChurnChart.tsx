@@ -11,11 +11,30 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getChurnData } from "@/lib/data";
 import { TrendingDown } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { STORAGE_KEYS, saveData, loadData } from "@/utils/persistence";
 
 export function ChurnChart() {
-  const data = getChurnData();
+  const defaultData = getChurnData();
+  const [data, setData] = useState(defaultData);
   const [isHovered, setIsHovered] = useState(false);
+  
+  // Load saved data if available
+  useEffect(() => {
+    const persistEnabled = localStorage.getItem("persistDashboard") === "true";
+    if (persistEnabled) {
+      const savedData = loadData(STORAGE_KEYS.CHURN, defaultData);
+      setData(savedData);
+    }
+  }, []);
+  
+  // Save data when it changes
+  useEffect(() => {
+    const persistEnabled = localStorage.getItem("persistDashboard") === "true";
+    if (persistEnabled) {
+      saveData(STORAGE_KEYS.CHURN, data);
+    }
+  }, [data]);
   
   return (
     <Card 
@@ -25,7 +44,10 @@ export function ChurnChart() {
     >
       <CardHeader className="p-1">
         <div className="flex items-center">
-          <TrendingDown className={`h-3 w-3 mr-1 text-red-500 ${isHovered ? '' : 'animate-spin'}`} style={{ animationDuration: '4s' }} />
+          <TrendingDown 
+            className={`h-3 w-3 mr-1 text-red-500 ${isHovered ? '' : 'animate-spin'}`} 
+            style={{ animationDuration: '4s' }} 
+          />
           <CardTitle className="text-xs">Churn Rate</CardTitle>
         </div>
       </CardHeader>
