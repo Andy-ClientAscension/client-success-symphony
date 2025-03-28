@@ -13,6 +13,7 @@ import { applyPolyfills } from "@/utils/browserCompatibility";
 import Index from "./pages/Index";
 import AddClient from "./pages/AddClient";
 import Analytics from "./pages/Analytics";
+import Help from "./pages/Help";
 import NotFound from "./pages/NotFound";
 
 // Apply polyfills immediately for older browsers
@@ -62,6 +63,7 @@ const App = () => {
                 <Route path="/" element={<Index />} />
                 <Route path="/add-client" element={<AddClient />} />
                 <Route path="/analytics" element={<Analytics />} />
+                <Route path="/help" element={<Help />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
