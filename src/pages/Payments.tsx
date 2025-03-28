@@ -63,9 +63,9 @@ export default function Payments() {
               <h1 className="text-2xl font-bold">Payment History</h1>
               <p className="text-muted-foreground">View and manage client payments and transactions.</p>
             </div>
-            <Button asChild variant="outline" className="gap-2">
+            <Button asChild variant="destructive" className="gap-2 text-white bg-red-600 hover:bg-red-700 text-base px-6 py-2">
               <Link to="/">
-                <Home className="h-4 w-4" />
+                <Home className="h-5 w-5" />
                 Back to Dashboard
               </Link>
             </Button>
