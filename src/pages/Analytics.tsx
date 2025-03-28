@@ -51,42 +51,42 @@ export default function Analytics() {
 
   return (
     <Layout>
-      <div className="flex-1 space-y-3 p-3 pt-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center space-x-2">
+      <div className="flex-1 space-y-1 p-1 pt-1">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+          <div className="flex items-center space-x-1">
             <Link to="/">
-              <Button variant="outline" size="icon" className="h-8 w-8">
-                <ArrowLeft className="h-4 w-4" />
+              <Button variant="outline" size="icon" className="h-6 w-6">
+                <ArrowLeft className="h-3 w-3" />
               </Button>
             </Link>
-            <h2 className="text-xl md:text-2xl font-bold tracking-tight">Analytics Dashboard</h2>
+            <h2 className="text-sm md:text-base font-bold tracking-tight">Analytics Dashboard</h2>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-1">
             <Button 
               variant="outline" 
               onClick={handleRefreshData}
               disabled={isRefreshing}
-              className="h-8 text-sm w-full sm:w-auto"
+              className="h-6 text-xs w-full sm:w-auto"
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-3 w-3 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
               {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
             </Button>
             
-            <Button asChild variant="destructive" className="gap-2 text-white bg-red-600 hover:bg-red-700 text-sm h-8 w-full sm:w-auto">
+            <Button asChild variant="destructive" className="gap-1 text-white bg-red-600 hover:bg-red-700 text-xs h-6 w-full sm:w-auto">
               <Link to="/">
-                <Home className="h-4 w-4" />
+                <Home className="h-3 w-3" />
                 Return to Home
               </Link>
             </Button>
           </div>
         </div>
         
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-1 md:grid-cols-2 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <ErrorBoundary 
               fallback={
-                <Card className="min-h-[240px] flex items-center justify-center">
+                <Card className="min-h-[150px] flex items-center justify-center">
                   <CardContent>
                     <ValidationError 
                       message="Something went wrong loading the NPS chart. Please try refreshing the data." 
@@ -102,42 +102,42 @@ export default function Analytics() {
           </div>
           
           <Card>
-            <CardHeader className="p-3">
-              <CardTitle className="text-base">Analytics Overview</CardTitle>
+            <CardHeader className="p-1">
+              <CardTitle className="text-xs">Analytics Overview</CardTitle>
             </CardHeader>
-            <CardContent className="p-3 pt-0">
-              <p className="text-xs text-muted-foreground mb-4">
+            <CardContent className="p-1 pt-0">
+              <p className="text-[8px] text-muted-foreground mb-1">
                 This dashboard provides detailed analytics about your client relationships and satisfaction metrics.
                 Track your Net Promoter Score (NPS) and other key performance indicators.
               </p>
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 p-2 rounded-lg border border-border bg-card/50">
-                  <div className="p-1.5 rounded-md bg-green-100 dark:bg-green-900/30">
-                    <Users className="h-3 w-3 text-green-600 dark:text-green-400" />
+              <div className="space-y-1">
+                <div className="flex items-center gap-1 p-1 rounded-lg border border-border bg-card/50">
+                  <div className="p-0.5 rounded-md bg-green-100 dark:bg-green-900/30">
+                    <Users className="h-2 w-2 text-green-600 dark:text-green-400" />
                   </div>
                   <div className="flex-1">
-                    <div className="text-xs font-medium">Client Retention Rate</div>
-                    <div className="font-semibold text-xs text-green-600">87%</div>
+                    <div className="text-[8px] font-medium">Client Retention Rate</div>
+                    <div className="font-semibold text-[8px] text-green-600">87%</div>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-2 p-2 rounded-lg border border-border bg-card/50">
-                  <div className="p-1.5 rounded-md bg-blue-100 dark:bg-blue-900/30">
-                    <Clock className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                <div className="flex items-center gap-1 p-1 rounded-lg border border-border bg-card/50">
+                  <div className="p-0.5 rounded-md bg-blue-100 dark:bg-blue-900/30">
+                    <Clock className="h-2 w-2 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div className="flex-1">
-                    <div className="text-xs font-medium">Average Response Time</div>
-                    <div className="font-semibold text-xs">4.2 hours</div>
+                    <div className="text-[8px] font-medium">Average Response Time</div>
+                    <div className="font-semibold text-[8px]">4.2 hours</div>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-2 p-2 rounded-lg border border-border bg-card/50">
-                  <div className="p-1.5 rounded-md bg-green-100 dark:bg-green-900/30">
-                    <TrendingUp className="h-3 w-3 text-green-600 dark:text-green-400" />
+                <div className="flex items-center gap-1 p-1 rounded-lg border border-border bg-card/50">
+                  <div className="p-0.5 rounded-md bg-green-100 dark:bg-green-900/30">
+                    <TrendingUp className="h-2 w-2 text-green-600 dark:text-green-400" />
                   </div>
                   <div className="flex-1">
-                    <div className="text-xs font-medium">Client Growth Rate</div>
-                    <div className="font-semibold text-xs text-green-600">+12%</div>
+                    <div className="text-[8px] font-medium">Client Growth Rate</div>
+                    <div className="font-semibold text-[8px] text-green-600">+12%</div>
                   </div>
                 </div>
               </div>

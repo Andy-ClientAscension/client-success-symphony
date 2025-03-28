@@ -15,7 +15,7 @@ export function Layout({ children }: LayoutProps) {
       <Sidebar />
       <div className="flex-1 flex flex-col w-full overflow-hidden">
         <Header />
-        <main className="flex-1 w-full overflow-auto max-h-[calc(100vh-3.5rem)]">
+        <main className="flex-1 w-full overflow-auto max-h-[calc(100vh-3rem)]">
           <ErrorBoundary>
             {children}
           </ErrorBoundary>
