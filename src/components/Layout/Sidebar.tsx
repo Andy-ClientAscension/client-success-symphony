@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
   Users, 
@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 export function Sidebar() {
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(!isMobile);
+  const location = useLocation();
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
@@ -27,7 +28,7 @@ export function Sidebar() {
 
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/" },
-    { icon: Users, label: "Clients", href: "/clients" },
+    { icon: Users, label: "Clients", href: "/add-client" },
     { icon: BarChart2, label: "Analytics", href: "/analytics" },
     { icon: Calendar, label: "Renewals", href: "/renewals" },
     { icon: MessagesSquare, label: "Communications", href: "/communications" },
@@ -76,18 +77,24 @@ export function Sidebar() {
         
         <nav className="flex-1 px-4">
           <ul className="space-y-1">
-            {navItems.map((item, index) => (
-              <li key={index}>
-                <Link
-                  to={item.href}
-                  className="flex items-center gap-3 px-4 py-3 text-white hover:bg-zinc-800 rounded-md transition-colors"
-                  onClick={isMobile ? () => setIsOpen(false) : undefined}
-                >
-                  <item.icon className="h-5 w-5" />
-                  <span>{item.label}</span>
-                </Link>
-              </li>
-            ))}
+            {navItems.map((item, index) => {
+              const isActive = location.pathname === item.href;
+              return (
+                <li key={index}>
+                  <Link
+                    to={item.href}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3 text-white hover:bg-zinc-800 rounded-md transition-colors",
+                      isActive && "bg-zinc-800 font-medium"
+                    )}
+                    onClick={isMobile ? () => setIsOpen(false) : undefined}
+                  >
+                    <item.icon className={cn("h-5 w-5", isActive && "text-red-600")} />
+                    <span>{item.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
         
