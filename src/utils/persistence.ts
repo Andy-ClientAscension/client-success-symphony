@@ -10,6 +10,9 @@ const STORAGE_KEYS = {
   METRICS: 'ssc-dashboard-metrics',
   NPS: 'ssc-dashboard-nps',
   CHURN: 'ssc-dashboard-churn',
+  LEADS: 'ssc-dashboard-leads',
+  COSTS: 'ssc-dashboard-costs',
+  USER_PREFERENCES: 'ssc-dashboard-preferences',
 };
 
 /**
@@ -54,6 +57,33 @@ export const clearAllData = (): void => {
     localStorage.removeItem(key);
   });
   console.log('All dashboard data cleared');
+};
+
+/**
+ * Save user preferences
+ */
+export const saveUserPreferences = (preferences: {
+  theme?: 'light' | 'dark' | 'system';
+  layout?: 'compact' | 'comfortable' | 'spacious';
+  sidebarCollapsed?: boolean;
+  dateFormat?: string;
+  currency?: string;
+}): void => {
+  const current = loadData(STORAGE_KEYS.USER_PREFERENCES, {});
+  saveData(STORAGE_KEYS.USER_PREFERENCES, { ...current, ...preferences });
+};
+
+/**
+ * Load user preferences
+ */
+export const loadUserPreferences = () => {
+  return loadData(STORAGE_KEYS.USER_PREFERENCES, {
+    theme: 'system',
+    layout: 'comfortable',
+    sidebarCollapsed: false,
+    dateFormat: 'MM/dd/yyyy',
+    currency: 'USD'
+  });
 };
 
 // Export storage keys for use in components

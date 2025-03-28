@@ -11,15 +11,13 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-white">
       <Sidebar />
       <div className="flex-1 flex flex-col w-full overflow-hidden">
         <Header />
-        <main className="flex-1 w-full overflow-auto max-h-[calc(100vh-3rem)]">
+        <main className="flex-1 w-full overflow-auto">
           <ErrorBoundary>
-            <div className="p-0.5">
-              {children}
-            </div>
+            {children}
           </ErrorBoundary>
         </main>
       </div>
