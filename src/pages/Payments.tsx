@@ -3,9 +3,11 @@ import { Layout } from "@/components/Layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { CreditCard, DollarSign } from "lucide-react";
+import { CreditCard, DollarSign, Home } from "lucide-react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Link } from "react-router-dom";
 
 // Creating dummy payment data - using string dates to avoid date parsing issues
 const payments = [
@@ -56,9 +58,17 @@ export default function Payments() {
     <Layout>
       <ErrorBoundary>
         <div className="container py-6 max-w-6xl">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold">Payment History</h1>
-            <p className="text-muted-foreground">View and manage client payments and transactions.</p>
+          <div className="mb-6 flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-bold">Payment History</h1>
+              <p className="text-muted-foreground">View and manage client payments and transactions.</p>
+            </div>
+            <Button asChild variant="outline" className="gap-2">
+              <Link to="/">
+                <Home className="h-4 w-4" />
+                Back to Dashboard
+              </Link>
+            </Button>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
