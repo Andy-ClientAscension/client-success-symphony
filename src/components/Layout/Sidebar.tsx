@@ -60,7 +60,7 @@ export function Sidebar() {
         <div className="p-4 sm:p-6 flex items-center justify-between">
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
             <BarChart2 className="h-6 w-6 text-red-600" />
-            <span className="whitespace-nowrap">Client Symphony</span>
+            <span className="whitespace-nowrap">SSC Dashboard</span>
           </h1>
           {isMobile && (
             <Button
