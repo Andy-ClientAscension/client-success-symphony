@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -119,10 +120,10 @@
     padding: 0;
   }
 
-  /* Improve scrollbar visibility */
+  /* Improve scrollbar visibility - these are now in App.css */
   ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 14px;
+    height: 14px;
   }
 
   ::-webkit-scrollbar-track {
@@ -131,12 +132,12 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.3);
     border-radius: 8px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.5);
   }
 }
 
@@ -178,5 +179,8 @@
   /* High zoom support */
   .zoom-friendly {
     min-width: fit-content;
+    min-height: fit-content;
+    width: max-content;
+    height: max-content;
   }
 }

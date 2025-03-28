@@ -16,9 +16,9 @@ export function Layout({ children }: LayoutProps) {
       <Sidebar />
       <div className="flex-1 flex flex-col w-full min-w-0">
         <Header />
-        <main className="flex-1 overflow-auto w-full">
+        <main className="flex-1 overflow-hidden w-full">
           <ScrollArea className="h-full w-full" orientation="both">
-            <div className="min-w-full p-4">
+            <div className="p-4 zoom-friendly">
               <ErrorBoundary>
                 {children}
               </ErrorBoundary>
