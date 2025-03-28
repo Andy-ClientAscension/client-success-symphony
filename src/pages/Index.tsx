@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout/Layout";
 import { MetricsCards } from "@/components/Dashboard/MetricsCards";
 import { ClientList } from "@/components/Dashboard/ClientList";
@@ -52,7 +51,7 @@ export default function Index() {
         </div>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <ScrollArea className="w-full pb-1" orientation="horizontal">
+          <ScrollArea className="w-full pb-1">
             <TabsList className="w-full md:w-auto justify-start border-b mb-2 bg-transparent p-0 flex-nowrap">
               <TabsTrigger 
                 value="overview" 

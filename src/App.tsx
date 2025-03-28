@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +12,19 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useEffect } from "react";
 import { applyPolyfills } from "@/utils/browserCompatibility";
+
+// Import page components
+import Login from "@/pages/Login";
+import SignUp from "@/pages/SignUp";
+import Index from "@/pages/Index";
+import AddClient from "@/pages/AddClient";
+import Analytics from "@/pages/Analytics";
+import Communications from "@/pages/Communications";
+import Renewals from "@/pages/Renewals";
+import Payments from "@/pages/Payments";
+import Settings from "@/pages/Settings";
+import Help from "@/pages/Help";
+import NotFound from "@/pages/NotFound";
 
 // Apply polyfills immediately for older browsers
 if (typeof window !== 'undefined') {
