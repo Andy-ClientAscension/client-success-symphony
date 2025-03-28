@@ -19,7 +19,7 @@ export function ThemeToggle() {
   };
 
   return (
-    <Button variant="outline" size="icon" onClick={toggleTheme}>
+    <Button variant="outline" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
       {theme === "dark" ? (
         <Sun className="h-[1.2rem] w-[1.2rem]" />
       ) : (

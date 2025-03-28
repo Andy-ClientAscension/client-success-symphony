@@ -5,6 +5,7 @@
 
 @layer base {
   :root {
+    /* Light mode variables */
     --background: 0 0% 100%;
     --foreground: 0 0% 10%;
 
@@ -44,7 +45,7 @@
     --sidebar-border: 0 0% 15%;
     --sidebar-ring: 0 100% 60%;
     
-    /* Updated brand colors to match the Client Ascension red */
+    /* Brand colors to match the Client Ascension red */
     --brand-50: 0 100% 98%;
     --brand-100: 0 100% 95%;
     --brand-200: 0 100% 89%;
@@ -56,6 +57,47 @@
     --brand-800: 0 100% 30%;
     --brand-900: 0 100% 25%;
     --brand-950: 0 100% 15%;
+  }
+
+  .dark {
+    /* Dark mode variables */
+    --background: 0 0% 10%;
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 15%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 15%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 100% 50%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 0 0% 20%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 20%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 0 100% 30%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 0 100% 50%;
+
+    /* Keep sidebar variables the same in dark mode */
+    --sidebar-background: 0 0% 10%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 0 100% 60%;
   }
 }
 
