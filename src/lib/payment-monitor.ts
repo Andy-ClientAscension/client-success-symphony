@@ -78,3 +78,54 @@ export const monitorPayments = async (
   const statuses = await checkOverduePayments(clients, dayThreshold);
   return statuses.filter(status => status.isOverdue);
 };
+
+// Function to check payment status for a single client/student
+export const checkStudentPaymentStatus = async (
+  studentId: string,
+  studentName: string,
+  dayThreshold: number = 28
+): Promise<PaymentStatus> => {
+  try {
+    // Mock API call to Stripe - in a real implementation, 
+    // this would be replaced with actual Stripe API call
+    const response = await apiIntegrations.stripe.getPayments(studentId);
+    
+    if (!response.success) {
+      throw new Error('Failed to fetch payment data');
+    }
+    
+    // For demo purposes only - in a real app, analyze actual payment data
+    const mockPayments = response.data || [];
+    const hasRecentPayment = mockPayments.length > 0;
+    
+    // Generate a random date between 0-60 days ago
+    const lastPaymentDate = hasRecentPayment 
+      ? new Date(Date.now() - Math.floor(Math.random() * 60) * 24 * 60 * 60 * 1000).toISOString()
+      : null;
+      
+    const daysOverdue = lastPaymentDate 
+      ? Math.floor((Date.now() - new Date(lastPaymentDate).getTime()) / (24 * 60 * 60 * 1000))
+      : 30; // Default to 30 days if no payment record
+      
+    const isOverdue = daysOverdue > dayThreshold;
+    
+    return {
+      clientId: studentId,
+      clientName: studentName,
+      lastPaymentDate,
+      daysOverdue,
+      amountDue: isOverdue ? Math.floor(Math.random() * 1000) + 500 : null,
+      isOverdue
+    };
+  } catch (error) {
+    console.error(`Error checking payments for student ${studentName}:`, error);
+    return {
+      clientId: studentId,
+      clientName: studentName,
+      lastPaymentDate: null,
+      daysOverdue: null,
+      amountDue: null,
+      isOverdue: false
+    };
+  }
+};

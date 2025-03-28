@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { KanbanSquare, Plus, MoreVertical, Calendar, Users, MessageSquare } from "lucide-react";
+import { KanbanSquare, Plus, MoreVertical, Calendar, Users, MessageSquare, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +23,8 @@ import {
 
 import { StudentDateModal } from "./StudentDateModal";
 import { StudentNotes } from "./StudentNotes";
+import { StudentPaymentAlert } from "./StudentPaymentAlert";
+import { checkStudentPaymentStatus, PaymentStatus } from "@/lib/payment-monitor";
 
 // Note type for student comments
 interface Note {
@@ -44,7 +45,8 @@ interface Student {
   contractDuration?: "6months" | "1year";
   churnDate?: string;
   csm?: string;
-  notes?: Note[]; // Added notes field
+  notes?: Note[];
+  paymentStatus?: PaymentStatus;
 }
 
 // CSM Team data
@@ -206,8 +208,60 @@ export function KanbanBoard() {
   const [expandedStudentId, setExpandedStudentId] = useState<string | null>(null);
   const { toast } = useToast();
   
-  // Filter data by selected team
   useEffect(() => {
+    // Check payments for all students
+    const checkAllStudentPayments = async () => {
+      const updatedStudents = { ...data.students };
+      let hasPaymentIssues = false;
+      
+      for (const studentId in updatedStudents) {
+        const student = updatedStudents[studentId];
+        // Only check active students
+        if (data.columns.active.studentIds.includes(studentId) || 
+            data.columns.backend.studentIds.includes(studentId) ||
+            data.columns.olympia.studentIds.includes(studentId)) {
+          const paymentStatus = await checkStudentPaymentStatus(
+            student.id, 
+            student.name,
+            28 // Alert after 28 days
+          );
+          
+          if (paymentStatus.isOverdue) {
+            hasPaymentIssues = true;
+          }
+          
+          updatedStudents[studentId] = {
+            ...student,
+            paymentStatus
+          };
+        }
+      }
+      
+      setData(prevData => ({
+        ...prevData,
+        students: updatedStudents
+      }));
+      
+      if (hasPaymentIssues) {
+        toast({
+          title: "Payment Alerts",
+          description: "Some students have overdue payments",
+          variant: "destructive",
+        });
+      }
+    };
+    
+    // Initial check
+    checkAllStudentPayments();
+    
+    // Check payments every 12 hours
+    const intervalId = setInterval(checkAllStudentPayments, 12 * 60 * 60 * 1000);
+    
+    return () => clearInterval(intervalId);
+  }, []);
+  
+  useEffect(() => {
+    // Filter data by selected team
     if (selectedTeam === "all") {
       setFilteredData(data);
       return;
@@ -414,7 +468,6 @@ export function KanbanBoard() {
     return null;
   };
   
-  // Calculate stats for the selected team
   const teamStats = () => {
     if (selectedTeam === "all") {
       return {
@@ -467,7 +520,6 @@ export function KanbanBoard() {
         </div>
       </CardHeader>
       <CardContent>
-        {/* Team Stats Section */}
         {selectedTeam !== "all" && (
           <div className="mb-4 p-4 bg-slate-100 rounded-lg">
             <h3 className="font-medium text-lg mb-2">
@@ -534,6 +586,15 @@ export function KanbanBoard() {
                                         <span>{student.notes?.length}</span>
                                       </Badge>
                                     )}
+                                    {student.paymentStatus?.isOverdue && (
+                                      <Badge 
+                                        variant="destructive" 
+                                        className="mr-2 px-1.5 py-0.5 flex items-center"
+                                      >
+                                        <AlertTriangle className="h-3 w-3 mr-1" />
+                                        <span>Payment</span>
+                                      </Badge>
+                                    )}
                                     <DropdownMenu>
                                       <DropdownMenuTrigger asChild>
                                         <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
@@ -571,7 +632,10 @@ export function KanbanBoard() {
                                 </div>
                                 {formatDateInfo(student)}
                                 
-                                {/* Notes section - conditionally displayed when expanded */}
+                                {student.paymentStatus?.isOverdue && (
+                                  <StudentPaymentAlert paymentStatus={student.paymentStatus} />
+                                )}
+                                
                                 {expandedStudentId === student.id && (
                                   <StudentNotes
                                     studentId={student.id}
