@@ -1,7 +1,7 @@
-
 import { useState } from "react";
-import { MoreHorizontal, ChevronRight } from "lucide-react";
+import { MoreHorizontal, ChevronRight, PlusCircle } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -23,6 +23,7 @@ import { Client, getAllClients } from "@/lib/data";
 
 export function ClientList() {
   const [clients] = useState<Client[]>(getAllClients());
+  const navigate = useNavigate();
   
   const getStatusBadge = (status: Client['status']) => {
     switch (status) {
@@ -51,12 +52,19 @@ export function ClientList() {
     return 'bg-danger-500';
   };
   
+  const handleAddNewClient = () => {
+    navigate("/add-client");
+  };
+  
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Client Overview</CardTitle>
-        <Button variant="outline" size="sm">
-          View All Clients
+        <Button 
+          onClick={handleAddNewClient}
+          className="bg-red-600 hover:bg-red-700"
+        >
+          <PlusCircle className="mr-2 h-4 w-4" /> Add New Client
         </Button>
       </CardHeader>
       <CardContent>
