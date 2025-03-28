@@ -16,7 +16,7 @@ import {
   TabsTrigger 
 } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Import } from "lucide-react";
 
 export default function Index() {
   const isMobile = useIsMobile();
@@ -36,21 +36,22 @@ export default function Index() {
 
   return (
     <Layout>
-      <div className="p-3 space-y-4">
+      <div className="p-2 space-y-3">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold">Performance Report</h1>
+          <div className="text-lg font-bold">Performance Report</div>
           <div className="flex items-center gap-2">
-            <Button className="bg-red-600 hover:bg-red-700 h-8 text-xs">
-              <PlusCircle className="mr-1 h-3 w-3" /> Add Chart
-            </Button>
-            <div className="border rounded-md px-2 py-1 text-xs">
-              Period: Last 30 Days ▼
+            <div className="flex flex-col">
+              <div className="text-xs font-medium">Import Data</div>
+              <div className="text-xs text-muted-foreground">Import client data</div>
             </div>
+            <Button className="bg-red-600 hover:bg-red-700 h-8">
+              <Import className="mr-1 h-3 w-3" /> Import
+            </Button>
           </div>
         </div>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full justify-start border-b mb-4 bg-transparent p-0">
+          <TabsList className="w-full justify-start border-b mb-2 bg-transparent p-0">
             <TabsTrigger 
               value="overview" 
               className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-4 py-1 bg-transparent text-xs"
@@ -93,8 +94,8 @@ export default function Index() {
             <div>
               <MetricsCards />
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-3">
-                <div className="col-span-1">
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                <div className="col-span-2">
                   <ChurnChart />
                 </div>
                 <div className="col-span-1">
@@ -102,11 +103,11 @@ export default function Index() {
                 </div>
               </div>
               
-              <div className="mt-3">
+              <div className="mt-2">
                 <ClientList />
               </div>
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-3">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mt-2">
                 <div className="col-span-1">
                   <KanbanBoard />
                 </div>
