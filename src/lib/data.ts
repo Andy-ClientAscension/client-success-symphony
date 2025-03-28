@@ -1,4 +1,3 @@
-
 import { subDays, format, addDays } from 'date-fns';
 
 export interface Client {
@@ -16,6 +15,20 @@ export interface Client {
   };
   npsScore: number | null;
   communicationLog: Communication[];
+  trustPilotReview?: {
+    date: string | null;
+    rating: number | null;
+    link: string | null;
+  };
+  caseStudyInterview?: {
+    completed: boolean;
+    scheduledDate: string | null;
+    notes: string | null;
+  };
+  referrals?: {
+    count: number;
+    names: string[];
+  };
 }
 
 export interface Communication {
@@ -71,7 +84,21 @@ export const MOCK_CLIENTS: Client[] = [
         subject: 'Support Call',
         summary: 'Addressed concerns about feature implementation'
       }
-    ]
+    ],
+    trustPilotReview: {
+      date: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
+      rating: 5,
+      link: 'https://trustpilot.com/reviews/acmecorp'
+    },
+    caseStudyInterview: {
+      completed: true,
+      scheduledDate: format(subDays(new Date(), 45), 'yyyy-MM-dd'),
+      notes: 'Great success story about implementation of our services'
+    },
+    referrals: {
+      count: 3,
+      names: ['TechStart Inc', 'Global Enterprises', 'MediaGroup Co.']
+    }
   },
   {
     id: '2',
@@ -95,7 +122,21 @@ export const MOCK_CLIENTS: Client[] = [
         subject: 'Retention Meeting',
         summary: 'Client expressed concerns about ROI'
       }
-    ]
+    ],
+    trustPilotReview: {
+      date: null,
+      rating: null,
+      link: null
+    },
+    caseStudyInterview: {
+      completed: false,
+      scheduledDate: format(addDays(new Date(), 10), 'yyyy-MM-dd'),
+      notes: 'Pending interview to discuss challenges and solutions'
+    },
+    referrals: {
+      count: 0,
+      names: []
+    }
   },
   {
     id: '3',
@@ -119,7 +160,21 @@ export const MOCK_CLIENTS: Client[] = [
         subject: 'Quick Update',
         summary: 'Shared new feature release information'
       }
-    ]
+    ],
+    trustPilotReview: {
+      date: format(subDays(new Date(), 15), 'yyyy-MM-dd'),
+      rating: 5,
+      link: 'https://trustpilot.com/reviews/globalent'
+    },
+    caseStudyInterview: {
+      completed: true,
+      scheduledDate: format(subDays(new Date(), 60), 'yyyy-MM-dd'),
+      notes: 'Featured case study on our website'
+    },
+    referrals: {
+      count: 5,
+      names: ['Startup Vision', 'TechCorp', 'InnovateX', 'FutureTech', 'DataFlow']
+    }
   },
   {
     id: '4',
@@ -143,7 +198,21 @@ export const MOCK_CLIENTS: Client[] = [
         subject: 'Onboarding Call',
         summary: 'Initial setup and training session'
       }
-    ]
+    ],
+    trustPilotReview: {
+      date: null,
+      rating: null,
+      link: null
+    },
+    caseStudyInterview: {
+      completed: false,
+      scheduledDate: null,
+      notes: 'Too early for case study'
+    },
+    referrals: {
+      count: 0,
+      names: []
+    }
   },
   {
     id: '5',
@@ -167,7 +236,21 @@ export const MOCK_CLIENTS: Client[] = [
         subject: 'Service Cancellation',
         summary: 'Client confirmed their decision to cancel services'
       }
-    ]
+    ],
+    trustPilotReview: {
+      date: format(subDays(new Date(), 20), 'yyyy-MM-dd'),
+      rating: 2,
+      link: 'https://trustpilot.com/reviews/mediagroup'
+    },
+    caseStudyInterview: {
+      completed: false,
+      scheduledDate: null,
+      notes: 'Not a candidate for case study'
+    },
+    referrals: {
+      count: 0,
+      names: []
+    }
   }
 ];
 
