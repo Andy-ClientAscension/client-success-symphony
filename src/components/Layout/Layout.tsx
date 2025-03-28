@@ -16,11 +16,15 @@ export function Layout({ children }: LayoutProps) {
       <Sidebar />
       <div className="flex-1 flex flex-col w-full overflow-hidden">
         <Header />
-        <ScrollArea className="flex-1 p-4">
-          <ErrorBoundary>
-            {children}
-          </ErrorBoundary>
-        </ScrollArea>
+        <div className="flex-1 overflow-hidden">
+          <ScrollArea className="h-full max-h-[calc(100vh-64px)]">
+            <div className="p-4">
+              <ErrorBoundary>
+                {children}
+              </ErrorBoundary>
+            </div>
+          </ScrollArea>
+        </div>
       </div>
       <Toaster />
     </div>

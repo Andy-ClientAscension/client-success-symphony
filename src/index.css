@@ -109,6 +109,12 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Make the app fully scrollable */
+  html, body, #root {
+    height: 100%;
+    overflow-x: hidden;
+  }
 }
 
 @layer utilities {
@@ -119,5 +125,17 @@
   .scrollbar-hidden {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+  
+  /* For horizontal scrolling elements */
+  .overflow-x-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* For vertical scrolling elements */
+  .overflow-y-scroll {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }

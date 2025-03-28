@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { StudentDateModal } from "./StudentDateModal";
 import { StudentNotes } from "./StudentNotes";
@@ -498,7 +499,7 @@ export function KanbanBoard() {
   const stats = teamStats();
   
   return (
-    <Card className="mt-4">
+    <Card className="mt-4 overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center gap-2">
           <KanbanSquare className="h-5 w-5 text-red-600" />
@@ -525,7 +526,7 @@ export function KanbanBoard() {
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-2">
         {selectedTeam !== "all" && (
           <div className="mb-4 p-4 bg-slate-100 rounded-lg">
             <h3 className="font-medium text-lg mb-2">
@@ -552,120 +553,122 @@ export function KanbanBoard() {
           </div>
         )}
         
-        <DragDropContext onDragEnd={onDragEnd}>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {data.columnOrder.map(columnId => {
-              const column = filteredData.columns[columnId];
-              const students = column.studentIds.map(studentId => data.students[studentId]);
-              
-              return (
-                <div key={column.id} className="flex flex-col bg-secondary/50 rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-medium">{column.title}</h3>
-                    <Badge variant="brand">{students.length}</Badge>
-                  </div>
-                  <Droppable droppableId={column.id}>
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className="flex-1 min-h-[200px]"
-                      >
-                        {students.map((student, index) => (
-                          <Draggable key={student.id} draggableId={student.id} index={index}>
-                            {(provided) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                className="mb-2 bg-background rounded-md p-3 shadow-sm hover:shadow-md transition-shadow border border-gray-100"
-                              >
-                                <div className="flex items-center justify-between">
-                                  <span className="font-medium">{student.name}</span>
-                                  <div className="flex items-center">
-                                    {(student.notes?.length || 0) > 0 && (
-                                      <Badge 
-                                        variant="outline" 
-                                        className="mr-2 px-1.5 py-0.5 flex items-center border-red-200 bg-red-50"
-                                      >
-                                        <MessageSquare className="h-3 w-3 mr-1 text-red-600" />
-                                        <span>{student.notes?.length}</span>
-                                      </Badge>
-                                    )}
-                                    {student.paymentStatus?.isOverdue && (
-                                      <Badge 
-                                        variant="destructive" 
-                                        className="mr-2 px-1.5 py-0.5 flex items-center"
-                                      >
-                                        <AlertTriangle className="h-3 w-3 mr-1" />
-                                        <span>Payment</span>
-                                      </Badge>
-                                    )}
-                                    <DropdownMenu>
-                                      <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                                          <MoreVertical className="h-3 w-3" />
-                                        </Button>
-                                      </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="end">
-                                        <DropdownMenuItem>View Details</DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleViewDates(student)}>
-                                          <Calendar className="h-3 w-3 mr-2" /> View Dates
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem 
-                                          onClick={() => setExpandedStudentId(
-                                            expandedStudentId === student.id ? null : student.id
-                                          )}
+        <ScrollArea className="h-full max-h-[calc(100vh-250px)]">
+          <DragDropContext onDragEnd={onDragEnd}>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 pb-4 overflow-x-auto">
+              {data.columnOrder.map(columnId => {
+                const column = filteredData.columns[columnId];
+                const students = column.studentIds.map(studentId => data.students[studentId]);
+                
+                return (
+                  <div key={column.id} className="flex flex-col bg-secondary/50 rounded-lg p-3 min-w-[250px]">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-medium">{column.title}</h3>
+                      <Badge variant="brand">{students.length}</Badge>
+                    </div>
+                    <Droppable droppableId={column.id}>
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className="flex-1 min-h-[200px] overflow-hidden"
+                        >
+                          {students.map((student, index) => (
+                            <Draggable key={student.id} draggableId={student.id} index={index}>
+                              {(provided) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className="mb-2 bg-background rounded-md p-3 shadow-sm hover:shadow-md transition-shadow border border-gray-100"
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-medium">{student.name}</span>
+                                    <div className="flex items-center">
+                                      {(student.notes?.length || 0) > 0 && (
+                                        <Badge 
+                                          variant="outline" 
+                                          className="mr-2 px-1.5 py-0.5 flex items-center border-red-200 bg-red-50"
                                         >
-                                          <MessageSquare className="h-3 w-3 mr-2" /> 
-                                          {expandedStudentId === student.id ? "Hide Notes" : "Show Notes"}
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem>Edit Student</DropdownMenuItem>
-                                        <DropdownMenuItem>Contact</DropdownMenuItem>
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
+                                          <MessageSquare className="h-3 w-3 mr-1 text-red-600" />
+                                          <span>{student.notes?.length}</span>
+                                        </Badge>
+                                      )}
+                                      {student.paymentStatus?.isOverdue && (
+                                        <Badge 
+                                          variant="destructive" 
+                                          className="mr-2 px-1.5 py-0.5 flex items-center"
+                                        >
+                                          <AlertTriangle className="h-3 w-3 mr-1" />
+                                          <span>Payment</span>
+                                        </Badge>
+                                      )}
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                            <MoreVertical className="h-3 w-3" />
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                          <DropdownMenuItem>View Details</DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => handleViewDates(student)}>
+                                            <Calendar className="h-3 w-3 mr-2" /> View Dates
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem 
+                                            onClick={() => setExpandedStudentId(
+                                              expandedStudentId === student.id ? null : student.id
+                                            )}
+                                          >
+                                            <MessageSquare className="h-3 w-3 mr-2" /> 
+                                            {expandedStudentId === student.id ? "Hide Notes" : "Show Notes"}
+                                          </DropdownMenuItem>
+                                          <DropdownMenuSeparator />
+                                          <DropdownMenuItem>Edit Student</DropdownMenuItem>
+                                          <DropdownMenuItem>Contact</DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    </div>
                                   </div>
-                                </div>
-                                <div className="mt-2">
-                                  <div className="text-xs text-muted-foreground mb-1">Progress</div>
-                                  <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                                    <div 
-                                      className={`h-full ${student.progress >= 70 ? 'bg-success-500' : student.progress >= 40 ? 'bg-warning-500' : 'bg-red-600'}`}
-                                      style={{ width: `${student.progress}%` }} 
+                                  <div className="mt-2">
+                                    <div className="text-xs text-muted-foreground mb-1">Progress</div>
+                                    <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+                                      <div 
+                                        className={`h-full ${student.progress >= 70 ? 'bg-success-500' : student.progress >= 40 ? 'bg-warning-500' : 'bg-red-600'}`}
+                                        style={{ width: `${student.progress}%` }} 
+                                      />
+                                    </div>
+                                  </div>
+                                  {formatDateInfo(student)}
+                                  
+                                  {student.paymentStatus?.isOverdue && (
+                                    <StudentPaymentAlert paymentStatus={student.paymentStatus} />
+                                  )}
+                                  
+                                  {expandedStudentId === student.id && (
+                                    <StudentNotes
+                                      studentId={student.id}
+                                      studentName={student.name}
+                                      notes={student.notes || []}
+                                      onAddNote={handleAddNote}
                                     />
-                                  </div>
+                                  )}
                                 </div>
-                                {formatDateInfo(student)}
-                                
-                                {student.paymentStatus?.isOverdue && (
-                                  <StudentPaymentAlert paymentStatus={student.paymentStatus} />
-                                )}
-                                
-                                {expandedStudentId === student.id && (
-                                  <StudentNotes
-                                    studentId={student.id}
-                                    studentName={student.name}
-                                    notes={student.notes || []}
-                                    onAddNote={handleAddNote}
-                                  />
-                                )}
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
-                  <Button variant="ghost" size="sm" className="mt-2">
-                    <Plus className="h-3 w-3 mr-1" /> Add
-                  </Button>
-                </div>
-              );
-            })}
-          </div>
-        </DragDropContext>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                    <Button variant="ghost" size="sm" className="mt-2">
+                      <Plus className="h-3 w-3 mr-1" /> Add
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          </DragDropContext>
+        </ScrollArea>
         
         {dateModalOpen && selectedStudent && (
           <StudentDateModal
