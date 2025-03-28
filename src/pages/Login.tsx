@@ -28,10 +28,16 @@ export default function Login() {
   useEffect(() => {
     const savedCredentials = localStorage.getItem("savedCredentials");
     if (savedCredentials) {
-      const credentials = JSON.parse(savedCredentials);
-      setEmail(credentials.email);
-      setPassword(credentials.password);
-      setRememberMe(true);
+      try {
+        const credentials = JSON.parse(savedCredentials);
+        if (credentials.email) {
+          setEmail(credentials.email);
+          setRememberMe(true);
+        }
+      } catch (error) {
+        console.error("Error parsing saved credentials:", error);
+        localStorage.removeItem("savedCredentials");
+      }
     }
   }, []);
 

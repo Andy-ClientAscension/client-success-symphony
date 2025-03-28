@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { BarChart2, Lock, Mail, Key, ArrowLeft } from "lucide-react";
 import { LoadingState } from "@/components/LoadingState";
+import { ValidationError } from "@/components/ValidationError";
 
 export default function SignUp() {
   const [email, setEmail] = useState("");
@@ -16,35 +17,68 @@ export default function SignUp() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { register } = useAuth();
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [inviteCodeError, setInviteCodeError] = useState("");
+  const { register, validateInviteCode } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const validateForm = () => {
+    let isValid = true;
+    
+    // Email validation
+    if (!email) {
+      setEmailError("Email is required");
+      isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailError("Please enter a valid email address");
+      isValid = false;
+    } else {
+      setEmailError("");
+    }
+    
+    // Password validation
+    if (!password) {
+      setPasswordError("Password is required");
+      isValid = false;
+    } else if (password.length < 6) {
+      setPasswordError("Password must be at least 6 characters");
+      isValid = false;
+    } else {
+      setPasswordError("");
+    }
+    
+    // Confirm password validation
+    if (!confirmPassword) {
+      setConfirmPasswordError("Please confirm your password");
+      isValid = false;
+    } else if (password !== confirmPassword) {
+      setConfirmPasswordError("Passwords do not match");
+      isValid = false;
+    } else {
+      setConfirmPasswordError("");
+    }
+    
+    // Invite code validation
+    if (!inviteCode) {
+      setInviteCodeError("Invitation code is required");
+      isValid = false;
+    } else {
+      setInviteCodeError("");
+    }
+    
+    return isValid;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password || !confirmPassword || !inviteCode) {
+    if (!validateForm()) {
       toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (password.length < 6) {
-      toast({
-        title: "Error",
-        description: "Password must be at least 6 characters",
+        title: "Validation Error",
+        description: "Please fix the errors in the form",
         variant: "destructive",
       });
       return;
@@ -53,6 +87,20 @@ export default function SignUp() {
     setIsLoading(true);
     
     try {
+      // Verify invite code first
+      const isValidCode = await validateInviteCode(inviteCode);
+      if (!isValidCode) {
+        setInviteCodeError("Invalid invitation code");
+        toast({
+          title: "Error",
+          description: "Invalid invitation code. Please check and try again.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      // Proceed with registration
       const result = await register(email, password, inviteCode);
       
       if (result.success) {
@@ -115,10 +163,11 @@ export default function SignUp() {
                     placeholder="name@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
+                    className={`pl-10 ${emailError ? "border-destructive" : ""}`}
                     required
                   />
                 </div>
+                {emailError && <ValidationError message={emailError} />}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
@@ -130,10 +179,11 @@ export default function SignUp() {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
+                    className={`pl-10 ${passwordError ? "border-destructive" : ""}`}
                     required
                   />
                 </div>
+                {passwordError && <ValidationError message={passwordError} />}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
@@ -145,10 +195,11 @@ export default function SignUp() {
                     placeholder="••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-10"
+                    className={`pl-10 ${confirmPasswordError ? "border-destructive" : ""}`}
                     required
                   />
                 </div>
+                {confirmPasswordError && <ValidationError message={confirmPasswordError} />}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="inviteCode">Invitation Code</Label>
@@ -160,12 +211,17 @@ export default function SignUp() {
                     placeholder="Enter your invitation code"
                     value={inviteCode}
                     onChange={(e) => setInviteCode(e.target.value)}
-                    className="pl-10"
+                    className={`pl-10 ${inviteCodeError ? "border-destructive" : ""}`}
                     required
                   />
                 </div>
+                {inviteCodeError && <ValidationError message={inviteCodeError} />}
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isLoading}
+              >
                 {isLoading ? "Creating account..." : "Sign Up"}
               </Button>
             </form>

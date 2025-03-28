@@ -33,7 +33,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Check if user is already logged in
         const savedUser = localStorage.getItem("user");
         
-        // Check for saved credentials with remember me
+        if (savedUser) {
+          // User is already logged in, set the user state
+          setUser(JSON.parse(savedUser));
+          setIsLoading(false);
+          return;
+        }
+        
+        // No saved user, check for saved credentials with remember me
         const savedCredentials = localStorage.getItem("savedCredentials");
         
         if (savedCredentials) {
@@ -43,7 +50,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (credentials.expiry && new Date().getTime() > credentials.expiry) {
             // Expired, remove the saved credentials
             localStorage.removeItem("savedCredentials");
-          } else if (!savedUser) {
+            setIsLoading(false);
+          } else {
             // Auto-login if credentials are valid and not expired
             await login(credentials.email, credentials.password)
               .then(success => {
@@ -53,14 +61,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               })
               .catch(() => {
                 localStorage.removeItem("savedCredentials");
+              })
+              .finally(() => {
+                setIsLoading(false);
               });
           }
-        } else if (savedUser) {
-          setUser(JSON.parse(savedUser));
+        } else {
+          // No saved credentials either
+          setIsLoading(false);
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
-      } finally {
         setIsLoading(false);
       }
     };
