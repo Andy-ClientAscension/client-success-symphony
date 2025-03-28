@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -110,7 +109,6 @@ export default function Login() {
       const success = await login(email, password);
       
       if (success) {
-        // Handle remember me for credentials
         if (rememberMe) {
           const credentials = { email, password };
           const expiryDate = new Date();
@@ -126,7 +124,6 @@ export default function Login() {
           localStorage.removeItem("savedCredentials");
         }
         
-        // Store the session persistence preference
         if (rememberSession) {
           localStorage.setItem("persistDashboard", "true");
           toast({
@@ -171,7 +168,7 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 overflow-auto">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <div className="flex justify-center mb-4">

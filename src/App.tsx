@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -68,26 +67,28 @@ const App = () => {
             <BrowserCompatibilityCheck />
             <BrowserRouter>
               <AuthProvider>
-                <Routes>
-                  {/* Public routes */}
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<SignUp />} />
-                
-                  {/* Protected routes */}
-                  <Route element={<ProtectedRoute />}>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/add-client" element={<AddClient />} />
-                    <Route path="/analytics" element={<Analytics />} />
-                    <Route path="/communications" element={<Communications />} />
-                    <Route path="/renewals" element={<Renewals />} />
-                    <Route path="/payments" element={<Payments />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="/help" element={<Help />} />
-                  </Route>
-                
-                  {/* Catch-all route */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
+                <div className="min-h-screen overflow-auto">
+                  <Routes>
+                    {/* Public routes */}
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<SignUp />} />
+                  
+                    {/* Protected routes */}
+                    <Route element={<ProtectedRoute />}>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/add-client" element={<AddClient />} />
+                      <Route path="/analytics" element={<Analytics />} />
+                      <Route path="/communications" element={<Communications />} />
+                      <Route path="/renewals" element={<Renewals />} />
+                      <Route path="/payments" element={<Payments />} />
+                      <Route path="/settings" element={<Settings />} />
+                      <Route path="/help" element={<Help />} />
+                    </Route>
+                  
+                    {/* Catch-all route */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </div>
               </AuthProvider>
             </BrowserRouter>
           </ErrorBoundary>

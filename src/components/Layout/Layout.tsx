@@ -13,9 +13,9 @@ export function Layout({ children }: LayoutProps) {
   return (
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar />
-      <div className="flex-1 flex flex-col w-full overflow-hidden">
+      <div className="flex-1 flex flex-col w-full">
         <Header />
-        <main className="flex-1 w-full overflow-auto pb-10">
+        <main className="flex-1 p-4 overflow-auto">
           <ErrorBoundary>
             {children}
           </ErrorBoundary>
