@@ -8,15 +8,15 @@ import { format } from "date-fns";
 import { Calendar, Clock } from "lucide-react";
 import { MOCK_CLIENTS } from "@/lib/data";
 
-// Calculate dummy renewal dates based on client creation dates
+// Calculate dummy renewal dates based on client ID (since createdAt doesn't exist in Client type)
 const renewals = MOCK_CLIENTS.map(client => {
-  // Add 1 year to creation date for renewal
-  const creationDate = new Date(client.createdAt);
-  const renewalDate = new Date(creationDate);
-  renewalDate.setFullYear(renewalDate.getFullYear() + 1);
+  // Create a renewal date based on client ID (for demo purposes)
+  const randomDaysOffset = parseInt(client.id) * 30;
+  const today = new Date();
+  const renewalDate = new Date(today);
+  renewalDate.setDate(today.getDate() + randomDaysOffset);
   
   // Calculate days until renewal
-  const today = new Date();
   const daysUntil = Math.ceil((renewalDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   
   // Determine status based on days until renewal
@@ -30,7 +30,6 @@ const renewals = MOCK_CLIENTS.map(client => {
   return {
     id: client.id,
     clientName: client.name,
-    clientEmail: client.email,
     renewalDate,
     daysUntil,
     status,
@@ -105,7 +104,6 @@ export default function Renewals() {
                     <TableCell>
                       <div>
                         <div className="font-medium">{renewal.clientName}</div>
-                        <div className="text-sm text-muted-foreground">{renewal.clientEmail}</div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -125,7 +123,7 @@ export default function Renewals() {
                     <TableCell>
                       <Badge variant={
                         renewal.status === "overdue" ? "destructive" : 
-                        renewal.status === "soon" ? "warning" : 
+                        renewal.status === "soon" ? "outline" : 
                         "secondary"
                       }>
                         {renewal.status === "soon" ? "Due Soon" : 
