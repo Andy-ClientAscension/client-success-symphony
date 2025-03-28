@@ -14,24 +14,30 @@ export default function Index() {
 
   return (
     <Layout>
-      <div className="flex-1 space-y-2 p-3 pt-2 overflow-auto">
+      <div className="flex-1 space-y-1 p-2 pt-1 overflow-auto">
         <div className="flex items-center justify-between mb-1">
-          <h2 className="text-xl font-bold tracking-tight">Dashboard</h2>
+          <h2 className="text-lg font-bold tracking-tight">Dashboard</h2>
         </div>
         
-        <div className="grid grid-cols-1 gap-2 md:grid-cols-4 lg:grid-cols-12">
-          <div className="md:col-span-3 lg:col-span-10">
+        <div className="grid grid-cols-1 gap-1 md:grid-cols-6 lg:grid-cols-12">
+          <div className="md:col-span-5 lg:col-span-11">
             <MetricsCards />
           </div>
-          <div className="md:col-span-1 lg:col-span-2">
+          <div className="md:col-span-1 lg:col-span-1">
             <ImportData />
           </div>
         </div>
         
-        <div className="grid grid-cols-1 gap-2 lg:grid-cols-3">
-          <ChurnChart />
-          <NPSChart />
-          <PaymentAlerts />
+        <div className="grid grid-cols-1 gap-1 md:grid-cols-3">
+          <div className="md:col-span-1">
+            <ChurnChart />
+          </div>
+          <div className="md:col-span-1">
+            <NPSChart />
+          </div>
+          <div className="md:col-span-1">
+            <PaymentAlerts />
+          </div>
         </div>
         
         {!isMobile && <ClientList />}
