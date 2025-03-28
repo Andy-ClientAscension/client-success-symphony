@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { KanbanSquare, Plus, MoreVertical, Calendar, Users } from "lucide-react";
+import { KanbanSquare, Plus, MoreVertical, Calendar, Users, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,8 +23,18 @@ import {
 } from "@/components/ui/select";
 
 import { StudentDateModal } from "./StudentDateModal";
+import { StudentNotes } from "./StudentNotes";
 
-// Enhanced student type with dates and CSM
+// Note type for student comments
+interface Note {
+  id: string;
+  text: string;
+  author: string;
+  timestamp: string;
+  mentions?: string[];
+}
+
+// Enhanced student type with dates, CSM and notes
 interface Student {
   id: string;
   name: string;
@@ -33,7 +43,8 @@ interface Student {
   endDate?: string;
   contractDuration?: "6months" | "1year";
   churnDate?: string;
-  csm?: string; // Added CSM field
+  csm?: string;
+  notes?: Note[]; // Added notes field
 }
 
 // CSM Team data
@@ -45,7 +56,7 @@ const CSM_TEAMS = [
   { id: "team4", name: "Team Delta" },
 ];
 
-// Mock data for student tracking, adding CSM information
+// Mock data for student tracking, adding CSM information and notes
 const INITIAL_DATA = {
   columns: {
     'active': {
@@ -82,7 +93,15 @@ const INITIAL_DATA = {
       startDate: format(new Date(2023, 5, 15), 'yyyy-MM-dd'),
       contractDuration: "6months" as const,
       endDate: format(addMonths(new Date(2023, 5, 15), 6), 'yyyy-MM-dd'),
-      csm: "team1"
+      csm: "team1",
+      notes: [
+        {
+          id: 'n1',
+          text: 'Alice is making great progress with the frontend module.',
+          author: 'Sarah',
+          timestamp: format(new Date(2023, 6, 10), 'yyyy-MM-dd HH:mm:ss')
+        }
+      ]
     },
     's2': { 
       id: 's2', 
@@ -91,7 +110,16 @@ const INITIAL_DATA = {
       startDate: format(new Date(2023, 8, 10), 'yyyy-MM-dd'),
       contractDuration: "1year" as const,
       endDate: format(addYears(new Date(2023, 8, 10), 1), 'yyyy-MM-dd'),
-      csm: "team2"
+      csm: "team2",
+      notes: [
+        {
+          id: 'n2',
+          text: 'Bob might need help with React hooks. @michael please check in with him.',
+          author: 'David',
+          timestamp: format(new Date(2023, 9, 5), 'yyyy-MM-dd HH:mm:ss'),
+          mentions: ['michael']
+        }
+      ]
     },
     's3': { 
       id: 's3', 
@@ -100,7 +128,8 @@ const INITIAL_DATA = {
       startDate: format(new Date(2023, 10, 5), 'yyyy-MM-dd'),
       contractDuration: "6months" as const,
       endDate: format(addMonths(new Date(2023, 10, 5), 6), 'yyyy-MM-dd'),
-      csm: "team1"
+      csm: "team1",
+      notes: []
     },
     's4': { 
       id: 's4', 
@@ -109,7 +138,8 @@ const INITIAL_DATA = {
       startDate: format(new Date(2023, 3, 12), 'yyyy-MM-dd'),
       contractDuration: "6months" as const,
       endDate: format(addMonths(new Date(2023, 3, 12), 6), 'yyyy-MM-dd'),
-      csm: "team3"
+      csm: "team3",
+      notes: []
     },
     's5': { 
       id: 's5', 
@@ -118,7 +148,8 @@ const INITIAL_DATA = {
       startDate: format(new Date(2023, 7, 20), 'yyyy-MM-dd'),
       contractDuration: "1year" as const,
       endDate: format(addYears(new Date(2023, 7, 20), 1), 'yyyy-MM-dd'),
-      csm: "team2"
+      csm: "team2",
+      notes: []
     },
     's6': { 
       id: 's6', 
@@ -127,7 +158,8 @@ const INITIAL_DATA = {
       startDate: format(new Date(2023, 9, 3), 'yyyy-MM-dd'),
       contractDuration: "1year" as const,
       endDate: format(addYears(new Date(2023, 9, 3), 1), 'yyyy-MM-dd'),
-      csm: "team4"
+      csm: "team4",
+      notes: []
     },
     's7': { 
       id: 's7', 
@@ -137,7 +169,8 @@ const INITIAL_DATA = {
       contractDuration: "6months" as const,
       endDate: format(addMonths(new Date(2023, 2, 8), 6), 'yyyy-MM-dd'),
       churnDate: format(new Date(2023, 4, 15), 'yyyy-MM-dd'),
-      csm: "team3"
+      csm: "team3",
+      notes: []
     },
     's8': { 
       id: 's8', 
@@ -146,7 +179,8 @@ const INITIAL_DATA = {
       startDate: format(new Date(2023, 0, 15), 'yyyy-MM-dd'),
       contractDuration: "6months" as const,
       endDate: format(addMonths(new Date(2023, 0, 15), 6), 'yyyy-MM-dd'),
-      csm: "team4"
+      csm: "team4",
+      notes: []
     },
     's9': { 
       id: 's9', 
@@ -155,7 +189,8 @@ const INITIAL_DATA = {
       startDate: format(new Date(2023, 1, 22), 'yyyy-MM-dd'),
       contractDuration: "1year" as const,
       endDate: format(addYears(new Date(2023, 1, 22), 1), 'yyyy-MM-dd'),
-      csm: "team1"
+      csm: "team1",
+      notes: []
     }
   },
   columnOrder: ['active', 'backend', 'olympia', 'churned', 'graduated']
@@ -168,6 +203,7 @@ export function KanbanBoard() {
   const [dateModalType, setDateModalType] = useState<"churn" | "other">("churn");
   const [selectedTeam, setSelectedTeam] = useState<string>("all");
   const [filteredData, setFilteredData] = useState(INITIAL_DATA);
+  const [expandedStudentId, setExpandedStudentId] = useState<string | null>(null);
   const { toast } = useToast();
   
   // Filter data by selected team
@@ -338,6 +374,32 @@ export function KanbanBoard() {
     setDateModalOpen(true);
   };
 
+  const handleAddNote = (studentId: string, note: Omit<Note, "id" | "timestamp">) => {
+    const newNote: Note = {
+      id: `n${Date.now()}`,
+      ...note,
+      timestamp: format(new Date(), 'yyyy-MM-dd HH:mm:ss')
+    };
+    
+    const updatedStudents = {
+      ...data.students,
+      [studentId]: {
+        ...data.students[studentId],
+        notes: [...(data.students[studentId].notes || []), newNote]
+      }
+    };
+    
+    setData({
+      ...data,
+      students: updatedStudents
+    });
+    
+    toast({
+      title: "Note Added",
+      description: `Note added for ${data.students[studentId].name}.`,
+    });
+  };
+
   const formatDateInfo = (student: Student) => {
     if (student.startDate) {
       return (
@@ -462,22 +524,41 @@ export function KanbanBoard() {
                               >
                                 <div className="flex items-center justify-between">
                                   <span className="font-medium">{student.name}</span>
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                                        <MoreVertical className="h-3 w-3" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                      <DropdownMenuItem>View Details</DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => handleViewDates(student)}>
-                                        <Calendar className="h-3 w-3 mr-2" /> View Dates
-                                      </DropdownMenuItem>
-                                      <DropdownMenuSeparator />
-                                      <DropdownMenuItem>Edit Student</DropdownMenuItem>
-                                      <DropdownMenuItem>Contact</DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
+                                  <div className="flex items-center">
+                                    {(student.notes?.length || 0) > 0 && (
+                                      <Badge 
+                                        variant="outline" 
+                                        className="mr-2 px-1.5 py-0.5 flex items-center border-red-200 bg-red-50"
+                                      >
+                                        <MessageSquare className="h-3 w-3 mr-1 text-red-600" />
+                                        <span>{student.notes?.length}</span>
+                                      </Badge>
+                                    )}
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                          <MoreVertical className="h-3 w-3" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        <DropdownMenuItem>View Details</DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleViewDates(student)}>
+                                          <Calendar className="h-3 w-3 mr-2" /> View Dates
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem 
+                                          onClick={() => setExpandedStudentId(
+                                            expandedStudentId === student.id ? null : student.id
+                                          )}
+                                        >
+                                          <MessageSquare className="h-3 w-3 mr-2" /> 
+                                          {expandedStudentId === student.id ? "Hide Notes" : "Show Notes"}
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem>Edit Student</DropdownMenuItem>
+                                        <DropdownMenuItem>Contact</DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </div>
                                 </div>
                                 <div className="mt-2">
                                   <div className="text-xs text-muted-foreground mb-1">Progress</div>
@@ -489,6 +570,16 @@ export function KanbanBoard() {
                                   </div>
                                 </div>
                                 {formatDateInfo(student)}
+                                
+                                {/* Notes section - conditionally displayed when expanded */}
+                                {expandedStudentId === student.id && (
+                                  <StudentNotes
+                                    studentId={student.id}
+                                    studentName={student.name}
+                                    notes={student.notes || []}
+                                    onAddNote={handleAddNote}
+                                  />
+                                )}
                               </div>
                             )}
                           </Draggable>
