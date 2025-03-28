@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Import } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function Index() {
   const isMobile = useIsMobile();
@@ -37,7 +36,7 @@ export default function Index() {
 
   return (
     <Layout>
-      <div className="space-y-2 max-w-full pb-8">
+      <div className="space-y-4 pb-12 min-w-[1200px]">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="text-lg font-bold">Performance Report</div>
           <div className="flex items-center gap-2">
@@ -52,8 +51,8 @@ export default function Index() {
         </div>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="overflow-x-auto pb-1">
-            <TabsList className="w-full md:w-auto justify-start border-b mb-2 bg-transparent p-0 flex-nowrap">
+          <div className="overflow-x-auto border-b mb-4">
+            <TabsList className="w-full md:w-auto justify-start bg-transparent p-0 flex-nowrap mb-0">
               <TabsTrigger 
                 value="overview" 
                 className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-3 py-1 bg-transparent text-xs whitespace-nowrap"
@@ -94,10 +93,10 @@ export default function Index() {
           </div>
           
           <TabsContent value="overview" className="m-0">
-            <div className="space-y-4">
+            <div className="space-y-6">
               <MetricsCards />
               
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="col-span-1 sm:col-span-2">
                   <ChurnChart />
                 </div>
@@ -110,7 +109,7 @@ export default function Index() {
                 <ClientList />
               </div>
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div className="col-span-1">
                   <KanbanBoard />
                 </div>

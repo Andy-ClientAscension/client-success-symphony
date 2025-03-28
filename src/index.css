@@ -113,7 +113,28 @@
   /* Make the app fully scrollable */
   html, body, #root {
     height: 100%;
-    overflow-x: hidden;
+    overflow-x: auto;
+    min-height: 100%;
+  }
+
+  /* Improve scrollbar visibility */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
   }
 }
 

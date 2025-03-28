@@ -12,18 +12,16 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="flex h-screen bg-slate-50">
       <Sidebar />
-      <div className="flex-1 flex flex-col w-full overflow-hidden">
+      <div className="flex-1 flex flex-col w-full">
         <Header />
         <div className="flex-1 overflow-auto">
-          <ScrollArea className="h-full w-full" type="always">
-            <div className="p-4">
-              <ErrorBoundary>
-                {children}
-              </ErrorBoundary>
-            </div>
-          </ScrollArea>
+          <div className="h-full min-w-full p-4">
+            <ErrorBoundary>
+              {children}
+            </ErrorBoundary>
+          </div>
         </div>
       </div>
       <Toaster />
