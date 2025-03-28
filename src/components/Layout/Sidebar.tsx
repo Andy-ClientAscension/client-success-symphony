@@ -37,24 +37,13 @@ export function Sidebar() {
     { icon: HelpCircle, label: "Help", href: "/help" }
   ];
 
-  const renderToggleButton = () => (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="absolute top-4 right-4 lg:hidden text-white"
-      onClick={toggleSidebar}
-    >
-      {isOpen ? <X size={20} /> : <Menu size={20} />}
-    </Button>
-  );
-
   return (
     <>
       {isMobile && !isOpen && (
         <Button
           variant="outline"
           size="icon"
-          className="fixed top-4 left-4 z-50"
+          className="fixed top-4 left-4 z-50 shadow-md"
           onClick={toggleSidebar}
         >
           <Menu size={20} />
@@ -64,18 +53,28 @@ export function Sidebar() {
       <div
         className={cn(
           "bg-black fixed h-full w-64 flex flex-col text-white transition-all duration-300 ease-in-out z-40",
-          isOpen ? "left-0" : "-left-64"
+          isOpen ? "left-0" : "-left-64",
+          isMobile ? "shadow-xl" : ""
         )}
       >
-        <div className="p-6">
+        <div className="p-4 sm:p-6 flex items-center justify-between">
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
             <BarChart2 className="h-6 w-6 text-red-600" />
-            <span>Client Symphony</span>
+            <span className="whitespace-nowrap">Client Symphony</span>
           </h1>
-          {isMobile && renderToggleButton()}
+          {isMobile && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white"
+              onClick={toggleSidebar}
+            >
+              <X size={20} />
+            </Button>
+          )}
         </div>
         
-        <nav className="flex-1 px-4">
+        <nav className="flex-1 px-2 sm:px-4 overflow-y-auto">
           <ul className="space-y-1">
             {navItems.map((item, index) => {
               const isActive = location.pathname === item.href;
@@ -99,7 +98,7 @@ export function Sidebar() {
         </nav>
         
         <div className="p-4 border-t border-zinc-800">
-          <div className="flex items-center gap-3 px-4 py-2">
+          <div className="flex items-center gap-3 px-2 sm:px-4 py-2">
             <div className="rounded-full bg-zinc-800 h-9 w-9 flex items-center justify-center">
               <span className="text-white font-medium">JD</span>
             </div>
@@ -113,7 +112,7 @@ export function Sidebar() {
       
       {isOpen && isMobile && (
         <div 
-          className="fixed inset-0 bg-black/50 z-30" 
+          className="fixed inset-0 bg-black/50 z-30 backdrop-blur-sm" 
           onClick={toggleSidebar}
         />
       )}

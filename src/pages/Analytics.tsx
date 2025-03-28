@@ -27,28 +27,29 @@ export default function Analytics() {
 
   return (
     <Layout>
-      <div className="flex-1 space-y-4 p-8 pt-6">
-        <div className="flex items-center justify-between">
+      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center space-x-2">
             <Link to="/">
               <Button variant="outline" size="icon">
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             </Link>
-            <h2 className="text-3xl font-bold tracking-tight">Analytics Dashboard</h2>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Analytics Dashboard</h2>
           </div>
           
           <Button 
             variant="outline" 
             onClick={handleRefreshData}
             disabled={isRefreshing}
+            className="w-full sm:w-auto"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
             {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
           </Button>
         </div>
         
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <NPSChart />
           
           <Card>
