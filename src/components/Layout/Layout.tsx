@@ -15,13 +15,13 @@ export function Layout({ children }: LayoutProps) {
   const { theme } = useTheme();
   
   return (
-    <div className={`flex h-screen w-full overflow-hidden ${theme === 'dark' ? 'bg-gray-900' : 'bg-slate-50'}`}>
+    <div className={`flex h-screen w-full overflow-hidden ${theme === 'dark' ? 'bg-gray-900 text-gray-200' : 'bg-slate-50 text-gray-900'}`}>
       <Sidebar />
       <div className="flex-1 flex flex-col w-full min-w-0 ml-56"> {/* Changed from pl-56 to ml-56 for better layout */}
         <Header />
         <main className="flex-1 overflow-hidden w-full">
           <ScrollArea className="h-full w-full" orientation="both">
-            <div className="p-4 dark:text-gray-200"> {/* Added dark mode text color */}
+            <div className="p-4"> {/* Simplified styling with theme handling in parent div */}
               <ErrorBoundary>
                 {children}
               </ErrorBoundary>
