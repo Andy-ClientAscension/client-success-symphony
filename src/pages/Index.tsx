@@ -36,7 +36,7 @@ export default function Index() {
 
   return (
     <Layout>
-      <div className="space-y-4 pb-12 min-w-[1200px]">
+      <div className="space-y-4 pb-12 w-full"> {/* Removed min-w-[1200px] to allow responsive layout */}
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="text-lg font-bold">Performance Report</div>
           <div className="flex items-center gap-2">

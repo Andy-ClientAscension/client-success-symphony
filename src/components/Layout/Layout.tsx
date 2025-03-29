@@ -14,11 +14,11 @@ export function Layout({ children }: LayoutProps) {
   return (
     <div className="flex h-screen w-full bg-slate-50 overflow-hidden">
       <Sidebar />
-      <div className="flex-1 flex flex-col w-full min-w-0 pl-56">
+      <div className="flex-1 flex flex-col w-full min-w-0 ml-56"> {/* Changed from pl-56 to ml-56 for better layout */}
         <Header />
         <main className="flex-1 overflow-hidden w-full">
           <ScrollArea className="h-full w-full" orientation="both">
-            <div className="p-4 min-w-max">
+            <div className="p-4"> {/* Removed min-w-max to prevent forced width */}
               <ErrorBoundary>
                 {children}
               </ErrorBoundary>

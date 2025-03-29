@@ -17,10 +17,10 @@ html, body {
   padding: 0;
 }
 
-/* Add improved scrolling for high zoom levels */
+/* Remove minimum width to allow proper responsive layout */
 @media screen and (min-width: 320px) {
   html, body, #root {
-    min-width: 320px;
+    min-width: auto;
   }
 }
 
