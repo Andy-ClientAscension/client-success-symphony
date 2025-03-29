@@ -38,7 +38,7 @@ export function CommunicationLog({ communications, clientName }: CommunicationLo
         <CardTitle className="text-red-600">
           {clientName ? `${clientName} - Communications` : "Recent Communications"}
         </CardTitle>
-        <Button variant="outline" size="sm" className="border-red-200 text-red-600 hover:bg-red-50">
+        <Button variant="outline" size="sm" className="border-red-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-950 dark:border-red-800">
           New Message
         </Button>
       </CardHeader>
@@ -46,16 +46,16 @@ export function CommunicationLog({ communications, clientName }: CommunicationLo
         <div className="space-y-4">
           {communications.length > 0 ? (
             communications.map((comm) => (
-              <div key={comm.id} className="flex gap-4 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="flex-shrink-0 bg-red-100 text-red-600 w-10 h-10 rounded-full flex items-center justify-center">
+              <div key={comm.id} className="flex gap-4 p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                <div className="flex-shrink-0 bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300 w-10 h-10 rounded-full flex items-center justify-center">
                   {getCommunicationIcon(comm.type)}
                 </div>
                 <div className="flex-1">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h4 className="font-medium text-gray-800">{comm.subject}</h4>
+                      <h4 className="font-medium text-gray-800 dark:text-gray-100">{comm.subject}</h4>
                       <p className="text-sm text-muted-foreground">
-                        {format(new Date(comm.date), 'MMMM dd, yyyy')} • <span className="text-blue-600">{comm.type}</span>
+                        {format(new Date(comm.date), 'MMMM dd, yyyy')} • <span className="text-blue-600 dark:text-blue-400">{comm.type}</span>
                       </p>
                     </div>
                     <DropdownMenu>
@@ -65,13 +65,13 @@ export function CommunicationLog({ communications, clientName }: CommunicationLo
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem className="text-blue-600">View Details</DropdownMenuItem>
+                        <DropdownMenuItem className="text-blue-600 dark:text-blue-400">View Details</DropdownMenuItem>
                         <DropdownMenuItem>Follow Up</DropdownMenuItem>
                         <DropdownMenuItem>Add Note</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
-                  <p className="mt-2 text-sm text-gray-700">{comm.summary}</p>
+                  <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">{comm.summary}</p>
                 </div>
               </div>
             ))

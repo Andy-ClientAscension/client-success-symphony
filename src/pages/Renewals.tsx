@@ -55,7 +55,7 @@ export default function Renewals() {
           <div className="mb-6 flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold">Client Renewals</h1>
-              <p className="text-muted-foreground">Track and manage upcoming client contract renewals.</p>
+              <p className="text-muted-foreground font-medium">Track and manage upcoming client contract renewals.</p>
             </div>
             <Button asChild variant="destructive" className="gap-2 text-white bg-red-600 hover:bg-red-700 text-base px-6 py-2">
               <Link to="/">
@@ -104,30 +104,30 @@ export default function Renewals() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Renewal Date</TableHead>
-                    <TableHead>Time Remaining</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Price</TableHead>
+                    <TableHead className="text-foreground">Client</TableHead>
+                    <TableHead className="text-foreground">Renewal Date</TableHead>
+                    <TableHead className="text-foreground">Time Remaining</TableHead>
+                    <TableHead className="text-foreground">Status</TableHead>
+                    <TableHead className="text-right text-foreground">Price</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredRenewals.map((renewal) => (
                     <TableRow key={renewal.id}>
-                      <TableCell>
+                      <TableCell className="text-foreground font-medium">
                         <div>
                           <div className="font-medium">{renewal.clientName}</div>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-foreground">
                         <div className="flex items-center">
-                          <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                          <Calendar className="mr-2 h-4 w-4 text-primary" />
                           {format(renewal.renewalDate, "MMM d, yyyy")}
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-foreground">
                         <div className="flex items-center">
-                          <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                          <Clock className="mr-2 h-4 w-4 text-primary" />
                           {renewal.daysUntil < 0 
                             ? `${Math.abs(renewal.daysUntil)} days overdue` 
                             : `${renewal.daysUntil} days remaining`}
@@ -138,12 +138,12 @@ export default function Renewals() {
                           renewal.status === "overdue" ? "destructive" : 
                           renewal.status === "soon" ? "outline" : 
                           "secondary"
-                        }>
+                        } className="font-medium">
                           {renewal.status === "soon" ? "Due Soon" : 
                            renewal.status === "overdue" ? "Overdue" : "Upcoming"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right">{renewal.price}</TableCell>
+                      <TableCell className="text-right text-foreground font-medium">{renewal.price}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
