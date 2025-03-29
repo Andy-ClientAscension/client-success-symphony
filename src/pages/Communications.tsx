@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Layout } from "@/components/Layout/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -146,7 +147,7 @@ export default function Communications() {
       <div className="container py-6 max-w-6xl">
         <div className="mb-6 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold">Communications</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-red-600">Communications</h1>
             <p className="text-muted-foreground">Manage all your communication links and recent communications.</p>
           </div>
           <Button asChild variant="destructive" className="gap-2 text-white bg-red-600 hover:bg-red-700 text-base px-6 py-2">
@@ -160,9 +161,19 @@ export default function Communications() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2">
             <Tabs defaultValue="recent" className="w-full">
-              <TabsList className="w-full justify-start mb-4">
-                <TabsTrigger value="recent">Recent Communications</TabsTrigger>
-                <TabsTrigger value="resources">Resources</TabsTrigger>
+              <TabsList className="w-full justify-start mb-4 bg-gray-100 p-1">
+                <TabsTrigger 
+                  value="recent" 
+                  className="data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:font-medium"
+                >
+                  Recent Communications
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="resources" 
+                  className="data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:font-medium"
+                >
+                  Resources
+                </TabsTrigger>
               </TabsList>
               
               <TabsContent value="recent">
@@ -175,20 +186,20 @@ export default function Communications() {
                     <Card key={category.id}>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-md flex items-center gap-2">
-                          <category.icon className="h-5 w-5 text-primary" />
-                          {category.title}
+                          <category.icon className="h-5 w-5 text-red-600" />
+                          <span className="font-semibold text-gray-800">{category.title}</span>
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
                         <ul className="space-y-2">
                           {category.links.map((link) => (
                             <li key={link.id} className="flex items-center gap-2">
-                              <LinkIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                              <LinkIcon className="h-4 w-4 text-gray-500 shrink-0" />
                               <a 
                                 href={link.url} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="text-primary hover:underline text-sm truncate"
+                                className="text-blue-600 hover:underline text-sm truncate"
                               >
                                 {link.title}
                               </a>
@@ -206,11 +217,11 @@ export default function Communications() {
           <div>
             <Card>
               <CardHeader>
-                <CardTitle>Add Resources</CardTitle>
+                <CardTitle className="text-red-600">Add Resources</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label htmlFor="link-title" className="text-sm font-medium mb-1 block">
+                  <label htmlFor="link-title" className="text-sm font-medium mb-1 block text-gray-700">
                     Link Title
                   </label>
                   <Input
@@ -222,7 +233,7 @@ export default function Communications() {
                 </div>
                   
                 <div>
-                  <label htmlFor="link-url" className="text-sm font-medium mb-1 block">
+                  <label htmlFor="link-url" className="text-sm font-medium mb-1 block text-gray-700">
                     Link URL
                   </label>
                   <Input
@@ -234,7 +245,7 @@ export default function Communications() {
                 </div>
                 
                 <div>
-                  <label htmlFor="category" className="text-sm font-medium mb-1 block">
+                  <label htmlFor="category" className="text-sm font-medium mb-1 block text-gray-700">
                     Category
                   </label>
                   <select
@@ -255,13 +266,13 @@ export default function Communications() {
                 <Button 
                   onClick={handleAddLink} 
                   disabled={!newLinkTitle || !newLinkUrl || !selectedCategory}
-                  className="w-full"
+                  className="w-full bg-red-600 hover:bg-red-700"
                 >
                   Add Resource
                 </Button>
                 
                 <div className="pt-4 border-t">
-                  <h4 className="font-medium mb-3">Quick Add</h4>
+                  <h4 className="font-medium mb-3 text-gray-800">Quick Add</h4>
                   <p className="text-sm text-muted-foreground mb-3">
                     Paste a link or HTML with links here.
                   </p>
@@ -275,7 +286,7 @@ export default function Communications() {
                   <Button 
                     variant="outline" 
                     onClick={handleAddCustomLink}
-                    className="w-full"
+                    className="w-full border-red-200 text-red-600 hover:bg-red-50"
                     disabled={!customLink}
                   >
                     Add Custom Link
