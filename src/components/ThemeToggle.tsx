@@ -9,9 +9,17 @@ export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
 
-  // Log current theme on component mount to help with debugging
+  // Log current theme on component mount and when theme changes
   useEffect(() => {
     console.log("Current theme:", theme);
+    
+    // Apply a data attribute to the body for additional CSS targeting if needed
+    document.documentElement.setAttribute('data-theme', theme);
+    
+    // Check text visibility in current theme
+    const bgColor = getComputedStyle(document.documentElement).backgroundColor;
+    const textColor = getComputedStyle(document.documentElement).color;
+    console.log(`Theme colors - Background: ${bgColor}, Text: ${textColor}`);
   }, [theme]);
 
   const toggleTheme = () => {
@@ -21,8 +29,8 @@ export function ThemeToggle() {
     
     toast({
       title: `Theme Changed`,
-      description: `Switched to ${newTheme} mode. If text appears invisible, please toggle again.`,
-      duration: 3000,
+      description: `Switched to ${newTheme} mode. Refresh the page if you notice any display issues.`,
+      duration: 5000,
     });
   };
 
@@ -31,7 +39,7 @@ export function ThemeToggle() {
       variant="outline" 
       size="icon" 
       onClick={toggleTheme} 
-      aria-label="Toggle theme"
+      aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
       className="transition-colors"
     >
       {theme === "dark" ? (

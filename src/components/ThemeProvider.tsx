@@ -34,14 +34,33 @@ export function ThemeProvider({
       const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
         ? "dark"
         : "light";
+      
+      console.log(`System theme detected: ${systemTheme}`);
       root.classList.add(systemTheme);
+      
+      // Debug output of applied CSS variables
+      const bgColor = getComputedStyle(root).getPropertyValue('--background');
+      const textColor = getComputedStyle(root).getPropertyValue('--foreground');
+      console.log(`System theme CSS variables - Background: ${bgColor}, Text: ${textColor}`);
+      
       return;
     }
 
+    console.log(`Manually setting theme to: ${theme}`);
     root.classList.add(theme);
     
-    // Log theme changes to help with debugging
-    console.log(`Theme set to: ${theme}`);
+    // Debug output of applied CSS variables
+    const bgColor = getComputedStyle(root).getPropertyValue('--background');
+    const textColor = getComputedStyle(root).getPropertyValue('--foreground');
+    console.log(`Applied theme CSS variables - Background: ${bgColor}, Text: ${textColor}`);
+    
+    // Additional debugging for dark mode text colors
+    if (theme === 'dark') {
+      const cardTextColor = getComputedStyle(root).getPropertyValue('--card-foreground');
+      const secondaryTextColor = getComputedStyle(root).getPropertyValue('--secondary-foreground');
+      const mutedTextColor = getComputedStyle(root).getPropertyValue('--muted-foreground');
+      console.log(`Dark mode text colors - Card: ${cardTextColor}, Secondary: ${secondaryTextColor}, Muted: ${mutedTextColor}`);
+    }
   }, [theme]);
 
   const value = {
