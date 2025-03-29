@@ -563,10 +563,12 @@ export function KanbanBoard() {
                 return (
                   <div key={column.id} className="flex flex-col bg-secondary/50 rounded-lg p-3 min-w-[250px]">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-medium flex items-center">
-                        {column.title} 
-                        <Badge variant="count" className="ml-2">{students.length}</Badge>
-                      </h3>
+                      <div className="flex items-center">
+                        <h3 className="font-medium">{column.title}</h3>
+                        <Badge variant="count" className="ml-2 px-2 flex-shrink-0">
+                          {students.length}
+                        </Badge>
+                      </div>
                     </div>
                     <Droppable droppableId={column.id}>
                       {(provided) => (
