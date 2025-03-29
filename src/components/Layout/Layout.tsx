@@ -14,7 +14,7 @@ export function Layout({ children }: LayoutProps) {
   return (
     <div className="flex h-screen w-full bg-slate-50 overflow-hidden">
       <Sidebar />
-      <div className="flex-1 flex flex-col w-full min-w-0">
+      <div className="flex-1 flex flex-col w-full min-w-0 pl-56">
         <Header />
         <main className="flex-1 overflow-hidden w-full">
           <ScrollArea className="h-full w-full" orientation="both">

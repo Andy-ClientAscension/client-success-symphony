@@ -59,7 +59,7 @@ export function Sidebar() {
       
       <div
         className={cn(
-          "bg-black fixed h-full w-56 flex flex-col text-white transition-all duration-300 ease-in-out z-40",
+          "bg-black fixed h-full w-56 flex flex-col text-white z-40",
           isOpen ? "left-0" : "-left-56",
           isMobile ? "shadow-xl" : ""
         )}
