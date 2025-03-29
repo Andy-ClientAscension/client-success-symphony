@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Import } from "lucide-react";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 export default function Index() {
   const isMobile = useIsMobile();
@@ -109,8 +110,8 @@ export default function Index() {
                 <ClientList />
               </div>
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="col-span-1">
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                <div className="col-span-1 lg:col-span-3">
                   <KanbanBoard />
                 </div>
                 <div className="col-span-1">

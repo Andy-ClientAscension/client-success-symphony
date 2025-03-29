@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { monitorPayments, PaymentStatus } from "@/lib/payment-monitor";
 import { getAllClients } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function PaymentAlerts() {
   const [overduePayments, setOverduePayments] = useState<PaymentStatus[]>([]);
@@ -58,53 +59,55 @@ export function PaymentAlerts() {
 
   return (
     <Card className="h-full">
-      <CardHeader className="p-0">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-[0.6rem] flex items-center">
-            <DollarSign className="h-1.5 w-1.5 mr-0.5 text-red-600" />
-            Payment Alerts
-          </CardTitle>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={checkPayments} 
-            disabled={isLoading}
-            className="h-3 text-[6px] px-0.5 py-0"
-          >
-            <RefreshCw className={`h-1.5 w-1.5 mr-0.5 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-        </div>
+      <CardHeader className="flex flex-row justify-between items-center p-2">
+        <CardTitle className="text-sm flex items-center">
+          <DollarSign className="h-4 w-4 mr-1 text-red-600" />
+          Payment Alerts
+        </CardTitle>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={checkPayments} 
+          disabled={isLoading}
+          className="h-6 text-xs px-2 py-0"
+        >
+          <RefreshCw className={`h-3 w-3 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </CardHeader>
-      <CardContent className="p-0 pt-0">
-        {overduePayments.length > 0 ? (
-          <div className="space-y-0.5 text-[5px]">
-            {overduePayments.map((payment) => (
-              <Alert key={payment.clientId} variant="destructive" className="p-0.5">
-                <AlertTriangle className="h-1.5 w-1.5" />
-                <AlertTitle className="flex items-center justify-between text-[6px]">
-                  <span>{payment.clientName}</span>
-                  <Badge variant="destructive" className="text-[5px] px-0.5 py-0">{payment.daysOverdue} days</Badge>
-                </AlertTitle>
-                <AlertDescription className="flex justify-between items-center mt-0.5 text-[5px]">
-                  <span>
-                    Last: {payment.lastPaymentDate 
-                      ? new Date(payment.lastPaymentDate).toLocaleDateString() 
-                      : 'No record'}
-                  </span>
-                  <span className="font-semibold">
-                    ${payment.amountDue?.toFixed(2)}
-                  </span>
-                </AlertDescription>
-              </Alert>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-1 text-[6px] text-muted-foreground">
-            <p>All client payments are up to date</p>
-            <p className="text-[5px] mt-0.5">Last checked: {new Date().toLocaleString()}</p>
-          </div>
-        )}
+      <CardContent className="p-2">
+        <ScrollArea className="h-[250px]">
+          {overduePayments.length > 0 ? (
+            <div className="space-y-2">
+              {overduePayments.map((payment) => (
+                <Alert key={payment.clientId} variant="destructive" className="p-2 mb-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  <div className="flex justify-between items-center">
+                    <AlertTitle className="text-xs">
+                      {payment.clientName}
+                    </AlertTitle>
+                    <Badge variant="destructive" className="text-xs px-1 py-0">{payment.daysOverdue} days</Badge>
+                  </div>
+                  <AlertDescription className="flex justify-between items-center mt-1 text-xs">
+                    <span>
+                      Last: {payment.lastPaymentDate 
+                        ? new Date(payment.lastPaymentDate).toLocaleDateString() 
+                        : 'No record'}
+                    </span>
+                    <span className="font-semibold">
+                      ${payment.amountDue?.toFixed(2)}
+                    </span>
+                  </AlertDescription>
+                </Alert>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-4 text-xs text-muted-foreground">
+              <p>All client payments are up to date</p>
+              <p className="text-xs mt-1">Last checked: {new Date().toLocaleString()}</p>
+            </div>
+          )}
+        </ScrollArea>
       </CardContent>
     </Card>
   );
