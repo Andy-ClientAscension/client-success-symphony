@@ -122,7 +122,10 @@ export default function Index() {
           </TabsContent>
           
           <TabsContent value="clients" className="m-0">
-            <ClientList />
+            <div className="space-y-6">
+              <ClientList />
+              <KanbanBoard />
+            </div>
           </TabsContent>
           
           <TabsContent value="agents" className="m-0">
