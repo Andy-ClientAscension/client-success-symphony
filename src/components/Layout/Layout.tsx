@@ -18,7 +18,7 @@ export function Layout({ children }: LayoutProps) {
         <Header />
         <main className="flex-1 overflow-hidden w-full">
           <ScrollArea className="h-full w-full" orientation="both">
-            <div className="p-4 zoom-friendly">
+            <div className="p-4 min-w-max">
               <ErrorBoundary>
                 {children}
               </ErrorBoundary>
