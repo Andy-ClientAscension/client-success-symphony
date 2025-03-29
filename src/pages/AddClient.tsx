@@ -32,9 +32,9 @@ const AddClient = () => {
         
         <main className="flex-1 overflow-y-auto p-6 bg-background">
           <div className="max-w-3xl mx-auto space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-4">
               <h1 className="text-3xl font-bold tracking-tight">Add New Client</h1>
-              <Button asChild variant="destructive" className="gap-2 text-white bg-red-600 hover:bg-red-700 text-base px-6 py-2">
+              <Button asChild variant="destructive" className="gap-2 text-white bg-red-600 hover:bg-red-700 text-base px-6 py-2 flex-shrink-0">
                 <Link to="/">
                   <Home className="h-5 w-5" />
                   Return to Home

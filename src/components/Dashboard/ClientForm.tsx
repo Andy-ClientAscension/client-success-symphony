@@ -232,8 +232,8 @@ export function ClientForm({ onSubmit, onCancel }: ClientFormProps) {
         {/* Display calculated end date */}
         <div className="border border-red-100 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-2">
-            <CalendarIcon className="h-4 w-4 text-red-600" />
-            <span className="font-medium">Calculated End Date</span>
+            <CalendarIcon className="h-4 w-4 text-red-600 flex-shrink-0" />
+            <span className="font-medium truncate">Calculated End Date</span>
           </div>
           <p className="text-lg font-medium">
             {endDate ? format(endDate, "PPP") : "Select start date and duration"}
