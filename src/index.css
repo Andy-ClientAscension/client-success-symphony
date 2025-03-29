@@ -60,7 +60,7 @@
   }
 
   .dark {
-    /* Dark mode variables - improving text visibility */
+    /* Dark mode variables - improving text visibility with higher contrast */
     --background: 0 0% 10%;
     --foreground: 0 0% 98%;
 
@@ -70,24 +70,24 @@
     --popover: 0 0% 15%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 0 100% 50%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 0 100% 60%; /* Brightened primary color for dark mode */
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 20%;
     --secondary-foreground: 0 0% 98%;
 
     --muted: 0 0% 20%;
-    --muted-foreground: 0 0% 75%; /* Increased brightness for better visibility */
+    --muted-foreground: 0 0% 85%; /* Increased brightness for better visibility */
 
     --accent: 0 100% 30%;
-    --accent-foreground: 0 0% 98%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 0 100% 50%;
+    --border: 0 0% 25%; /* Increased border brightness */
+    --input: 0 0% 25%; /* Increased input brightness */
+    --ring: 0 100% 60%;
 
     /* Keep sidebar variables the same in dark mode */
     --sidebar-background: 0 0% 10%;
