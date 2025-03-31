@@ -6,10 +6,26 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { Calendar, Clock, Home } from "lucide-react";
+import { Calendar, Clock, Home, Users } from "lucide-react";
 import { MOCK_CLIENTS } from "@/lib/data";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Link } from "react-router-dom";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+// Available teams for filtering
+const TEAMS = [
+  { id: "all", name: "All Teams" },
+  { id: "Team-Andy", name: "Team-Andy" },
+  { id: "Team-Chris", name: "Team-Chris" },
+  { id: "Team-Alex", name: "Team-Alex" },
+  { id: "Team-Cillin", name: "Team-Cillin" },
+];
 
 // Calculate dummy renewal dates based on client ID
 const renewals = MOCK_CLIENTS.map(client => {
@@ -37,16 +53,18 @@ const renewals = MOCK_CLIENTS.map(client => {
     renewalDate,
     daysUntil,
     status,
-    price: `$${(Math.floor(Math.random() * 500) + 500).toLocaleString()}/year`
+    price: `$${(Math.floor(Math.random() * 500) + 500).toLocaleString()}/year`,
+    team: client.team || "Unassigned"
   };
 }).sort((a, b) => a.daysUntil - b.daysUntil);
 
 export default function Renewals() {
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState("all"); // Status filter
+  const [selectedTeam, setSelectedTeam] = useState("all"); // Team filter
   
-  const filteredRenewals = filter === "all" 
-    ? renewals 
-    : renewals.filter(renewal => renewal.status === filter);
+  const filteredRenewals = renewals
+    .filter(renewal => filter === "all" || renewal.status === filter) // Filter by status
+    .filter(renewal => selectedTeam === "all" || renewal.team === selectedTeam); // Filter by team
   
   return (
     <Layout>
@@ -65,40 +83,63 @@ export default function Renewals() {
             </Button>
           </div>
           
-          <div className="flex gap-2 mb-6">
-            <Badge 
-              variant={filter === "all" ? "default" : "outline"} 
-              className="cursor-pointer"
-              onClick={() => setFilter("all")}
-            >
-              All
-            </Badge>
-            <Badge 
-              variant={filter === "soon" ? "default" : "outline"} 
-              className="cursor-pointer"
-              onClick={() => setFilter("soon")}
-            >
-              Due Soon
-            </Badge>
-            <Badge 
-              variant={filter === "upcoming" ? "default" : "outline"} 
-              className="cursor-pointer"
-              onClick={() => setFilter("upcoming")}
-            >
-              Upcoming
-            </Badge>
-            <Badge 
-              variant={filter === "overdue" ? "default" : "outline"} 
-              className="cursor-pointer"
-              onClick={() => setFilter("overdue")}
-            >
-              Overdue
-            </Badge>
+          <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
+            <div className="flex gap-2 flex-wrap">
+              <Badge 
+                variant={filter === "all" ? "default" : "outline"} 
+                className="cursor-pointer"
+                onClick={() => setFilter("all")}
+              >
+                All
+              </Badge>
+              <Badge 
+                variant={filter === "soon" ? "default" : "outline"} 
+                className="cursor-pointer"
+                onClick={() => setFilter("soon")}
+              >
+                Due Soon
+              </Badge>
+              <Badge 
+                variant={filter === "upcoming" ? "default" : "outline"} 
+                className="cursor-pointer"
+                onClick={() => setFilter("upcoming")}
+              >
+                Upcoming
+              </Badge>
+              <Badge 
+                variant={filter === "overdue" ? "default" : "outline"} 
+                className="cursor-pointer"
+                onClick={() => setFilter("overdue")}
+              >
+                Overdue
+              </Badge>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <Select value={selectedTeam} onValueChange={setSelectedTeam}>
+                <SelectTrigger className="w-[180px] h-8 text-xs">
+                  <SelectValue placeholder="Filter by team" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TEAMS.map((team) => (
+                    <SelectItem key={team.id} value={team.id}>
+                      {team.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Client Renewals</CardTitle>
+              {selectedTeam !== "all" && (
+                <Badge variant="outline" className="ml-2">
+                  Team: {selectedTeam}
+                </Badge>
+              )}
             </CardHeader>
             <CardContent>
               <Table>
@@ -112,40 +153,49 @@ export default function Renewals() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredRenewals.map((renewal) => (
-                    <TableRow key={renewal.id}>
-                      <TableCell className="text-foreground font-medium">
-                        <div>
-                          <div className="font-medium">{renewal.clientName}</div>
-                        </div>
+                  {filteredRenewals.length > 0 ? (
+                    filteredRenewals.map((renewal) => (
+                      <TableRow key={renewal.id}>
+                        <TableCell className="text-foreground font-medium">
+                          <div>
+                            <div className="font-medium">{renewal.clientName}</div>
+                            <div className="text-xs text-muted-foreground">{renewal.team}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-foreground">
+                          <div className="flex items-center">
+                            <Calendar className="mr-2 h-4 w-4 text-primary" />
+                            {format(renewal.renewalDate, "MMM d, yyyy")}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-foreground">
+                          <div className="flex items-center">
+                            <Clock className="mr-2 h-4 w-4 text-primary" />
+                            {renewal.daysUntil < 0 
+                              ? `${Math.abs(renewal.daysUntil)} days overdue` 
+                              : `${renewal.daysUntil} days remaining`}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={
+                            renewal.status === "overdue" ? "destructive" : 
+                            renewal.status === "soon" ? "outline" : 
+                            "secondary"
+                          } className="font-medium">
+                            {renewal.status === "soon" ? "Due Soon" : 
+                             renewal.status === "overdue" ? "Overdue" : "Upcoming"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right text-foreground font-medium">{renewal.price}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                        No renewals found for the selected filters.
                       </TableCell>
-                      <TableCell className="text-foreground">
-                        <div className="flex items-center">
-                          <Calendar className="mr-2 h-4 w-4 text-primary" />
-                          {format(renewal.renewalDate, "MMM d, yyyy")}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-foreground">
-                        <div className="flex items-center">
-                          <Clock className="mr-2 h-4 w-4 text-primary" />
-                          {renewal.daysUntil < 0 
-                            ? `${Math.abs(renewal.daysUntil)} days overdue` 
-                            : `${renewal.daysUntil} days remaining`}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={
-                          renewal.status === "overdue" ? "destructive" : 
-                          renewal.status === "soon" ? "outline" : 
-                          "secondary"
-                        } className="font-medium">
-                          {renewal.status === "soon" ? "Due Soon" : 
-                           renewal.status === "overdue" ? "Overdue" : "Upcoming"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right text-foreground font-medium">{renewal.price}</TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
