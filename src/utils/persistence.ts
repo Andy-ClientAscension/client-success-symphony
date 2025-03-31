@@ -1,3 +1,4 @@
+
 /**
  * Utility for persisting dashboard data in localStorage
  */
@@ -10,7 +11,9 @@ const STORAGE_KEYS = {
   THEME: "theme",
   KANBAN: "kanbanBoard",
   CLIENT_NOTES: "clientNotes",
-  CLIENT_STATUS: "clientStatus"
+  CLIENT_STATUS: "clientStatus",
+  CHURN: "churnData",
+  USER_PREFERENCES: "userPreferences"
 };
 
 /**
