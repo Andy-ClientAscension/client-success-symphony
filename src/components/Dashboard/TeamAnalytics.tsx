@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getClientMetricsByTeam, getAllClients, getCSMList } from "@/lib/data";
-import { CheckCircle2, AlertTriangle, ArrowDownRight, Users } from "lucide-react";
+import { CheckCircle2, AlertTriangle, ArrowDownRight, Users, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { TeamMetricCard } from "./TeamMetricCard";
 import { TeamStatusMetric } from "./TeamStatusMetric";
 import { SSCPerformanceTable } from "./SSCPerformanceTable";
@@ -41,6 +41,17 @@ export function TeamAnalytics() {
     total: teamClients.length
   };
   
+  // Calculate previous period metrics (simulated for this example)
+  // In a real app, this would come from historical data
+  const prevPeriodRetention = Math.max(0, Math.round(retentionRate - (Math.random() * 10 - 5)));
+  const prevPeriodAtRisk = Math.max(0, Math.round(atRiskRate - (Math.random() * 10 - 3)));
+  const prevPeriodChurn = Math.max(0, Math.round(churnRate - (Math.random() * 10 - 2)));
+  
+  // Calculate trends
+  const retentionTrend = retentionRate - prevPeriodRetention;
+  const atRiskTrend = atRiskRate - prevPeriodAtRisk;
+  const churnTrend = churnRate - prevPeriodChurn;
+  
   const retentionRate = statusCounts.total > 0 
     ? Math.round((statusCounts.active / statusCounts.total) * 100) 
     : 0;
@@ -52,6 +63,13 @@ export function TeamAnalytics() {
   const churnRate = statusCounts.total > 0 
     ? Math.round((statusCounts.churned / statusCounts.total) * 100) 
     : 0;
+
+  // Helper function to get trend indicator component
+  const getTrendIndicator = (trend: number) => {
+    if (trend > 0) return <TrendingUp className="h-3 w-3 ml-1" />;
+    if (trend < 0) return <TrendingDown className="h-3 w-3 ml-1" />;
+    return <Minus className="h-3 w-3 ml-1" />;
+  };
 
   return (
     <Card className="shadow-sm">
@@ -107,6 +125,10 @@ export function TeamAnalytics() {
             icon={<CheckCircle2 className="h-3 w-3 mr-1 text-green-500" />}
             count={statusCounts.active}
             label="active clients"
+            trend={{
+              value: retentionTrend,
+              indicator: getTrendIndicator(retentionTrend)
+            }}
           />
           
           <TeamStatusMetric 
@@ -116,6 +138,10 @@ export function TeamAnalytics() {
             icon={<AlertTriangle className="h-3 w-3 mr-1 text-amber-500" />}
             count={statusCounts.atRisk}
             label="at-risk clients"
+            trend={{
+              value: -atRiskTrend,
+              indicator: getTrendIndicator(-atRiskTrend)
+            }}
           />
           
           <TeamStatusMetric 
@@ -125,6 +151,10 @@ export function TeamAnalytics() {
             icon={<ArrowDownRight className="h-3 w-3 mr-1 text-red-500" />}
             count={statusCounts.churned}
             label="churned clients"
+            trend={{
+              value: -churnTrend,
+              indicator: getTrendIndicator(-churnTrend)
+            }}
           />
         </div>
 
