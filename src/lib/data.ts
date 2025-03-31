@@ -1,4 +1,12 @@
-import { subDays, format, addDays } from 'date-fns';
+import { subDays, format, addDays, addMonths, addYears } from 'date-fns';
+
+export const CSM_TEAMS = [
+  { id: "all", name: "All Teams" },
+  { id: "Team-Andy", name: "Team-Andy" },
+  { id: "Team-Chris", name: "Team-Chris" },
+  { id: "Team-Alex", name: "Team-Alex" },
+  { id: "Team-Cillin", name: "Team-Cillin" },
+];
 
 export interface Client {
   id: string;

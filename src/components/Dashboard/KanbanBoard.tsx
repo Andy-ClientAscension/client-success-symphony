@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { KanbanSquare, Plus, MoreVertical, Calendar, Users, MessageSquare, AlertTriangle } from "lucide-react";
+import { KanbanSquare, Plus, MoreVertical, Calendar, Users, MessageSquare, AlertTriangle, UserCheck } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,8 +25,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { StudentDateModal } from "./StudentDateModal";
 import { StudentNotes } from "./StudentNotes";
 import { StudentPaymentAlert } from "./StudentPaymentAlert";
+import { StudentTeamEdit } from "./StudentTeamEdit";
 import { checkStudentPaymentStatus, PaymentStatus } from "@/lib/payment-monitor";
 import { STORAGE_KEYS, saveData, loadData } from "@/utils/persistence";
+import { CSM_TEAMS } from "@/lib/data";
 
 // Note type for student comments
 interface Note {
@@ -50,15 +52,6 @@ interface Student {
   notes?: Note[];
   paymentStatus?: PaymentStatus;
 }
-
-// CSM Team data - updating to match the new team names
-const CSM_TEAMS = [
-  { id: "all", name: "All Teams" },
-  { id: "Team-Andy", name: "Team-Andy" },
-  { id: "Team-Chris", name: "Team-Chris" },
-  { id: "Team-Alex", name: "Team-Alex" },
-  { id: "Team-Cillin", name: "Team-Cillin" },
-];
 
 // Mock data for student tracking, adding CSM information and notes
 const INITIAL_DATA = {
@@ -208,6 +201,7 @@ export function KanbanBoard() {
   const [selectedTeam, setSelectedTeam] = useState<string>("all");
   const [filteredData, setFilteredData] = useState(INITIAL_DATA);
   const [expandedStudentId, setExpandedStudentId] = useState<string | null>(null);
+  const [teamEditOpen, setTeamEditOpen] = useState(false);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -461,6 +455,28 @@ export function KanbanBoard() {
     });
   };
 
+  const handleEditTeam = (student: Student) => {
+    setSelectedStudent(student);
+    setTeamEditOpen(true);
+  };
+
+  const handleTeamChange = (teamId: string) => {
+    if (!selectedStudent) return;
+    
+    const updatedStudents = {
+      ...data.students,
+      [selectedStudent.id]: {
+        ...data.students[selectedStudent.id],
+        csm: teamId
+      }
+    };
+    
+    setData({
+      ...data,
+      students: updatedStudents
+    });
+  };
+
   const formatDateInfo = (student: Student) => {
     if (student.startDate) {
       return (
@@ -618,6 +634,9 @@ export function KanbanBoard() {
                                           <DropdownMenuItem onClick={() => handleViewDates(student)}>
                                             <Calendar className="h-3 w-3 mr-2" /> View Dates
                                           </DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => handleEditTeam(student)}>
+                                            <UserCheck className="h-3 w-3 mr-2" /> Assign Team
+                                          </DropdownMenuItem>
                                           <DropdownMenuItem 
                                             onClick={() => setExpandedStudentId(
                                               expandedStudentId === student.id ? null : student.id
@@ -691,6 +710,16 @@ export function KanbanBoard() {
                   ? new Date(selectedStudent.churnDate)
                   : new Date()
             }
+          />
+        )}
+
+        {teamEditOpen && selectedStudent && (
+          <StudentTeamEdit
+            isOpen={teamEditOpen}
+            onClose={() => setTeamEditOpen(false)}
+            onSubmit={handleTeamChange}
+            studentName={selectedStudent.name}
+            currentTeam={selectedStudent.csm}
           />
         )}
       </CardContent>
