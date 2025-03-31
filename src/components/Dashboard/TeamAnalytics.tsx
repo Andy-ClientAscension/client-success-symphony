@@ -156,15 +156,15 @@ export function TeamAnalytics() {
           </div>
         </div>
 
-        <h3 className="text-sm font-medium mb-2">Team Members Performance</h3>
+        <h3 className="text-sm font-medium mb-2">Student Success Coach Performance</h3>
         <div className="border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[150px]">CSM</TableHead>
+                <TableHead className="w-[150px]">SSC</TableHead>
                 <TableHead className="text-right">Clients</TableHead>
                 <TableHead className="text-right">Backend Students</TableHead>
-                <TableHead className="text-right">Calls</TableHead>
+                <TableHead className="text-right">Team Health</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -173,19 +173,40 @@ export function TeamAnalytics() {
                 return clients.some(client => client.csm === csm && client.team === selectedTeam);
               }).map((csm) => {
                 const csmClients = clients.filter(client => client.csm === csm);
-                const backendStudents = csmClients.filter(client => client.category === 'Backend Student').length;
-                const csmMetrics = {
-                  clients: csmClients.length,
-                  calls: csmClients.reduce((total, client) => total + client.callsBooked, 0),
-                  backendStudents
-                };
+                const backendStudents = csmClients.filter(client => 
+                  client.type === 'Backend Student' || 
+                  client.category === 'Backend Student'
+                ).length;
+                
+                // Calculate team health metrics
+                const clientsWithNPS = csmClients.filter(client => client.npsScore !== null);
+                const avgNPS = clientsWithNPS.length > 0 
+                  ? Math.round(clientsWithNPS.reduce((sum, client) => sum + (client.npsScore || 0), 0) / clientsWithNPS.length)
+                  : 0;
+                
+                const mrrGrowth = csmClients.length > 0;
+                const progressRate = csmClients.reduce((sum, client) => sum + client.progress, 0) / (csmClients.length || 1);
+                
+                // Determine health color based on NPS
+                let healthColor = "text-green-600";
+                let healthText = "Healthy";
+                
+                if (avgNPS < 6) {
+                  healthColor = "text-red-600";
+                  healthText = "At Risk";
+                } else if (avgNPS >= 6 && avgNPS < 8) {
+                  healthColor = "text-amber-600";
+                  healthText = "Adequate";
+                }
                 
                 return (
                   <TableRow key={csm}>
                     <TableCell className="font-medium">{csm}</TableCell>
-                    <TableCell className="text-right">{csmMetrics.clients}</TableCell>
-                    <TableCell className="text-right">{csmMetrics.backendStudents}</TableCell>
-                    <TableCell className="text-right">{csmMetrics.calls}</TableCell>
+                    <TableCell className="text-right">{csmClients.length}</TableCell>
+                    <TableCell className="text-right">{backendStudents}</TableCell>
+                    <TableCell className={`text-right font-medium ${healthColor}`}>
+                      {healthText} (NPS: {avgNPS})
+                    </TableCell>
                   </TableRow>
                 );
               })}
