@@ -163,7 +163,7 @@ export function TeamAnalytics() {
               <TableRow>
                 <TableHead className="w-[150px]">CSM</TableHead>
                 <TableHead className="text-right">Clients</TableHead>
-                <TableHead className="text-right">MRR</TableHead>
+                <TableHead className="text-right">Backend Students</TableHead>
                 <TableHead className="text-right">Calls</TableHead>
               </TableRow>
             </TableHeader>
@@ -173,17 +173,18 @@ export function TeamAnalytics() {
                 return clients.some(client => client.csm === csm && client.team === selectedTeam);
               }).map((csm) => {
                 const csmClients = clients.filter(client => client.csm === csm);
+                const backendStudents = csmClients.filter(client => client.category === 'Backend Student').length;
                 const csmMetrics = {
                   clients: csmClients.length,
-                  mrr: csmClients.reduce((total, client) => total + client.mrr, 0),
-                  calls: csmClients.reduce((total, client) => total + client.callsBooked, 0)
+                  calls: csmClients.reduce((total, client) => total + client.callsBooked, 0),
+                  backendStudents
                 };
                 
                 return (
                   <TableRow key={csm}>
                     <TableCell className="font-medium">{csm}</TableCell>
                     <TableCell className="text-right">{csmMetrics.clients}</TableCell>
-                    <TableCell className="text-right">${csmMetrics.mrr}</TableCell>
+                    <TableCell className="text-right">{csmMetrics.backendStudents}</TableCell>
                     <TableCell className="text-right">{csmMetrics.calls}</TableCell>
                   </TableRow>
                 );
