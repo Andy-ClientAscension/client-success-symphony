@@ -6,7 +6,6 @@ import { ChurnChart } from "@/components/Dashboard/ChurnChart";
 import { NPSChart } from "@/components/Dashboard/NPSChart";
 import { KanbanBoard } from "@/components/Dashboard/KanbanBoard";
 import { PaymentAlerts } from "@/components/Dashboard/PaymentAlerts";
-import { ClientActivityLog } from "@/components/Dashboard/ClientActivityLog";
 import { TaskManager } from "@/components/Dashboard/TaskManager";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useEffect, useState } from "react";
@@ -118,15 +117,12 @@ export default function Index() {
                 <ClientList />
               </div>
               
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div className="col-span-1 lg:col-span-2">
                   <KanbanBoard />
                 </div>
                 <div className="col-span-1">
                   <PaymentAlerts />
-                </div>
-                <div className="col-span-1">
-                  <ClientActivityLog limit={5} />
                 </div>
               </div>
             </div>
