@@ -161,7 +161,9 @@ export default function Index() {
           
           <TabsContent value="activities" className="m-0">
             <div className="space-y-4">
-              <ClientActivityLog limit={0} />
+              <div className="text-center p-8 text-muted-foreground">
+                Activities section coming soon
+              </div>
             </div>
           </TabsContent>
         </Tabs>
