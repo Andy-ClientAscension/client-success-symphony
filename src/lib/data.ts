@@ -1,3 +1,4 @@
+
 import { subDays, format, addDays } from 'date-fns';
 
 export interface Client {
@@ -34,6 +35,7 @@ export interface Client {
     names: string[];
   };
   csm?: string;
+  team?: string; // Added the team property
   callsBooked: number;
   dealsClosed: number;
   mrr: number;
@@ -113,6 +115,7 @@ export const MOCK_CLIENTS: Client[] = [
       names: ['TechStart Inc', 'Global Enterprises', 'MediaGroup Co.']
     },
     csm: 'Sarah Johnson',
+    team: 'success', // Added team property
     callsBooked: 12,
     dealsClosed: 3,
     mrr: 1200
@@ -155,6 +158,7 @@ export const MOCK_CLIENTS: Client[] = [
       names: []
     },
     csm: 'Michael Chen',
+    team: 'sales', // Added team property
     callsBooked: 5,
     dealsClosed: 1,
     mrr: 850
@@ -197,6 +201,7 @@ export const MOCK_CLIENTS: Client[] = [
       names: ['Startup Vision', 'TechCorp', 'InnovateX', 'FutureTech', 'DataFlow']
     },
     csm: 'Sarah Johnson',
+    team: 'success', // Added team property
     callsBooked: 18,
     dealsClosed: 5,
     mrr: 2400
@@ -239,6 +244,7 @@ export const MOCK_CLIENTS: Client[] = [
       names: []
     },
     csm: 'Alex Rodriguez',
+    team: 'product', // Added team property
     callsBooked: 2,
     dealsClosed: 0,
     mrr: 500
@@ -281,6 +287,7 @@ export const MOCK_CLIENTS: Client[] = [
       names: []
     },
     csm: 'Emma Watson',
+    team: 'support', // Added team property
     callsBooked: 3,
     dealsClosed: 0,
     mrr: 0
