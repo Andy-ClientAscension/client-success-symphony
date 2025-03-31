@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { MoreHorizontal, ChevronRight, PlusCircle, Phone, BarChart2, DollarSign, Edit, TrendingUp } from "lucide-react";
+import { MoreHorizontal, ChevronRight, PlusCircle, Phone, BarChart2, DollarSign, Edit, TrendingUp, Users, Filter } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import {
@@ -25,13 +26,31 @@ import { ClientMetricsForm } from "./ClientMetricsForm";
 import { NPSUpdateForm } from "./NPSUpdateForm";
 import { useToast } from "@/hooks/use-toast";
 import { STORAGE_KEYS, saveData, loadData } from "@/utils/persistence";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+// Available teams for filtering
+const TEAMS = [
+  { id: "all", name: "All Teams" },
+  { id: "sales", name: "Sales Team" },
+  { id: "support", name: "Support Team" },
+  { id: "success", name: "Customer Success" },
+  { id: "product", name: "Product Team" },
+];
 
 export function ClientList() {
   const defaultClients = getAllClients();
   const [clients, setClients] = useState<Client[]>(defaultClients);
+  const [filteredClients, setFilteredClients] = useState<Client[]>(clients);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [metricsModalOpen, setMetricsModalOpen] = useState(false);
   const [npsModalOpen, setNpsModalOpen] = useState(false);
+  const [selectedTeam, setSelectedTeam] = useState("all");
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -48,7 +67,19 @@ export function ClientList() {
     if (persistEnabled && clients !== defaultClients) {
       saveData(STORAGE_KEYS.CLIENTS, clients);
     }
-  }, [clients]);
+
+    // Update filtered clients whenever clients or selected team changes
+    if (selectedTeam === "all") {
+      setFilteredClients(clients);
+    } else {
+      const filtered = clients.filter(client => {
+        // Assume clients have a 'team' property, if not, you might need to adjust this logic
+        const clientTeam = client.team || ""; 
+        return clientTeam.toLowerCase() === selectedTeam.toLowerCase();
+      });
+      setFilteredClients(filtered);
+    }
+  }, [clients, selectedTeam]);
   
   const getStatusBadge = (status: Client['status']) => {
     switch (status) {
@@ -107,17 +138,38 @@ export function ClientList() {
       description: `${selectedClient.name}'s metrics have been updated successfully.`,
     });
   };
+
+  const handleTeamChange = (value: string) => {
+    setSelectedTeam(value);
+  };
   
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Client Overview</CardTitle>
-        <Button 
-          onClick={handleAddNewClient}
-          className="bg-red-600 hover:bg-red-700"
-        >
-          <PlusCircle className="mr-2 h-4 w-4" /> Add New Client
-        </Button>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-muted-foreground" />
+            <Select value={selectedTeam} onValueChange={handleTeamChange}>
+              <SelectTrigger className="w-[180px] h-8 text-xs">
+                <SelectValue placeholder="Filter by team" />
+              </SelectTrigger>
+              <SelectContent>
+                {TEAMS.map((team) => (
+                  <SelectItem key={team.id} value={team.id}>
+                    {team.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button 
+            onClick={handleAddNewClient}
+            className="bg-red-600 hover:bg-red-700"
+          >
+            <PlusCircle className="mr-2 h-4 w-4" /> Add New Client
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
@@ -137,7 +189,7 @@ export function ClientList() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {clients.map((client) => (
+              {filteredClients.map((client) => (
                 <TableRow key={client.id}>
                   <TableCell className="font-medium">{client.name}</TableCell>
                   <TableCell>{getStatusBadge(client.status)}</TableCell>
