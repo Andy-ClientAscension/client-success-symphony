@@ -18,6 +18,8 @@ import Login from "@/pages/Login";
 import SignUp from "@/pages/SignUp";
 import Index from "@/pages/Index";
 import AddClient from "@/pages/AddClient";
+import ClientDetailsPage from "@/pages/ClientDetails";
+import Clients from "@/pages/Clients";
 import Analytics from "@/pages/Analytics";
 import Communications from "@/pages/Communications";
 import Renewals from "@/pages/Renewals";
@@ -80,6 +82,8 @@ const App = () => {
                     <Route element={<ProtectedRoute />}>
                       <Route path="/" element={<Index />} />
                       <Route path="/add-client" element={<AddClient />} />
+                      <Route path="/clients" element={<Clients />} />
+                      <Route path="/client/:clientId" element={<ClientDetailsPage />} />
                       <Route path="/analytics" element={<Analytics />} />
                       <Route path="/communications" element={<Communications />} />
                       <Route path="/renewals" element={<Renewals />} />

@@ -42,7 +42,11 @@ const TEAMS = [
   { id: "Team-Cillin", name: "Team-Cillin" },
 ];
 
-export function ClientList() {
+interface ClientListProps {
+  statusFilter?: Client['status'];
+}
+
+export function ClientList({ statusFilter }: ClientListProps) {
   const defaultClients = getAllClients();
   const [clients, setClients] = useState<Client[]>(defaultClients);
   const [filteredClients, setFilteredClients] = useState<Client[]>(clients);
@@ -67,18 +71,23 @@ export function ClientList() {
       saveData(STORAGE_KEYS.CLIENTS, clients);
     }
 
-    // Update filtered clients whenever clients or selected team changes
+    // First filter by status if a statusFilter is provided
+    let statusFiltered = clients;
+    if (statusFilter) {
+      statusFiltered = clients.filter(client => client.status === statusFilter);
+    }
+
+    // Then filter by team
     if (selectedTeam === "all") {
-      setFilteredClients(clients);
+      setFilteredClients(statusFiltered);
     } else {
-      const filtered = clients.filter(client => {
-        // Assume clients have a 'team' property, if not, you might need to adjust this logic
+      const filtered = statusFiltered.filter(client => {
         const clientTeam = client.team || ""; 
         return clientTeam.toLowerCase() === selectedTeam.toLowerCase();
       });
       setFilteredClients(filtered);
     }
-  }, [clients, selectedTeam]);
+  }, [clients, selectedTeam, statusFilter]);
   
   const getStatusBadge = (status: Client['status']) => {
     switch (status) {
@@ -105,6 +114,10 @@ export function ClientList() {
     if (progress >= 70) return 'bg-success-500';
     if (progress >= 40) return 'bg-warning-500';
     return 'bg-danger-500';
+  };
+  
+  const handleViewDetails = (client: Client) => {
+    navigate(`/client/${client.id}`);
   };
   
   const handleAddNewClient = () => {
@@ -262,7 +275,11 @@ export function ClientList() {
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleViewDetails(client)}
+                      >
                         <ChevronRight className="h-4 w-4" />
                       </Button>
                       <DropdownMenu>
@@ -272,7 +289,9 @@ export function ClientList() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleViewDetails(client)}>
+                            View Details
+                          </DropdownMenuItem>
                           <DropdownMenuItem>Contact Client</DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => handleEditMetrics(client)}>

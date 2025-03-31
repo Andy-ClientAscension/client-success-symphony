@@ -1,18 +1,16 @@
-
 /**
  * Utility for persisting dashboard data in localStorage
  */
 
 // Keys for different types of data
 const STORAGE_KEYS = {
-  CLIENTS: 'ssc-dashboard-clients',
-  KANBAN: 'ssc-dashboard-kanban',
-  METRICS: 'ssc-dashboard-metrics',
-  NPS: 'ssc-dashboard-nps',
-  CHURN: 'ssc-dashboard-churn',
-  LEADS: 'ssc-dashboard-leads',
-  COSTS: 'ssc-dashboard-costs',
-  USER_PREFERENCES: 'ssc-dashboard-preferences',
+  CLIENTS: "clientsData",
+  SETTINGS: "appSettings",
+  DASHBOARD: "dashboardLayout",
+  THEME: "theme",
+  KANBAN: "kanbanBoard",
+  CLIENT_NOTES: "clientNotes",
+  CLIENT_STATUS: "clientStatus"
 };
 
 /**

@@ -1,4 +1,3 @@
-
 import { subDays, format, addDays } from 'date-fns';
 
 export interface Client {
@@ -421,6 +420,35 @@ export const updateClientNPSScore = (clientId: string, score: number): boolean =
   client.monthlyNpsScores.sort((a, b) => {
     return new Date(a.month).getTime() - new Date(b.month).getTime();
   });
+  
+  return true;
+};
+
+export const updateClientStatusById = (
+  clientId: string,
+  updates: {
+    trustPilotReview?: {
+      date: string | null;
+      rating: number | null;
+      link: string | null;
+    },
+    caseStudyInterview?: {
+      completed: boolean;
+      scheduledDate: string | null;
+      notes: string | null;
+    }
+  }
+): boolean => {
+  const client = MOCK_CLIENTS.find(c => c.id === clientId);
+  if (!client) return false;
+  
+  if (updates.trustPilotReview) {
+    client.trustPilotReview = updates.trustPilotReview;
+  }
+  
+  if (updates.caseStudyInterview) {
+    client.caseStudyInterview = updates.caseStudyInterview;
+  }
   
   return true;
 };
