@@ -41,17 +41,7 @@ export function TeamAnalytics() {
     total: teamClients.length
   };
   
-  // Calculate previous period metrics (simulated for this example)
-  // In a real app, this would come from historical data
-  const prevPeriodRetention = Math.max(0, Math.round(retentionRate - (Math.random() * 10 - 5)));
-  const prevPeriodAtRisk = Math.max(0, Math.round(atRiskRate - (Math.random() * 10 - 3)));
-  const prevPeriodChurn = Math.max(0, Math.round(churnRate - (Math.random() * 10 - 2)));
-  
-  // Calculate trends
-  const retentionTrend = retentionRate - prevPeriodRetention;
-  const atRiskTrend = atRiskRate - prevPeriodAtRisk;
-  const churnTrend = churnRate - prevPeriodChurn;
-  
+  // Calculate rates first
   const retentionRate = statusCounts.total > 0 
     ? Math.round((statusCounts.active / statusCounts.total) * 100) 
     : 0;
@@ -63,6 +53,17 @@ export function TeamAnalytics() {
   const churnRate = statusCounts.total > 0 
     ? Math.round((statusCounts.churned / statusCounts.total) * 100) 
     : 0;
+  
+  // Calculate previous period metrics (simulated for this example)
+  // In a real app, this would come from historical data
+  const prevPeriodRetention = Math.max(0, Math.round(retentionRate - (Math.random() * 10 - 5)));
+  const prevPeriodAtRisk = Math.max(0, Math.round(atRiskRate - (Math.random() * 10 - 3)));
+  const prevPeriodChurn = Math.max(0, Math.round(churnRate - (Math.random() * 10 - 2)));
+  
+  // Calculate trends
+  const retentionTrend = retentionRate - prevPeriodRetention;
+  const atRiskTrend = atRiskRate - prevPeriodAtRisk;
+  const churnTrend = churnRate - prevPeriodChurn;
 
   // Helper function to get trend indicator component
   const getTrendIndicator = (trend: number) => {
