@@ -14,8 +14,9 @@ export function SSCPerformanceRow({ csm, clients, isMobile = false }: SSCPerform
   // Filter clients for this CSM
   const csmClients = clients.filter(client => client.csm === csm);
   
-  // Calculate backend students
+  // Calculate backend students - with fallback if property doesn't exist
   const backendStudents = csmClients.reduce((total, client) => {
+    // Access with optional chaining and fallback to 0 if undefined
     return total + (client.backendStudents || 0);
   }, 0);
   
@@ -43,8 +44,9 @@ export function SSCPerformanceRow({ csm, clients, isMobile = false }: SSCPerform
     return total + (client.mrr || 0);
   }, 0);
   
-  // Calculate growth metrics
+  // Calculate growth metrics - with fallback if property doesn't exist
   const growthMetric = csmClients.reduce((total, client) => {
+    // Access with optional chaining and fallback to 0 if undefined
     return total + (client.growth || 0);
   }, 0);
   
@@ -63,7 +65,7 @@ export function SSCPerformanceRow({ csm, clients, isMobile = false }: SSCPerform
   healthScore += retentionRate * 0.3;
   
   // Growth component (20%) - simplified calculation
-  const growthScore = Math.min(100, (growthMetric / csmClients.length) * 20);
+  const growthScore = Math.min(100, (growthMetric / Math.max(1, csmClients.length)) * 20);
   healthScore += growthScore * 0.2;
   
   // MRR trends component (20%) - simplified calculation
