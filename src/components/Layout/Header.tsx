@@ -1,14 +1,18 @@
+
 import { Bell, Search, HelpCircle, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { LoadingState } from "@/components/LoadingState";
 import { ValidationError } from "@/components/ValidationError";
 import { useToast } from "@/hooks/use-toast";
 import { FileUp, AlertCircle } from "lucide-react";
+import { SearchResults } from "@/components/Search/SearchResults";
+import { searchAll } from "@/services/searchService";
+import { useDebounce } from "@/hooks/use-debounce";
 
 type ImportFormat = "csv" | "json" | "xlsx";
 
@@ -21,6 +25,67 @@ export function Header() {
   const [fileName, setFileName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (debouncedSearchQuery.trim().length > 2) {
+      setIsSearching(true);
+      const results = searchAll(debouncedSearchQuery);
+      setSearchResults(results);
+      setShowResults(true);
+      setIsSearching(false);
+    } else {
+      setSearchResults([]);
+      setShowResults(false);
+    }
+  }, [debouncedSearchQuery]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleCloseSearch = () => {
+    setSearchQuery("");
+    setShowResults(false);
+    setSearchResults([]);
+  };
+
+  const handleSearchFocus = () => {
+    if (searchQuery.trim().length > 2) {
+      setShowResults(true);
+    }
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') {
+      handleCloseSearch();
+    }
+  };
+
+  // Click outside handler
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        searchInputRef.current &&
+        !searchInputRef.current.contains(event.target as Node) &&
+        !(event.target as Element).closest('.search-results')
+      ) {
+        setShowResults(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -99,12 +164,38 @@ export function Header() {
         
         <div className="flex-1 max-w-xl hidden sm:block ml-2 md:ml-4">
           <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className={`absolute left-2.5 top-2.5 h-4 w-4 ${isSearching ? 'animate-pulse text-red-600' : 'text-muted-foreground'}`} />
             <Input
+              ref={searchInputRef}
               type="search"
-              placeholder="Search clients, communications..."
-              className="w-full pl-9 bg-background"
+              placeholder="Search clients, students, resources..."
+              className="w-full pl-9 bg-background pr-4"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              onFocus={handleSearchFocus}
+              onKeyDown={handleSearchKeyDown}
             />
+            {searchQuery && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                onClick={handleCloseSearch}
+              >
+                <span className="sr-only">Clear search</span>
+                <FileUp className="h-4 w-4 rotate-45" />
+              </Button>
+            )}
+            {showResults && (
+              <div className="search-results">
+                <SearchResults 
+                  results={searchResults}
+                  isOpen={showResults}
+                  onClose={handleCloseSearch}
+                  searchQuery={searchQuery}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
