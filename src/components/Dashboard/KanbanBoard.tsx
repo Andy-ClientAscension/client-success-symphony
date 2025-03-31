@@ -51,13 +51,13 @@ interface Student {
   paymentStatus?: PaymentStatus;
 }
 
-// CSM Team data
+// CSM Team data - updating to match the new team names
 const CSM_TEAMS = [
   { id: "all", name: "All Teams" },
-  { id: "team1", name: "Team Alpha" },
-  { id: "team2", name: "Team Beta" },
-  { id: "team3", name: "Team Gamma" },
-  { id: "team4", name: "Team Delta" },
+  { id: "Team-Andy", name: "Team-Andy" },
+  { id: "Team-Chris", name: "Team-Chris" },
+  { id: "Team-Alex", name: "Team-Alex" },
+  { id: "Team-Cillin", name: "Team-Cillin" },
 ];
 
 // Mock data for student tracking, adding CSM information and notes
@@ -97,7 +97,7 @@ const INITIAL_DATA = {
       startDate: format(new Date(2023, 5, 15), 'yyyy-MM-dd'),
       contractDuration: "6months" as const,
       endDate: format(addMonths(new Date(2023, 5, 15), 6), 'yyyy-MM-dd'),
-      csm: "team1",
+      csm: "Team-Andy",
       notes: [
         {
           id: 'n1',
@@ -114,7 +114,7 @@ const INITIAL_DATA = {
       startDate: format(new Date(2023, 8, 10), 'yyyy-MM-dd'),
       contractDuration: "1year" as const,
       endDate: format(addYears(new Date(2023, 8, 10), 1), 'yyyy-MM-dd'),
-      csm: "team2",
+      csm: "Team-Chris",
       notes: [
         {
           id: 'n2',
@@ -132,7 +132,7 @@ const INITIAL_DATA = {
       startDate: format(new Date(2023, 10, 5), 'yyyy-MM-dd'),
       contractDuration: "6months" as const,
       endDate: format(addMonths(new Date(2023, 10, 5), 6), 'yyyy-MM-dd'),
-      csm: "team1",
+      csm: "Team-Andy",
       notes: []
     },
     's4': { 
@@ -142,7 +142,7 @@ const INITIAL_DATA = {
       startDate: format(new Date(2023, 3, 12), 'yyyy-MM-dd'),
       contractDuration: "6months" as const,
       endDate: format(addMonths(new Date(2023, 3, 12), 6), 'yyyy-MM-dd'),
-      csm: "team3",
+      csm: "Team-Cillin",
       notes: []
     },
     's5': { 
@@ -152,7 +152,7 @@ const INITIAL_DATA = {
       startDate: format(new Date(2023, 7, 20), 'yyyy-MM-dd'),
       contractDuration: "1year" as const,
       endDate: format(addYears(new Date(2023, 7, 20), 1), 'yyyy-MM-dd'),
-      csm: "team2",
+      csm: "Team-Chris",
       notes: []
     },
     's6': { 
@@ -162,7 +162,7 @@ const INITIAL_DATA = {
       startDate: format(new Date(2023, 9, 3), 'yyyy-MM-dd'),
       contractDuration: "1year" as const,
       endDate: format(addYears(new Date(2023, 9, 3), 1), 'yyyy-MM-dd'),
-      csm: "team4",
+      csm: "Team-Cillin",
       notes: []
     },
     's7': { 
@@ -173,7 +173,7 @@ const INITIAL_DATA = {
       contractDuration: "6months" as const,
       endDate: format(addMonths(new Date(2023, 2, 8), 6), 'yyyy-MM-dd'),
       churnDate: format(new Date(2023, 4, 15), 'yyyy-MM-dd'),
-      csm: "team3",
+      csm: "Team-Andy",
       notes: []
     },
     's8': { 
@@ -183,7 +183,7 @@ const INITIAL_DATA = {
       startDate: format(new Date(2023, 0, 15), 'yyyy-MM-dd'),
       contractDuration: "6months" as const,
       endDate: format(addMonths(new Date(2023, 0, 15), 6), 'yyyy-MM-dd'),
-      csm: "team4",
+      csm: "Team-Cillin",
       notes: []
     },
     's9': { 
@@ -193,7 +193,7 @@ const INITIAL_DATA = {
       startDate: format(new Date(2023, 1, 22), 'yyyy-MM-dd'),
       contractDuration: "1year" as const,
       endDate: format(addYears(new Date(2023, 1, 22), 1), 'yyyy-MM-dd'),
-      csm: "team1",
+      csm: "Team-Andy",
       notes: []
     }
   },

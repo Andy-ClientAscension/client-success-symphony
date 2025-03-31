@@ -115,7 +115,7 @@ export const MOCK_CLIENTS: Client[] = [
       names: ['TechStart Inc', 'Global Enterprises', 'MediaGroup Co.']
     },
     csm: 'Sarah Johnson',
-    team: 'success', // Added team property
+    team: 'Team-Andy',
     callsBooked: 12,
     dealsClosed: 3,
     mrr: 1200
@@ -158,7 +158,7 @@ export const MOCK_CLIENTS: Client[] = [
       names: []
     },
     csm: 'Michael Chen',
-    team: 'sales', // Added team property
+    team: 'Team-Chris',
     callsBooked: 5,
     dealsClosed: 1,
     mrr: 850
@@ -201,7 +201,7 @@ export const MOCK_CLIENTS: Client[] = [
       names: ['Startup Vision', 'TechCorp', 'InnovateX', 'FutureTech', 'DataFlow']
     },
     csm: 'Sarah Johnson',
-    team: 'success', // Added team property
+    team: 'Team-Alex',
     callsBooked: 18,
     dealsClosed: 5,
     mrr: 2400
@@ -244,7 +244,7 @@ export const MOCK_CLIENTS: Client[] = [
       names: []
     },
     csm: 'Alex Rodriguez',
-    team: 'product', // Added team property
+    team: 'Team-Cillin',
     callsBooked: 2,
     dealsClosed: 0,
     mrr: 500
@@ -287,7 +287,7 @@ export const MOCK_CLIENTS: Client[] = [
       names: []
     },
     csm: 'Emma Watson',
-    team: 'support', // Added team property
+    team: 'Team-Andy',
     callsBooked: 3,
     dealsClosed: 0,
     mrr: 0

@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { MoreHorizontal, ChevronRight, PlusCircle, Phone, BarChart2, DollarSign, Edit, TrendingUp, Users, Filter } from "lucide-react";
+import { MoreHorizontal, ChevronRight, PlusCircle, Phone, BarChart2, DollarSign, Edit, TrendingUp, Users } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import {
@@ -37,10 +36,10 @@ import {
 // Available teams for filtering
 const TEAMS = [
   { id: "all", name: "All Teams" },
-  { id: "sales", name: "Sales Team" },
-  { id: "support", name: "Support Team" },
-  { id: "success", name: "Customer Success" },
-  { id: "product", name: "Product Team" },
+  { id: "Team-Andy", name: "Team-Andy" },
+  { id: "Team-Chris", name: "Team-Chris" },
+  { id: "Team-Alex", name: "Team-Alex" },
+  { id: "Team-Cillin", name: "Team-Cillin" },
 ];
 
 export function ClientList() {
