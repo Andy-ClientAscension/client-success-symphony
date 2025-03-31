@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { format, isPast, isToday } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -57,8 +56,8 @@ export function TaskManager() {
     const allClients = getAllClients();
     setClients(allClients);
     
-    // Load saved tasks or initialize with example tasks
-    const savedTasks = loadData(STORAGE_KEYS.TASKS, [
+    // Define default tasks with proper types
+    const defaultTasks: Task[] = [
       {
         id: '1',
         title: 'Follow up on renewal',
@@ -92,8 +91,10 @@ export function TaskManager() {
         assignedTo: 'Alex Wilson',
         createdAt: new Date(2023, 8, 15).toISOString(),
       }
-    ]);
+    ];
     
+    // Load saved tasks or initialize with example tasks
+    const savedTasks = loadData(STORAGE_KEYS.TASKS, defaultTasks);
     setTasks(savedTasks);
   }, []);
   
@@ -388,7 +389,7 @@ export function TaskManager() {
               <Label htmlFor="priority">Priority</Label>
               <Select 
                 value={newTask.priority || 'medium'} 
-                onValueChange={(value: any) => setNewTask({...newTask, priority: value})}
+                onValueChange={(value: 'low' | 'medium' | 'high') => setNewTask({...newTask, priority: value})}
               >
                 <SelectTrigger id="priority">
                   <SelectValue placeholder="Select priority" />

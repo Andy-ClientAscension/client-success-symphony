@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -72,7 +71,7 @@ export function CustomFields({ clientId, onSave }: CustomFieldsProps) {
 
   // Load custom fields from storage
   useEffect(() => {
-    const fields = loadData(`${STORAGE_KEYS.CUSTOM_FIELDS}`, [
+    const defaultFields: CustomField[] = [
       {
         id: '1',
         name: 'Account Manager',
@@ -92,8 +91,9 @@ export function CustomFields({ clientId, onSave }: CustomFieldsProps) {
         options: ['Technology', 'Healthcare', 'Finance', 'Education', 'Retail'],
         required: false
       }
-    ]);
+    ];
     
+    const fields = loadData(`${STORAGE_KEYS.CUSTOM_FIELDS}`, defaultFields);
     setCustomFields(fields);
     
     // Load field values for this client

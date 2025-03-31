@@ -1,4 +1,3 @@
-
 /**
  * Utility for persisting dashboard data in localStorage
  */
@@ -13,7 +12,10 @@ const STORAGE_KEYS = {
   CLIENT_NOTES: "clientNotes",
   CLIENT_STATUS: "clientStatus",
   CHURN: "churnData",
-  USER_PREFERENCES: "userPreferences"
+  USER_PREFERENCES: "userPreferences",
+  CUSTOM_FIELDS: "customFields",
+  CLIENT_CUSTOM_FIELDS: "clientCustomFields",
+  TASKS: "tasksList"
 };
 
 /**

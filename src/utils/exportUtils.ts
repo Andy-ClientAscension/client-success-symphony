@@ -1,3 +1,4 @@
+
 /**
  * Utility functions for exporting data
  */
@@ -46,17 +47,11 @@ export const exportToCSV = (data: any[], filename: string) => {
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   
-  // Create a download link
-  if (navigator.msSaveBlob) {
-    // IE 10+
-    navigator.msSaveBlob(blob, filename);
-  } else {
-    // Other browsers
-    const url = URL.createObjectURL(blob);
-    link.href = url;
-    link.setAttribute('download', `${filename}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
+  // Create a download link - fixed to remove IE-specific msSaveBlob
+  const url = URL.createObjectURL(blob);
+  link.href = url;
+  link.setAttribute('download', `${filename}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 };

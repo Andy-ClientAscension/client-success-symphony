@@ -90,7 +90,7 @@ export default function ClientDetailsPage() {
                 <ClientDetails client={client} />
               </div>
               <div className="col-span-1 md:col-span-2">
-                <ClientStatusUpdates clientId={client.id} />
+                <ClientStatusUpdates client={client} />
               </div>
             </div>
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -109,11 +109,11 @@ export default function ClientDetailsPage() {
           </TabsContent>
 
           <TabsContent value="analytics" className="mt-6">
-            <ClientAnalytics clientId={client.id} clientName={client.name} />
+            <ClientAnalytics client={client} />
           </TabsContent>
 
           <TabsContent value="communication" className="mt-6">
-            <CommunicationLog clientId={client.id} />
+            <CommunicationLog client={client} />
           </TabsContent>
           
           <TabsContent value="tasks" className="mt-6">
@@ -121,7 +121,7 @@ export default function ClientDetailsPage() {
           </TabsContent>
 
           <TabsContent value="notes" className="mt-6">
-            <ClientNotesSection clientId={client.id} />
+            <ClientNotesSection client={client} />
           </TabsContent>
           
           <TabsContent value="activity" className="mt-6">
