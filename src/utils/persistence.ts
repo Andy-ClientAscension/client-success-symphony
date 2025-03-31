@@ -87,5 +87,19 @@ export const loadUserPreferences = () => {
   });
 };
 
+/**
+ * Save analytics metrics
+ */
+export const saveAnalyticsData = (data: any): void => {
+  saveData(STORAGE_KEYS.CLIENTS, data);
+};
+
+/**
+ * Get analytics metrics
+ */
+export const getAnalyticsData = () => {
+  return loadData(STORAGE_KEYS.CLIENTS, {});
+};
+
 // Export storage keys for use in components
 export { STORAGE_KEYS };

@@ -1,15 +1,20 @@
 
 import { Layout } from "@/components/Layout/Layout";
-import { NPSChart } from "@/components/Dashboard/NPSChart";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowLeft, RefreshCw, LineChart, Users, Clock, TrendingUp, Home } from "lucide-react";
+import { ArrowLeft, RefreshCw, Home } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ValidationError } from "@/components/ValidationError";
 import { useQueryClient } from "@tanstack/react-query";
+
+// Import our new analytics components
+import { CompanyMetrics } from "@/components/Dashboard/CompanyMetrics";
+import { TeamAnalytics } from "@/components/Dashboard/TeamAnalytics";
+import { ClientAnalytics } from "@/components/Dashboard/ClientAnalytics";
+import { NPSChart } from "@/components/Dashboard/NPSChart";
 
 export default function Analytics() {
   const queryClient = useQueryClient();
@@ -82,68 +87,54 @@ export default function Analytics() {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 mt-2">
-          <div className="lg:col-span-2">
-            <ErrorBoundary 
-              fallback={
-                <Card className="min-h-[100px] flex items-center justify-center">
-                  <CardContent>
-                    <ValidationError 
-                      message="Something went wrong loading the NPS chart. Please try refreshing the data." 
-                      type="error"
-                      className="text-sm"
-                    />
-                  </CardContent>
-                </Card>
-              }
-              onReset={handleNPSErrorReset}
-            >
-              <NPSChart />
-            </ErrorBoundary>
-          </div>
+        <div className="space-y-4">
+          {/* Company Overview */}
+          <ErrorBoundary 
+            fallback={
+              <Card className="min-h-[100px] flex items-center justify-center">
+                <ValidationError 
+                  message="Something went wrong loading the company metrics." 
+                  type="error"
+                  className="text-sm"
+                />
+              </Card>
+            }
+            onReset={handleNPSErrorReset}
+          >
+            <CompanyMetrics />
+          </ErrorBoundary>
           
-          <Card>
-            <CardHeader className="p-4">
-              <CardTitle className="text-lg">Analytics Overview</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <p className="text-sm text-muted-foreground mb-4">
-                This dashboard provides detailed analytics about your client relationships and satisfaction metrics.
-                Track your Net Promoter Score (NPS) and other key performance indicators.
-              </p>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card/50">
-                  <div className="p-2 rounded-md bg-green-100 dark:bg-green-900/30">
-                    <Users className="h-4 w-4 text-green-600 dark:text-green-400" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-medium">Client Retention Rate</div>
-                    <div className="font-semibold text-sm text-green-600">87%</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card/50">
-                  <div className="p-2 rounded-md bg-blue-100 dark:bg-blue-900/30">
-                    <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-medium">Average Response Time</div>
-                    <div className="font-semibold text-sm">4.2 hours</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card/50">
-                  <div className="p-2 rounded-md bg-green-100 dark:bg-green-900/30">
-                    <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-medium">Client Growth Rate</div>
-                    <div className="font-semibold text-sm text-green-600">+12%</div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Team Analytics */}
+          <ErrorBoundary 
+            fallback={
+              <Card className="min-h-[100px] flex items-center justify-center">
+                <ValidationError 
+                  message="Something went wrong loading the team analytics." 
+                  type="error"
+                  className="text-sm"
+                />
+              </Card>
+            }
+            onReset={handleNPSErrorReset}
+          >
+            <TeamAnalytics />
+          </ErrorBoundary>
+          
+          {/* Client Analytics */}
+          <ErrorBoundary 
+            fallback={
+              <Card className="min-h-[100px] flex items-center justify-center">
+                <ValidationError 
+                  message="Something went wrong loading the client analytics." 
+                  type="error"
+                  className="text-sm"
+                />
+              </Card>
+            }
+            onReset={handleNPSErrorReset}
+          >
+            <ClientAnalytics />
+          </ErrorBoundary>
         </div>
       </div>
     </Layout>
