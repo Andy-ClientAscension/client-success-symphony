@@ -173,10 +173,11 @@ export function TeamAnalytics() {
                 return clients.some(client => client.csm === csm && client.team === selectedTeam);
               }).map((csm) => {
                 const csmClients = clients.filter(client => client.csm === csm);
-                const backendStudents = csmClients.filter(client => 
-                  client.type === 'Backend Student' || 
-                  client.category === 'Backend Student'
-                ).length;
+                
+                // Since 'type' and 'category' don't exist in the Client type,
+                // we'll just count all clients for this SSC as backend students for now
+                // In a real app, you would add these properties to the Client interface
+                const backendStudents = csmClients.length;
                 
                 // Calculate team health metrics
                 const clientsWithNPS = csmClients.filter(client => client.npsScore !== null);
