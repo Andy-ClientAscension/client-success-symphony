@@ -174,9 +174,8 @@ export function TeamAnalytics() {
               }).map((csm) => {
                 const csmClients = clients.filter(client => client.csm === csm);
                 
-                // Since 'type' and 'category' don't exist in the Client type,
-                // we'll just count all clients for this SSC as backend students for now
-                // In a real app, you would add these properties to the Client interface
+                // For now, we'll assume all clients are backend students
+                // In a real app, you would add a 'type' or 'category' field to the Client interface
                 const backendStudents = csmClients.length;
                 
                 // Calculate team health metrics
@@ -184,9 +183,6 @@ export function TeamAnalytics() {
                 const avgNPS = clientsWithNPS.length > 0 
                   ? Math.round(clientsWithNPS.reduce((sum, client) => sum + (client.npsScore || 0), 0) / clientsWithNPS.length)
                   : 0;
-                
-                const mrrGrowth = csmClients.length > 0;
-                const progressRate = csmClients.reduce((sum, client) => sum + client.progress, 0) / (csmClients.length || 1);
                 
                 // Determine health color based on NPS
                 let healthColor = "text-green-600";
