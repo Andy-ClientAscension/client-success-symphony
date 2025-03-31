@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { CommunicationLog } from "@/components/Dashboard/CommunicationLog";
+import { ClientActivityLog } from "@/components/Dashboard/ClientActivityLog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MOCK_CLIENTS } from "@/lib/data";
 import { Link } from "react-router-dom";
@@ -169,6 +170,12 @@ export default function Communications() {
                   Recent Communications
                 </TabsTrigger>
                 <TabsTrigger 
+                  value="activity" 
+                  className="data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:font-medium"
+                >
+                  Activity Log
+                </TabsTrigger>
+                <TabsTrigger 
                   value="resources" 
                   className="data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:font-medium"
                 >
@@ -178,6 +185,10 @@ export default function Communications() {
               
               <TabsContent value="recent">
                 <CommunicationLog communications={allCommunications} />
+              </TabsContent>
+
+              <TabsContent value="activity">
+                <ClientActivityLog limit={0} showTitle={true} />
               </TabsContent>
               
               <TabsContent value="resources" className="space-y-6">

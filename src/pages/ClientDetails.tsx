@@ -80,7 +80,6 @@ export default function ClientDetailsPage() {
             <TabsTrigger value="communication">Communication</TabsTrigger>
             <TabsTrigger value="tasks">Tasks</TabsTrigger>
             <TabsTrigger value="notes">Notes</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
             <TabsTrigger value="custom-fields">Custom Fields</TabsTrigger>
           </TabsList>
 
@@ -108,7 +107,14 @@ export default function ClientDetailsPage() {
           </TabsContent>
 
           <TabsContent value="communication" className="mt-6">
-            <CommunicationLog communications={client.communicationLog} clientName={client.name} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="col-span-1 md:col-span-1">
+                <CommunicationLog communications={client.communicationLog} clientName={client.name} />
+              </div>
+              <div className="col-span-1 md:col-span-1">
+                <ClientActivityLog clientId={client.id} limit={0} />
+              </div>
+            </div>
           </TabsContent>
           
           <TabsContent value="tasks" className="mt-6">
@@ -117,10 +123,6 @@ export default function ClientDetailsPage() {
 
           <TabsContent value="notes" className="mt-6">
             <ClientNotesSection client={client} />
-          </TabsContent>
-          
-          <TabsContent value="activity" className="mt-6">
-            <ClientActivityLog clientId={client.id} limit={0} />
           </TabsContent>
           
           <TabsContent value="custom-fields" className="mt-6">
