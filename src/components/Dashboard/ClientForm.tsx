@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { CSM_TEAMS } from "@/lib/data";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -44,6 +45,9 @@ const formSchema = z.object({
   }),
   status: z.enum(["new", "active", "at-risk", "churned"], {
     required_error: "Please select a status.",
+  }),
+  team: z.string({
+    required_error: "Please select a CSM team.",
   }),
 });
 
@@ -65,6 +69,7 @@ export function ClientForm({ onSubmit, onCancel }: ClientFormProps) {
       status: "new",
       contractDuration: "6months",
       startDate: new Date(),
+      team: CSM_TEAMS.find(team => team.id !== "all")?.id || "",
     },
   });
 
@@ -138,6 +143,34 @@ export function ClientForm({ onSubmit, onCancel }: ClientFormProps) {
                   <SelectItem value="churned">Churned</SelectItem>
                 </SelectContent>
               </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="team"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>CSM Team</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a CSM team" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {CSM_TEAMS.filter(team => team.id !== "all").map((team) => (
+                    <SelectItem key={team.id} value={team.id}>
+                      {team.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Assign this client to a specific CSM team
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

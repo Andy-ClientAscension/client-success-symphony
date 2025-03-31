@@ -19,7 +19,7 @@ const AddClient = () => {
   const handleSubmit = (data: any) => {
     console.log("New client data:", data);
     // In a real app, you would add this client to your data store
-    // For now, we'll just navigate back to the dashboard
+    // Including the new team field
     navigate("/");
   };
   
