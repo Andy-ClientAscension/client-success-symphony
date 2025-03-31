@@ -34,10 +34,12 @@ export interface Client {
     names: string[];
   };
   csm?: string;
-  team?: string; // Added the team property
+  team?: string;
   callsBooked: number;
   dealsClosed: number;
   mrr: number;
+  backendStudents?: number;
+  growth?: number;
 }
 
 export interface Communication {
@@ -117,7 +119,9 @@ export const MOCK_CLIENTS: Client[] = [
     team: 'Team-Andy',
     callsBooked: 12,
     dealsClosed: 3,
-    mrr: 1200
+    mrr: 1200,
+    backendStudents: 10,
+    growth: 5
   },
   {
     id: '2',
@@ -160,7 +164,9 @@ export const MOCK_CLIENTS: Client[] = [
     team: 'Team-Chris',
     callsBooked: 5,
     dealsClosed: 1,
-    mrr: 850
+    mrr: 850,
+    backendStudents: 5,
+    growth: 3
   },
   {
     id: '3',
@@ -203,7 +209,9 @@ export const MOCK_CLIENTS: Client[] = [
     team: 'Team-Alex',
     callsBooked: 18,
     dealsClosed: 5,
-    mrr: 2400
+    mrr: 2400,
+    backendStudents: 15,
+    growth: 7
   },
   {
     id: '4',
@@ -246,7 +254,9 @@ export const MOCK_CLIENTS: Client[] = [
     team: 'Team-Cillin',
     callsBooked: 2,
     dealsClosed: 0,
-    mrr: 500
+    mrr: 500,
+    backendStudents: 8,
+    growth: 2
   },
   {
     id: '5',
@@ -289,7 +299,9 @@ export const MOCK_CLIENTS: Client[] = [
     team: 'Team-Andy',
     callsBooked: 3,
     dealsClosed: 0,
-    mrr: 0
+    mrr: 0,
+    backendStudents: 12,
+    growth: 4
   }
 ];
 
