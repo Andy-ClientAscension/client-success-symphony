@@ -95,7 +95,6 @@ export default function ClientDetailsPage() {
             </div>
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="col-span-1 md:col-span-2">
-                {/* Fix the CompanyMetrics props to match what the component expects */}
                 <CompanyMetrics />
               </div>
               <div className="col-span-1">
@@ -105,17 +104,15 @@ export default function ClientDetailsPage() {
           </TabsContent>
 
           <TabsContent value="analytics" className="mt-6">
-            {/* The ClientAnalytics component doesn't expect a client prop, removing it */}
             <ClientAnalytics />
           </TabsContent>
 
           <TabsContent value="communication" className="mt-6">
-            {/* Update props for CommunicationLog */}
             <CommunicationLog communications={client.communicationLog} clientName={client.name} />
           </TabsContent>
           
           <TabsContent value="tasks" className="mt-6">
-            <TaskManager />
+            <TaskManager clientId={client.id} />
           </TabsContent>
 
           <TabsContent value="notes" className="mt-6">
