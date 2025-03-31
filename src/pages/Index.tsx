@@ -6,6 +6,8 @@ import { ChurnChart } from "@/components/Dashboard/ChurnChart";
 import { NPSChart } from "@/components/Dashboard/NPSChart";
 import { KanbanBoard } from "@/components/Dashboard/KanbanBoard";
 import { PaymentAlerts } from "@/components/Dashboard/PaymentAlerts";
+import { ClientActivityLog } from "@/components/Dashboard/ClientActivityLog";
+import { TaskManager } from "@/components/Dashboard/TaskManager";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -33,11 +35,11 @@ export default function Index() {
         description: "Your dashboard data will be saved automatically between sessions",
       });
     }
-  }, []);
+  }, [toast]);
 
   return (
     <Layout>
-      <div className="space-y-4 pb-12 w-full"> {/* Removed min-w-[1200px] to allow responsive layout */}
+      <div className="space-y-4 pb-12 w-full"> 
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="text-lg font-bold">Performance Report</div>
           <div className="flex items-center gap-2">
@@ -67,6 +69,12 @@ export default function Index() {
                 Clients
               </TabsTrigger>
               <TabsTrigger 
+                value="tasks" 
+                className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-3 py-1 bg-transparent text-xs whitespace-nowrap"
+              >
+                Tasks
+              </TabsTrigger>
+              <TabsTrigger 
                 value="agents" 
                 className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-3 py-1 bg-transparent text-xs whitespace-nowrap"
               >
@@ -85,10 +93,10 @@ export default function Index() {
                 Commissions
               </TabsTrigger>
               <TabsTrigger 
-                value="tags" 
+                value="activities" 
                 className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-3 py-1 bg-transparent text-xs whitespace-nowrap"
               >
-                Tags
+                Activities
               </TabsTrigger>
             </TabsList>
           </div>
@@ -111,11 +119,14 @@ export default function Index() {
               </div>
               
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                <div className="col-span-1 lg:col-span-3">
+                <div className="col-span-1 lg:col-span-2">
                   <KanbanBoard />
                 </div>
                 <div className="col-span-1">
                   <PaymentAlerts />
+                </div>
+                <div className="col-span-1">
+                  <ClientActivityLog limit={5} />
                 </div>
               </div>
             </div>
@@ -125,6 +136,12 @@ export default function Index() {
             <div className="space-y-6">
               <ClientList />
               <KanbanBoard />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="tasks" className="m-0">
+            <div className="space-y-4">
+              <TaskManager />
             </div>
           </TabsContent>
           
@@ -146,9 +163,9 @@ export default function Index() {
             </div>
           </TabsContent>
           
-          <TabsContent value="tags" className="m-0">
-            <div className="text-center p-8 text-muted-foreground">
-              Tags section coming soon
+          <TabsContent value="activities" className="m-0">
+            <div className="space-y-4">
+              <ClientActivityLog limit={0} />
             </div>
           </TabsContent>
         </Tabs>

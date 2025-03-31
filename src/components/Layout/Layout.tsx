@@ -7,6 +7,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTheme } from "@/components/ThemeProvider";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { RenewalNotifier } from "@/components/Dashboard/RenewalNotifier";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -21,6 +22,9 @@ export function Layout({ children }: LayoutProps) {
       <Sidebar />
       <div className={`flex-1 flex flex-col w-full min-w-0 ${isMobile ? 'ml-0' : 'ml-56'}`}>
         <Header />
+        <div className="flex items-center justify-end px-4 py-2 border-b">
+          <RenewalNotifier />
+        </div>
         <main className="flex-1 overflow-hidden w-full">
           <ScrollArea className="h-full w-full" orientation="both">
             <div className="p-4">
