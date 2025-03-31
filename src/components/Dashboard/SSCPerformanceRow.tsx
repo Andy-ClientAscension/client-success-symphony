@@ -2,97 +2,108 @@
 import React from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Client } from "@/lib/data";
-import { TrendingUp, TrendingDown, Minus, Award } from "lucide-react";
+import { Award } from "lucide-react";
 
 interface SSCPerformanceRowProps {
   csm: string;
   clients: Client[];
+  isMobile?: boolean;
 }
 
-// Helper function to calculate team grade
-const calculateTeamGrade = (
-  npsScore: number, 
-  retentionRate: number, 
-  growthRate: number, 
-  mrrChange: number
-): { grade: string; color: string } => {
-  // Calculate weighted score (adjust weights as needed)
-  const weightedScore = 
-    (npsScore / 10) * 0.3 + 
-    (retentionRate / 100) * 0.3 + 
-    Math.min(growthRate / 20, 1) * 0.2 + 
-    Math.min(mrrChange / 15, 1) * 0.2;
-  
-  // Convert to letter grade
-  if (weightedScore >= 0.9) return { grade: "A+", color: "text-emerald-600" };
-  if (weightedScore >= 0.8) return { grade: "A", color: "text-green-600" };
-  if (weightedScore >= 0.7) return { grade: "B+", color: "text-green-500" };
-  if (weightedScore >= 0.6) return { grade: "B", color: "text-lime-600" };
-  if (weightedScore >= 0.5) return { grade: "C+", color: "text-amber-500" };
-  if (weightedScore >= 0.4) return { grade: "C", color: "text-amber-600" };
-  if (weightedScore >= 0.3) return { grade: "D", color: "text-orange-600" };
-  return { grade: "F", color: "text-red-600" };
-};
-
-// Helper to determine trend icon
-const getTrendIndicator = (trend: number) => {
-  if (trend > 3) return <TrendingUp className="h-4 w-4 ml-1 text-green-600" />;
-  if (trend < -3) return <TrendingDown className="h-4 w-4 ml-1 text-red-600" />;
-  return <Minus className="h-4 w-4 ml-1 text-amber-600" />;
-};
-
-export function SSCPerformanceRow({ csm, clients }: SSCPerformanceRowProps) {
+export function SSCPerformanceRow({ csm, clients, isMobile = false }: SSCPerformanceRowProps) {
+  // Filter clients for this CSM
   const csmClients = clients.filter(client => client.csm === csm);
   
-  // For now, we'll assume all clients are backend students
-  const backendStudents = csmClients.length;
+  // Calculate backend students
+  const backendStudents = csmClients.reduce((total, client) => {
+    return total + (client.backendStudents || 0);
+  }, 0);
   
-  // Calculate NPS metrics
-  const clientsWithNPS = csmClients.filter(client => client.npsScore !== null);
-  const avgNPS = clientsWithNPS.length > 0 
-    ? Math.round(clientsWithNPS.reduce((sum, client) => sum + (client.npsScore || 0), 0) / clientsWithNPS.length)
-    : 0;
+  // Calculate average NPS
+  let totalNPS = 0;
+  let npsCount = 0;
   
-  // Calculate retention rate
+  csmClients.forEach(client => {
+    if (client.npsScore) {
+      totalNPS += client.npsScore;
+      npsCount++;
+    }
+  });
+  
+  const avgNPS = npsCount > 0 ? Math.round(totalNPS / npsCount) : "-";
+  
+  // Calculate average retention
   const activeClients = csmClients.filter(client => client.status === 'active').length;
   const retentionRate = csmClients.length > 0 
     ? Math.round((activeClients / csmClients.length) * 100) 
     : 0;
   
-  // Calculate growth metrics (calls booked as a proxy for growth)
-  const totalCallsBooked = csmClients.reduce((sum, client) => sum + client.callsBooked, 0);
-  const growthRate = Math.round((totalCallsBooked / Math.max(csmClients.length, 1)) * 5); // Normalized growth score
+  // Calculate MRR
+  const totalMRR = csmClients.reduce((total, client) => {
+    return total + (client.mrr || 0);
+  }, 0);
   
-  // Calculate MRR change (simplified simulation)
-  const totalMRR = csmClients.reduce((sum, client) => sum + client.mrr, 0);
-  const mrrPerClient = totalMRR / Math.max(csmClients.length, 1);
-  // Simulate a trend between -10 and +15
-  const mrrChange = Math.round((mrrPerClient / 100) * (Math.random() * 25 - 10));
+  // Calculate growth metrics
+  const growthMetric = csmClients.reduce((total, client) => {
+    return total + (client.growth || 0);
+  }, 0);
   
-  // Calculate team health grade
-  const { grade, color } = calculateTeamGrade(avgNPS, retentionRate, growthRate, mrrChange);
+  // Calculate health grade
+  // 30% NPS + 30% Retention + 20% Growth + 20% MRR trends
+  let healthScore = 0;
+  
+  // NPS component (30%)
+  if (npsCount > 0) {
+    // Normalize NPS from -100 to 100 scale to 0-100 scale
+    const normalizedNPS = ((totalNPS / npsCount) + 100) / 2;
+    healthScore += normalizedNPS * 0.3;
+  }
+  
+  // Retention component (30%)
+  healthScore += retentionRate * 0.3;
+  
+  // Growth component (20%) - simplified calculation
+  const growthScore = Math.min(100, (growthMetric / csmClients.length) * 20);
+  healthScore += growthScore * 0.2;
+  
+  // MRR trends component (20%) - simplified calculation
+  const mrrScore = Math.min(100, (totalMRR / 10000) * 100);
+  healthScore += mrrScore * 0.2;
+  
+  // Convert health score to letter grade
+  let grade;
+  let color;
+  
+  if (healthScore >= 97) { grade = "A+"; color = "text-green-600"; }
+  else if (healthScore >= 93) { grade = "A"; color = "text-green-600"; }
+  else if (healthScore >= 90) { grade = "A-"; color = "text-green-600"; }
+  else if (healthScore >= 87) { grade = "B+"; color = "text-green-500"; }
+  else if (healthScore >= 83) { grade = "B"; color = "text-green-500"; }
+  else if (healthScore >= 80) { grade = "B-"; color = "text-green-500"; }
+  else if (healthScore >= 77) { grade = "C+"; color = "text-amber-500"; }
+  else if (healthScore >= 73) { grade = "C"; color = "text-amber-500"; }
+  else if (healthScore >= 70) { grade = "C-"; color = "text-amber-500"; }
+  else if (healthScore >= 67) { grade = "D+"; color = "text-red-500"; }
+  else if (healthScore >= 63) { grade = "D"; color = "text-red-500"; }
+  else if (healthScore >= 60) { grade = "D-"; color = "text-red-500"; }
+  else { grade = "F"; color = "text-red-600"; }
   
   return (
     <TableRow className="hover:bg-gray-50">
-      <TableCell className="font-medium py-4">{csm}</TableCell>
+      <TableCell className="font-medium py-3">{csm}</TableCell>
       <TableCell className="text-center">{csmClients.length}</TableCell>
-      <TableCell className="text-center">{backendStudents}</TableCell>
+      {!isMobile && <TableCell className="text-center">{backendStudents}</TableCell>}
       <TableCell>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-y-2">
           <div className="flex items-center min-w-[80px]">
             <Award className={`h-4 w-4 mr-1.5 ${color}`} />
             <span className={`font-medium ${color}`}>Grade: {grade}</span>
           </div>
           
-          <div className="flex items-center space-x-3 text-sm text-gray-600">
+          <div className={`flex ${isMobile ? 'flex-col space-y-1' : 'items-center space-x-3'} text-sm text-gray-600`}>
             <span>NPS: {avgNPS}</span>
-            <span>·</span>
-            <span>Ret: {retentionRate}%</span>
-            <span>·</span>
-            <span className="flex items-center">
-              Growth: {growthRate}
-              {getTrendIndicator(mrrChange)}
-            </span>
+            <span>Retention: {retentionRate}%</span>
+            <span>${totalMRR.toLocaleString()}</span>
           </div>
         </div>
       </TableCell>

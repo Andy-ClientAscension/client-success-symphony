@@ -5,6 +5,7 @@ import { SSCPerformanceRow } from "./SSCPerformanceRow";
 import { Client } from "@/lib/data";
 import { HelpCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SSCPerformanceTableProps {
   csmList: string[];
@@ -13,6 +14,8 @@ interface SSCPerformanceTableProps {
 }
 
 export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerformanceTableProps) {
+  const isMobile = useIsMobile();
+  
   return (
     <div className="mt-6">
       <div className="flex items-center mb-3">
@@ -35,13 +38,13 @@ export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerfo
           </Tooltip>
         </TooltipProvider>
       </div>
-      <div className="border rounded-lg overflow-hidden bg-white">
+      <div className="border rounded-lg overflow-hidden bg-white overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50">
-              <TableHead className="w-[180px] py-4 text-sm">SSC</TableHead>
-              <TableHead className="text-center text-sm w-[100px]">Clients</TableHead>
-              <TableHead className="text-center text-sm w-[180px]">Backend Students</TableHead>
+              <TableHead className={`py-4 text-sm ${isMobile ? 'w-[120px]' : 'w-[180px]'}`}>SSC</TableHead>
+              <TableHead className={`text-center text-sm ${isMobile ? 'w-[70px]' : 'w-[100px]'}`}>Clients</TableHead>
+              <TableHead className={`text-center text-sm ${isMobile ? 'hidden' : 'w-[180px]'}`}>Backend Students</TableHead>
               <TableHead>
                 <div className="flex justify-between text-sm">
                   <div className="min-w-[80px]">Team Health</div>
@@ -55,7 +58,7 @@ export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerfo
               if (selectedTeam === "all") return true;
               return clients.some(client => client.csm === csm && client.team === selectedTeam);
             }).map((csm) => (
-              <SSCPerformanceRow key={csm} csm={csm} clients={clients} />
+              <SSCPerformanceRow key={csm} csm={csm} clients={clients} isMobile={isMobile} />
             ))}
           </TableBody>
         </Table>

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -24,6 +24,15 @@ export function Sidebar() {
   const [isOpen, setIsOpen] = useState(!isMobile);
   const location = useLocation();
   const { logout, user } = useAuth();
+
+  // Close sidebar by default on mobile and update when isMobile changes
+  useEffect(() => {
+    if (isMobile) {
+      setIsOpen(false);
+    } else {
+      setIsOpen(true);
+    }
+  }, [isMobile]);
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
@@ -59,7 +68,7 @@ export function Sidebar() {
       
       <div
         className={cn(
-          "bg-black fixed h-full w-56 flex flex-col text-white z-40",
+          "bg-black fixed h-full w-56 flex flex-col text-white z-40 transition-all duration-300",
           isOpen ? "left-0" : "-left-56",
           isMobile ? "shadow-xl" : ""
         )}
