@@ -1,3 +1,4 @@
+
 import React from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Client } from "@/lib/data";
@@ -77,13 +78,11 @@ export function SSCPerformanceRow({ csm, clients }: SSCPerformanceRowProps) {
       <TableCell className="text-center">{csmClients.length}</TableCell>
       <TableCell className="text-center">{backendStudents}</TableCell>
       <TableCell>
-        <div className="flex items-center justify-end space-x-2">
-          <div className="flex items-center">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center min-w-[80px]">
             <Award className={`h-4 w-4 mr-1.5 ${color}`} />
             <span className={`font-medium ${color}`}>Grade: {grade}</span>
           </div>
-          
-          <div className="border-l border-gray-200 h-5 mx-3"></div>
           
           <div className="flex items-center space-x-3 text-sm text-gray-600">
             <span>NPS: {avgNPS}</span>

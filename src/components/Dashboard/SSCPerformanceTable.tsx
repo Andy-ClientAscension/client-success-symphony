@@ -42,7 +42,12 @@ export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerfo
               <TableHead className="w-[180px] py-4 text-sm">SSC</TableHead>
               <TableHead className="text-center text-sm w-[100px]">Clients</TableHead>
               <TableHead className="text-center text-sm w-[180px]">Backend Students</TableHead>
-              <TableHead className="text-right text-sm">Team Health Grade</TableHead>
+              <TableHead>
+                <div className="flex justify-between text-sm">
+                  <div className="min-w-[80px]">Team Health</div>
+                  <div className="flex-1 text-right">Metrics</div>
+                </div>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
