@@ -1,4 +1,3 @@
-
 import React from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Client } from "@/lib/data";
@@ -73,24 +72,28 @@ export function SSCPerformanceRow({ csm, clients }: SSCPerformanceRowProps) {
   const { grade, color } = calculateTeamGrade(avgNPS, retentionRate, growthRate, mrrChange);
   
   return (
-    <TableRow>
-      <TableCell className="font-medium">{csm}</TableCell>
-      <TableCell className="text-right">{csmClients.length}</TableCell>
-      <TableCell className="text-right">{backendStudents}</TableCell>
+    <TableRow className="hover:bg-gray-50">
+      <TableCell className="font-medium py-4">{csm}</TableCell>
+      <TableCell className="text-center">{csmClients.length}</TableCell>
+      <TableCell className="text-center">{backendStudents}</TableCell>
       <TableCell>
-        <div className="flex items-center justify-end">
-          <span className={`font-medium ${color} flex items-center`}>
-            <Award className={`h-4 w-4 mr-1 ${color}`} />
-            Grade: {grade}
-          </span>
-          <div className="border-l border-gray-200 mx-2 h-4"></div>
-          <div className="flex items-center ml-2">
-            <span className="text-sm text-muted-foreground mr-1">NPS: {avgNPS}</span>
-            <span className="text-sm text-muted-foreground">·</span>
-            <span className="text-sm text-muted-foreground mx-1">Ret: {retentionRate}%</span>
-            <span className="text-sm text-muted-foreground">·</span>
-            <span className="text-sm text-muted-foreground mx-1">Growth: {growthRate}</span>
-            {getTrendIndicator(mrrChange)}
+        <div className="flex items-center justify-end space-x-2">
+          <div className="flex items-center">
+            <Award className={`h-4 w-4 mr-1.5 ${color}`} />
+            <span className={`font-medium ${color}`}>Grade: {grade}</span>
+          </div>
+          
+          <div className="border-l border-gray-200 h-5 mx-3"></div>
+          
+          <div className="flex items-center space-x-3 text-sm text-gray-600">
+            <span>NPS: {avgNPS}</span>
+            <span>·</span>
+            <span>Ret: {retentionRate}%</span>
+            <span>·</span>
+            <span className="flex items-center">
+              Growth: {growthRate}
+              {getTrendIndicator(mrrChange)}
+            </span>
           </div>
         </div>
       </TableCell>

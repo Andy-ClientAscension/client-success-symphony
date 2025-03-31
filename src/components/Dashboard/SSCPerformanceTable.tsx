@@ -14,9 +14,9 @@ interface SSCPerformanceTableProps {
 
 export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerformanceTableProps) {
   return (
-    <>
-      <div className="flex items-center mb-2">
-        <h3 className="text-sm font-medium">Student Success Coach Performance</h3>
+    <div className="mt-6">
+      <div className="flex items-center mb-3">
+        <h3 className="text-base font-medium">Student Success Coach Performance</h3>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -35,14 +35,14 @@ export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerfo
           </Tooltip>
         </TooltipProvider>
       </div>
-      <div className="border rounded-lg overflow-hidden">
+      <div className="border rounded-lg overflow-hidden bg-white">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-[150px]">SSC</TableHead>
-              <TableHead className="text-right">Clients</TableHead>
-              <TableHead className="text-right">Backend Students</TableHead>
-              <TableHead className="text-right">Team Health Grade</TableHead>
+            <TableRow className="bg-gray-50">
+              <TableHead className="w-[180px] py-4 text-sm">SSC</TableHead>
+              <TableHead className="text-center text-sm w-[100px]">Clients</TableHead>
+              <TableHead className="text-center text-sm w-[180px]">Backend Students</TableHead>
+              <TableHead className="text-right text-sm">Team Health Grade</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -55,6 +55,6 @@ export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerfo
           </TableBody>
         </Table>
       </div>
-    </>
+    </div>
   );
 }
