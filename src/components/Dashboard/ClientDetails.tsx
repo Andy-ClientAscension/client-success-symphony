@@ -17,6 +17,7 @@ import {
 import { format } from "date-fns";
 import { Client } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
+import { ClientBiWeeklyNotes } from "./ClientBiWeeklyNotes";
 
 interface ClientDetailsProps {
   client: Client;
@@ -304,6 +305,7 @@ export function ClientDetails({ client }: ClientDetailsProps) {
             >
               Add Note
             </Button>
+            <ClientBiWeeklyNotes clientId={client.id} clientName={client.name} />
           </div>
         </div>
       </CardContent>
