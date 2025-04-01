@@ -15,8 +15,7 @@ export function StudentPaymentAlert({ paymentStatus }: StudentPaymentAlertProps)
     <div className="flex items-center justify-between w-full mt-1.5 text-xs">
       {paymentStatus.amountDue && (
         <div className="text-xs font-medium text-gray-700 flex items-center">
-          <DollarSign className="h-3 w-3 mr-1 text-gray-500" />
-          ${paymentStatus.amountDue.toFixed(2)}
+          <span className="text-gray-500">${paymentStatus.amountDue.toFixed(2)}</span>
         </div>
       )}
       
