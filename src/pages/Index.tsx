@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/Layout/Layout";
 import { MetricsCards } from "@/components/Dashboard/MetricsCards";
 import { ClientList } from "@/components/Dashboard/ClientList";
@@ -114,8 +115,8 @@ export default function Index() {
                 <ClientList />
               </div>
               
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-2">
-                <div className="col-span-1 lg:col-span-2">
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 mb-2">
+                <div className="col-span-1 lg:col-span-3">
                   <KanbanBoard />
                 </div>
                 <div className="col-span-1">

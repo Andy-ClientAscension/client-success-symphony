@@ -3,11 +3,10 @@ import { useState, useEffect } from "react";
 import { AlertTriangle, DollarSign, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { monitorPayments, PaymentStatus } from "@/lib/payment-monitor";
 import { getAllClients } from "@/lib/data";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function PaymentAlerts() {
@@ -58,7 +57,7 @@ export function PaymentAlerts() {
   }, []);
 
   return (
-    <Card className="h-full">
+    <Card className="h-auto mb-2">
       <CardHeader className="flex flex-row justify-between items-center p-2 border-b">
         <CardTitle className="text-sm flex items-center font-medium">
           <DollarSign className="h-4 w-4 mr-1 text-red-600" />
@@ -76,33 +75,26 @@ export function PaymentAlerts() {
         </Button>
       </CardHeader>
       <CardContent className="p-2">
-        <ScrollArea className="h-[250px]">
+        <ScrollArea className="h-[150px]">
           {overduePayments.length > 0 ? (
-            <div className="space-y-2">
+            <div className="space-y-1">
               {overduePayments.map((payment) => (
-                <Alert key={payment.clientId} className="p-2 mb-2 border border-red-200 bg-red-50">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-start">
-                      <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5 mr-2 flex-shrink-0" />
-                      <div>
-                        <AlertTitle className="text-xs font-medium">
-                          {payment.clientName}
-                        </AlertTitle>
-                        <AlertDescription className="text-xs text-muted-foreground mt-0.5">
-                          Last: {payment.lastPaymentDate 
-                            ? new Date(payment.lastPaymentDate).toLocaleDateString() 
-                            : 'No record'}
-                        </AlertDescription>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end">
-                      <Badge variant="destructive" className="text-xs px-1.5 py-0 mb-1">{payment.daysOverdue} days</Badge>
-                      <span className="text-xs font-semibold text-red-600">
-                        ${payment.amountDue?.toFixed(2)}
-                      </span>
-                    </div>
+                <div key={payment.clientId} className="flex justify-between items-center p-1.5 mb-1 border-b border-red-100">
+                  <div className="flex items-center">
+                    <AlertTriangle className="h-3 w-3 text-red-600 mr-2 flex-shrink-0" />
+                    <span className="text-xs font-medium truncate max-w-[120px]">
+                      {payment.clientName}
+                    </span>
                   </div>
-                </Alert>
+                  <div className="flex items-center">
+                    <Badge variant="destructive" className="text-xs px-1.5 py-0 mr-1.5">
+                      {payment.daysOverdue}d
+                    </Badge>
+                    <span className="text-xs font-semibold text-red-600 whitespace-nowrap">
+                      ${payment.amountDue?.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
               ))}
             </div>
           ) : (
