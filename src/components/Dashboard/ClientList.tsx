@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -12,7 +11,6 @@ import { ClientListFilters } from "./ClientListFilters";
 import { ClientSearchBar } from "./ClientSearchBar";
 import { ClientsTable } from "./ClientsTable";
 import { ClientBulkActionDialog } from "./ClientBulkActionDialog";
-import { BulkActionsMenu } from "./BulkActionsMenu";
 
 interface ClientListProps {
   statusFilter?: Client['status'];
@@ -187,7 +185,7 @@ export function ClientList({ statusFilter }: ClientListProps) {
           searchQuery={searchQuery}
           onSearchChange={handleSearchChange}
           selectedClientCount={selectedClientIds.length}
-          onOpenBulkActions={() => {}}
+          onOpenBulkActions={handleOpenBulkActions}
         />
 
         <ClientsTable 

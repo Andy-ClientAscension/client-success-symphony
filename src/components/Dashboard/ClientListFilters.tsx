@@ -24,7 +24,7 @@ interface ClientListFiltersProps {
   selectedTeam: string;
   searchQuery: string;
   onTeamChange: (team: string) => void;
-  onSearchChange: (search: string) => void;
+  onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   filteredClients: Client[];
   onAddNewClient: () => void;
 }
