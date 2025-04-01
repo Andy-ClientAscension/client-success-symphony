@@ -8,9 +8,10 @@ import { CSM_TEAMS, Client } from "@/lib/data";
 import { STORAGE_KEYS, loadData, saveData } from "@/utils/persistence";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { FileDown, FileUp, HelpCircle } from "lucide-react";
+import { FileDown, FileUp, HelpCircle, Edit, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { HealthScoreEditor } from "./HealthScoreEditor";
 
 interface HealthScoreEntry {
   id: string;
@@ -27,6 +28,9 @@ interface HealthScoreEntry {
 export function HealthScoreSheet({ clients }: { clients: Client[] }) {
   const [selectedTeam, setSelectedTeam] = useState<string>("all");
   const [healthScores, setHealthScores] = useState<HealthScoreEntry[]>([]);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [editingScore, setEditingScore] = useState<HealthScoreEntry | null>(null);
   const { toast } = useToast();
 
   // Load health scores from storage
@@ -134,6 +138,28 @@ export function HealthScoreSheet({ clients }: { clients: Client[] }) {
     });
   };
 
+  const handleAddHealthScore = (client: Client) => {
+    setSelectedClient(client);
+    setEditingScore(null);
+    setIsEditorOpen(true);
+  };
+
+  const handleEditHealthScore = (score: HealthScoreEntry) => {
+    // Find the client associated with this score
+    const client = clients.find(c => c.id === score.clientId);
+    if (client) {
+      setSelectedClient(client);
+      setEditingScore(score);
+      setIsEditorOpen(true);
+    }
+  };
+
+  const handleEditorSubmit = () => {
+    // Refresh the scores after editing
+    const updatedScores = loadData<HealthScoreEntry[]>(STORAGE_KEYS.HEALTH_SCORES, []);
+    setHealthScores(updatedScores);
+  };
+
   // Helper to get score color
   const getScoreColor = (score: number) => {
     if (score >= 8) return "text-green-600";
@@ -214,6 +240,7 @@ export function HealthScoreSheet({ clients }: { clients: Client[] }) {
                 <TableHead>Health Score</TableHead>
                 <TableHead>Last Updated</TableHead>
                 <TableHead>Notes</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -237,11 +264,22 @@ export function HealthScoreSheet({ clients }: { clients: Client[] }) {
                     <TableCell className="max-w-[300px] truncate">
                       {score.notes || "No notes"}
                     </TableCell>
+                    <TableCell className="text-right">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => handleEditHealthScore(score)}
+                      >
+                        <Edit className="h-4 w-4" />
+                        <span className="sr-only">Edit</span>
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-32 text-center">
+                  <TableCell colSpan={7} className="h-32 text-center">
                     No health scores found for {selectedTeam === "all" ? "any team" : selectedTeam}.
                     <p className="text-sm text-muted-foreground mt-1">
                       Health scores are recorded in bi-weekly notes for each client.
@@ -261,12 +299,45 @@ export function HealthScoreSheet({ clients }: { clients: Client[] }) {
                   </TableCell>
                   <TableCell>-</TableCell>
                   <TableCell>-</TableCell>
+                  <TableCell className="text-right">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => {
+                        const actualClient = clients.find(c => c.id === client.clientId);
+                        if (actualClient) {
+                          handleAddHealthScore(actualClient);
+                        }
+                      }}
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span className="sr-only">Add</span>
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
       </CardContent>
+      
+      {selectedClient && (
+        <HealthScoreEditor
+          isOpen={isEditorOpen}
+          onClose={() => setIsEditorOpen(false)}
+          onSubmit={handleEditorSubmit}
+          clientId={selectedClient.id}
+          clientName={selectedClient.name}
+          team={selectedClient.team || ""}
+          csm={selectedClient.csm || "Unassigned"}
+          initialData={editingScore ? {
+            id: editingScore.id,
+            score: editingScore.score,
+            notes: editingScore.notes
+          } : undefined}
+        />
+      )}
     </Card>
   );
 }

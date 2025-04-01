@@ -9,6 +9,7 @@ import { TeamStatusMetric } from "./TeamStatusMetric";
 import { SSCPerformanceTable } from "./SSCPerformanceTable";
 import { HealthScoreSheet } from "./HealthScoreSheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 
 export function TeamAnalytics() {
   const [selectedTeam, setSelectedTeam] = useState<string>("all");

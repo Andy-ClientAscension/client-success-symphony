@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/select";
 import { CalendarIcon, Plus } from "lucide-react";
 import { format } from "date-fns";
+import { STORAGE_KEYS, saveData, loadData } from "@/utils/persistence";
+import { useToast } from "@/hooks/use-toast";
 
 interface Task {
   id: string;
@@ -41,23 +43,16 @@ interface TaskManagerProps {
 export function TaskManager({ clientId }: TaskManagerProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activeTab, setActiveTab] = useState("all");
+  const { toast } = useToast();
   
   // Load tasks from localStorage on component mount
   useEffect(() => {
-    const storedTasks = localStorage.getItem("TASKS");
-    if (storedTasks) {
-      try {
-        const parsedTasks: Task[] = JSON.parse(storedTasks);
-        // Filter tasks based on clientId if provided
-        const filteredTasks = clientId 
-          ? parsedTasks.filter(task => task.clientId === clientId)
-          : parsedTasks;
-        setTasks(filteredTasks);
-      } catch (error) {
-        console.error("Error parsing tasks from localStorage:", error);
-        setTasks([]);
-      }
-    }
+    const storedTasks = loadData<Task[]>(STORAGE_KEYS.TASKS, []);
+    // Filter tasks based on clientId if provided
+    const filteredTasks = clientId 
+      ? storedTasks.filter(task => task.clientId === clientId)
+      : storedTasks;
+    setTasks(filteredTasks);
   }, [clientId]);
 
   const getFilteredTasks = () => {
@@ -71,6 +66,35 @@ export function TaskManager({ clientId }: TaskManagerProps) {
       default:
         return tasks;
     }
+  };
+
+  const handleStatusChange = (taskId: string, newStatus: string) => {
+    // Update the task status in the local state
+    const updatedTasks = tasks.map(task => 
+      task.id === taskId ? { ...task, status: newStatus } : task
+    );
+    
+    setTasks(updatedTasks);
+    
+    // Update in localStorage
+    const allTasks = loadData<Task[]>(STORAGE_KEYS.TASKS, []);
+    const updatedAllTasks = allTasks.map(task => 
+      task.id === taskId ? { ...task, status: newStatus } : task
+    );
+    
+    saveData(STORAGE_KEYS.TASKS, updatedAllTasks);
+    
+    toast({
+      title: "Task Updated",
+      description: `Task status has been updated to ${newStatus}`,
+    });
+  };
+
+  const handleAddTask = () => {
+    toast({
+      title: "Create Task",
+      description: "Task creation functionality will be available soon",
+    });
   };
 
   return (
@@ -92,7 +116,11 @@ export function TaskManager({ clientId }: TaskManagerProps) {
                 <TabsTrigger value="completed">Completed</TabsTrigger>
               </TabsList>
             </Tabs>
-            <Button size="sm" className="ml-2 flex items-center gap-1">
+            <Button 
+              size="sm" 
+              className="ml-2 flex items-center gap-1"
+              onClick={handleAddTask}
+            >
               <Plus className="h-4 w-4" />
               Add Task
             </Button>
@@ -122,7 +150,10 @@ export function TaskManager({ clientId }: TaskManagerProps) {
                       }`}>
                         {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
                       </span>
-                      <Select defaultValue={task.status}>
+                      <Select 
+                        defaultValue={task.status}
+                        onValueChange={(value) => handleStatusChange(task.id, value)}
+                      >
                         <SelectTrigger className="w-32 ml-2 h-7 text-xs">
                           <SelectValue placeholder="Status" />
                         </SelectTrigger>
