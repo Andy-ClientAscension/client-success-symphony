@@ -17,20 +17,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Pagination } from "@/components/Dashboard/Pagination";
 
 // Available teams for filtering
 const TEAMS = [
   { id: "all", name: "All Teams" },
-  { id: "Team-Andy", name: "Team-Andy" },
-  { id: "Team-Chris", name: "Team-Chris" },
-  { id: "Team-Alex", name: "Team-Alex" },
-  { id: "Team-Cillin", name: "Team-Cillin" },
+  { id: "Team-Andy", name: "Team Andy" },
+  { id: "Team-Chris", name: "Team Chris" },
+  { id: "Team-Alex", name: "Team Alex" },
+  { id: "Team-Cillin", name: "Team Cillin" },
 ];
 
 // Calculate dummy renewal dates based on client ID
 const renewals = MOCK_CLIENTS.map(client => {
   // Create a renewal date based on client ID (for demo purposes)
-  const randomDaysOffset = parseInt(client.id) * 30;
+  const randomDaysOffset = parseInt(client.id) * 30 % 365;  // Using modulo to prevent extremely large dates
   const today = new Date();
   
   // Create the renewalDate safely
@@ -61,10 +62,29 @@ const renewals = MOCK_CLIENTS.map(client => {
 export default function Renewals() {
   const [filter, setFilter] = useState("all"); // Status filter
   const [selectedTeam, setSelectedTeam] = useState("all"); // Team filter
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
   
+  // Apply filters
   const filteredRenewals = renewals
     .filter(renewal => filter === "all" || renewal.status === filter) // Filter by status
     .filter(renewal => selectedTeam === "all" || renewal.team === selectedTeam); // Filter by team
+  
+  // Pagination
+  const totalItems = filteredRenewals.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredRenewals.slice(indexOfFirstItem, indexOfLastItem);
+  
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+  
+  const handleItemsPerPageChange = (value: number) => {
+    setItemsPerPage(value);
+    setCurrentPage(1); // Reset to first page when changing items per page
+  };
   
   return (
     <Layout>
@@ -129,6 +149,21 @@ export default function Renewals() {
                   ))}
                 </SelectContent>
               </Select>
+              
+              <Select 
+                value={String(itemsPerPage)} 
+                onValueChange={(value) => handleItemsPerPageChange(Number(value))}
+              >
+                <SelectTrigger className="w-[110px] h-8 text-xs">
+                  <SelectValue placeholder="Show" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10 per page</SelectItem>
+                  <SelectItem value="25">25 per page</SelectItem>
+                  <SelectItem value="50">50 per page</SelectItem>
+                  <SelectItem value="100">100 per page</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           
@@ -153,8 +188,8 @@ export default function Renewals() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredRenewals.length > 0 ? (
-                    filteredRenewals.map((renewal) => (
+                  {currentItems.length > 0 ? (
+                    currentItems.map((renewal) => (
                       <TableRow key={renewal.id}>
                         <TableCell className="text-foreground font-medium">
                           <div>
@@ -198,6 +233,16 @@ export default function Renewals() {
                   )}
                 </TableBody>
               </Table>
+              
+              <Pagination 
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                totalItems={totalItems}
+                itemsPerPage={itemsPerPage}
+                startIndex={indexOfFirstItem}
+                endIndex={Math.min(indexOfLastItem, totalItems)}
+              />
             </CardContent>
           </Card>
         </div>

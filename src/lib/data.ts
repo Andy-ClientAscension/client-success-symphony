@@ -77,7 +77,7 @@ export const CSM_TEAMS = [
   { id: "Team-Cillin", name: "Team Cillin" },
 ];
 
-export const CLIENTS: Client[] = [
+const BASE_CLIENTS: Client[] = [
   {
     id: "1",
     name: "Acme Corporation",
@@ -1271,6 +1271,92 @@ export const CLIENTS: Client[] = [
     ]
   }
 ];
+
+function generateMockClients(startId: number, count: number): Client[] {
+  const statuses: ("new" | "active" | "at-risk" | "churned")[] = ["new", "active", "at-risk", "churned"];
+  const teams = ["Team-Andy", "Team-Chris", "Team-Alex", "Team-Cillin"];
+  const csms = ["Andy", "Chris", "Alex", "Cillin"];
+  const companyPrefixes = ["Global", "Advanced", "Prime", "Modern", "Elite", "Tech", "Digital", "Smart", "Innovative", "Next", "Future", "Strategic", "Synergy", "Dynamic", "Creative"];
+  const companySuffixes = ["Solutions", "Systems", "Technologies", "Enterprises", "Group", "Consulting", "Partners", "Labs", "Industries", "Networks", "Services", "Innovations", "Applications", "Dynamics", "Ventures"];
+  
+  const mockClients: Client[] = [];
+  
+  for (let i = 0; i < count; i++) {
+    const idNum = startId + i;
+    const statusIndex = Math.floor(Math.random() * statuses.length);
+    const teamIndex = Math.floor(Math.random() * teams.length);
+    
+    const today = new Date();
+    const startDate = subDays(today, Math.floor(Math.random() * 500) + 30);
+    const endDate = addDays(startDate, Math.floor(Math.random() * 365) + 180);
+    
+    const prefixIndex = Math.floor(Math.random() * companyPrefixes.length);
+    const suffixIndex = Math.floor(Math.random() * companySuffixes.length);
+    const companyName = `${companyPrefixes[prefixIndex]} ${companySuffixes[suffixIndex]}`;
+    
+    const progress = statuses[statusIndex] === "churned" ? 0 : Math.floor(Math.random() * 101);
+    const npsScore = Math.random() > 0.2 ? Math.floor(Math.random() * 11) : null;
+    const callsBooked = Math.floor(Math.random() * 15);
+    const dealsClosed = Math.floor(Math.random() * (callsBooked + 1));
+    const mrr = Math.floor(Math.random() * 10000) + 500;
+    const contractValue = mrr * (Math.floor(Math.random() * 24) + 6);
+    
+    mockClients.push({
+      id: String(idNum),
+      name: companyName,
+      status: statuses[statusIndex],
+      team: teams[teamIndex],
+      csm: csms[teamIndex],
+      startDate: format(startDate, 'yyyy-MM-dd'),
+      endDate: format(endDate, 'yyyy-MM-dd'),
+      contractValue,
+      notes: `Auto-generated client #${idNum} for testing pagination`,
+      progress,
+      npsScore,
+      callsBooked,
+      dealsClosed,
+      mrr,
+      backendStudents: Math.floor(Math.random() * 20) + 1,
+      growth: Math.floor(Math.random() * 30) - 5,
+      lastCommunication: format(subDays(today, Math.floor(Math.random() * 30)), 'yyyy-MM-dd'),
+      lastPayment: {
+        amount: mrr,
+        date: format(subDays(today, Math.floor(Math.random() * 30)), 'yyyy-MM-dd')
+      },
+      trustPilotReview: Math.random() > 0.4 ? {
+        date: format(subDays(today, Math.floor(Math.random() * 90)), 'yyyy-MM-dd'),
+        rating: Math.floor(Math.random() * 5) + 1,
+        link: `https://trustpilot.com/reviews/mockid${idNum}`
+      } : {
+        date: null,
+        rating: null,
+        link: null
+      },
+      caseStudyInterview: {
+        completed: Math.random() > 0.7,
+        scheduledDate: Math.random() > 0.5 ? format(addDays(today, Math.floor(Math.random() * 30)), 'yyyy-MM-dd') : null,
+        conducted: Math.random() > 0.8,
+        notes: "Auto-generated case study notes"
+      },
+      communicationLog: [
+        {
+          id: `c${idNum}-1`,
+          type: "email",
+          date: format(subDays(today, Math.floor(Math.random() * 14) + 1), 'yyyy-MM-dd'),
+          subject: "Follow-up",
+          content: "Routine check-in with client",
+          sentBy: csms[teamIndex]
+        }
+      ]
+    });
+  }
+  
+  return mockClients;
+}
+
+const ADDITIONAL_CLIENTS = generateMockClients(26, 150);
+
+export const CLIENTS: Client[] = [...BASE_CLIENTS, ...ADDITIONAL_CLIENTS];
 
 export function getClientsCountByStatus() {
   const counts = {
