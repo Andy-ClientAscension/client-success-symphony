@@ -1,6 +1,7 @@
+
 import { create } from 'zustand';
 import { STORAGE_KEYS, saveData, loadData } from '@/utils/persistence';
-import { format } from 'date-fns';
+import { format, addDays, subDays, subMonths } from 'date-fns';
 
 export interface Note {
   id: string;
@@ -27,9 +28,16 @@ export interface Student {
   endDate?: string;
   contractDuration?: "6months" | "1year";
   churnDate?: string;
+  pauseDate?: string;
+  pauseReason?: string;
+  resumeDate?: string;
   csm?: string;
   notes?: Note[];
   paymentStatus?: PaymentStatus;
+  npsScore?: number;
+  mrr?: number;
+  backendEnrolled?: boolean;
+  olympiaEnrolled?: boolean;
 }
 
 export interface KanbanColumn {
@@ -44,6 +52,116 @@ export interface KanbanState {
   columnOrder: string[];
 }
 
+// Generate fake student data
+const generateFakeStudents = (count: number): Record<string, Student> => {
+  const students: Record<string, Student> = {};
+  const teams = ["Team-Andy", "Team-Chris", "Team-Cillin", "Team-Alex"];
+  const names = [
+    "Emma Wilson", "James Smith", "Olivia Johnson", "Noah Williams", "Sophia Brown", 
+    "Liam Jones", "Ava Garcia", "Mason Miller", "Isabella Davis", "Logan Martinez",
+    "Charlotte Rodriguez", "Elijah Hernandez", "Mia Lopez", "Alexander Gonzalez", "Harper Wilson",
+    "Ethan Lee", "Amelia Walker", "Oliver Hall", "Abigail Allen", "Benjamin Young",
+    "Emily King", "Daniel Wright", "Elizabeth Scott", "Matthew Torres", "Sofia Green",
+    "Michael Adams", "Camila Baker", "Carter Flores", "Madison Nelson", "Jackson Hill",
+    "Aria Mitchell", "Lucas Clark", "Penelope Rodriguez", "Sebastian Lewis", "Layla Lee",
+    "Henry Harrison", "Chloe Martin", "Wyatt Thompson", "Ella White", "John Harris",
+    "Grace Robinson", "Owen Lewis", "Victoria Walker", "Jack Allen", "Scarlett Hall",
+    "William Scott", "Zoey Green", "Jayden King", "Luna Adams", "Gabriel Baker",
+    "Mila Hall", "Dylan Mitchell", "Aubrey Martin", "Anthony Thompson", "Nora Harris"
+  ];
+  
+  const today = new Date();
+  
+  for (let i = 1; i <= count; i++) {
+    const id = `s${i + 9}`; // Start from s10 since we already have s1-s9
+    const randomName = names[Math.floor(Math.random() * names.length)] || `Student ${id}`;
+    const randomProgress = Math.floor(Math.random() * 101);
+    const randomTeam = teams[Math.floor(Math.random() * teams.length)];
+    const contractDuration = Math.random() > 0.5 ? "6months" : "1year";
+    
+    // Generate random dates
+    const startOffset = Math.floor(Math.random() * 365);
+    const startDate = subDays(today, startOffset);
+    const endDate = contractDuration === "6months" 
+      ? addDays(startDate, 180)
+      : addDays(startDate, 365);
+    
+    // Random NPS score between 0-10
+    const npsScore = Math.floor(Math.random() * 11);
+    
+    // Random MRR between 500-2000
+    const mrr = Math.floor(Math.random() * 1500) + 500;
+    
+    // Generate notes for some students
+    const hasNotes = Math.random() > 0.7;
+    const notes = hasNotes ? [
+      {
+        id: `n${id}-1`,
+        text: `${randomName} is making good progress with their current module.`,
+        author: ["Sarah", "Michael", "David", "Emma", "Chris"][Math.floor(Math.random() * 5)],
+        timestamp: format(subDays(today, Math.floor(Math.random() * 30)), 'yyyy-MM-dd HH:mm:ss')
+      }
+    ] : [];
+    
+    // Generate payment status
+    const hasPaymentIssue = Math.random() > 0.8;
+    const paymentStatus = hasPaymentIssue ? {
+      isOverdue: true,
+      daysOverdue: Math.floor(Math.random() * 60) + 1,
+      amountDue: Math.floor(Math.random() * 1000) + 200,
+      lastPaymentDate: format(subDays(today, 45 + Math.floor(Math.random() * 30)), 'yyyy-MM-dd')
+    } : {
+      isOverdue: false
+    };
+    
+    // Add special cases for paused and churned students
+    let churnDate;
+    let pauseDate;
+    let pauseReason;
+    let resumeDate;
+    
+    if (i % 23 === 0) { // Some students are churned
+      churnDate = format(subDays(today, Math.floor(Math.random() * 90) + 1), 'yyyy-MM-dd');
+    }
+    
+    if (i % 17 === 0) { // Some students are paused
+      pauseDate = format(subDays(today, Math.floor(Math.random() * 45) + 1), 'yyyy-MM-dd');
+      pauseReason = ["Health issues", "Financial hardship", "Family emergency", "Travel", "Work commitments"][Math.floor(Math.random() * 5)];
+      
+      if (Math.random() > 0.5) { // Some paused students have resume dates
+        resumeDate = format(addDays(today, Math.floor(Math.random() * 60) + 15), 'yyyy-MM-dd');
+      }
+    }
+    
+    // Backend or Olympia enrollments
+    const backendEnrolled = Math.random() > 0.7;
+    const olympiaEnrolled = !backendEnrolled && Math.random() > 0.8;
+    
+    students[id] = {
+      id,
+      name: randomName,
+      progress: randomProgress,
+      startDate: format(startDate, 'yyyy-MM-dd'),
+      endDate: format(endDate, 'yyyy-MM-dd'),
+      contractDuration,
+      csm: randomTeam,
+      notes,
+      paymentStatus,
+      churnDate,
+      pauseDate,
+      pauseReason,
+      resumeDate,
+      npsScore,
+      mrr,
+      backendEnrolled,
+      olympiaEnrolled
+    };
+  }
+  
+  return students;
+};
+
+// Create initial data with existing and fake students
 export const INITIAL_DATA: KanbanState = {
   columns: {
     'active': {
@@ -60,6 +178,11 @@ export const INITIAL_DATA: KanbanState = {
       id: 'olympia',
       title: 'Olympia Students',
       studentIds: ['s6']
+    },
+    'paused': {
+      id: 'paused',
+      title: 'Paused Students',
+      studentIds: []
     },
     'churned': {
       id: 'churned',
@@ -88,7 +211,9 @@ export const INITIAL_DATA: KanbanState = {
           author: 'Sarah',
           timestamp: format(new Date(2023, 6, 10), 'yyyy-MM-dd HH:mm:ss')
         }
-      ]
+      ],
+      mrr: 1200,
+      npsScore: 9
     },
     's2': { 
       id: 's2', 
@@ -106,7 +231,9 @@ export const INITIAL_DATA: KanbanState = {
           timestamp: format(new Date(2023, 9, 5), 'yyyy-MM-dd HH:mm:ss'),
           mentions: ['michael']
         }
-      ]
+      ],
+      mrr: 1500,
+      npsScore: 7
     },
     's3': { 
       id: 's3', 
@@ -116,7 +243,9 @@ export const INITIAL_DATA: KanbanState = {
       contractDuration: "6months" as const,
       endDate: format(new Date(2024, 4, 5), 'yyyy-MM-dd'),
       csm: "Team-Andy",
-      notes: []
+      notes: [],
+      mrr: 1200,
+      npsScore: 8
     },
     's4': { 
       id: 's4', 
@@ -126,7 +255,10 @@ export const INITIAL_DATA: KanbanState = {
       contractDuration: "6months" as const,
       endDate: format(new Date(2023, 9, 12), 'yyyy-MM-dd'),
       csm: "Team-Cillin",
-      notes: []
+      notes: [],
+      mrr: 1800,
+      npsScore: 6,
+      backendEnrolled: true
     },
     's5': { 
       id: 's5', 
@@ -136,7 +268,10 @@ export const INITIAL_DATA: KanbanState = {
       contractDuration: "1year" as const,
       endDate: format(new Date(2024, 7, 20), 'yyyy-MM-dd'),
       csm: "Team-Chris",
-      notes: []
+      notes: [],
+      mrr: 1800,
+      npsScore: 8,
+      backendEnrolled: true
     },
     's6': { 
       id: 's6', 
@@ -146,7 +281,10 @@ export const INITIAL_DATA: KanbanState = {
       contractDuration: "1year" as const,
       endDate: format(new Date(2024, 9, 3), 'yyyy-MM-dd'),
       csm: "Team-Cillin",
-      notes: []
+      notes: [],
+      mrr: 2000,
+      npsScore: 9,
+      olympiaEnrolled: true
     },
     's7': { 
       id: 's7', 
@@ -157,7 +295,9 @@ export const INITIAL_DATA: KanbanState = {
       endDate: format(new Date(2023, 8, 8), 'yyyy-MM-dd'),
       churnDate: format(new Date(2023, 4, 15), 'yyyy-MM-dd'),
       csm: "Team-Andy",
-      notes: []
+      notes: [],
+      mrr: 0,
+      npsScore: 3
     },
     's8': { 
       id: 's8', 
@@ -167,7 +307,9 @@ export const INITIAL_DATA: KanbanState = {
       contractDuration: "6months" as const,
       endDate: format(new Date(2023, 6, 15), 'yyyy-MM-dd'),
       csm: "Team-Cillin",
-      notes: []
+      notes: [],
+      mrr: 0,
+      npsScore: 10
     },
     's9': { 
       id: 's9', 
@@ -177,11 +319,48 @@ export const INITIAL_DATA: KanbanState = {
       contractDuration: "1year" as const,
       endDate: format(new Date(2024, 1, 22), 'yyyy-MM-dd'),
       csm: "Team-Andy",
-      notes: []
-    }
+      notes: [],
+      mrr: 0,
+      npsScore: 9
+    },
+    // Add the remaining fake students
+    ...generateFakeStudents(100)
   },
-  columnOrder: ['active', 'backend', 'olympia', 'churned', 'graduated']
+  columnOrder: ['active', 'backend', 'olympia', 'paused', 'churned', 'graduated']
 };
+
+// Distribute the fake students into the appropriate columns
+(() => {
+  // Reset all column studentIds except for s1-s9 which are already assigned
+  INITIAL_DATA.columns.active.studentIds = ['s1', 's2', 's3'];
+  INITIAL_DATA.columns.backend.studentIds = ['s4', 's5'];
+  INITIAL_DATA.columns.olympia.studentIds = ['s6'];
+  INITIAL_DATA.columns.churned.studentIds = ['s7'];
+  INITIAL_DATA.columns.graduated.studentIds = ['s8', 's9'];
+  INITIAL_DATA.columns.paused.studentIds = [];
+  
+  // Distribute students from s10 onwards
+  for (let i = 10; i <= 109; i++) {
+    const id = `s${i}`;
+    const student = INITIAL_DATA.students[id];
+    
+    if (!student) continue;
+    
+    if (student.churnDate) {
+      INITIAL_DATA.columns.churned.studentIds.push(id);
+    } else if (student.pauseDate) {
+      INITIAL_DATA.columns.paused.studentIds.push(id);
+    } else if (student.progress === 100) {
+      INITIAL_DATA.columns.graduated.studentIds.push(id);
+    } else if (student.backendEnrolled) {
+      INITIAL_DATA.columns.backend.studentIds.push(id);
+    } else if (student.olympiaEnrolled) {
+      INITIAL_DATA.columns.olympia.studentIds.push(id);
+    } else {
+      INITIAL_DATA.columns.active.studentIds.push(id);
+    }
+  }
+})();
 
 interface KanbanStore {
   data: KanbanState;
@@ -191,6 +370,8 @@ interface KanbanStore {
   updateData: (newData: KanbanState) => void;
   moveStudent: (studentId: string, sourceColumnId: string, destinationColumnId: string, sourceIndex: number, destinationIndex: number) => void;
   addChurnDate: (studentId: string, date: Date) => void;
+  addPauseDate: (studentId: string, date: Date, reason: string) => void;
+  resumeFromPause: (studentId: string, date: Date) => void;
   addNote: (studentId: string, note: Omit<Note, "id" | "timestamp">) => void;
   updateStudentTeam: (studentId: string, teamId: string) => void;
   reorderColumn: (columnId: string, startIndex: number, endIndex: number) => void;
@@ -299,6 +480,31 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
     newData.students[studentId] = {
       ...newData.students[studentId],
       churnDate: format(date, 'yyyy-MM-dd')
+    };
+    
+    get().updateData(newData);
+  },
+  
+  addPauseDate: (studentId, date, reason) => {
+    const { data } = get();
+    const newData = { ...data };
+    
+    newData.students[studentId] = {
+      ...newData.students[studentId],
+      pauseDate: format(date, 'yyyy-MM-dd'),
+      pauseReason: reason
+    };
+    
+    get().updateData(newData);
+  },
+  
+  resumeFromPause: (studentId, date) => {
+    const { data } = get();
+    const newData = { ...data };
+    
+    newData.students[studentId] = {
+      ...newData.students[studentId],
+      resumeDate: format(date, 'yyyy-MM-dd')
     };
     
     get().updateData(newData);

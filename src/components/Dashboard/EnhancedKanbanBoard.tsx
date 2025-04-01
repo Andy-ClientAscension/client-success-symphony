@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { KanbanSquare, Plus, MoreVertical, Calendar, Users, MessageSquare, AlertTriangle, UserCheck, Maximize2, Minimize2 } from "lucide-react";
+import { KanbanSquare, Plus, MoreVertical, Calendar, Users, MessageSquare, AlertTriangle, UserCheck, Maximize2, Minimize2, PauseCircle, AlertOctagon, DollarSign, BarChart } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,8 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
     setSelectedTeam,
     moveStudent,
     addChurnDate,
+    addPauseDate,
+    resumeFromPause,
     addNote,
     updateStudentTeam,
     loadPersistedData
@@ -45,10 +48,11 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
   
   const [dateModalOpen, setDateModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
-  const [dateModalType, setDateModalType] = useState<"churn" | "other">("churn");
+  const [dateModalType, setDateModalType] = useState<"churn" | "pause" | "resume" | "other">("churn");
   const [expandedStudentId, setExpandedStudentId] = useState<string | null>(null);
   const [teamEditOpen, setTeamEditOpen] = useState(false);
   const [expanded, setExpanded] = useState(fullScreen);
+  const [pauseReason, setPauseReason] = useState("");
   const { toast } = useToast();
   
   useEffect(() => {
@@ -116,6 +120,21 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
       setSelectedStudent(data.students[draggableId]);
       setDateModalType("churn");
       setDateModalOpen(true);
+      return;
+    }
+    
+    if (destination.droppableId === 'paused' && source.droppableId !== 'paused') {
+      setSelectedStudent(data.students[draggableId]);
+      setDateModalType("pause");
+      setDateModalOpen(true);
+      return;
+    }
+    
+    if (source.droppableId === 'paused' && destination.droppableId !== 'paused') {
+      setSelectedStudent(data.students[draggableId]);
+      setDateModalType("resume");
+      setDateModalOpen(true);
+      return;
     }
     
     moveStudent(
@@ -135,6 +154,58 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
         title: "Churn Date Set",
         description: `${selectedStudent.name} marked as churned on ${format(date, 'MMMM d, yyyy')}.`,
       });
+      
+      moveStudent(
+        selectedStudent.id,
+        filteredData.columnOrder.find(id => 
+          filteredData.columns[id].studentIds.includes(selectedStudent.id)
+        ) || '',
+        'churned',
+        0,
+        0
+      );
+    }
+  };
+  
+  const handlePauseDateConfirm = (date: Date) => {
+    if (selectedStudent && pauseReason) {
+      addPauseDate(selectedStudent.id, date, pauseReason);
+      
+      toast({
+        title: "Student Paused",
+        description: `${selectedStudent.name} placed on pause from ${format(date, 'MMMM d, yyyy')}.`,
+      });
+      
+      moveStudent(
+        selectedStudent.id,
+        filteredData.columnOrder.find(id => 
+          filteredData.columns[id].studentIds.includes(selectedStudent.id)
+        ) || '',
+        'paused',
+        0,
+        0
+      );
+      
+      setPauseReason("");
+    }
+  };
+  
+  const handleResumeConfirm = (date: Date) => {
+    if (selectedStudent) {
+      resumeFromPause(selectedStudent.id, date);
+      
+      toast({
+        title: "Student Resumed",
+        description: `${selectedStudent.name} resumed active status from ${format(date, 'MMMM d, yyyy')}.`,
+      });
+      
+      moveStudent(
+        selectedStudent.id,
+        'paused',
+        'active',
+        0,
+        0
+      );
     }
   };
 
@@ -171,7 +242,14 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
           {student.startDate && <div>Start: {format(new Date(student.startDate), 'MMM d, yyyy')}</div>}
           {student.endDate && <div>End: {format(new Date(student.endDate), 'MMM d, yyyy')}</div>}
           {student.churnDate && <div className="text-red-500">Churned: {format(new Date(student.churnDate), 'MMM d, yyyy')}</div>}
-          {student.csm && <div className="font-semibold mt-1">{CSM_TEAMS.find(team => team.id === student.csm)?.name}</div>}
+          {student.pauseDate && (
+            <div className="text-amber-500">
+              Paused: {format(new Date(student.pauseDate), 'MMM d, yyyy')}
+              {student.resumeDate && <> until {format(new Date(student.resumeDate), 'MMM d, yyyy')}</>}
+            </div>
+          )}
+          {student.pauseReason && <div className="text-amber-500 italic">{student.pauseReason}</div>}
+          {student.csm && <div className="font-semibold mt-1">{CSM_TEAMS.find(team => team.id === student.csm)?.name || student.csm}</div>}
         </div>
       );
     }
@@ -185,6 +263,9 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
         active: data.columns.active.studentIds.length,
         graduated: data.columns.graduated.studentIds.length,
         churned: data.columns.churned.studentIds.length,
+        paused: data.columns.paused.studentIds.length,
+        backend: data.columns.backend.studentIds.length,
+        olympia: data.columns.olympia.studentIds.length,
       };
     }
     
@@ -196,12 +277,43 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
       active: data.columns.active.studentIds.filter(id => teamIds.includes(id)).length,
       graduated: data.columns.graduated.studentIds.filter(id => teamIds.includes(id)).length,
       churned: data.columns.churned.studentIds.filter(id => teamIds.includes(id)).length,
+      paused: data.columns.paused.studentIds.filter(id => teamIds.includes(id)).length,
+      backend: data.columns.backend.studentIds.filter(id => teamIds.includes(id)).length,
+      olympia: data.columns.olympia.studentIds.filter(id => teamIds.includes(id)).length,
     };
   };
   
   const stats = teamStats();
   
   const boardHeight = expanded ? "max-h-[calc(100vh-200px)]" : "max-h-[calc(100vh-250px)]";
+  
+  const handleDateModalClose = () => {
+    setDateModalOpen(false);
+    setPauseReason("");
+  };
+  
+  const getStudentMetricsRow = (student) => {
+    if (!student.mrr && !student.npsScore) return null;
+    
+    return (
+      <div className="flex items-center justify-between mt-2 border-t pt-1 text-xs text-gray-600">
+        {student.mrr !== undefined && (
+          <div className="flex items-center">
+            <DollarSign className="h-3 w-3 mr-0.5 text-green-600" />
+            <span>{student.mrr}</span>
+          </div>
+        )}
+        {student.npsScore !== undefined && (
+          <div className="flex items-center">
+            <BarChart className="h-3 w-3 mr-0.5 text-blue-600" />
+            <span className={`${student.npsScore > 8 ? 'text-green-600' : student.npsScore > 6 ? 'text-amber-600' : 'text-red-600'}`}>
+              {student.npsScore}/10
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  };
   
   return (
     <Card className={`${expanded ? 'fixed inset-0 z-50 m-4 rounded-lg' : 'mt-4'} overflow-hidden`}>
@@ -244,24 +356,36 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
         {selectedTeam !== "all" && (
           <div className="mb-4 p-4 bg-slate-100 rounded-lg">
             <h3 className="font-medium text-lg mb-2">
-              {CSM_TEAMS.find(team => team.id === selectedTeam)?.name} Stats
+              {CSM_TEAMS.find(team => team.id === selectedTeam)?.name || selectedTeam} Stats
             </h3>
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
               <div className="bg-white p-3 rounded-md shadow-sm">
-                <div className="text-sm text-gray-500">Total Students</div>
-                <div className="text-2xl font-bold">{stats.total}</div>
+                <div className="text-sm text-gray-500">Total</div>
+                <div className="text-xl font-bold">{stats.total}</div>
               </div>
               <div className="bg-white p-3 rounded-md shadow-sm">
                 <div className="text-sm text-gray-500">Active</div>
-                <div className="text-2xl font-bold text-green-600">{stats.active}</div>
+                <div className="text-xl font-bold text-green-600">{stats.active}</div>
+              </div>
+              <div className="bg-white p-3 rounded-md shadow-sm">
+                <div className="text-sm text-gray-500">Backend</div>
+                <div className="text-xl font-bold text-purple-600">{stats.backend}</div>
+              </div>
+              <div className="bg-white p-3 rounded-md shadow-sm">
+                <div className="text-sm text-gray-500">Olympia</div>
+                <div className="text-xl font-bold text-indigo-600">{stats.olympia}</div>
+              </div>
+              <div className="bg-white p-3 rounded-md shadow-sm">
+                <div className="text-sm text-gray-500">Paused</div>
+                <div className="text-xl font-bold text-amber-600">{stats.paused}</div>
               </div>
               <div className="bg-white p-3 rounded-md shadow-sm">
                 <div className="text-sm text-gray-500">Graduated</div>
-                <div className="text-2xl font-bold text-blue-600">{stats.graduated}</div>
+                <div className="text-xl font-bold text-blue-600">{stats.graduated}</div>
               </div>
               <div className="bg-white p-3 rounded-md shadow-sm">
                 <div className="text-sm text-gray-500">Churned</div>
-                <div className="text-2xl font-bold text-red-600">{stats.churned}</div>
+                <div className="text-xl font-bold text-red-600">{stats.churned}</div>
               </div>
             </div>
           </div>
@@ -269,13 +393,25 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
         
         <ScrollArea className={`h-full ${boardHeight}`}>
           <DragDropContext onDragEnd={onDragEnd}>
-            <div className={`grid grid-cols-1 ${expanded ? 'lg:grid-cols-5' : 'md:grid-cols-3 lg:grid-cols-5'} gap-4 pb-4 overflow-x-auto`}>
+            <div className={`grid grid-cols-1 ${expanded ? 'lg:grid-cols-6' : 'md:grid-cols-3 lg:grid-cols-6'} gap-4 pb-4 overflow-x-auto`}>
               {data.columnOrder.map(columnId => {
                 const column = filteredData.columns[columnId];
-                const students = column.studentIds.map(studentId => data.students[studentId]);
+                const students = column.studentIds.map(studentId => data.students[studentId]).filter(Boolean);
+                
+                // Get special styling based on column type
+                const getColumnStyle = () => {
+                  switch(columnId) {
+                    case 'churned': return "border-l-4 border-red-400";
+                    case 'paused': return "border-l-4 border-amber-400";
+                    case 'graduated': return "border-l-4 border-blue-400";
+                    case 'backend': return "border-l-4 border-purple-400";
+                    case 'olympia': return "border-l-4 border-indigo-400";
+                    default: return "border-l-4 border-green-400";
+                  }
+                };
                 
                 return (
-                  <div key={column.id} className="flex flex-col bg-secondary/50 rounded-lg p-3 min-w-[250px]">
+                  <div key={column.id} className={`flex flex-col bg-secondary/50 rounded-lg p-3 min-w-[250px] ${getColumnStyle()}`}>
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center">
                         <h3 className="font-medium">{column.title}</h3>
@@ -312,6 +448,15 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
                                           <span>{student.notes?.length}</span>
                                         </Badge>
                                       )}
+                                      {student.pauseDate && (
+                                        <Badge 
+                                          variant="outline" 
+                                          className="mr-2 px-1.5 py-0.5 flex items-center border-amber-200 bg-amber-50"
+                                        >
+                                          <PauseCircle className="h-3 w-3 mr-1 text-amber-600" />
+                                          <span>Paused</span>
+                                        </Badge>
+                                      )}
                                       {student.paymentStatus?.isOverdue && (
                                         <Badge 
                                           variant="destructive" 
@@ -344,8 +489,40 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
                                             {expandedStudentId === student.id ? "Hide Notes" : "Show Notes"}
                                           </DropdownMenuItem>
                                           <DropdownMenuSeparator />
+                                          {columnId !== 'paused' && (
+                                            <DropdownMenuItem 
+                                              onClick={() => {
+                                                setSelectedStudent(student);
+                                                setDateModalType("pause");
+                                                setDateModalOpen(true);
+                                              }}
+                                            >
+                                              <PauseCircle className="h-3 w-3 mr-2" /> Pause Student
+                                            </DropdownMenuItem>
+                                          )}
+                                          {columnId === 'paused' && (
+                                            <DropdownMenuItem 
+                                              onClick={() => {
+                                                setSelectedStudent(student);
+                                                setDateModalType("resume");
+                                                setDateModalOpen(true);
+                                              }}
+                                            >
+                                              <PauseCircle className="h-3 w-3 mr-2" /> Resume Student
+                                            </DropdownMenuItem>
+                                          )}
+                                          {columnId !== 'churned' && (
+                                            <DropdownMenuItem 
+                                              onClick={() => {
+                                                setSelectedStudent(student);
+                                                setDateModalType("churn");
+                                                setDateModalOpen(true);
+                                              }}
+                                            >
+                                              <AlertOctagon className="h-3 w-3 mr-2" /> Mark as Churned
+                                            </DropdownMenuItem>
+                                          )}
                                           <DropdownMenuItem>Edit Student</DropdownMenuItem>
-                                          <DropdownMenuItem>Contact</DropdownMenuItem>
                                         </DropdownMenuContent>
                                       </DropdownMenu>
                                     </div>
@@ -359,6 +536,7 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
                                       />
                                     </div>
                                   </div>
+                                  {getStudentMetricsRow(student)}
                                   {formatDateInfo(student)}
                                   
                                   {student.paymentStatus?.isOverdue && (
@@ -394,20 +572,35 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
         {dateModalOpen && selectedStudent && (
           <StudentDateModal
             isOpen={dateModalOpen}
-            onClose={() => setDateModalOpen(false)}
-            onConfirm={dateModalType === "churn" ? handleChurnDateConfirm : () => {}}
+            onClose={handleDateModalClose}
+            onConfirm={
+              dateModalType === "churn" 
+                ? handleChurnDateConfirm 
+                : dateModalType === "pause" 
+                ? handlePauseDateConfirm
+                : dateModalType === "resume"
+                ? handleResumeConfirm
+                : () => {}
+            }
             title={
               dateModalType === "churn" 
-                ? `Set Churn Date for ${selectedStudent.name}` 
+                ? `Set Churn Date for ${selectedStudent.name}`
+                : dateModalType === "pause"
+                ? `Pause ${selectedStudent.name}`
+                : dateModalType === "resume"
+                ? `Resume ${selectedStudent.name}`
                 : `Date Information for ${selectedStudent.name}`
             }
             defaultDate={
-              dateModalType === "churn" 
+              dateModalType === "churn" || dateModalType === "pause" || dateModalType === "resume"
                 ? new Date() 
                 : selectedStudent.churnDate 
                   ? new Date(selectedStudent.churnDate)
                   : new Date()
             }
+            showReasonField={dateModalType === "pause"}
+            reason={pauseReason}
+            onReasonChange={(reason) => setPauseReason(reason)}
           />
         )}
 
