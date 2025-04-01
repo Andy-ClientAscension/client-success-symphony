@@ -7,13 +7,20 @@ import { STORAGE_KEYS, saveData, loadData } from '@/utils/persistence';
  * Controls whether dashboard data should be saved between sessions
  */
 export function useDashboardPersistence() {
-  const [persistDashboard, setPersistDashboard] = useState<boolean>(
-    loadData(STORAGE_KEYS.USER_PREFERENCES, {}).persistDashboard ?? false
-  );
+  // Define a type for the user preferences
+  interface UserPreferences {
+    persistDashboard?: boolean;
+    [key: string]: any;
+  }
+
+  const [persistDashboard, setPersistDashboard] = useState<boolean>(() => {
+    const prefs = loadData<UserPreferences>(STORAGE_KEYS.USER_PREFERENCES, {});
+    return prefs.persistDashboard ?? false;
+  });
 
   // Load initial state from local storage
   useEffect(() => {
-    const preferences = loadData(STORAGE_KEYS.USER_PREFERENCES, {});
+    const preferences = loadData<UserPreferences>(STORAGE_KEYS.USER_PREFERENCES, {});
     setPersistDashboard(preferences.persistDashboard ?? false);
   }, []);
   
@@ -23,7 +30,7 @@ export function useDashboardPersistence() {
     setPersistDashboard(newState);
     
     // Update the user preferences in local storage
-    const currentPreferences = loadData(STORAGE_KEYS.USER_PREFERENCES, {});
+    const currentPreferences = loadData<UserPreferences>(STORAGE_KEYS.USER_PREFERENCES, {});
     saveData(STORAGE_KEYS.USER_PREFERENCES, {
       ...currentPreferences,
       persistDashboard: newState
