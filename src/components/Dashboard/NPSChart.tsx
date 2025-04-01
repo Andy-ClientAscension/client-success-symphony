@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { 
   BarChart,
@@ -36,20 +37,20 @@ export function NPSChart() {
   
   return (
     <Card className="w-full shadow-sm">
-      <CardHeader className="p-2 flex flex-row items-center justify-between">
+      <CardHeader className="p-1 flex flex-row items-center justify-between">
         <div>
           <CardTitle className="text-xs font-semibold">NPS Tracking</CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="p-2 pt-0">
+      <CardContent className="p-1 pt-0">
         <Tabs defaultValue="distribution" className="w-full">
-          <TabsList className="w-full grid grid-cols-2 mb-2 h-7">
+          <TabsList className="w-full grid grid-cols-2 mb-2 h-6">
             <TabsTrigger value="distribution" className="text-[10px] py-0.5">Distribution</TabsTrigger>
             <TabsTrigger value="monthly" className="text-[10px] py-0.5">Monthly Trend</TabsTrigger>
           </TabsList>
           
           <TabsContent value="distribution" className="mt-0">
-            <div className="h-[90px]">
+            <div className="h-[85px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -57,7 +58,7 @@ export function NPSChart() {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    outerRadius={40}
+                    outerRadius={35}
                     fill="#8884d8"
                     dataKey="value"
                     label={({ name, percentage }) => `${percentage}`}
@@ -87,7 +88,7 @@ export function NPSChart() {
           </TabsContent>
           
           <TabsContent value="monthly" className="mt-0">
-            <div className="h-[90px]">
+            <div className="h-[85px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={barData.slice(0, 3)} // Show fewer bars to fit in smaller space
