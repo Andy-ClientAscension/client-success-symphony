@@ -19,7 +19,7 @@ interface StudentTeamEditProps {
   onClose: () => void;
   onSubmit: (teamId: string) => void;
   studentName: string;
-  studentId: string;
+  studentId?: string; // Make studentId optional
   currentTeam?: string;
 }
 
@@ -28,7 +28,7 @@ export function StudentTeamEdit({
   onClose,
   onSubmit,
   studentName,
-  studentId,
+  studentId = "", // Provide a default empty string
   currentTeam = "all",
 }: StudentTeamEditProps) {
   const [selectedTeam, setSelectedTeam] = useState<string>(currentTeam);
@@ -45,8 +45,10 @@ export function StudentTeamEdit({
       // Update team assignment
       onSubmit(selectedTeam);
 
-      // Transfer bi-weekly notes to the new team
-      transferBiWeeklyNotes(studentId, currentTeam, selectedTeam);
+      // Only transfer bi-weekly notes if studentId is provided
+      if (studentId) {
+        transferBiWeeklyNotes(studentId, currentTeam, selectedTeam);
+      }
 
       toast({
         title: "Team Assignment Updated",

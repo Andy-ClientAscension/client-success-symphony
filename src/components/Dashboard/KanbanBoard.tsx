@@ -719,6 +719,7 @@ export function KanbanBoard() {
             onClose={() => setTeamEditOpen(false)}
             onSubmit={handleTeamChange}
             studentName={selectedStudent.name}
+            studentId={selectedStudent.id}
             currentTeam={selectedStudent.csm}
           />
         )}
