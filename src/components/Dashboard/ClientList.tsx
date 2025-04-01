@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { PlusCircle } from "lucide-react";
+
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Client, getAllClients } from "@/lib/data";
@@ -11,13 +11,14 @@ import { ClientListFilters } from "./ClientListFilters";
 import { ClientSearchBar } from "./ClientSearchBar";
 import { ClientsTable } from "./ClientsTable";
 import { ClientBulkActionDialog } from "./ClientBulkActionDialog";
+import { Pagination } from "./Pagination";
 
 interface ClientListProps {
   statusFilter?: Client['status'];
 }
 
 export function ClientList({ statusFilter }: ClientListProps) {
-  const defaultClients = getAllClients();
+  const defaultClients = useMemo(() => getAllClients(), []);
   const [clients, setClients] = useState<Client[]>(defaultClients);
   const [filteredClients, setFilteredClients] = useState<Client[]>(clients);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -29,6 +30,8 @@ export function ClientList({ statusFilter }: ClientListProps) {
   const [bulkActionDialogOpen, setBulkActionDialogOpen] = useState(false);
   const [bulkActionType, setBulkActionType] = useState<'status' | 'team' | null>(null);
   const [bulkActionValue, setBulkActionValue] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
   
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -39,6 +42,7 @@ export function ClientList({ statusFilter }: ClientListProps) {
       saveData(STORAGE_KEYS.CLIENTS, clients);
     }
 
+    // Apply filters
     let filtered = clients;
     if (statusFilter) {
       filtered = clients.filter(client => client.status === statusFilter);
@@ -60,7 +64,23 @@ export function ClientList({ statusFilter }: ClientListProps) {
     }
 
     setFilteredClients(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   }, [clients, selectedTeam, statusFilter, searchQuery]);
+  
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredClients.slice(indexOfFirstItem, Math.min(indexOfLastItem, filteredClients.length));
+  const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleItemsPerPageChange = (value: number) => {
+    setItemsPerPage(value);
+    setCurrentPage(1);
+  };
   
   const handleViewDetails = (client: Client) => {
     navigate(`/client/${client.id}`);
@@ -116,10 +136,10 @@ export function ClientList({ statusFilter }: ClientListProps) {
   };
   
   const handleSelectAll = () => {
-    if (selectedClientIds.length === filteredClients.length) {
+    if (selectedClientIds.length === currentItems.length) {
       setSelectedClientIds([]);
     } else {
-      setSelectedClientIds(filteredClients.map(client => client.id));
+      setSelectedClientIds(currentItems.map(client => client.id));
     }
   };
   
@@ -163,14 +183,15 @@ export function ClientList({ statusFilter }: ClientListProps) {
     });
   };
 
-  const handleOpenBulkActions = () => {
-    // This function isn't used directly but would be for a custom bulk actions button
-  };
-
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Client Overview</CardTitle>
+        <CardTitle>
+          Client Overview 
+          <span className="text-muted-foreground text-sm ml-2">
+            (Total: {filteredClients.length})
+          </span>
+        </CardTitle>
         <ClientListFilters 
           selectedTeam={selectedTeam}
           searchQuery={searchQuery}
@@ -178,6 +199,8 @@ export function ClientList({ statusFilter }: ClientListProps) {
           onSearchChange={handleSearchChange}
           filteredClients={filteredClients}
           onAddNewClient={handleAddNewClient}
+          itemsPerPage={itemsPerPage}
+          onItemsPerPageChange={handleItemsPerPageChange}
         />
       </CardHeader>
       <CardContent>
@@ -185,17 +208,27 @@ export function ClientList({ statusFilter }: ClientListProps) {
           searchQuery={searchQuery}
           onSearchChange={handleSearchChange}
           selectedClientCount={selectedClientIds.length}
-          onOpenBulkActions={handleOpenBulkActions}
+          onOpenBulkActions={() => {}}
         />
 
         <ClientsTable 
-          clients={filteredClients}
+          clients={currentItems}
           selectedClientIds={selectedClientIds}
           onSelectClient={handleSelectClient}
           onSelectAll={handleSelectAll}
           onViewDetails={handleViewDetails}
           onEditMetrics={handleEditMetrics}
           onUpdateNPS={handleUpdateNPS}
+        />
+        
+        <Pagination 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          totalItems={filteredClients.length}
+          itemsPerPage={itemsPerPage}
+          startIndex={indexOfFirstItem}
+          endIndex={Math.min(indexOfLastItem, filteredClients.length)}
         />
       </CardContent>
       

@@ -27,6 +27,8 @@ interface ClientListFiltersProps {
   onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   filteredClients: Client[];
   onAddNewClient: () => void;
+  itemsPerPage?: number;
+  onItemsPerPageChange?: (value: number) => void;
 }
 
 export function ClientListFilters({
@@ -35,7 +37,9 @@ export function ClientListFilters({
   onTeamChange,
   onSearchChange,
   filteredClients,
-  onAddNewClient
+  onAddNewClient,
+  itemsPerPage = 25,
+  onItemsPerPageChange
 }: ClientListFiltersProps) {
   const handleExportCSV = () => {
     const csvData = filteredClients.map(client => ({
@@ -70,6 +74,26 @@ export function ClientListFilters({
           </SelectContent>
         </Select>
       </div>
+      
+      {onItemsPerPageChange && (
+        <div className="flex items-center gap-2">
+          <Select 
+            value={String(itemsPerPage)} 
+            onValueChange={(value) => onItemsPerPageChange(Number(value))}
+          >
+            <SelectTrigger className="w-[100px] h-8 text-xs">
+              <SelectValue placeholder="Show" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="10">10 per page</SelectItem>
+              <SelectItem value="25">25 per page</SelectItem>
+              <SelectItem value="50">50 per page</SelectItem>
+              <SelectItem value="100">100 per page</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+      
       <Button 
         onClick={handleExportCSV}
         variant="outline"

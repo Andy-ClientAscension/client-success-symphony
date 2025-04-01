@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getClientMetricsByTeam, getAllClients, getCSMList } from "@/lib/data";
@@ -15,51 +16,74 @@ export function TeamAnalytics() {
   const [selectedTeam, setSelectedTeam] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<string>("overview");
   
-  const clients = getAllClients();
-  const teamSet = new Set<string>();
-  clients.forEach(client => {
-    if (client.team) {
-      teamSet.add(client.team);
-    }
-  });
+  const clients = useMemo(() => getAllClients(), []);
+  const teamSet = useMemo(() => {
+    const set = new Set<string>();
+    clients.forEach(client => {
+      if (client.team) {
+        set.add(client.team);
+      }
+    });
+    return set;
+  }, [clients]);
   
-  const teams = Array.from(teamSet);
-  const csmList = getCSMList();
+  const teams = useMemo(() => Array.from(teamSet), [teamSet]);
+  const csmList = useMemo(() => getCSMList(), []);
   
-  const teamClients = selectedTeam === "all" 
-    ? clients 
-    : clients.filter(client => client.team === selectedTeam);
+  const teamClients = useMemo(() => {
+    return selectedTeam === "all" 
+      ? clients 
+      : clients.filter(client => client.team === selectedTeam);
+  }, [clients, selectedTeam]);
   
-  const metrics = getClientMetricsByTeam();
-  const teamMetrics = selectedTeam === "all" ? metrics : getClientMetricsByTeam(selectedTeam);
+  const metrics = useMemo(() => getClientMetricsByTeam(), []);
+  const teamMetrics = useMemo(() => {
+    return selectedTeam === "all" ? metrics : getClientMetricsByTeam(selectedTeam);
+  }, [metrics, selectedTeam]);
   
-  const statusCounts = {
+  const statusCounts = useMemo(() => ({
     active: teamClients.filter(client => client.status === 'active').length,
     atRisk: teamClients.filter(client => client.status === 'at-risk').length,
     churned: teamClients.filter(client => client.status === 'churned').length,
     new: teamClients.filter(client => client.status === 'new').length,
     total: teamClients.length
-  };
+  }), [teamClients]);
   
-  const retentionRate = statusCounts.total > 0 
-    ? Math.round((statusCounts.active / statusCounts.total) * 100) 
-    : 0;
+  const retentionRate = useMemo(() => {
+    return statusCounts.total > 0 
+      ? Math.round((statusCounts.active / statusCounts.total) * 100) 
+      : 0;
+  }, [statusCounts]);
     
-  const atRiskRate = statusCounts.total > 0 
-    ? Math.round((statusCounts.atRisk / statusCounts.total) * 100) 
-    : 0;
+  const atRiskRate = useMemo(() => {
+    return statusCounts.total > 0 
+      ? Math.round((statusCounts.atRisk / statusCounts.total) * 100) 
+      : 0;
+  }, [statusCounts]);
     
-  const churnRate = statusCounts.total > 0 
-    ? Math.round((statusCounts.churned / statusCounts.total) * 100) 
-    : 0;
+  const churnRate = useMemo(() => {
+    return statusCounts.total > 0 
+      ? Math.round((statusCounts.churned / statusCounts.total) * 100) 
+      : 0;
+  }, [statusCounts]);
   
-  const prevPeriodRetention = Math.max(0, Math.round(retentionRate - (Math.random() * 10 - 5)));
-  const prevPeriodAtRisk = Math.max(0, Math.round(atRiskRate - (Math.random() * 10 - 3)));
-  const prevPeriodChurn = Math.max(0, Math.round(churnRate - (Math.random() * 10 - 2)));
+  // For demo purposes, we're still using random values for previous period
+  // In a production app, this would come from historical data
+  const prevPeriodRetention = useMemo(() => {
+    return Math.max(0, Math.round(retentionRate - (Math.random() * 10 - 5)));
+  }, [retentionRate]);
   
-  const retentionTrend = retentionRate - prevPeriodRetention;
-  const atRiskTrend = atRiskRate - prevPeriodAtRisk;
-  const churnTrend = churnRate - prevPeriodChurn;
+  const prevPeriodAtRisk = useMemo(() => {
+    return Math.max(0, Math.round(atRiskRate - (Math.random() * 10 - 3)));
+  }, [atRiskRate]);
+  
+  const prevPeriodChurn = useMemo(() => {
+    return Math.max(0, Math.round(churnRate - (Math.random() * 10 - 2)));
+  }, [churnRate]);
+  
+  const retentionTrend = useMemo(() => retentionRate - prevPeriodRetention, [retentionRate, prevPeriodRetention]);
+  const atRiskTrend = useMemo(() => atRiskRate - prevPeriodAtRisk, [atRiskRate, prevPeriodAtRisk]);
+  const churnTrend = useMemo(() => churnRate - prevPeriodChurn, [churnRate, prevPeriodChurn]);
 
   const getTrendIndicator = (trend: number) => {
     if (trend > 0) return <TrendingUp className="h-3 w-3 ml-1" />;
@@ -176,7 +200,7 @@ export function TeamAnalytics() {
           </TabsContent>
           
           <TabsContent value="health-scores">
-            <HealthScoreSheet clients={clients} />
+            <HealthScoreSheet clients={teamClients} />
           </TabsContent>
           
           <TabsContent value="health-trends">
