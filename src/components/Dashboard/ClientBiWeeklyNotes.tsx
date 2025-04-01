@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   Sheet,
@@ -216,18 +217,13 @@ export function ClientBiWeeklyNotes({
                 </div>
                 <div>
                   <h4 className="text-sm font-medium mb-1">Booked Calls</h4>
-                  <div className="flex items-center space-x-2 mt-2">
-                    {[0, 1, 2, 3, 4, 5].map((num) => (
-                      <Button 
-                        key={num}
-                        variant={currentNote.bookedCalls === num ? "default" : "outline"} 
-                        className={`w-10 h-10 p-0 ${currentNote.bookedCalls === num ? "bg-red-600" : ""}`}
-                        onClick={() => setCurrentNote({...currentNote, bookedCalls: num})}
-                      >
-                        {num}
-                      </Button>
-                    ))}
-                  </div>
+                  <Input 
+                    type="number"
+                    min="0"
+                    value={currentNote.bookedCalls}
+                    onChange={(e) => setCurrentNote({...currentNote, bookedCalls: Number(e.target.value)})}
+                    placeholder="Enter number of booked calls"
+                  />
                 </div>
               </div>
               

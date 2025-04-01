@@ -208,19 +208,12 @@ export function HealthScoreEditor({
                   <FormItem>
                     <FormLabel>Booked Calls</FormLabel>
                     <FormControl>
-                      <div className="flex flex-wrap items-center gap-2 mt-2">
-                        {[0, 1, 2, 3, 4, 5].map((num) => (
-                          <Button 
-                            key={num}
-                            type="button"
-                            variant={field.value === num ? "default" : "outline"} 
-                            className={`w-10 h-10 p-0 ${field.value === num ? "bg-red-600" : ""}`}
-                            onClick={() => field.onChange(num)}
-                          >
-                            {num}
-                          </Button>
-                        ))}
-                      </div>
+                      <Input 
+                        type="number" 
+                        min="0"
+                        placeholder="Number of booked calls" 
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
