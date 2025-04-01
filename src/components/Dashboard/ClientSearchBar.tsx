@@ -1,0 +1,42 @@
+
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { FileUp } from "lucide-react";
+
+interface ClientSearchBarProps {
+  searchQuery: string;
+  onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  selectedClientCount: number;
+  onOpenBulkActions: () => void;
+}
+
+export function ClientSearchBar({
+  searchQuery,
+  onSearchChange,
+  selectedClientCount,
+  onOpenBulkActions
+}: ClientSearchBarProps) {
+  return (
+    <div className="flex flex-wrap gap-2 mb-4">
+      <div className="relative flex-grow">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search by client name or CSM..."
+          value={searchQuery}
+          onChange={onSearchChange}
+          className="pl-9"
+        />
+      </div>
+      
+      {selectedClientCount > 0 && (
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">
+            {selectedClientCount} selected
+          </span>
+          <Button variant="outline" size="sm" onClick={onOpenBulkActions}>Bulk Actions</Button>
+        </div>
+      )}
+    </div>
+  );
+}
