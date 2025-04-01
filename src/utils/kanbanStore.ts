@@ -51,7 +51,6 @@ export interface KanbanState {
   columnOrder: string[];
 }
 
-// Generate fake student data
 const generateFakeStudents = (count: number): Record<string, Student> => {
   const students: Record<string, Student> = {};
   const teams = ["Team-Andy", "Team-Chris", "Team-Cillin", "Team-Alex"];
@@ -72,30 +71,25 @@ const generateFakeStudents = (count: number): Record<string, Student> => {
   const today = new Date();
   
   for (let i = 1; i <= count; i++) {
-    const id = `s${i + 9}`; // Start from s10 since we already have s1-s9
+    const id = `s${i + 9}`;
     const randomName = names[Math.floor(Math.random() * names.length)] || `Student ${id}`;
     const randomProgress = Math.floor(Math.random() * 101);
     
-    // Ensure even distribution across teams
     const teamIndex = i % teams.length;
     const randomTeam = teams[teamIndex];
     
     const contractDuration = Math.random() > 0.5 ? "6months" : "1year";
     
-    // Generate random dates
     const startOffset = Math.floor(Math.random() * 365);
     const startDate = subDays(today, startOffset);
     const endDate = contractDuration === "6months" 
       ? addDays(startDate, 180)
       : addDays(startDate, 365);
     
-    // Random NPS score between 0-10
     const npsScore = Math.floor(Math.random() * 11);
     
-    // Random MRR between 500-2000
     const mrr = Math.floor(Math.random() * 1500) + 500;
     
-    // Generate notes for some students
     const hasNotes = Math.random() > 0.7;
     const notes = hasNotes ? [
       {
@@ -106,7 +100,6 @@ const generateFakeStudents = (count: number): Record<string, Student> => {
       }
     ] : [];
     
-    // Generate payment status
     const hasPaymentIssue = Math.random() > 0.8;
     const paymentStatus = hasPaymentIssue ? {
       isOverdue: true,
@@ -117,26 +110,24 @@ const generateFakeStudents = (count: number): Record<string, Student> => {
       isOverdue: false
     };
     
-    // Add special cases for paused and churned students
     let churnDate;
     let pauseDate;
     let pauseReason;
     let resumeDate;
     
-    if (i % 23 === 0) { // Some students are churned
+    if (i % 23 === 0) {
       churnDate = format(subDays(today, Math.floor(Math.random() * 90) + 1), 'yyyy-MM-dd');
     }
     
-    if (i % 17 === 0) { // Some students are paused
+    if (i % 17 === 0) {
       pauseDate = format(subDays(today, Math.floor(Math.random() * 45) + 1), 'yyyy-MM-dd');
       pauseReason = ["Health issues", "Financial hardship", "Family emergency", "Travel", "Work commitments"][Math.floor(Math.random() * 5)];
       
-      if (Math.random() > 0.5) { // Some paused students have resume dates
+      if (Math.random() > 0.5) {
         resumeDate = format(addDays(today, Math.floor(Math.random() * 60) + 15), 'yyyy-MM-dd');
       }
     }
     
-    // Backend or Olympia enrollments - distribute somewhat evenly
     const backendEnrolled = i % 5 === 0;
     const olympiaEnrolled = i % 7 === 0 && !backendEnrolled;
     
@@ -164,7 +155,6 @@ const generateFakeStudents = (count: number): Record<string, Student> => {
   return students;
 };
 
-// Create initial data with existing and fake students
 const INITIAL_DATA: KanbanState = {
   columns: {
     'active': {
@@ -326,15 +316,12 @@ const INITIAL_DATA: KanbanState = {
       mrr: 0,
       npsScore: 9
     },
-    // Add the fake students
     ...generateFakeStudents(100)
   },
   columnOrder: ['active', 'backend', 'olympia', 'paused', 'churned', 'graduated']
 };
 
-// Distribute the fake students into the appropriate columns
 const distributeStudents = () => {
-  // Reset all column studentIds except for s1-s9 which are already assigned
   const newData = {...INITIAL_DATA};
   newData.columns.active.studentIds = ['s1', 's2', 's3'];
   newData.columns.backend.studentIds = ['s4', 's5'];
@@ -343,7 +330,6 @@ const distributeStudents = () => {
   newData.columns.graduated.studentIds = ['s8', 's9'];
   newData.columns.paused.studentIds = [];
   
-  // Distribute students from s10 onwards
   for (let i = 10; i <= 109; i++) {
     const id = `s${i}`;
     const student = newData.students[id];
@@ -370,6 +356,19 @@ const distributeStudents = () => {
 
 const POPULATED_DATA = distributeStudents();
 
+const createEmptyState = (): KanbanState => ({
+  columns: {
+    'active': { id: 'active', title: 'Active Students', studentIds: [] },
+    'backend': { id: 'backend', title: 'Backend Students', studentIds: [] },
+    'olympia': { id: 'olympia', title: 'Olympia Students', studentIds: [] },
+    'paused': { id: 'paused', title: 'Paused Students', studentIds: [] },
+    'churned': { id: 'churned', title: 'Churned Students', studentIds: [] },
+    'graduated': { id: 'graduated', title: 'Graduated Students', studentIds: [] }
+  },
+  students: {},
+  columnOrder: ['active', 'backend', 'olympia', 'paused', 'churned', 'graduated']
+});
+
 interface KanbanStore {
   data: KanbanState;
   filteredData: KanbanState;
@@ -387,13 +386,18 @@ interface KanbanStore {
 }
 
 export const useKanbanStore = create<KanbanStore>((set, get) => ({
-  data: POPULATED_DATA,
-  filteredData: POPULATED_DATA,
+  data: POPULATED_DATA || createEmptyState(),
+  filteredData: POPULATED_DATA || createEmptyState(),
   selectedTeam: "all",
 
   setSelectedTeam: (team) => {
     set({ selectedTeam: team });
     const { data } = get();
+    
+    if (!data || !data.columns) {
+      console.error("Kanban data is not initialized properly");
+      return;
+    }
     
     if (team === "all") {
       set({ filteredData: data });
@@ -406,39 +410,48 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       columnOrder: [...data.columnOrder]
     };
     
-    const filteredStudentIds = Object.keys(data.students).filter(
-      id => data.students[id].csm === team
+    const filteredStudentIds = Object.keys(data.students || {}).filter(
+      id => data.students[id]?.csm === team
     );
     
     Object.keys(newData.columns).forEach(columnId => {
-      newData.columns[columnId] = {
-        ...data.columns[columnId],
-        studentIds: data.columns[columnId].studentIds.filter(
-          id => filteredStudentIds.includes(id)
-        )
-      };
+      if (newData.columns[columnId]) {
+        newData.columns[columnId] = {
+          ...data.columns[columnId],
+          studentIds: (data.columns[columnId]?.studentIds || []).filter(
+            id => filteredStudentIds.includes(id)
+          )
+        };
+      }
     });
     
     set({ filteredData: newData });
   },
 
   updateData: (newData) => {
+    if (!newData || !newData.columns) {
+      console.error("Attempting to update with invalid kanban data");
+      return;
+    }
+    
     set({ data: newData });
     const { selectedTeam } = get();
     
     if (selectedTeam !== "all") {
       const filteredData = { ...newData };
-      const filteredStudentIds = Object.keys(newData.students).filter(
-        id => newData.students[id].csm === selectedTeam
+      const filteredStudentIds = Object.keys(newData.students || {}).filter(
+        id => newData.students[id]?.csm === selectedTeam
       );
       
       Object.keys(filteredData.columns).forEach(columnId => {
-        filteredData.columns[columnId] = {
-          ...newData.columns[columnId],
-          studentIds: newData.columns[columnId].studentIds.filter(
-            id => filteredStudentIds.includes(id)
-          )
-        };
+        if (filteredData.columns[columnId]) {
+          filteredData.columns[columnId] = {
+            ...newData.columns[columnId],
+            studentIds: (newData.columns[columnId]?.studentIds || []).filter(
+              id => filteredStudentIds.includes(id)
+            )
+          };
+        }
       });
       
       set({ filteredData });
@@ -569,12 +582,21 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
   },
   
   loadPersistedData: () => {
-    const persistEnabled = localStorage.getItem("persistDashboard") === "true";
-    if (persistEnabled) {
-      const savedData = loadData(STORAGE_KEYS.KANBAN, POPULATED_DATA);
-      set({ data: savedData, filteredData: savedData });
-    } else {
-      // If not persisted, make sure we use our pre-populated data
+    try {
+      const persistEnabled = localStorage.getItem("persistDashboard") === "true";
+      if (persistEnabled) {
+        const savedData = loadData(STORAGE_KEYS.KANBAN, POPULATED_DATA);
+        if (savedData && savedData.columns && savedData.students && savedData.columnOrder) {
+          set({ data: savedData, filteredData: savedData });
+        } else {
+          console.warn("Loaded kanban data has invalid structure, using default data");
+          set({ data: POPULATED_DATA, filteredData: POPULATED_DATA });
+        }
+      } else {
+        set({ data: POPULATED_DATA, filteredData: POPULATED_DATA });
+      }
+    } catch (error) {
+      console.error("Error loading persisted kanban data:", error);
       set({ data: POPULATED_DATA, filteredData: POPULATED_DATA });
     }
   }

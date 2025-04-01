@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { KanbanSquare, Plus, MoreVertical, Calendar, Users, MessageSquare, AlertTriangle, UserCheck } from "lucide-react";
@@ -51,77 +52,87 @@ export function KanbanBoard() {
   const { toast } = useToast();
   
   useEffect(() => {
-    loadPersistedData();
-    
-    const checkAllStudentPayments = async () => {
-      const updatedStudents = { ...data.students };
-      let hasPaymentIssues = false;
+    try {
+      loadPersistedData();
       
-      for (const studentId in updatedStudents) {
-        const student = updatedStudents[studentId];
-        if (data.columns.active.studentIds.includes(studentId) || 
-            data.columns.backend.studentIds.includes(studentId) ||
-            data.columns.olympia.studentIds.includes(studentId)) {
-          const paymentStatus = await checkStudentPaymentStatus(
-            student.id, 
-            student.name,
-            28
-          );
-          
-          if (paymentStatus.isOverdue) {
-            hasPaymentIssues = true;
+      const checkAllStudentPayments = async () => {
+        if (!data || !data.students) {
+          console.warn("Student data not available for payment check");
+          return;
+        }
+        
+        const updatedStudents = { ...data.students };
+        let hasPaymentIssues = false;
+        
+        for (const studentId in updatedStudents) {
+          const student = updatedStudents[studentId];
+          if (data.columns && (
+              data.columns.active?.studentIds.includes(studentId) || 
+              data.columns.backend?.studentIds.includes(studentId) ||
+              data.columns.olympia?.studentIds.includes(studentId))) {
+            const paymentStatus = await checkStudentPaymentStatus(
+              student.id, 
+              student.name,
+              28
+            );
+            
+            if (paymentStatus.isOverdue) {
+              hasPaymentIssues = true;
+            }
           }
         }
-      }
+        
+        if (hasPaymentIssues) {
+          toast({
+            title: "Payment Alerts",
+            description: "Some students have overdue payments",
+            variant: "destructive",
+          });
+        }
+      };
       
-      if (hasPaymentIssues) {
-        toast({
-          title: "Payment Alerts",
-          description: "Some students have overdue payments",
-          variant: "destructive",
-        });
-      }
-    };
-    
-    checkAllStudentPayments();
+      checkAllStudentPayments().catch(err => {
+        console.error("Error checking student payments:", err);
+      });
+    } catch (error) {
+      console.error("Error in KanbanBoard initialization:", error);
+    }
   }, []);
   
   const onDragEnd = (result) => {
-    const { destination, source, draggableId } = result;
-    
-    if (!destination) {
-      return;
-    }
-    
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) {
-      return;
-    }
-    
-    if (destination.droppableId === 'churned' && source.droppableId !== 'churned') {
-      setSelectedStudent(data.students[draggableId]);
-      setDateModalType("churn");
-      setDateModalOpen(true);
-    }
-    
-    moveStudent(
-      draggableId, 
-      source.droppableId, 
-      destination.droppableId, 
-      source.index, 
-      destination.index
-    );
-  };
-
-  const handleChurnDateConfirm = (date: Date) => {
-    if (selectedStudent) {
-      addChurnDate(selectedStudent.id, date);
+    try {
+      const { destination, source, draggableId } = result;
       
+      if (!destination) {
+        return;
+      }
+      
+      if (
+        destination.droppableId === source.droppableId &&
+        destination.index === source.index
+      ) {
+        return;
+      }
+      
+      if (destination.droppableId === 'churned' && source.droppableId !== 'churned') {
+        setSelectedStudent(data.students?.[draggableId]);
+        setDateModalType("churn");
+        setDateModalOpen(true);
+      }
+      
+      moveStudent(
+        draggableId, 
+        source.droppableId, 
+        destination.droppableId, 
+        source.index, 
+        destination.index
+      );
+    } catch (error) {
+      console.error("Error in drag and drop operation:", error);
       toast({
-        title: "Churn Date Set",
-        description: `${selectedStudent.name} marked as churned on ${format(date, 'MMMM d, yyyy')}.`,
+        title: "Operation Failed",
+        description: "There was an error moving the student. Please try again.",
+        variant: "destructive",
       });
     }
   };
@@ -167,27 +178,61 @@ export function KanbanBoard() {
   };
   
   const teamStats = () => {
-    if (selectedTeam === "all") {
+    try {
+      if (!data || !data.students || !data.columns) {
+        return {
+          total: 0,
+          active: 0,
+          graduated: 0,
+          churned: 0,
+        };
+      }
+      
+      if (selectedTeam === "all") {
+        return {
+          total: Object.keys(data.students).length,
+          active: data.columns.active?.studentIds?.length || 0,
+          graduated: data.columns.graduated?.studentIds?.length || 0,
+          churned: data.columns.churned?.studentIds?.length || 0,
+        };
+      }
+      
+      const teamStudents = Object.values(data.students).filter(student => student.csm === selectedTeam);
+      const teamIds = teamStudents.map(student => student.id);
+      
       return {
-        total: Object.keys(data.students).length,
-        active: data.columns.active.studentIds.length,
-        graduated: data.columns.graduated.studentIds.length,
-        churned: data.columns.churned.studentIds.length,
+        total: teamStudents.length,
+        active: (data.columns.active?.studentIds || []).filter(id => teamIds.includes(id)).length,
+        graduated: (data.columns.graduated?.studentIds || []).filter(id => teamIds.includes(id)).length,
+        churned: (data.columns.churned?.studentIds || []).filter(id => teamIds.includes(id)).length,
       };
+    } catch (error) {
+      console.error("Error calculating team stats:", error);
+      return { total: 0, active: 0, graduated: 0, churned: 0 };
     }
-    
-    const teamStudents = Object.values(data.students).filter(student => student.csm === selectedTeam);
-    const teamIds = teamStudents.map(student => student.id);
-    
-    return {
-      total: teamStudents.length,
-      active: data.columns.active.studentIds.filter(id => teamIds.includes(id)).length,
-      graduated: data.columns.graduated.studentIds.filter(id => teamIds.includes(id)).length,
-      churned: data.columns.churned.studentIds.filter(id => teamIds.includes(id)).length,
-    };
   };
   
   const stats = teamStats();
+  
+  // If data is not properly loaded, show a loading state
+  if (!filteredData || !filteredData.columns || !filteredData.columnOrder) {
+    return (
+      <Card className="mt-4 overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div className="flex items-center gap-2">
+            <KanbanSquare className="h-5 w-5 text-red-600" />
+            <CardTitle>Student Tracking</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="p-6 text-center">
+          <div className="flex flex-col items-center justify-center gap-2">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-current border-t-transparent text-red-600"></div>
+            <div>Loading student data...</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
   
   return (
     <Card className="mt-4 overflow-hidden">
@@ -248,9 +293,13 @@ export function KanbanBoard() {
         <ScrollArea className="h-full max-h-[calc(100vh-250px)]">
           <DragDropContext onDragEnd={onDragEnd}>
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 pb-4 overflow-x-auto">
-              {data.columnOrder.map(columnId => {
-                const column = filteredData.columns[columnId];
-                const students = column.studentIds.map(studentId => data.students[studentId]);
+              {filteredData.columnOrder.map(columnId => {
+                const column = filteredData.columns?.[columnId];
+                if (!column) return null;
+                
+                const students = (column.studentIds || [])
+                  .map(studentId => data.students?.[studentId])
+                  .filter(Boolean);
                 
                 return (
                   <div key={column.id} className="flex flex-col bg-secondary/50 rounded-lg p-3 min-w-[250px]">

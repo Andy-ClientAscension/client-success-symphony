@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { getAllClients, Client, Communication } from "@/lib/data";
 import { SearchResult } from "@/components/Search/SearchResults";
@@ -136,97 +135,132 @@ function eventToSearchResult(event: any): SearchResult {
 
 // Convert students from kanban board to search results
 function getStudentResults(query: string): SearchResult[] {
-  // This would normally pull from actual student data
-  // For now using mock data
-  const mockStudents = [
-    { id: 's1', name: 'Alice Johnson', team: 'Team-Andy', progress: 75 },
-    { id: 's2', name: 'Bob Smith', team: 'Team-Chris', progress: 60 },
-    { id: 's3', name: 'Carol Davis', team: 'Team-Andy', progress: 80 },
-    { id: 's4', name: 'Dave Wilson', team: 'Team-Cillin', progress: 45 },
-    { id: 's5', name: 'Eve Brown', team: 'Team-Chris', progress: 50 },
-    { id: 's6', name: 'Frank Miller', team: 'Team-Cillin', progress: 70 },
-    { id: 's7', name: 'Grace Lee', team: 'Team-Andy', progress: 30 },
-    { id: 's8', name: 'Henry Taylor', team: 'Team-Cillin', progress: 100 },
-    { id: 's9', name: 'Ivy Robinson', team: 'Team-Andy', progress: 100 },
-  ];
-  
-  return mockStudents
-    .filter(student => 
-      student.name.toLowerCase().includes(query.toLowerCase()) ||
-      student.team.toLowerCase().includes(query.toLowerCase())
-    )
-    .map(student => ({
-      id: student.id,
-      type: 'student',
-      title: student.name,
-      description: `${student.team} - Progress: ${student.progress}%`
-    }));
+  try {
+    // This would normally pull from actual student data
+    // For now using mock data
+    const mockStudents = [
+      { id: 's1', name: 'Alice Johnson', team: 'Team-Andy', progress: 75 },
+      { id: 's2', name: 'Bob Smith', team: 'Team-Chris', progress: 60 },
+      { id: 's3', name: 'Carol Davis', team: 'Team-Andy', progress: 80 },
+      { id: 's4', name: 'Dave Wilson', team: 'Team-Cillin', progress: 45 },
+      { id: 's5', name: 'Eve Brown', team: 'Team-Chris', progress: 50 },
+      { id: 's6', name: 'Frank Miller', team: 'Team-Cillin', progress: 70 },
+      { id: 's7', name: 'Grace Lee', team: 'Team-Andy', progress: 30 },
+      { id: 's8', name: 'Henry Taylor', team: 'Team-Cillin', progress: 100 },
+      { id: 's9', name: 'Ivy Robinson', team: 'Team-Andy', progress: 100 },
+    ];
+    
+    return mockStudents
+      .filter(student => 
+        student.name.toLowerCase().includes(query.toLowerCase()) ||
+        student.team.toLowerCase().includes(query.toLowerCase())
+      )
+      .map(student => ({
+        id: student.id,
+        type: 'student',
+        title: student.name,
+        description: `${student.team} - Progress: ${student.progress}%`
+      }));
+  } catch (error) {
+    console.error("Error getting student results:", error);
+    return [];
+  }
 }
 
 export function searchAll(query: string): SearchResult[] {
-  if (!query || query.trim() === '') {
+  try {
+    if (!query || query.trim() === '') {
+      return [];
+    }
+
+    query = query.toLowerCase().trim();
+    const results: SearchResult[] = [];
+
+    // Search clients
+    try {
+      const clients = getAllClients();
+      const clientResults = clients
+        .filter(client => 
+          client.name.toLowerCase().includes(query) ||
+          client.status.toLowerCase().includes(query) ||
+          (client.csm && client.csm.toLowerCase().includes(query))
+        )
+        .map(clientToSearchResult);
+      results.push(...clientResults);
+    } catch (error) {
+      console.error("Error searching clients:", error);
+    }
+
+    // Search communications
+    try {
+      const clients = getAllClients();
+      clients.forEach(client => {
+        if (client.communicationLog) {
+          const commResults = client.communicationLog
+            .filter(comm => 
+              comm.subject.toLowerCase().includes(query) ||
+              comm.content.toLowerCase().includes(query) ||
+              comm.type.toLowerCase().includes(query)
+            )
+            .map(comm => communicationToSearchResult(comm, client.name));
+          results.push(...commResults);
+        }
+      });
+    } catch (error) {
+      console.error("Error searching communications:", error);
+    }
+
+    // Search resources
+    try {
+      const resourceResults = resources
+        .filter(resource => 
+          resource.title.toLowerCase().includes(query) ||
+          resource.description.toLowerCase().includes(query) ||
+          resource.tags.some(tag => tag.toLowerCase().includes(query))
+        )
+        .map(resourceToSearchResult);
+      results.push(...resourceResults);
+    } catch (error) {
+      console.error("Error searching resources:", error);
+    }
+
+    // Search links
+    try {
+      const linkResults = links
+        .filter(link => 
+          link.title.toLowerCase().includes(query) ||
+          link.category.toLowerCase().includes(query)
+        )
+        .map(linkToSearchResult);
+      results.push(...linkResults);
+    } catch (error) {
+      console.error("Error searching links:", error);
+    }
+
+    // Search events
+    try {
+      const eventResults = events
+        .filter(event => 
+          event.title.toLowerCase().includes(query) ||
+          event.description.toLowerCase().includes(query)
+        )
+        .map(eventToSearchResult);
+      results.push(...eventResults);
+    } catch (error) {
+      console.error("Error searching events:", error);
+    }
+
+    // Search students
+    try {
+      const studentResults = getStudentResults(query);
+      results.push(...studentResults);
+    } catch (error) {
+      console.error("Error searching students:", error);
+    }
+
+    return results;
+  } catch (error) {
+    console.error("Error in searchAll function:", error);
     return [];
   }
-
-  query = query.toLowerCase().trim();
-  const results: SearchResult[] = [];
-
-  // Search clients
-  const clients = getAllClients();
-  const clientResults = clients
-    .filter(client => 
-      client.name.toLowerCase().includes(query) ||
-      client.status.toLowerCase().includes(query) ||
-      (client.csm && client.csm.toLowerCase().includes(query))
-    )
-    .map(clientToSearchResult);
-  results.push(...clientResults);
-
-  // Search communications
-  clients.forEach(client => {
-    if (client.communicationLog) {
-      const commResults = client.communicationLog
-        .filter(comm => 
-          comm.subject.toLowerCase().includes(query) ||
-          comm.content.toLowerCase().includes(query) ||
-          comm.type.toLowerCase().includes(query)
-        )
-        .map(comm => communicationToSearchResult(comm, client.name));
-      results.push(...commResults);
-    }
-  });
-
-  // Search resources
-  const resourceResults = resources
-    .filter(resource => 
-      resource.title.toLowerCase().includes(query) ||
-      resource.description.toLowerCase().includes(query) ||
-      resource.tags.some(tag => tag.toLowerCase().includes(query))
-    )
-    .map(resourceToSearchResult);
-  results.push(...resourceResults);
-
-  // Search links
-  const linkResults = links
-    .filter(link => 
-      link.title.toLowerCase().includes(query) ||
-      link.category.toLowerCase().includes(query)
-    )
-    .map(linkToSearchResult);
-  results.push(...linkResults);
-
-  // Search events
-  const eventResults = events
-    .filter(event => 
-      event.title.toLowerCase().includes(query) ||
-      event.description.toLowerCase().includes(query)
-    )
-    .map(eventToSearchResult);
-  results.push(...eventResults);
-
-  // Search students
-  const studentResults = getStudentResults(query);
-  results.push(...studentResults);
-
-  return results;
 }
