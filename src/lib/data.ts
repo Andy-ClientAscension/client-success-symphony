@@ -10,6 +10,63 @@ export interface Client {
   endDate: string;
   contractValue: number;
   notes?: string;
+  progress?: number;
+  npsScore?: number | null;
+  callsBooked?: number;
+  dealsClosed?: number;
+  mrr?: number;
+  lastCommunication?: string;
+  backendStudents?: number;
+  growth?: number;
+  logo?: string;
+  lastPayment?: {
+    amount: number;
+    date: string;
+  };
+  trustPilotReview?: {
+    date: string | null;
+    rating: number | null;
+    link: string | null;
+    notes?: string;
+  };
+  caseStudyInterview?: {
+    completed: boolean;
+    scheduledDate: string | null;
+    conducted: boolean;
+    notes: string;
+  };
+  referrals?: {
+    count: number;
+    names: string[];
+  };
+  communicationLog?: Communication[];
+}
+
+export interface Communication {
+  id: string;
+  type: "email" | "call" | "meeting" | "note";
+  date: string;
+  subject: string;
+  content: string;
+  sentBy: string;
+}
+
+export interface NPSData {
+  score: number;
+  date: string;
+  clientId: string;
+  feedback?: string;
+}
+
+export interface NPSMonthlyTrend {
+  month: string;
+  score: number;
+  count: number;
+}
+
+export interface ChurnDataPoint {
+  month: string;
+  rate: number;
 }
 
 export const CSM_TEAMS = [
@@ -29,7 +86,52 @@ export const CLIENTS: Client[] = [
     startDate: "2023-01-01",
     endDate: "2024-01-01",
     contractValue: 50000,
-    notes: "Key enterprise client with multiple product lines"
+    notes: "Key enterprise client with multiple product lines",
+    progress: 85,
+    npsScore: 9,
+    callsBooked: 8,
+    dealsClosed: 3,
+    mrr: 4500,
+    backendStudents: 12,
+    growth: 15,
+    lastCommunication: "2023-11-15",
+    lastPayment: {
+      amount: 4500,
+      date: "2023-11-01"
+    },
+    trustPilotReview: {
+      date: "2023-10-15",
+      rating: 5,
+      link: "https://trustpilot.com/reviews/acme123"
+    },
+    caseStudyInterview: {
+      completed: true,
+      scheduledDate: "2023-09-20",
+      conducted: true,
+      notes: "Great success story with 45% efficiency improvement"
+    },
+    referrals: {
+      count: 3,
+      names: ["Stark Industries", "Wayne Enterprises", "Oscorp"]
+    },
+    communicationLog: [
+      {
+        id: "c1-1",
+        type: "meeting",
+        date: "2023-11-15",
+        subject: "Quarterly Review",
+        content: "Discussed expansion to new markets",
+        sentBy: "John Smith"
+      },
+      {
+        id: "c1-2",
+        type: "email",
+        date: "2023-11-10",
+        subject: "Feature Request",
+        content: "Client requested improved reporting",
+        sentBy: "Support Team"
+      }
+    ]
   },
   {
     id: "2",
@@ -40,7 +142,44 @@ export const CLIENTS: Client[] = [
     startDate: "2022-11-15",
     endDate: "2023-11-15",
     contractValue: 25000,
-    notes: "Renewal discussions needed, showing signs of churn"
+    notes: "Renewal discussions needed, showing signs of churn",
+    progress: 45,
+    npsScore: 6,
+    callsBooked: 4,
+    dealsClosed: 1,
+    mrr: 2200,
+    backendStudents: 7,
+    growth: 2,
+    lastCommunication: "2023-11-05",
+    lastPayment: {
+      amount: 2200,
+      date: "2023-11-01"
+    },
+    trustPilotReview: {
+      date: "2023-08-22",
+      rating: 3,
+      link: "https://trustpilot.com/reviews/globex789"
+    },
+    caseStudyInterview: {
+      completed: false,
+      scheduledDate: "2023-11-25",
+      conducted: false,
+      notes: "Need to focus on their success with our product"
+    },
+    referrals: {
+      count: 0,
+      names: []
+    },
+    communicationLog: [
+      {
+        id: "c2-1",
+        type: "call",
+        date: "2023-11-05",
+        subject: "Renewal Discussion",
+        content: "Client expressed budget concerns",
+        sentBy: "Jane Doe"
+      }
+    ]
   },
   {
     id: "3",
@@ -51,7 +190,40 @@ export const CLIENTS: Client[] = [
     startDate: "2023-05-01",
     endDate: "2023-11-01",
     contractValue: 10000,
-    notes: "New client, needs onboarding assistance"
+    notes: "New client, needs onboarding assistance",
+    progress: 25,
+    npsScore: null,
+    callsBooked: 3,
+    dealsClosed: 1,
+    mrr: 1800,
+    backendStudents: 3,
+    growth: 0,
+    lastCommunication: "2023-11-10",
+    lastPayment: {
+      amount: 1800,
+      date: "2023-11-01"
+    },
+    trustPilotReview: {
+      date: null,
+      rating: null,
+      link: null
+    },
+    caseStudyInterview: {
+      completed: false,
+      scheduledDate: null,
+      conducted: false,
+      notes: "Too early for case study"
+    },
+    communicationLog: [
+      {
+        id: "c3-1",
+        type: "meeting",
+        date: "2023-11-10",
+        subject: "Onboarding Session",
+        content: "Walked through platform capabilities",
+        sentBy: "David Johnson"
+      }
+    ]
   },
   {
     id: "4",
@@ -62,7 +234,44 @@ export const CLIENTS: Client[] = [
     startDate: "2023-02-15",
     endDate: "2024-02-15",
     contractValue: 75000,
-    notes: "Expansion opportunity in Q4"
+    notes: "Expansion opportunity in Q4",
+    progress: 92,
+    npsScore: 10,
+    callsBooked: 12,
+    dealsClosed: 5,
+    mrr: 6800,
+    backendStudents: 18,
+    growth: 22,
+    lastCommunication: "2023-11-12",
+    lastPayment: {
+      amount: 6800,
+      date: "2023-11-01"
+    },
+    trustPilotReview: {
+      date: "2023-10-05",
+      rating: 5,
+      link: "https://trustpilot.com/reviews/massivedynamic456"
+    },
+    caseStudyInterview: {
+      completed: true,
+      scheduledDate: "2023-09-15",
+      conducted: true,
+      notes: "Excellent testimonial for marketing"
+    },
+    referrals: {
+      count: 2,
+      names: ["Hooli", "Pied Piper"]
+    },
+    communicationLog: [
+      {
+        id: "c4-1",
+        type: "email",
+        date: "2023-11-12",
+        subject: "Expansion Proposal",
+        content: "Sent pricing for enterprise tier upgrade",
+        sentBy: "Sarah Williams"
+      }
+    ]
   },
   {
     id: "5",
@@ -73,7 +282,40 @@ export const CLIENTS: Client[] = [
     startDate: "2022-08-01",
     endDate: "2023-08-01",
     contractValue: 30000,
-    notes: "Churned due to budget constraints"
+    notes: "Churned due to budget constraints",
+    progress: 0,
+    npsScore: 4,
+    callsBooked: 2,
+    dealsClosed: 0,
+    mrr: 0,
+    backendStudents: 0,
+    growth: -100,
+    lastCommunication: "2023-07-25",
+    lastPayment: {
+      amount: 2800,
+      date: "2023-07-01"
+    },
+    trustPilotReview: {
+      date: "2023-06-12",
+      rating: 3,
+      link: "https://trustpilot.com/reviews/stark321"
+    },
+    caseStudyInterview: {
+      completed: false,
+      scheduledDate: null,
+      conducted: false,
+      notes: "Not a candidate due to churn"
+    },
+    communicationLog: [
+      {
+        id: "c5-1",
+        type: "call",
+        date: "2023-07-25",
+        subject: "Exit Interview",
+        content: "Discussed reasons for cancellation",
+        sentBy: "Michael Brown"
+      }
+    ]
   },
   {
     id: "6",
@@ -84,7 +326,44 @@ export const CLIENTS: Client[] = [
     startDate: "2023-03-15",
     endDate: "2024-03-15",
     contractValue: 65000,
-    notes: "Strategic partner with multiple departments using our platform"
+    notes: "Strategic partner with multiple departments using our platform",
+    progress: 75,
+    npsScore: 8,
+    callsBooked: 6,
+    dealsClosed: 4,
+    mrr: 5000,
+    backendStudents: 10,
+    growth: 10,
+    lastCommunication: "2023-11-10",
+    lastPayment: {
+      amount: 5000,
+      date: "2023-11-01"
+    },
+    trustPilotReview: {
+      date: "2023-09-10",
+      rating: 4,
+      link: "https://trustpilot.com/reviews/wayne123"
+    },
+    caseStudyInterview: {
+      completed: true,
+      scheduledDate: "2023-08-15",
+      conducted: true,
+      notes: "Excellent case study with 50% increase in sales"
+    },
+    referrals: {
+      count: 1,
+      names: ["Globex Industries"]
+    },
+    communicationLog: [
+      {
+        id: "c6-1",
+        type: "meeting",
+        date: "2023-11-10",
+        subject: "Product Launch",
+        content: "Discussed new product features",
+        sentBy: "John Smith"
+      }
+    ]
   },
   {
     id: "7",
@@ -95,7 +374,44 @@ export const CLIENTS: Client[] = [
     startDate: "2022-10-01",
     endDate: "2023-10-01",
     contractValue: 55000,
-    notes: "Usage declining in last quarter, needs intervention"
+    notes: "Usage declining in last quarter, needs intervention",
+    progress: 50,
+    npsScore: 7,
+    callsBooked: 4,
+    dealsClosed: 2,
+    mrr: 4000,
+    backendStudents: 8,
+    growth: 5,
+    lastCommunication: "2023-11-05",
+    lastPayment: {
+      amount: 4000,
+      date: "2023-11-01"
+    },
+    trustPilotReview: {
+      date: "2023-07-10",
+      rating: 3,
+      link: "https://trustpilot.com/reviews/umbrella789"
+    },
+    caseStudyInterview: {
+      completed: false,
+      scheduledDate: "2023-10-15",
+      conducted: false,
+      notes: "Need to improve customer service"
+    },
+    referrals: {
+      count: 0,
+      names: []
+    },
+    communicationLog: [
+      {
+        id: "c7-1",
+        type: "email",
+        date: "2023-11-05",
+        subject: "Renewal Reminder",
+        content: "Sent reminder for renewal",
+        sentBy: "Support Team"
+      }
+    ]
   },
   {
     id: "8",
@@ -106,7 +422,40 @@ export const CLIENTS: Client[] = [
     startDate: "2023-06-01",
     endDate: "2024-06-01",
     contractValue: 28000,
-    notes: "Recently migrated from competitor, needs extra support"
+    notes: "Recently migrated from competitor, needs extra support",
+    progress: 30,
+    npsScore: null,
+    callsBooked: 2,
+    dealsClosed: 1,
+    mrr: 2000,
+    backendStudents: 5,
+    growth: 0,
+    lastCommunication: "2023-11-01",
+    lastPayment: {
+      amount: 2000,
+      date: "2023-11-01"
+    },
+    trustPilotReview: {
+      date: null,
+      rating: null,
+      link: null
+    },
+    caseStudyInterview: {
+      completed: false,
+      scheduledDate: null,
+      conducted: false,
+      notes: "Too early for case study"
+    },
+    communicationLog: [
+      {
+        id: "c8-1",
+        type: "meeting",
+        date: "2023-11-01",
+        subject: "Onboarding Session",
+        content: "Walked through platform capabilities",
+        sentBy: "Jane Doe"
+      }
+    ]
   },
   {
     id: "9",
@@ -117,7 +466,44 @@ export const CLIENTS: Client[] = [
     startDate: "2023-01-15",
     endDate: "2024-01-15",
     contractValue: 12000,
-    notes: "Growing startup with expansion potential"
+    notes: "Growing startup with expansion potential",
+    progress: 60,
+    npsScore: 7,
+    callsBooked: 5,
+    dealsClosed: 3,
+    mrr: 1500,
+    backendStudents: 4,
+    growth: 3,
+    lastCommunication: "2023-11-05",
+    lastPayment: {
+      amount: 1500,
+      date: "2023-11-01"
+    },
+    trustPilotReview: {
+      date: "2023-08-10",
+      rating: 4,
+      link: "https://trustpilot.com/reviews/soylent123"
+    },
+    caseStudyInterview: {
+      completed: true,
+      scheduledDate: "2023-07-15",
+      conducted: true,
+      notes: "Excellent case study with 40% increase in sales"
+    },
+    referrals: {
+      count: 2,
+      names: ["Massive Dynamic", "Wayne Enterprises"]
+    },
+    communicationLog: [
+      {
+        id: "c9-1",
+        type: "email",
+        date: "2023-11-05",
+        subject: "Product Launch",
+        content: "Discussed new product features",
+        sentBy: "David Johnson"
+      }
+    ]
   },
   {
     id: "10",
@@ -128,7 +514,40 @@ export const CLIENTS: Client[] = [
     startDate: "2022-09-15",
     endDate: "2023-03-15",
     contractValue: 22000,
-    notes: "Churned due to acquisition by competitor"
+    notes: "Churned due to acquisition by competitor",
+    progress: 0,
+    npsScore: 3,
+    callsBooked: 1,
+    dealsClosed: 0,
+    mrr: 0,
+    backendStudents: 0,
+    growth: -100,
+    lastCommunication: "2023-07-25",
+    lastPayment: {
+      amount: 1100,
+      date: "2023-07-01"
+    },
+    trustPilotReview: {
+      date: "2023-06-12",
+      rating: 2,
+      link: "https://trustpilot.com/reviews/oscorp321"
+    },
+    caseStudyInterview: {
+      completed: false,
+      scheduledDate: null,
+      conducted: false,
+      notes: "Not a candidate due to churn"
+    },
+    communicationLog: [
+      {
+        id: "c10-1",
+        type: "call",
+        date: "2023-07-25",
+        subject: "Exit Interview",
+        content: "Discussed reasons for cancellation",
+        sentBy: "Michael Brown"
+      }
+    ]
   },
   {
     id: "11",
@@ -139,7 +558,52 @@ export const CLIENTS: Client[] = [
     startDate: "2022-12-01",
     endDate: "2023-12-01",
     contractValue: 85000,
-    notes: "Key account with multiple product integrations"
+    notes: "Key account with multiple product integrations",
+    progress: 95,
+    npsScore: 9,
+    callsBooked: 10,
+    dealsClosed: 6,
+    mrr: 7000,
+    backendStudents: 15,
+    growth: 15,
+    lastCommunication: "2023-11-15",
+    lastPayment: {
+      amount: 7000,
+      date: "2023-11-01"
+    },
+    trustPilotReview: {
+      date: "2023-10-15",
+      rating: 5,
+      link: "https://trustpilot.com/reviews/hooli123"
+    },
+    caseStudyInterview: {
+      completed: true,
+      scheduledDate: "2023-09-20",
+      conducted: true,
+      notes: "Great success story with 45% efficiency improvement"
+    },
+    referrals: {
+      count: 3,
+      names: ["Acme Corporation", "Globex Industries", "Initech Software"]
+    },
+    communicationLog: [
+      {
+        id: "c11-1",
+        type: "meeting",
+        date: "2023-11-15",
+        subject: "Quarterly Review",
+        content: "Discussed expansion to new markets",
+        sentBy: "John Smith"
+      },
+      {
+        id: "c11-2",
+        type: "email",
+        date: "2023-11-10",
+        subject: "Feature Request",
+        content: "Client requested improved reporting",
+        sentBy: "Support Team"
+      }
+    ]
   },
   {
     id: "12",
@@ -150,7 +614,40 @@ export const CLIENTS: Client[] = [
     startDate: "2023-07-01",
     endDate: "2024-01-01",
     contractValue: 15000,
-    notes: "Innovative startup with rapid growth potential"
+    notes: "Innovative startup with rapid growth potential",
+    progress: 40,
+    npsScore: null,
+    callsBooked: 3,
+    dealsClosed: 1,
+    mrr: 1000,
+    backendStudents: 3,
+    growth: 0,
+    lastCommunication: "2023-11-05",
+    lastPayment: {
+      amount: 1000,
+      date: "2023-11-01"
+    },
+    trustPilotReview: {
+      date: null,
+      rating: null,
+      link: null
+    },
+    caseStudyInterview: {
+      completed: false,
+      scheduledDate: null,
+      conducted: false,
+      notes: "Too early for case study"
+    },
+    communicationLog: [
+      {
+        id: "c12-1",
+        type: "meeting",
+        date: "2023-11-05",
+        subject: "Onboarding Session",
+        content: "Walked through platform capabilities",
+        sentBy: "Sarah Williams"
+      }
+    ]
   },
   {
     id: "13",
@@ -161,7 +658,40 @@ export const CLIENTS: Client[] = [
     startDate: "2022-11-01",
     endDate: "2023-11-01",
     contractValue: 32000,
-    notes: "Struggling with adoption, needs training"
+    notes: "Struggling with adoption, needs training",
+    progress: 35,
+    npsScore: 6,
+    callsBooked: 3,
+    dealsClosed: 1,
+    mrr: 2000,
+    backendStudents: 4,
+    growth: 2,
+    lastCommunication: "2023-11-05",
+    lastPayment: {
+      amount: 2000,
+      date: "2023-11-01"
+    },
+    trustPilotReview: {
+      date: "2023-08-10",
+      rating: 3,
+      link: "https://trustpilot.com/reviews/dunder123"
+    },
+    caseStudyInterview: {
+      completed: false,
+      scheduledDate: "2023-10-15",
+      conducted: false,
+      notes: "Need to improve customer service"
+    },
+    communicationLog: [
+      {
+        id: "c13-1",
+        type: "email",
+        date: "2023-11-05",
+        subject: "Renewal Reminder",
+        content: "Sent reminder for renewal",
+        sentBy: "Support Team"
+      }
+    ]
   },
   {
     id: "14",
@@ -172,7 +702,44 @@ export const CLIENTS: Client[] = [
     startDate: "2023-02-01",
     endDate: "2024-02-01",
     contractValue: 18000,
-    notes: "Expanding to new locations, opportunity for upsell"
+    notes: "Expanding to new locations, opportunity for upsell",
+    progress: 70,
+    npsScore: 8,
+    callsBooked: 6,
+    dealsClosed: 4,
+    mrr: 3000,
+    backendStudents: 6,
+    growth: 4,
+    lastCommunication: "2023-11-10",
+    lastPayment: {
+      amount: 3000,
+      date: "2023-11-01"
+    },
+    trustPilotReview: {
+      date: "2023-09-10",
+      rating: 4,
+      link: "https://trustpilot.com/reviews/lospollos123"
+    },
+    caseStudyInterview: {
+      completed: true,
+      scheduledDate: "2023-08-15",
+      conducted: true,
+      notes: "Excellent case study with 50% increase in sales"
+    },
+    referrals: {
+      count: 1,
+      names: ["Globex Industries"]
+    },
+    communicationLog: [
+      {
+        id: "c14-1",
+        type: "meeting",
+        date: "2023-11-10",
+        subject: "Product Launch",
+        content: "Discussed new product features",
+        sentBy: "David Johnson"
+      }
+    ]
   },
   {
     id: "15",
@@ -183,7 +750,40 @@ export const CLIENTS: Client[] = [
     startDate: "2022-07-15",
     endDate: "2023-07-15",
     contractValue: 70000,
-    notes: "Churned due to internal restructuring"
+    notes: "Churned due to internal restructuring",
+    progress: 0,
+    npsScore: 3,
+    callsBooked: 1,
+    dealsClosed: 0,
+    mrr: 0,
+    backendStudents: 0,
+    growth: -100,
+    lastCommunication: "2023-07-25",
+    lastPayment: {
+      amount: 3500,
+      date: "2023-07-01"
+    },
+    trustPilotReview: {
+      date: "2023-06-12",
+      rating: 2,
+      link: "https://trustpilot.com/reviews/gekko123"
+    },
+    caseStudyInterview: {
+      completed: false,
+      scheduledDate: null,
+      conducted: false,
+      notes: "Not a candidate due to churn"
+    },
+    communicationLog: [
+      {
+        id: "c15-1",
+        type: "call",
+        date: "2023-07-25",
+        subject: "Exit Interview",
+        content: "Discussed reasons for cancellation",
+        sentBy: "Michael Brown"
+      }
+    ]
   },
   {
     id: "16",
@@ -194,7 +794,52 @@ export const CLIENTS: Client[] = [
     startDate: "2023-02-15",
     endDate: "2024-02-15",
     contractValue: 25000,
-    notes: "Large enterprise client with complex needs"
+    notes: "Large enterprise client with complex needs",
+    progress: 80,
+    npsScore: 9,
+    callsBooked: 8,
+    dealsClosed: 3,
+    mrr: 4500,
+    backendStudents: 12,
+    growth: 15,
+    lastCommunication: "2023-11-15",
+    lastPayment: {
+      amount: 4500,
+      date: "2023-11-01"
+    },
+    trustPilotReview: {
+      date: "2023-10-15",
+      rating: 5,
+      link: "https://trustpilot.com/reviews/enterprisesolutions123"
+    },
+    caseStudyInterview: {
+      completed: true,
+      scheduledDate: "2023-09-20",
+      conducted: true,
+      notes: "Great success story with 45% efficiency improvement"
+    },
+    referrals: {
+      count: 3,
+      names: ["Acme Corporation", "Globex Industries", "Initech Software"]
+    },
+    communicationLog: [
+      {
+        id: "c16-1",
+        type: "meeting",
+        date: "2023-11-15",
+        subject: "Quarterly Review",
+        content: "Discussed expansion to new markets",
+        sentBy: "John Smith"
+      },
+      {
+        id: "c16-2",
+        type: "email",
+        date: "2023-11-10",
+        subject: "Feature Request",
+        content: "Client requested improved reporting",
+        sentBy: "Support Team"
+      }
+    ]
   },
   {
     id: "17",
@@ -205,7 +850,40 @@ export const CLIENTS: Client[] = [
     startDate: "2023-07-01",
     endDate: "2024-01-01",
     contractValue: 7500,
-    notes: "New client transitioning from competitor"
+    notes: "New client transitioning from competitor",
+    progress: 20,
+    npsScore: null,
+    callsBooked: 2,
+    dealsClosed: 1,
+    mrr: 1000,
+    backendStudents: 3,
+    growth: 0,
+    lastCommunication: "2023-11-05",
+    lastPayment: {
+      amount: 1000,
+      date: "2023-11-01"
+    },
+    trustPilotReview: {
+      date: null,
+      rating: null,
+      link: null
+    },
+    caseStudyInterview: {
+      completed: false,
+      scheduledDate: null,
+      conducted: false,
+      notes: "Too early for case study"
+    },
+    communicationLog: [
+      {
+        id: "c17-1",
+        type: "meeting",
+        date: "2023-11-05",
+        subject: "Onboarding Session",
+        content: "Walked through platform capabilities",
+        sentBy: "Sarah Lee"
+      }
+    ]
   },
   {
     id: "18",
@@ -216,7 +894,44 @@ export const CLIENTS: Client[] = [
     startDate: "2022-11-30",
     endDate: "2023-11-30",
     contractValue: 32000,
-    notes: "Healthcare industry, requires HIPAA compliance"
+    notes: "Healthcare industry, requires HIPAA compliance",
+    progress: 70,
+    npsScore: 8,
+    callsBooked: 6,
+    dealsClosed: 4,
+    mrr: 2000,
+    backendStudents: 4,
+    growth: 2,
+    lastCommunication: "2023-11-05",
+    lastPayment: {
+      amount: 2000,
+      date: "2023-11-01"
+    },
+    trustPilotReview: {
+      date: "2023-08-10",
+      rating: 4,
+      link: "https://trustpilot.com/reviews/healthcare123"
+    },
+    caseStudyInterview: {
+      completed: true,
+      scheduledDate: "2023-09-15",
+      conducted: true,
+      notes: "Excellent case study with 50% increase in sales"
+    },
+    referrals: {
+      count: 1,
+      names: ["Globex Industries"]
+    },
+    communicationLog: [
+      {
+        id: "c18-1",
+        type: "meeting",
+        date: "2023-11-05",
+        subject: "Product Launch",
+        content: "Discussed new product features",
+        sentBy: "James Thompson"
+      }
+    ]
   },
   {
     id: "19",
@@ -227,7 +942,40 @@ export const CLIENTS: Client[] = [
     startDate: "2023-01-15",
     endDate: "2023-07-15",
     contractValue: 6800,
-    notes: "Experiencing budget constraints, needs attention"
+    notes: "Experiencing budget constraints, needs attention",
+    progress: 40,
+    npsScore: 6,
+    callsBooked: 3,
+    dealsClosed: 1,
+    mrr: 1000,
+    backendStudents: 4,
+    growth: 2,
+    lastCommunication: "2023-11-05",
+    lastPayment: {
+      amount: 1000,
+      date: "2023-11-01"
+    },
+    trustPilotReview: {
+      date: "2023-08-10",
+      rating: 3,
+      link: "https://trustpilot.com/reviews/urban123"
+    },
+    caseStudyInterview: {
+      completed: false,
+      scheduledDate: "2023-10-15",
+      conducted: false,
+      notes: "Need to improve customer service"
+    },
+    communicationLog: [
+      {
+        id: "c19-1",
+        type: "email",
+        date: "2023-11-05",
+        subject: "Renewal Reminder",
+        content: "Sent reminder for renewal",
+        sentBy: "Support Team"
+      }
+    ]
   },
   {
     id: "20",
@@ -238,7 +986,52 @@ export const CLIENTS: Client[] = [
     startDate: "2022-09-01",
     endDate: "2023-09-01",
     contractValue: 18500,
-    notes: "International shipping company with good growth potential"
+    notes: "International shipping company with good growth potential",
+    progress: 85,
+    npsScore: 9,
+    callsBooked: 8,
+    dealsClosed: 3,
+    mrr: 3000,
+    backendStudents: 12,
+    growth: 15,
+    lastCommunication: "2023-11-15",
+    lastPayment: {
+      amount: 3000,
+      date: "2023-11-01"
+    },
+    trustPilotReview: {
+      date: "2023-10-15",
+      rating: 5,
+      link: "https://trustpilot.com/reviews/globallogistics123"
+    },
+    caseStudyInterview: {
+      completed: true,
+      scheduledDate: "2023-09-20",
+      conducted: true,
+      notes: "Great success story with 45% efficiency improvement"
+    },
+    referrals: {
+      count: 3,
+      names: ["Acme Corporation", "Globex Industries", "Initech Software"]
+    },
+    communicationLog: [
+      {
+        id: "c20-1",
+        type: "meeting",
+        date: "2023-11-15",
+        subject: "Quarterly Review",
+        content: "Discussed expansion to new markets",
+        sentBy: "John Smith"
+      },
+      {
+        id: "c20-2",
+        type: "email",
+        date: "2023-11-10",
+        subject: "Feature Request",
+        content: "Client requested improved reporting",
+        sentBy: "Support Team"
+      }
+    ]
   },
   {
     id: "21",
@@ -249,7 +1042,40 @@ export const CLIENTS: Client[] = [
     startDate: "2023-06-10",
     endDate: "2024-06-10",
     contractValue: 15000,
-    notes: "Educational technology company, needs implementation support"
+    notes: "Educational technology company, needs implementation support",
+    progress: 50,
+    npsScore: null,
+    callsBooked: 3,
+    dealsClosed: 1,
+    mrr: 1000,
+    backendStudents: 3,
+    growth: 0,
+    lastCommunication: "2023-11-05",
+    lastPayment: {
+      amount: 1000,
+      date: "2023-11-01"
+    },
+    trustPilotReview: {
+      date: null,
+      rating: null,
+      link: null
+    },
+    caseStudyInterview: {
+      completed: false,
+      scheduledDate: null,
+      conducted: false,
+      notes: "Too early for case study"
+    },
+    communicationLog: [
+      {
+        id: "c21-1",
+        type: "meeting",
+        date: "2023-11-05",
+        subject: "Onboarding Session",
+        content: "Walked through platform capabilities",
+        sentBy: "Laura Garcia"
+      }
+    ]
   },
   {
     id: "22",
@@ -260,7 +1086,44 @@ export const CLIENTS: Client[] = [
     startDate: "2022-12-15",
     endDate: "2023-12-15",
     contractValue: 28000,
-    notes: "Financial services client with regulatory requirements"
+    notes: "Financial services client with regulatory requirements",
+    progress: 60,
+    npsScore: 8,
+    callsBooked: 6,
+    dealsClosed: 4,
+    mrr: 2000,
+    backendStudents: 4,
+    growth: 2,
+    lastCommunication: "2023-11-05",
+    lastPayment: {
+      amount: 2000,
+      date: "2023-11-01"
+    },
+    trustPilotReview: {
+      date: "2023-08-10",
+      rating: 4,
+      link: "https://trustpilot.com/reviews/apex123"
+    },
+    caseStudyInterview: {
+      completed: true,
+      scheduledDate: "2023-09-15",
+      conducted: true,
+      notes: "Excellent case study with 50% increase in sales"
+    },
+    referrals: {
+      count: 1,
+      names: ["Globex Industries"]
+    },
+    communicationLog: [
+      {
+        id: "c22-1",
+        type: "meeting",
+        date: "2023-11-05",
+        subject: "Product Launch",
+        content: "Discussed new product features",
+        sentBy: "Daniel Parker"
+      }
+    ]
   },
   {
     id: "23",
@@ -271,7 +1134,40 @@ export const CLIENTS: Client[] = [
     startDate: "2023-03-01",
     endDate: "2024-03-01",
     contractValue: 16500,
-    notes: "Experiencing integration issues, needs technical support"
+    notes: "Experiencing integration issues, needs technical support",
+    progress: 50,
+    npsScore: 6,
+    callsBooked: 3,
+    dealsClosed: 1,
+    mrr: 1000,
+    backendStudents: 4,
+    growth: 2,
+    lastCommunication: "2023-11-05",
+    lastPayment: {
+      amount: 1000,
+      date: "2023-11-01"
+    },
+    trustPilotReview: {
+      date: "2023-08-10",
+      rating: 3,
+      link: "https://trustpilot.com/reviews/pacific123"
+    },
+    caseStudyInterview: {
+      completed: false,
+      scheduledDate: "2023-10-15",
+      conducted: false,
+      notes: "Need to improve customer service"
+    },
+    communicationLog: [
+      {
+        id: "c23-1",
+        type: "email",
+        date: "2023-11-05",
+        subject: "Renewal Reminder",
+        content: "Sent reminder for renewal",
+        sentBy: "Support Team"
+      }
+    ]
   },
   {
     id: "24",
@@ -282,7 +1178,52 @@ export const CLIENTS: Client[] = [
     startDate: "2023-01-01",
     endDate: "2025-01-01",
     contractValue: 45000,
-    notes: "Long-term contract with innovative technology company"
+    notes: "Long-term contract with innovative technology company",
+    progress: 90,
+    npsScore: 10,
+    callsBooked: 10,
+    dealsClosed: 6,
+    mrr: 5000,
+    backendStudents: 15,
+    growth: 15,
+    lastCommunication: "2023-11-15",
+    lastPayment: {
+      amount: 5000,
+      date: "2023-11-01"
+    },
+    trustPilotReview: {
+      date: "2023-10-15",
+      rating: 5,
+      link: "https://trustpilot.com/reviews/quantum123"
+    },
+    caseStudyInterview: {
+      completed: true,
+      scheduledDate: "2023-09-20",
+      conducted: true,
+      notes: "Great success story with 45% efficiency improvement"
+    },
+    referrals: {
+      count: 3,
+      names: ["Acme Corporation", "Globex Industries", "Initech Software"]
+    },
+    communicationLog: [
+      {
+        id: "c24-1",
+        type: "meeting",
+        date: "2023-11-15",
+        subject: "Quarterly Review",
+        content: "Discussed expansion to new markets",
+        sentBy: "John Smith"
+      },
+      {
+        id: "c24-2",
+        type: "email",
+        date: "2023-11-10",
+        subject: "Feature Request",
+        content: "Client requested improved reporting",
+        sentBy: "Support Team"
+      }
+    ]
   },
   {
     id: "25",
@@ -293,11 +1234,43 @@ export const CLIENTS: Client[] = [
     startDate: "2023-08-15",
     endDate: "2024-02-15",
     contractValue: 8900,
-    notes: "Green energy startup with ambitious growth plans"
+    notes: "Green energy startup with ambitious growth plans",
+    progress: 30,
+    npsScore: null,
+    callsBooked: 2,
+    dealsClosed: 1,
+    mrr: 1000,
+    backendStudents: 3,
+    growth: 0,
+    lastCommunication: "2023-11-05",
+    lastPayment: {
+      amount: 1000,
+      date: "2023-11-01"
+    },
+    trustPilotReview: {
+      date: null,
+      rating: null,
+      link: null
+    },
+    caseStudyInterview: {
+      completed: false,
+      scheduledDate: null,
+      conducted: false,
+      notes: "Too early for case study"
+    },
+    communicationLog: [
+      {
+        id: "c25-1",
+        type: "meeting",
+        date: "2023-11-05",
+        subject: "Onboarding Session",
+        content: "Walked through platform capabilities",
+        sentBy: "Sophia Martinez"
+      }
+    ]
   }
 ];
 
-// Helper functions for data access
 export function getClientsCountByStatus() {
   const counts = {
     active: 0,
@@ -323,25 +1296,44 @@ export function getAverageNPS() {
   };
 }
 
-export function getClientMetricsByTeam() {
-  // Simulate metrics by team
-  return {
+export function getClientMetricsByTeam(teamFilter?: string) {
+  // Base metrics
+  const baseMetrics = {
     enterprise: {
       revenue: 325000,
       clients: 5,
-      churnRate: 0.05
+      churnRate: 0.05,
     },
     "mid-market": {
       revenue: 123500,
       clients: 4,
-      churnRate: 0.08
+      churnRate: 0.08,
     },
     smb: {
       revenue: 63700,
       clients: 6,
-      churnRate: 0.12
+      churnRate: 0.12,
     }
   };
+  
+  // Add additional metrics needed by components
+  const metrics = {
+    ...baseMetrics,
+    totalMRR: 38000,
+    totalCallsBooked: 85,
+    totalDealsClosed: 28
+  };
+  
+  if (teamFilter && teamFilter !== 'all' && metrics[teamFilter as keyof typeof baseMetrics]) {
+    return {
+      [teamFilter]: metrics[teamFilter as keyof typeof baseMetrics],
+      totalMRR: metrics.totalMRR,
+      totalCallsBooked: metrics.totalCallsBooked,
+      totalDealsClosed: metrics.totalDealsClosed
+    };
+  }
+  
+  return metrics;
 }
 
 export function getRecentActivity() {
@@ -400,3 +1392,73 @@ export function getUpcomingRenewals() {
     return diffDays <= 90 && diffDays > 0 && client.status !== "churned";
   }).sort((a, b) => new Date(a.endDate).getTime() - new Date(b.endDate).getTime());
 }
+
+export function getAllClients(): Client[] {
+  return CLIENTS;
+}
+
+export function getChurnData(): ChurnDataPoint[] {
+  return [
+    { month: "Jan", rate: 2.1 },
+    { month: "Feb", rate: 2.3 },
+    { month: "Mar", rate: 2.0 },
+    { month: "Apr", rate: 2.2 },
+    { month: "May", rate: 1.8 },
+    { month: "Jun", rate: 1.6 },
+    { month: "Jul", rate: 1.9 },
+    { month: "Aug", rate: 2.4 },
+    { month: "Sep", rate: 2.8 },
+    { month: "Oct", rate: 2.5 },
+    { month: "Nov", rate: 2.2 },
+    { month: "Dec", rate: 2.0 }
+  ];
+}
+
+export function getNPSMonthlyTrend(): NPSMonthlyTrend[] {
+  return [
+    { month: "Jan", score: 42, count: 18 },
+    { month: "Feb", score: 40, count: 22 },
+    { month: "Mar", score: 38, count: 15 },
+    { month: "Apr", score: 39, count: 20 },
+    { month: "May", score: 41, count: 25 },
+    { month: "Jun", score: 44, count: 30 },
+    { month: "Jul", score: 45, count: 28 },
+    { month: "Aug", score: 47, count: 32 },
+    { month: "Sep", score: 42, count: 27 },
+    { month: "Oct", score: 40, count: 22 },
+    { month: "Nov", score: 43, count: 24 },
+    { month: "Dec", score: 45, count: 29 }
+  ];
+}
+
+export function getCSMList(): string[] {
+  const csmSet = new Set<string>();
+  
+  CLIENTS.forEach(client => {
+    if (client.csm) {
+      csmSet.add(client.csm);
+    }
+  });
+  
+  return Array.from(csmSet);
+}
+
+export function updateClientNPSScore(clientId: string, score: number): boolean {
+  const clientIndex = CLIENTS.findIndex(c => c.id === clientId);
+  if (clientIndex !== -1) {
+    CLIENTS[clientIndex].npsScore = score;
+    return true;
+  }
+  return false;
+}
+
+export function updateClientStatusById(clientId: string, updates: Partial<Client>): boolean {
+  const clientIndex = CLIENTS.findIndex(c => c.id === clientId);
+  if (clientIndex !== -1) {
+    CLIENTS[clientIndex] = { ...CLIENTS[clientIndex], ...updates };
+    return true;
+  }
+  return false;
+}
+
+export const MOCK_CLIENTS = CLIENTS;
