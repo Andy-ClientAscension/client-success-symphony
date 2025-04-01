@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { STORAGE_KEYS, saveData, loadData } from '@/utils/persistence';
 import { format, addDays, subDays, subMonths } from 'date-fns';
@@ -166,7 +165,7 @@ const generateFakeStudents = (count: number): Record<string, Student> => {
 };
 
 // Create initial data with existing and fake students
-export const INITIAL_DATA: KanbanState = {
+const INITIAL_DATA: KanbanState = {
   columns: {
     'active': {
       id: 'active',
@@ -327,44 +326,49 @@ export const INITIAL_DATA: KanbanState = {
       mrr: 0,
       npsScore: 9
     },
-    // Add the remaining fake students
+    // Add the fake students
     ...generateFakeStudents(100)
   },
   columnOrder: ['active', 'backend', 'olympia', 'paused', 'churned', 'graduated']
 };
 
 // Distribute the fake students into the appropriate columns
-(() => {
+const distributeStudents = () => {
   // Reset all column studentIds except for s1-s9 which are already assigned
-  INITIAL_DATA.columns.active.studentIds = ['s1', 's2', 's3'];
-  INITIAL_DATA.columns.backend.studentIds = ['s4', 's5'];
-  INITIAL_DATA.columns.olympia.studentIds = ['s6'];
-  INITIAL_DATA.columns.churned.studentIds = ['s7'];
-  INITIAL_DATA.columns.graduated.studentIds = ['s8', 's9'];
-  INITIAL_DATA.columns.paused.studentIds = [];
+  const newData = {...INITIAL_DATA};
+  newData.columns.active.studentIds = ['s1', 's2', 's3'];
+  newData.columns.backend.studentIds = ['s4', 's5'];
+  newData.columns.olympia.studentIds = ['s6'];
+  newData.columns.churned.studentIds = ['s7'];
+  newData.columns.graduated.studentIds = ['s8', 's9'];
+  newData.columns.paused.studentIds = [];
   
   // Distribute students from s10 onwards
   for (let i = 10; i <= 109; i++) {
     const id = `s${i}`;
-    const student = INITIAL_DATA.students[id];
+    const student = newData.students[id];
     
     if (!student) continue;
     
     if (student.churnDate) {
-      INITIAL_DATA.columns.churned.studentIds.push(id);
-    } else if (student.pauseDate) {
-      INITIAL_DATA.columns.paused.studentIds.push(id);
+      newData.columns.churned.studentIds.push(id);
+    } else if (student.pauseDate && !student.resumeDate) {
+      newData.columns.paused.studentIds.push(id);
     } else if (student.progress === 100) {
-      INITIAL_DATA.columns.graduated.studentIds.push(id);
+      newData.columns.graduated.studentIds.push(id);
     } else if (student.backendEnrolled) {
-      INITIAL_DATA.columns.backend.studentIds.push(id);
+      newData.columns.backend.studentIds.push(id);
     } else if (student.olympiaEnrolled) {
-      INITIAL_DATA.columns.olympia.studentIds.push(id);
+      newData.columns.olympia.studentIds.push(id);
     } else {
-      INITIAL_DATA.columns.active.studentIds.push(id);
+      newData.columns.active.studentIds.push(id);
     }
   }
-})();
+  
+  return newData;
+};
+
+const POPULATED_DATA = distributeStudents();
 
 interface KanbanStore {
   data: KanbanState;
@@ -383,8 +387,8 @@ interface KanbanStore {
 }
 
 export const useKanbanStore = create<KanbanStore>((set, get) => ({
-  data: INITIAL_DATA,
-  filteredData: INITIAL_DATA,
+  data: POPULATED_DATA,
+  filteredData: POPULATED_DATA,
   selectedTeam: "all",
 
   setSelectedTeam: (team) => {
@@ -396,7 +400,12 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       return;
     }
     
-    const newData = { ...data };
+    const newData = { 
+      ...data,
+      columns: { ...data.columns },
+      columnOrder: [...data.columnOrder]
+    };
+    
     const filteredStudentIds = Object.keys(data.students).filter(
       id => data.students[id].csm === team
     );
@@ -562,8 +571,11 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
   loadPersistedData: () => {
     const persistEnabled = localStorage.getItem("persistDashboard") === "true";
     if (persistEnabled) {
-      const savedData = loadData(STORAGE_KEYS.KANBAN, INITIAL_DATA);
+      const savedData = loadData(STORAGE_KEYS.KANBAN, POPULATED_DATA);
       set({ data: savedData, filteredData: savedData });
+    } else {
+      // If not persisted, make sure we use our pre-populated data
+      set({ data: POPULATED_DATA, filteredData: POPULATED_DATA });
     }
   }
 }));

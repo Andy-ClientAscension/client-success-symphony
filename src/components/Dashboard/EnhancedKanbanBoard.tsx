@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { KanbanSquare, Plus, MoreVertical, Calendar, Users, MessageSquare, AlertTriangle, UserCheck, Maximize2, Minimize2, PauseCircle, AlertOctagon, DollarSign, BarChart } from "lucide-react";
@@ -57,6 +56,12 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
   
   useEffect(() => {
     loadPersistedData();
+    console.log("Loaded kanban data:", data);
+    console.log("Filtered kanban data:", filteredData);
+    
+    Object.keys(data.columns).forEach(columnId => {
+      console.log(`Column ${columnId} has ${data.columns[columnId].studentIds.length} students`);
+    });
   }, []);
   
   useEffect(() => {
@@ -167,9 +172,9 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
     }
   };
   
-  const handlePauseDateConfirm = (date: Date) => {
-    if (selectedStudent && pauseReason) {
-      addPauseDate(selectedStudent.id, date, pauseReason);
+  const handlePauseDateConfirm = (date: Date, reason?: string) => {
+    if (selectedStudent && reason) {
+      addPauseDate(selectedStudent.id, date, reason);
       
       toast({
         title: "Student Paused",
@@ -315,6 +320,9 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
     );
   };
   
+  console.log("Rendering kanban with data:", filteredData);
+  console.log("Column order:", filteredData.columnOrder);
+  
   return (
     <Card className={`${expanded ? 'fixed inset-0 z-50 m-4 rounded-lg' : 'mt-4'} overflow-hidden`}>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -394,11 +402,10 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
         <ScrollArea className={`h-full ${boardHeight}`}>
           <DragDropContext onDragEnd={onDragEnd}>
             <div className={`grid grid-cols-1 ${expanded ? 'lg:grid-cols-6' : 'md:grid-cols-3 lg:grid-cols-6'} gap-4 pb-4 overflow-x-auto`}>
-              {data.columnOrder.map(columnId => {
+              {filteredData.columnOrder.map(columnId => {
                 const column = filteredData.columns[columnId];
                 const students = column.studentIds.map(studentId => data.students[studentId]).filter(Boolean);
                 
-                // Get special styling based on column type
                 const getColumnStyle = () => {
                   switch(columnId) {
                     case 'churned': return "border-l-4 border-red-400";

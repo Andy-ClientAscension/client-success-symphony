@@ -44,6 +44,13 @@ export function StudentDateModal({
     }
   };
   
+  const handleReasonChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setPauseReason(e.target.value);
+    if (onReasonChange) {
+      onReasonChange(e.target.value);
+    }
+  };
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
@@ -66,12 +73,7 @@ export function StudentDateModal({
                 id="pause-reason"
                 placeholder="Enter reason for pause"
                 value={pauseReason}
-                onChange={(e) => {
-                  setPauseReason(e.target.value);
-                  if (onReasonChange) {
-                    onReasonChange(e.target.value);
-                  }
-                }}
+                onChange={handleReasonChange}
                 className="mt-1"
               />
             </div>
