@@ -14,10 +14,10 @@ import { Client } from "@/lib/data";
 
 const TEAMS = [
   { id: "all", name: "All Teams" },
-  { id: "Team-Andy", name: "Team-Andy" },
-  { id: "Team-Chris", name: "Team-Chris" },
-  { id: "Team-Alex", name: "Team-Alex" },
-  { id: "Team-Cillin", name: "Team-Cillin" },
+  { id: "Team-Andy", name: "Team Andy" },
+  { id: "Team-Chris", name: "Team Chris" },
+  { id: "Team-Alex", name: "Team Alex" },
+  { id: "Team-Cillin", name: "Team Cillin" },
 ];
 
 interface ClientListFiltersProps {

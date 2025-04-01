@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,7 @@ interface StudentTeamEditProps {
   onClose: () => void;
   onSubmit: (teamId: string) => void;
   studentName: string;
-  studentId?: string; // Make studentId optional
+  studentId?: string;
   currentTeam?: string;
 }
 
@@ -28,7 +27,7 @@ export function StudentTeamEdit({
   onClose,
   onSubmit,
   studentName,
-  studentId = "", // Provide a default empty string
+  studentId = "",
   currentTeam = "all",
 }: StudentTeamEditProps) {
   const [selectedTeam, setSelectedTeam] = useState<string>(currentTeam);
@@ -42,10 +41,8 @@ export function StudentTeamEdit({
 
   const handleSubmit = () => {
     if (currentTeam !== selectedTeam) {
-      // Update team assignment
       onSubmit(selectedTeam);
 
-      // Only transfer bi-weekly notes if studentId is provided
       if (studentId) {
         transferBiWeeklyNotes(studentId, currentTeam, selectedTeam);
         transferHealthScores(studentId, selectedTeam);
@@ -60,18 +57,15 @@ export function StudentTeamEdit({
   };
 
   const transferBiWeeklyNotes = (studentId: string, oldTeam: string, newTeam: string) => {
-    // Load bi-weekly notes for this student
     const notesKey = `${STORAGE_KEYS.CLIENT_NOTES}_biweekly_${studentId}`;
     const studentNotes = loadData(notesKey, []);
 
     if (studentNotes.length > 0) {
-      // Update team information in the notes
       const updatedNotes = studentNotes.map((note: any) => ({
         ...note,
         team: newTeam
       }));
 
-      // Save updated notes
       saveData(notesKey, updatedNotes);
       
       console.log(`Transferred ${studentNotes.length} bi-weekly notes from ${oldTeam} to ${newTeam}`);
@@ -79,7 +73,6 @@ export function StudentTeamEdit({
   };
   
   const transferHealthScores = (studentId: string, newTeam: string) => {
-    // Update health scores for this student
     const healthScoresKey = STORAGE_KEYS.HEALTH_SCORES;
     const healthScores = loadData(healthScoresKey, []);
     
@@ -94,7 +87,6 @@ export function StudentTeamEdit({
         return score;
       });
       
-      // Save updated health scores
       saveData(healthScoresKey, updatedScores);
     }
   };

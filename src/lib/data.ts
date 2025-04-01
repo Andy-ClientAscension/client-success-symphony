@@ -71,9 +71,10 @@ export interface ChurnDataPoint {
 
 export const CSM_TEAMS = [
   { id: "all", name: "All Teams" },
-  { id: "enterprise", name: "Enterprise" },
-  { id: "mid-market", name: "Mid-Market" },
-  { id: "smb", name: "Small Business" },
+  { id: "Team-Andy", name: "Team Andy" },
+  { id: "Team-Chris", name: "Team Chris" },
+  { id: "Team-Alex", name: "Team Alex" },
+  { id: "Team-Cillin", name: "Team Cillin" },
 ];
 
 export const CLIENTS: Client[] = [
