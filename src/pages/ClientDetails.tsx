@@ -16,23 +16,42 @@ import { Client, getAllClients } from "@/lib/data";
 import { CustomFields } from "@/components/Dashboard/CustomFields";
 import { ClientActivityLog } from "@/components/Dashboard/ClientActivityLog";
 import { TaskManager } from "@/components/Dashboard/TaskManager";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ClientDetailsPage() {
   const { clientId } = useParams<{ clientId: string }>();
   const navigate = useNavigate();
   const [client, setClient] = useState<Client | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const { toast } = useToast();
+  
+  // Use a key to force re-render when clientId changes
+  const [componentKey, setComponentKey] = useState(clientId);
   
   useEffect(() => {
     if (!clientId) return;
+    
+    // Update key when clientId changes to force re-rendering of all components
+    setComponentKey(clientId);
     
     const clients = getAllClients();
     const foundClient = clients.find(c => c.id === clientId);
     
     if (foundClient) {
       setClient(foundClient);
+    } else {
+      // Show toast if client not found
+      toast({
+        title: "Client Not Found",
+        description: "The requested client could not be found.",
+        variant: "destructive",
+      });
     }
-  }, [clientId]);
+  }, [clientId, toast]);
+
+  const handleNavigateToClients = () => {
+    navigate("/clients");
+  };
 
   if (!client) {
     return (
@@ -44,7 +63,7 @@ export default function ClientDetailsPage() {
               <p className="mb-6 text-muted-foreground">
                 The client you're looking for doesn't exist or has been removed.
               </p>
-              <Button onClick={() => navigate("/clients")}>
+              <Button onClick={handleNavigateToClients}>
                 Return to Clients
               </Button>
             </div>
@@ -56,14 +75,14 @@ export default function ClientDetailsPage() {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-6" key={componentKey}>
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
               className="rounded-full"
-              onClick={() => navigate("/clients")}
+              onClick={handleNavigateToClients}
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
