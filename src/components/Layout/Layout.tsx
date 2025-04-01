@@ -29,8 +29,8 @@ export function Layout({ children }: LayoutProps) {
       <div className={`flex-1 flex flex-col w-full min-w-0 ${isMobile ? 'ml-0' : (sidebarOpen ? 'ml-64' : 'ml-0')}`}>
         <Header />
         <main className="flex-1 overflow-hidden w-full bg-white dark:bg-gray-950">
-          <ScrollArea className="h-full w-full" orientation="both">
-            <div className="px-6 py-4">
+          <ScrollArea className="h-full w-full" orientation="vertical">
+            <div className="px-6 py-0">
               <ErrorBoundary>
                 {children}
               </ErrorBoundary>

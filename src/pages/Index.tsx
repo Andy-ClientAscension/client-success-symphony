@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/Layout/Layout";
 import { MetricsCards } from "@/components/Dashboard/MetricsCards";
 import { ClientList } from "@/components/Dashboard/ClientList";
@@ -37,9 +38,9 @@ export default function Index() {
 
   return (
     <Layout>
-      <div className="space-y-4 pb-12 w-full"> 
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="text-lg font-bold">Performance Report</div>
+      <div className="space-y-2 w-full"> 
+        <div className="flex items-center justify-between flex-wrap gap-2 mt-4">
+          <div className="text-xl font-bold">Performance Report</div>
           <div className="flex items-center gap-2">
             <div className="hidden sm:flex flex-col">
               <div className="text-xs font-medium">Import Data</div>
@@ -99,30 +100,28 @@ export default function Index() {
             </TabsList>
           </div>
           
-          <TabsContent value="overview" className="m-0">
-            <div className="space-y-6">
-              <MetricsCards />
-              
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="col-span-1 sm:col-span-2">
-                  <ChurnChart />
-                </div>
-                <div className="col-span-1">
-                  <NPSChart />
-                </div>
+          <TabsContent value="overview" className="m-0 space-y-4">
+            <MetricsCards />
+            
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="col-span-1 sm:col-span-2">
+                <ChurnChart />
               </div>
-              
-              <div>
-                <ClientList />
+              <div className="col-span-1">
+                <NPSChart />
               </div>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div className="col-span-1 lg:col-span-2">
-                  <KanbanBoard />
-                </div>
-                <div className="col-span-1">
-                  <PaymentAlerts />
-                </div>
+            </div>
+            
+            <div>
+              <ClientList />
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="col-span-1 lg:col-span-2">
+                <KanbanBoard />
+              </div>
+              <div className="col-span-1">
+                <PaymentAlerts />
               </div>
             </div>
           </TabsContent>
