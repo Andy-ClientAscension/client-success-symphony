@@ -16,12 +16,36 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { Client } from "@/lib/data";
+import { useToast } from "@/hooks/use-toast";
 
 interface ClientDetailsProps {
   client: Client;
 }
 
 export function ClientDetails({ client }: ClientDetailsProps) {
+  const { toast } = useToast();
+
+  const handleContactClient = () => {
+    toast({
+      title: "Contact Initiated",
+      description: `Opening communication with ${client.name}`,
+    });
+  };
+
+  const handleViewHistory = () => {
+    toast({
+      title: "Loading History",
+      description: `Viewing interaction history for ${client.name}`,
+    });
+  };
+
+  const handleAddNote = () => {
+    toast({
+      title: "Add Note",
+      description: `Adding a note for ${client.name}`,
+    });
+  };
+  
   const getStatusColor = (status: Client['status']) => {
     switch (status) {
       case 'active':
@@ -260,9 +284,26 @@ export function ClientDetails({ client }: ClientDetailsProps) {
           </div>
           
           <div className="flex flex-wrap gap-2">
-            <Button className="bg-red-600 hover:bg-red-700">Contact</Button>
-            <Button variant="outline" className="border-red-200 hover:bg-red-50 hover:text-red-600">View History</Button>
-            <Button variant="outline" className="border-red-200 hover:bg-red-50 hover:text-red-600">Add Note</Button>
+            <Button 
+              className="bg-red-600 hover:bg-red-700"
+              onClick={handleContactClient}
+            >
+              Contact
+            </Button>
+            <Button 
+              variant="outline" 
+              className="border-red-200 hover:bg-red-50 hover:text-red-600"
+              onClick={handleViewHistory}
+            >
+              View History
+            </Button>
+            <Button 
+              variant="outline" 
+              className="border-red-200 hover:bg-red-50 hover:text-red-600"
+              onClick={handleAddNote}
+            >
+              Add Note
+            </Button>
           </div>
         </div>
       </CardContent>

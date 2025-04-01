@@ -39,6 +39,8 @@ export default function ClientDetailsPage() {
     
     if (foundClient) {
       setClient(foundClient);
+      // Reset to overview tab when changing clients for consistency
+      setActiveTab("overview");
     } else {
       // Show toast if client not found
       toast({
@@ -51,6 +53,11 @@ export default function ClientDetailsPage() {
 
   const handleNavigateToClients = () => {
     navigate("/clients");
+  };
+
+  // Handler for tab changes to ensure proper state updates
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
   };
 
   if (!client) {
@@ -92,7 +99,7 @@ export default function ClientDetailsPage() {
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="w-full md:w-auto flex-nowrap overflow-x-auto">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
