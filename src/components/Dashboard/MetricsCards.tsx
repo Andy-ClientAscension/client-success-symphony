@@ -67,7 +67,7 @@ export function MetricsCards() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
         {metrics.map((metric, index) => (
           <Card key={index} className="shadow-sm">
-            <CardContent className="p-3">
+            <CardContent className="p-2">
               <div className="text-sm text-gray-600">{metric.title}</div>
               <div className="text-xl font-semibold">{metric.value}</div>
               {metric.percent && (

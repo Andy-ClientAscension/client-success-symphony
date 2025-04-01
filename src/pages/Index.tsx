@@ -37,8 +37,8 @@ export default function Index() {
 
   return (
     <Layout>
-      <div className="w-full p-4"> 
-        <div className="flex items-center justify-between flex-wrap mb-4">
+      <div className="w-full p-3"> 
+        <div className="flex items-center justify-between flex-wrap mb-2">
           <div className="text-xl font-bold">Performance Report</div>
           <div className="flex items-center">
             <div className="hidden sm:flex flex-col">
@@ -52,7 +52,7 @@ export default function Index() {
         </div>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="border-b mb-4">
+          <div className="border-b mb-2">
             <TabsList className="w-full md:w-auto justify-start bg-transparent p-0">
               <TabsTrigger 
                 value="overview" 
@@ -100,10 +100,10 @@ export default function Index() {
           </div>
           
           <TabsContent value="overview" className="m-0 p-0">
-            <div className="space-y-4">
+            <div className="space-y-3">
               <MetricsCards />
               
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="col-span-1 sm:col-span-2">
                   <ChurnChart />
                 </div>
@@ -116,7 +116,7 @@ export default function Index() {
                 <ClientList />
               </div>
               
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-3">
                 <div className="col-span-1 lg:col-span-2">
                   <KanbanBoard />
                 </div>
