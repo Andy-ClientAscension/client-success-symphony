@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { KanbanSquare, Plus, MoreVertical, Calendar, Users, MessageSquare, AlertTriangle, UserCheck, Maximize2, Minimize2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { format, addMonths, addYears, differenceInDays } from "date-fns";
+import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
@@ -78,7 +77,11 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
           
           updatedStudents[studentId] = {
             ...student,
-            paymentStatus
+            paymentStatus: {
+              isOverdue: paymentStatus.isOverdue,
+              daysOverdue: paymentStatus.daysOverdue,
+              amountDue: paymentStatus.amountDue
+            }
           };
         }
       }

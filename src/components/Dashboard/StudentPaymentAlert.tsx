@@ -1,8 +1,7 @@
 
 import React from 'react';
-import { DollarSign } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
-import { PaymentStatus } from '@/lib/payment-monitor';
+import { PaymentStatus } from '@/utils/kanbanStore';
 
 interface StudentPaymentAlertProps {
   paymentStatus: PaymentStatus;
