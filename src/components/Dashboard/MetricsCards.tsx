@@ -62,25 +62,25 @@ export function MetricsCards() {
   ];
   
   return (
-    <div className="mt-1">
-      <h2 className="text-lg font-semibold mb-2">Company Overview</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
+    <div className="mt-0">
+      <h2 className="text-lg font-semibold mb-1">Company Overview</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-1">
         {metrics.map((metric, index) => (
           <Card key={index} className="border shadow-sm">
-            <CardContent className="p-2">
-              <div className="text-sm text-gray-600 mb-1">{metric.title}</div>
-              <div className="text-2xl font-semibold">{metric.value}</div>
+            <CardContent className="p-1">
+              <div className="text-sm text-gray-600 mb-0.5">{metric.title}</div>
+              <div className="text-xl font-semibold">{metric.value}</div>
               {metric.percent && (
-                <div className="text-xs px-2 py-1 bg-green-100 text-green-800 inline-block rounded mt-1">
+                <div className="text-xs px-1.5 py-0.5 bg-green-100 text-green-800 inline-block rounded mt-0.5">
                   {metric.percent}
                 </div>
               )}
               {metric.trend && (
-                <div className={`flex items-center text-xs ${metric.trendDirection === 'up' ? 'text-green-600' : 'text-red-600'} mt-1`}>
+                <div className={`flex items-center text-xs ${metric.trendDirection === 'up' ? 'text-green-600' : 'text-red-600'} mt-0.5`}>
                   {metric.trendDirection === 'up' ? (
-                    <ArrowUp className="h-3 w-3 mr-1" />
+                    <ArrowUp className="h-3 w-3 mr-0.5" />
                   ) : (
-                    <ArrowDown className="h-3 w-3 mr-1" />
+                    <ArrowDown className="h-3 w-3 mr-0.5" />
                   )}
                   <span>{metric.trend}</span>
                 </div>

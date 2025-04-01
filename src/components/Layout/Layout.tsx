@@ -28,9 +28,9 @@ export function Layout({ children }: LayoutProps) {
       {sidebarOpen && <Sidebar isMobile={isMobile} closeSidebar={closeSidebar} />}
       <div className={`flex-1 flex flex-col w-full min-w-0 ${isMobile ? 'ml-0' : (sidebarOpen ? 'ml-64' : 'ml-0')}`}>
         <Header />
-        <main className="flex-1 overflow-hidden w-full bg-white dark:bg-gray-950">
-          <ScrollArea className="h-full w-full" orientation="vertical">
-            <div className="p-0">
+        <main className="flex-1 overflow-hidden w-full bg-white dark:bg-gray-950 p-0 m-0">
+          <ScrollArea className="h-full w-full p-0 m-0" orientation="vertical">
+            <div className="p-0 m-0">
               <ErrorBoundary>
                 {children}
               </ErrorBoundary>
