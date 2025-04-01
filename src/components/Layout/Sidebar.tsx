@@ -65,7 +65,7 @@ export function Sidebar({ isMobile, closeSidebar }: SidebarProps) {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-black text-white w-64 border-r-0">
+    <div className="flex flex-col h-full bg-black text-white w-64 border-0">
       <div className="px-6 py-6 border-b border-gray-800 flex items-center">
         {isMobile && (
           <Button variant="ghost" className="pl-0 mr-2 lg:hidden text-white" onClick={closeSidebar}>

@@ -37,7 +37,7 @@ export default function Index() {
 
   return (
     <Layout>
-      <div className="w-full p-3"> 
+      <div className="w-full p-2"> 
         <div className="flex items-center justify-between flex-wrap mb-2">
           <div className="text-xl font-bold">Performance Report</div>
           <div className="flex items-center">
@@ -116,7 +116,7 @@ export default function Index() {
                 <ClientList />
               </div>
               
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-3">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-2">
                 <div className="col-span-1 lg:col-span-2">
                   <KanbanBoard />
                 </div>
