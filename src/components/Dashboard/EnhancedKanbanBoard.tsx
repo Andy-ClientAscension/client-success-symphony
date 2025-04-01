@@ -1,11 +1,11 @@
 
 import { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { KanbanSquare, Plus, MoreVertical, Calendar, Users, MessageSquare, AlertTriangle, UserCheck } from "lucide-react";
+import { KanbanSquare, Plus, MoreVertical, Calendar, Users, MessageSquare, AlertTriangle, UserCheck, Maximize2, Minimize2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
+import { format, addMonths, addYears, differenceInDays } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
@@ -31,147 +31,7 @@ import { checkStudentPaymentStatus } from "@/lib/payment-monitor";
 import { CSM_TEAMS } from "@/lib/data";
 import { useKanbanStore } from "@/utils/kanbanStore";
 
-// Define the initial data structure for the Kanban board
-export const INITIAL_DATA = {
-  columns: {
-    'active': {
-      id: 'active',
-      title: 'Active Students',
-      studentIds: ['s1', 's2', 's3']
-    },
-    'backend': {
-      id: 'backend',
-      title: 'Backend Students',
-      studentIds: ['s4', 's5']
-    },
-    'olympia': {
-      id: 'olympia',
-      title: 'Olympia Students',
-      studentIds: ['s6']
-    },
-    'churned': {
-      id: 'churned',
-      title: 'Churned Students',
-      studentIds: ['s7']
-    },
-    'graduated': {
-      id: 'graduated',
-      title: 'Graduated Students',
-      studentIds: ['s8', 's9']
-    }
-  },
-  students: {
-    's1': { 
-      id: 's1', 
-      name: 'Alice Johnson', 
-      progress: 75, 
-      startDate: format(new Date(2023, 5, 15), 'yyyy-MM-dd'),
-      contractDuration: "6months" as const,
-      endDate: format(new Date(2023, 11, 15), 'yyyy-MM-dd'),
-      csm: "Team-Andy",
-      notes: [
-        {
-          id: 'n1',
-          text: 'Alice is making great progress with the frontend module.',
-          author: 'Sarah',
-          timestamp: format(new Date(2023, 6, 10), 'yyyy-MM-dd HH:mm:ss')
-        }
-      ]
-    },
-    's2': { 
-      id: 's2', 
-      name: 'Bob Smith', 
-      progress: 60,
-      startDate: format(new Date(2023, 8, 10), 'yyyy-MM-dd'),
-      contractDuration: "1year" as const,
-      endDate: format(new Date(2024, 8, 10), 'yyyy-MM-dd'),
-      csm: "Team-Chris",
-      notes: [
-        {
-          id: 'n2',
-          text: 'Bob might need help with React hooks. @michael please check in with him.',
-          author: 'David',
-          timestamp: format(new Date(2023, 9, 5), 'yyyy-MM-dd HH:mm:ss'),
-          mentions: ['michael']
-        }
-      ]
-    },
-    's3': { 
-      id: 's3', 
-      name: 'Carol Davis', 
-      progress: 80,
-      startDate: format(new Date(2023, 10, 5), 'yyyy-MM-dd'),
-      contractDuration: "6months" as const,
-      endDate: format(new Date(2024, 4, 5), 'yyyy-MM-dd'),
-      csm: "Team-Andy",
-      notes: []
-    },
-    's4': { 
-      id: 's4', 
-      name: 'Dave Wilson', 
-      progress: 45,
-      startDate: format(new Date(2023, 3, 12), 'yyyy-MM-dd'),
-      contractDuration: "6months" as const,
-      endDate: format(new Date(2023, 9, 12), 'yyyy-MM-dd'),
-      csm: "Team-Cillin",
-      notes: []
-    },
-    's5': { 
-      id: 's5', 
-      name: 'Eve Brown', 
-      progress: 50,
-      startDate: format(new Date(2023, 7, 20), 'yyyy-MM-dd'),
-      contractDuration: "1year" as const,
-      endDate: format(new Date(2024, 7, 20), 'yyyy-MM-dd'),
-      csm: "Team-Chris",
-      notes: []
-    },
-    's6': { 
-      id: 's6', 
-      name: 'Frank Miller', 
-      progress: 70,
-      startDate: format(new Date(2023, 9, 3), 'yyyy-MM-dd'),
-      contractDuration: "1year" as const,
-      endDate: format(new Date(2024, 9, 3), 'yyyy-MM-dd'),
-      csm: "Team-Cillin",
-      notes: []
-    },
-    's7': { 
-      id: 's7', 
-      name: 'Grace Lee', 
-      progress: 30,
-      startDate: format(new Date(2023, 2, 8), 'yyyy-MM-dd'),
-      contractDuration: "6months" as const,
-      endDate: format(new Date(2023, 8, 8), 'yyyy-MM-dd'),
-      churnDate: format(new Date(2023, 4, 15), 'yyyy-MM-dd'),
-      csm: "Team-Andy",
-      notes: []
-    },
-    's8': { 
-      id: 's8', 
-      name: 'Henry Taylor', 
-      progress: 100,
-      startDate: format(new Date(2023, 0, 15), 'yyyy-MM-dd'),
-      contractDuration: "6months" as const,
-      endDate: format(new Date(2023, 6, 15), 'yyyy-MM-dd'),
-      csm: "Team-Cillin",
-      notes: []
-    },
-    's9': { 
-      id: 's9', 
-      name: 'Ivy Robinson', 
-      progress: 100,
-      startDate: format(new Date(2023, 1, 22), 'yyyy-MM-dd'),
-      contractDuration: "1year" as const,
-      endDate: format(new Date(2024, 1, 22), 'yyyy-MM-dd'),
-      csm: "Team-Andy",
-      notes: []
-    }
-  },
-  columnOrder: ['active', 'backend', 'olympia', 'churned', 'graduated']
-};
-
-export function KanbanBoard() {
+export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boolean }) {
   const {
     data,
     filteredData,
@@ -189,11 +49,14 @@ export function KanbanBoard() {
   const [dateModalType, setDateModalType] = useState<"churn" | "other">("churn");
   const [expandedStudentId, setExpandedStudentId] = useState<string | null>(null);
   const [teamEditOpen, setTeamEditOpen] = useState(false);
+  const [expanded, setExpanded] = useState(fullScreen);
   const { toast } = useToast();
   
   useEffect(() => {
     loadPersistedData();
-    
+  }, []);
+  
+  useEffect(() => {
     const checkAllStudentPayments = async () => {
       const updatedStudents = { ...data.students };
       let hasPaymentIssues = false;
@@ -212,6 +75,11 @@ export function KanbanBoard() {
           if (paymentStatus.isOverdue) {
             hasPaymentIssues = true;
           }
+          
+          updatedStudents[studentId] = {
+            ...student,
+            paymentStatus
+          };
         }
       }
       
@@ -330,14 +198,24 @@ export function KanbanBoard() {
   
   const stats = teamStats();
   
+  const boardHeight = expanded ? "max-h-[calc(100vh-200px)]" : "max-h-[calc(100vh-250px)]";
+  
   return (
-    <Card className="mt-4 overflow-hidden">
+    <Card className={`${expanded ? 'fixed inset-0 z-50 m-4 rounded-lg' : 'mt-4'} overflow-hidden`}>
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center gap-2">
           <KanbanSquare className="h-5 w-5 text-red-600" />
           <CardTitle>Student Tracking</CardTitle>
         </div>
         <div className="flex items-center gap-4">
+          <Button 
+            size="icon" 
+            variant="ghost" 
+            onClick={() => setExpanded(!expanded)}
+            className="h-8 w-8"
+          >
+            {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </Button>
           <div className="flex items-center">
             <Users className="h-5 w-5 mr-2 text-red-600" />
             <Select value={selectedTeam} onValueChange={setSelectedTeam}>
@@ -386,9 +264,9 @@ export function KanbanBoard() {
           </div>
         )}
         
-        <ScrollArea className="h-full max-h-[calc(100vh-250px)]">
+        <ScrollArea className={`h-full ${boardHeight}`}>
           <DragDropContext onDragEnd={onDragEnd}>
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 pb-4 overflow-x-auto">
+            <div className={`grid grid-cols-1 ${expanded ? 'lg:grid-cols-5' : 'md:grid-cols-3 lg:grid-cols-5'} gap-4 pb-4 overflow-x-auto`}>
               {data.columnOrder.map(columnId => {
                 const column = filteredData.columns[columnId];
                 const students = column.studentIds.map(studentId => data.students[studentId]);

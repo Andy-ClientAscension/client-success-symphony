@@ -12,6 +12,7 @@ import {
   TabsTrigger 
 } from "@/components/ui/tabs";
 import { TeamAnalytics } from "@/components/Dashboard/TeamAnalytics";
+import { EnhancedKanbanBoard } from "@/components/Dashboard/EnhancedKanbanBoard";
 
 export default function Clients() {
   const [activeTab, setActiveTab] = useState("all");
@@ -74,6 +75,12 @@ export default function Clients() {
                 <BarChart2 className="h-3 w-3 mr-1" />
                 Team Health
               </TabsTrigger>
+              <TabsTrigger 
+                value="student-tracking" 
+                className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-3 py-1 bg-transparent text-xs whitespace-nowrap"
+              >
+                Student Tracking
+              </TabsTrigger>
             </TabsList>
           </div>
           
@@ -99,6 +106,10 @@ export default function Clients() {
           
           <TabsContent value="team-health" className="m-0">
             <TeamAnalytics />
+          </TabsContent>
+          
+          <TabsContent value="student-tracking" className="m-0 p-0">
+            <EnhancedKanbanBoard fullScreen={false} />
           </TabsContent>
         </Tabs>
       </div>
