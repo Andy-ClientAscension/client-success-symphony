@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -45,7 +44,7 @@ export function ClientStatusUpdates({ client }: ClientStatusUpdatesProps) {
     caseStudyInterview: {
       completed: client.caseStudyInterview?.completed || false,
       scheduledDate: client.caseStudyInterview?.scheduledDate || null,
-      conducted: client.caseStudyInterview?.completed || false,
+      conducted: client.caseStudyInterview?.conducted || false,
       notes: client.caseStudyInterview?.notes || ""
     }
   });
@@ -64,7 +63,6 @@ export function ClientStatusUpdates({ client }: ClientStatusUpdatesProps) {
   
   const { toast } = useToast();
 
-  // Load status updates from storage
   useEffect(() => {
     const storedUpdates = loadData(`${STORAGE_KEYS.CLIENT_STATUS}_${client.id}`, null);
     if (storedUpdates) {
@@ -80,7 +78,6 @@ export function ClientStatusUpdates({ client }: ClientStatusUpdatesProps) {
     }
   }, [client.id]);
 
-  // Save status updates to storage whenever they change
   useEffect(() => {
     saveData(`${STORAGE_KEYS.CLIENT_STATUS}_${client.id}`, statusUpdates);
   }, [statusUpdates, client.id]);
@@ -198,12 +195,10 @@ export function ClientStatusUpdates({ client }: ClientStatusUpdatesProps) {
       caseStudyInterview: {
         completed: statusUpdates.caseStudyInterview.conducted,
         scheduledDate: statusUpdates.caseStudyInterview.scheduledDate,
+        conducted: statusUpdates.caseStudyInterview.conducted,
         notes: statusUpdates.caseStudyInterview.notes
       }
     };
-    
-    // In a real app, this would update the backend
-    // For now, we'll just update the local storage
     
     toast({
       title: "Status Updated",
@@ -217,7 +212,6 @@ export function ClientStatusUpdates({ client }: ClientStatusUpdatesProps) {
         <CardTitle>Status Updates</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* TrustPilot Review Section */}
         <div className="space-y-4 p-4 border rounded-md">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium">TrustPilot Review</h3>
@@ -295,7 +289,6 @@ export function ClientStatusUpdates({ client }: ClientStatusUpdatesProps) {
           )}
         </div>
         
-        {/* Case Study Interview Section */}
         <div className="space-y-4 p-4 border rounded-md">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium">Case Study Interview</h3>

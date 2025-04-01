@@ -184,14 +184,16 @@ export function searchAll(query: string): SearchResult[] {
 
   // Search communications
   clients.forEach(client => {
-    const commResults = client.communicationLog
-      .filter(comm => 
-        comm.subject.toLowerCase().includes(query) ||
-        comm.summary.toLowerCase().includes(query) ||
-        comm.type.toLowerCase().includes(query)
-      )
-      .map(comm => communicationToSearchResult(comm, client.name));
-    results.push(...commResults);
+    if (client.communicationLog) {
+      const commResults = client.communicationLog
+        .filter(comm => 
+          comm.subject.toLowerCase().includes(query) ||
+          comm.content.toLowerCase().includes(query) ||
+          comm.type.toLowerCase().includes(query)
+        )
+        .map(comm => communicationToSearchResult(comm, client.name));
+      results.push(...commResults);
+    }
   });
 
   // Search resources

@@ -25,7 +25,7 @@ export function CommunicationLog({ communications, clientName }: CommunicationLo
         return <Phone className="h-4 w-4" />;
       case 'meeting':
         return <Calendar className="h-4 w-4" />;
-      case 'slack':
+      case 'note':
         return <MessageCircle className="h-4 w-4" />;
       default:
         return <MessageSquare className="h-4 w-4" />;
@@ -71,7 +71,7 @@ export function CommunicationLog({ communications, clientName }: CommunicationLo
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
-                  <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">{comm.summary}</p>
+                  <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">{comm.content}</p>
                 </div>
               </div>
             ))

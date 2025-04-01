@@ -102,7 +102,8 @@ export const fetchNPSDataFromSheets = async (): Promise<{
       const averageScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
       return {
         month,
-        score: parseFloat(averageScore.toFixed(1))
+        score: parseFloat(averageScore.toFixed(1)),
+        count: scores.length
       };
     }).sort((a, b) => {
       // Convert month to date for proper sorting
@@ -115,6 +116,9 @@ export const fetchNPSDataFromSheets = async (): Promise<{
     const distributionData: NPSData[] = Object.entries(categoryCountMap).map(([label, value]) => ({
       label,
       value,
+      score: getCategoryScore(label),
+      date: new Date().toISOString().split('T')[0],
+      clientId: 'aggregate'
     }));
     
     toast({
@@ -148,6 +152,16 @@ const getCategoryFromScore = (score: number): string => {
   if (score >= 7 && score <= 8) return 'Passives';
   if (score >= 9 && score <= 10) return 'Promoters';
   return 'Unknown';
+};
+
+// Helper function to get representative score for a category
+const getCategoryScore = (category: string): number => {
+  switch (category) {
+    case 'Detractors': return 3;
+    case 'Passives': return 7;
+    case 'Promoters': return 9;
+    default: return 0;
+  }
 };
 
 // Update a specific NPS score in Google Sheets
