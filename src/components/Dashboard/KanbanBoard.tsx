@@ -137,6 +137,35 @@ export function KanbanBoard() {
     }
   };
 
+  // Add the missing handleChurnDateConfirm function
+  const handleChurnDateConfirm = (date: Date) => {
+    if (selectedStudent) {
+      addChurnDate(selectedStudent.id, date);
+      
+      toast({
+        title: "Churn Date Set",
+        description: `${selectedStudent.name} marked as churned on ${format(date, 'MMMM d, yyyy')}.`,
+      });
+      
+      // Move the student to the churned column
+      if (filteredData && filteredData.columns) {
+        const sourceColumn = filteredData.columnOrder.find(id => 
+          filteredData.columns[id]?.studentIds?.includes(selectedStudent.id)
+        );
+        
+        if (sourceColumn) {
+          moveStudent(
+            selectedStudent.id,
+            sourceColumn,
+            'churned',
+            0,
+            0
+          );
+        }
+      }
+    }
+  };
+
   const handleViewDates = (student: any) => {
     setSelectedStudent(student);
     setDateModalType("other");
