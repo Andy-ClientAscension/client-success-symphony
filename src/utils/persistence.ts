@@ -115,6 +115,11 @@ export const saveHealthScore = (healthScoreData: {
   team: string;
   csm: string;
   score: number;
+  updatesInteractions?: string;
+  wins?: string;
+  struggles?: string;
+  outreachChannels?: string;
+  bookedCalls?: number;
   notes: string;
   date: string;
 }): void => {

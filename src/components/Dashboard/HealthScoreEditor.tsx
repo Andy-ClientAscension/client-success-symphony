@@ -19,6 +19,11 @@ import {
 import { saveHealthScore } from "@/utils/persistence";
 
 const formSchema = z.object({
+  updatesInteractions: z.string().min(1, { message: "Updates/interactions are required" }),
+  wins: z.string().optional(),
+  struggles: z.string().optional(),
+  outreachChannels: z.string().optional(),
+  bookedCalls: z.coerce.number().min(0).default(0),
   score: z.coerce
     .number()
     .min(1, { message: "Score must be at least 1" })
@@ -40,6 +45,11 @@ interface HealthScoreEditorProps {
     id?: string;
     score?: number;
     notes?: string;
+    updatesInteractions?: string;
+    wins?: string;
+    struggles?: string;
+    outreachChannels?: string;
+    bookedCalls?: number;
   };
 }
 
@@ -60,6 +70,11 @@ export function HealthScoreEditor({
     defaultValues: {
       score: initialData?.score || 5,
       notes: initialData?.notes || "",
+      updatesInteractions: initialData?.updatesInteractions || "",
+      wins: initialData?.wins || "",
+      struggles: initialData?.struggles || "",
+      outreachChannels: initialData?.outreachChannels || "",
+      bookedCalls: initialData?.bookedCalls || 0,
     },
   });
 
@@ -74,6 +89,11 @@ export function HealthScoreEditor({
       team,
       csm,
       score: data.score,
+      updatesInteractions: data.updatesInteractions,
+      wins: data.wins || "",
+      struggles: data.struggles || "",
+      outreachChannels: data.outreachChannels || "",
+      bookedCalls: data.bookedCalls,
       notes: data.notes || "",
       date: new Date().toISOString(),
     });
@@ -87,9 +107,17 @@ export function HealthScoreEditor({
     onClose();
   };
 
+  const getScoreButtonColor = (value: number, currentValue: number) => {
+    if (value !== currentValue) return "";
+    
+    if (value >= 8) return "bg-green-600 hover:bg-green-700";
+    if (value >= 5) return "bg-amber-500 hover:bg-amber-600";
+    return "bg-red-600 hover:bg-red-700";
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
             {initialData?.id ? "Update" : "Add"} Health Score for {clientName}
@@ -100,17 +128,126 @@ export function HealthScoreEditor({
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
               control={form.control}
+              name="updatesInteractions"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Updates/Interactions *</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Recent communications, meetings, etc."
+                      className="min-h-[80px]"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="wins"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Wins</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Recent successes"
+                        className="min-h-[80px]"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="struggles"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Struggles</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Current challenges"
+                        className="min-h-[80px]"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="outreachChannels"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Outreach Channels</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Email, LinkedIn, etc."
+                        className="min-h-[60px]"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="bookedCalls"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Booked Calls</FormLabel>
+                    <FormControl>
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                        {[0, 1, 2, 3, 4, 5].map((num) => (
+                          <Button 
+                            key={num}
+                            type="button"
+                            variant={field.value === num ? "default" : "outline"} 
+                            className={`w-10 h-10 p-0 ${field.value === num ? "bg-red-600" : ""}`}
+                            onClick={() => field.onChange(num)}
+                          >
+                            {num}
+                          </Button>
+                        ))}
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <FormField
+              control={form.control}
               name="score"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Health Score (1-10)</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="number" 
-                      min={1} 
-                      max={10}
-                      {...field} 
-                    />
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => (
+                        <Button 
+                          key={value}
+                          type="button"
+                          variant={field.value === value ? "default" : "outline"} 
+                          className={`w-9 h-9 p-0 ${getScoreButtonColor(value, field.value)}`}
+                          onClick={() => field.onChange(value)}
+                        >
+                          {value}
+                        </Button>
+                      ))}
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -122,11 +259,11 @@ export function HealthScoreEditor({
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notes</FormLabel>
+                  <FormLabel>Additional Notes</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="Add context about this health score..."
-                      className="min-h-[100px]"
+                      placeholder="Any additional notes or observations..."
+                      className="min-h-[80px]"
                       {...field} 
                     />
                   </FormControl>

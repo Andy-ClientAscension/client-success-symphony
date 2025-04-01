@@ -11,18 +11,20 @@ import { CompanyMetrics } from "@/components/Dashboard/CompanyMetrics";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, BarChart2 } from "lucide-react";
 import { Client, getAllClients } from "@/lib/data";
 import { CustomFields } from "@/components/Dashboard/CustomFields";
 import { ClientActivityLog } from "@/components/Dashboard/ClientActivityLog";
 import { TaskManager } from "@/components/Dashboard/TaskManager";
 import { useToast } from "@/hooks/use-toast";
+import { HealthScoreEditor } from "@/components/Dashboard/HealthScoreEditor";
 
 export default function ClientDetailsPage() {
   const { clientId } = useParams<{ clientId: string }>();
   const navigate = useNavigate();
   const [client, setClient] = useState<Client | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [healthScoreEditorOpen, setHealthScoreEditorOpen] = useState(false);
   const { toast } = useToast();
   
   // Use a key to force re-render when clientId changes
@@ -97,6 +99,17 @@ export default function ClientDetailsPage() {
               {client.name}
             </h1>
           </div>
+          
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setHealthScoreEditorOpen(true)} 
+              className="border-red-200 hover:bg-red-50 hover:text-red-600"
+            >
+              <BarChart2 className="mr-2 h-4 w-4" />
+              Add Health Score
+            </Button>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
@@ -156,6 +169,23 @@ export default function ClientDetailsPage() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      {healthScoreEditorOpen && (
+        <HealthScoreEditor
+          isOpen={healthScoreEditorOpen}
+          onClose={() => setHealthScoreEditorOpen(false)}
+          onSubmit={() => {
+            toast({
+              title: "Health Score Added",
+              description: "Health score data successfully saved.",
+            });
+          }}
+          clientId={client.id}
+          clientName={client.name}
+          team={client.team || ""}
+          csm={client.csm || ""}
+        />
+      )}
     </Layout>
   );
 }
