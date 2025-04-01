@@ -60,6 +60,9 @@ const App = () => {
     } catch (e) {
       console.log("Passive event listeners are not supported");
     }
+    
+    // Log initial route for debugging
+    console.log("Initial route:", window.location.pathname);
   }, []);
 
   return (
