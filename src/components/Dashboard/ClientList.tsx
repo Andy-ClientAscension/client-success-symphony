@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,8 +9,11 @@ import { STORAGE_KEYS, saveData } from "@/utils/persistence";
 import { ClientListFilters } from "./ClientListFilters";
 import { ClientSearchBar } from "./ClientSearchBar";
 import { ClientsTable } from "./ClientsTable";
+import { ClientKanbanView } from "./ClientKanbanView";
 import { ClientBulkActionDialog } from "./ClientBulkActionDialog";
 import { Pagination } from "./Pagination";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { LayoutList, Kanban } from "lucide-react";
 
 interface ClientListProps {
   statusFilter?: Client['status'];
@@ -32,6 +34,7 @@ export function ClientList({ statusFilter }: ClientListProps) {
   const [bulkActionValue, setBulkActionValue] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
+  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
   
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -42,7 +45,6 @@ export function ClientList({ statusFilter }: ClientListProps) {
       saveData(STORAGE_KEYS.CLIENTS, clients);
     }
 
-    // Apply filters
     let filtered = clients;
     if (statusFilter) {
       filtered = clients.filter(client => client.status === statusFilter);
@@ -64,10 +66,9 @@ export function ClientList({ statusFilter }: ClientListProps) {
     }
 
     setFilteredClients(filtered);
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
   }, [clients, selectedTeam, statusFilter, searchQuery]);
   
-  // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredClients.slice(indexOfFirstItem, Math.min(indexOfLastItem, filteredClients.length));
@@ -192,16 +193,26 @@ export function ClientList({ statusFilter }: ClientListProps) {
             (Total: {filteredClients.length})
           </span>
         </CardTitle>
-        <ClientListFilters 
-          selectedTeam={selectedTeam}
-          searchQuery={searchQuery}
-          onTeamChange={handleTeamChange}
-          onSearchChange={handleSearchChange}
-          filteredClients={filteredClients}
-          onAddNewClient={handleAddNewClient}
-          itemsPerPage={itemsPerPage}
-          onItemsPerPageChange={handleItemsPerPageChange}
-        />
+        <div className="flex items-center gap-4">
+          <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'table' | 'kanban')}>
+            <ToggleGroupItem value="table" aria-label="List view">
+              <LayoutList className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="kanban" aria-label="Kanban view">
+              <Kanban className="h-4 w-4" />
+            </ToggleGroupItem>
+          </ToggleGroup>
+          <ClientListFilters 
+            selectedTeam={selectedTeam}
+            searchQuery={searchQuery}
+            onTeamChange={handleTeamChange}
+            onSearchChange={handleSearchChange}
+            filteredClients={filteredClients}
+            onAddNewClient={handleAddNewClient}
+            itemsPerPage={itemsPerPage}
+            onItemsPerPageChange={handleItemsPerPageChange}
+          />
+        </div>
       </CardHeader>
       <CardContent>
         <ClientSearchBar 
@@ -211,25 +222,35 @@ export function ClientList({ statusFilter }: ClientListProps) {
           onOpenBulkActions={() => {}}
         />
 
-        <ClientsTable 
-          clients={currentItems}
-          selectedClientIds={selectedClientIds}
-          onSelectClient={handleSelectClient}
-          onSelectAll={handleSelectAll}
-          onViewDetails={handleViewDetails}
-          onEditMetrics={handleEditMetrics}
-          onUpdateNPS={handleUpdateNPS}
-        />
-        
-        <Pagination 
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={handlePageChange}
-          totalItems={filteredClients.length}
-          itemsPerPage={itemsPerPage}
-          startIndex={indexOfFirstItem}
-          endIndex={Math.min(indexOfLastItem, filteredClients.length)}
-        />
+        {viewMode === 'table' ? (
+          <>
+            <ClientsTable 
+              clients={currentItems}
+              selectedClientIds={selectedClientIds}
+              onSelectClient={handleSelectClient}
+              onSelectAll={handleSelectAll}
+              onViewDetails={handleViewDetails}
+              onEditMetrics={handleEditMetrics}
+              onUpdateNPS={handleUpdateNPS}
+            />
+            
+            <Pagination 
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              totalItems={filteredClients.length}
+              itemsPerPage={itemsPerPage}
+              startIndex={indexOfFirstItem}
+              endIndex={Math.min(indexOfLastItem, filteredClients.length)}
+            />
+          </>
+        ) : (
+          <ClientKanbanView 
+            clients={currentItems} 
+            onEditMetrics={handleEditMetrics} 
+            onUpdateNPS={handleUpdateNPS} 
+          />
+        )}
       </CardContent>
       
       {selectedClient && metricsModalOpen && (
