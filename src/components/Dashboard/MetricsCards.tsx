@@ -62,7 +62,7 @@ export function MetricsCards() {
   ];
   
   return (
-    <div className="mt-2">
+    <div>
       <h2 className="text-lg font-semibold mb-4">Company Overview</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
         {metrics.map((metric, index) => (

@@ -30,7 +30,7 @@ export function Layout({ children }: LayoutProps) {
         <Header />
         <main className="flex-1 overflow-hidden w-full bg-white dark:bg-gray-950">
           <ScrollArea className="h-full w-full" orientation="vertical">
-            <div className="px-6 py-0">
+            <div className="px-6">
               <ErrorBoundary>
                 {children}
               </ErrorBoundary>
