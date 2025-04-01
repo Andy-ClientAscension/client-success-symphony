@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout/Layout";
 import { MetricsCards } from "@/components/Dashboard/MetricsCards";
 import { ClientList } from "@/components/Dashboard/ClientList";
@@ -25,7 +24,6 @@ export default function Index() {
   const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
-    // Show a toast if persistence is enabled
     const persistEnabled = localStorage.getItem("persistDashboard") === "true";
     if (persistEnabled) {
       toast({
@@ -37,7 +35,7 @@ export default function Index() {
 
   return (
     <Layout>
-      <div className="w-full p-2"> 
+      <div className="w-full p-0 px-2"> 
         <div className="flex items-center justify-between flex-wrap mb-2">
           <div className="text-xl font-bold">Performance Report</div>
           <div className="flex items-center">
