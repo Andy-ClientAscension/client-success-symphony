@@ -15,13 +15,17 @@ export default function AddClient() {
     navigate("/clients");
   };
   
-  const handleClientAdded = () => {
+  const handleClientSubmit = (data: any) => {
     toast({
       title: "Client Added",
-      description: "New client has been successfully added.",
+      description: `${data.name} has been successfully added.`,
       variant: "default",
     });
     
+    navigate("/clients");
+  };
+  
+  const handleCancel = () => {
     navigate("/clients");
   };
   
@@ -44,7 +48,7 @@ export default function AddClient() {
         </div>
         
         <div className="border rounded-md p-4 bg-card">
-          <ClientForm onClientAdded={handleClientAdded} />
+          <ClientForm onSubmit={handleClientSubmit} onCancel={handleCancel} />
         </div>
       </div>
     </Layout>
