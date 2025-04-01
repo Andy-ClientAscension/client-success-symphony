@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +11,8 @@ import { FileDown, FileUp, HelpCircle, Edit, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { HealthScoreEditor } from "./HealthScoreEditor";
+import { HealthScoreHistory } from "./HealthScoreHistory";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface HealthScoreEntry {
   id: string;
@@ -31,20 +32,18 @@ export function HealthScoreSheet({ clients }: { clients: Client[] }) {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [editingScore, setEditingScore] = useState<HealthScoreEntry | null>(null);
+  const [activeTab, setActiveTab] = useState<"table" | "trends">("table");
   const { toast } = useToast();
 
-  // Load health scores from storage
   useEffect(() => {
     const storedScores = loadData<HealthScoreEntry[]>(STORAGE_KEYS.HEALTH_SCORES, []);
     setHealthScores(storedScores);
   }, []);
 
-  // Get filtered scores based on selected team
   const filteredScores = selectedTeam === "all" 
     ? healthScores 
     : healthScores.filter(score => score.team === selectedTeam);
 
-  // Group scores by client for the selected team
   const scoresByClient = filteredScores.reduce<Record<string, HealthScoreEntry[]>>(
     (acc, score) => {
       if (!acc[score.clientId]) {
@@ -56,27 +55,22 @@ export function HealthScoreSheet({ clients }: { clients: Client[] }) {
     {}
   );
 
-  // Get the latest health score for each client
   const latestScores = Object.values(scoresByClient).map(scores => {
-    // Sort by date, newest first
     const sortedScores = [...scores].sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
     
     const latest = sortedScores[0];
-    // If there's more than one score, set the previous score
     if (sortedScores.length > 1) {
       latest.previousScore = sortedScores[1].score;
     }
     return latest;
   });
 
-  // Sort by client name
   const sortedLatestScores = latestScores.sort((a, b) => 
     a.clientName.localeCompare(b.clientName)
   );
 
-  // Find clients without health scores and add placeholder entries
   const clientsWithoutScores = clients
     .filter(client => {
       if (selectedTeam !== "all" && client.team !== selectedTeam) return false;
@@ -95,7 +89,6 @@ export function HealthScoreSheet({ clients }: { clients: Client[] }) {
     }));
 
   const handleExportCsv = () => {
-    // Create CSV data
     const headers = ["Client Name", "Team", "CSM", "Health Score", "Notes", "Date"];
     const csvRows = [headers];
     
@@ -105,15 +98,13 @@ export function HealthScoreSheet({ clients }: { clients: Client[] }) {
         score.team,
         score.csm,
         score.score.toString(),
-        score.notes.replace(/,/g, ";"), // Replace commas to avoid CSV issues
+        score.notes.replace(/,/g, ";"),
         format(new Date(score.date), "yyyy-MM-dd")
       ]);
     });
     
-    // Convert to CSV string
     const csvContent = csvRows.map(row => row.join(",")).join("\n");
     
-    // Create download link
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -131,7 +122,6 @@ export function HealthScoreSheet({ clients }: { clients: Client[] }) {
   };
 
   const handleImportCsv = () => {
-    // Placeholder for future CSV import functionality
     toast({
       title: "Import Feature",
       description: "CSV import functionality will be available in a future update",
@@ -145,7 +135,6 @@ export function HealthScoreSheet({ clients }: { clients: Client[] }) {
   };
 
   const handleEditHealthScore = (score: HealthScoreEntry) => {
-    // Find the client associated with this score
     const client = clients.find(c => c.id === score.clientId);
     if (client) {
       setSelectedClient(client);
@@ -155,19 +144,16 @@ export function HealthScoreSheet({ clients }: { clients: Client[] }) {
   };
 
   const handleEditorSubmit = () => {
-    // Refresh the scores after editing
     const updatedScores = loadData<HealthScoreEntry[]>(STORAGE_KEYS.HEALTH_SCORES, []);
     setHealthScores(updatedScores);
   };
 
-  // Helper to get score color
   const getScoreColor = (score: number) => {
     if (score >= 8) return "text-green-600";
     if (score >= 5) return "text-amber-600";
     return "text-red-600";
   };
 
-  // Helper to get trend indicator
   const getTrendIndicator = (current: number, previous?: number) => {
     if (previous === undefined) return null;
     
@@ -230,96 +216,140 @@ export function HealthScoreSheet({ clients }: { clients: Client[] }) {
       </CardHeader>
       
       <CardContent className="pb-4">
-        <div className="border rounded-lg overflow-hidden bg-white overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-gray-50">
-                <TableHead className="w-[200px]">Client</TableHead>
-                <TableHead>Team</TableHead>
-                <TableHead>CSM</TableHead>
-                <TableHead>Health Score</TableHead>
-                <TableHead>Last Updated</TableHead>
-                <TableHead>Notes</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedLatestScores.length > 0 ? (
-                sortedLatestScores.map((score) => (
-                  <TableRow key={score.id} className="hover:bg-gray-50">
-                    <TableCell className="font-medium">{score.clientName}</TableCell>
-                    <TableCell>{score.team}</TableCell>
-                    <TableCell>{score.csm}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <span className={`font-bold ${getScoreColor(score.score)}`}>
-                          {score.score}/10
-                        </span>
-                        {getTrendIndicator(score.score, score.previousScore)}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {score.date ? format(new Date(score.date), "MMM dd, yyyy") : "Not yet recorded"}
-                    </TableCell>
-                    <TableCell className="max-w-[300px] truncate">
-                      {score.notes || "No notes"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => handleEditHealthScore(score)}
-                      >
-                        <Edit className="h-4 w-4" />
-                        <span className="sr-only">Edit</span>
-                      </Button>
-                    </TableCell>
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "table" | "trends")} className="mb-6">
+          <TabsList>
+            <TabsTrigger value="table">Data Table</TabsTrigger>
+            <TabsTrigger value="trends">Score Trends</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="table" className="mt-4">
+            <div className="border rounded-lg overflow-hidden bg-white overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50">
+                    <TableHead className="w-[200px]">Client</TableHead>
+                    <TableHead>Team</TableHead>
+                    <TableHead>CSM</TableHead>
+                    <TableHead>Health Score</TableHead>
+                    <TableHead>Last Updated</TableHead>
+                    <TableHead>Notes</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center">
-                    No health scores found for {selectedTeam === "all" ? "any team" : selectedTeam}.
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Health scores are recorded in bi-weekly notes for each client.
+                </TableHeader>
+                <TableBody>
+                  {sortedLatestScores.length > 0 ? (
+                    sortedLatestScores.map((score) => (
+                      <TableRow key={score.id} className="hover:bg-gray-50">
+                        <TableCell className="font-medium">{score.clientName}</TableCell>
+                        <TableCell>{score.team}</TableCell>
+                        <TableCell>{score.csm}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <span className={`font-bold ${getScoreColor(score.score)}`}>
+                              {score.score}/10
+                            </span>
+                            {getTrendIndicator(score.score, score.previousScore)}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {score.date ? format(new Date(score.date), "MMM dd, yyyy") : "Not yet recorded"}
+                        </TableCell>
+                        <TableCell className="max-w-[300px] truncate">
+                          {score.notes || "No notes"}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => handleEditHealthScore(score)}
+                          >
+                            <Edit className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={7} className="h-32 text-center">
+                        No health scores found for {selectedTeam === "all" ? "any team" : selectedTeam}.
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Health scores are recorded in bi-weekly notes for each client.
+                        </p>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  
+                  {clientsWithoutScores.map((client) => (
+                    <TableRow key={client.id} className="hover:bg-gray-50 bg-gray-50/30">
+                      <TableCell className="font-medium">{client.clientName}</TableCell>
+                      <TableCell>{client.team}</TableCell>
+                      <TableCell>{client.csm}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">Not recorded</Badge>
+                      </TableCell>
+                      <TableCell>-</TableCell>
+                      <TableCell>-</TableCell>
+                      <TableCell className="text-right">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => {
+                            const actualClient = clients.find(c => c.id === client.clientId);
+                            if (actualClient) {
+                              handleAddHealthScore(actualClient);
+                            }
+                          }}
+                        >
+                          <Plus className="h-4 w-4" />
+                          <span className="sr-only">Add</span>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="trends" className="mt-4">
+            {selectedClient ? (
+              <HealthScoreHistory 
+                clientId={selectedClient.id} 
+                clientName={selectedClient.name} 
+              />
+            ) : (
+              <HealthScoreHistory />
+            )}
+            
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {sortedLatestScores.slice(0, 4).map((score) => (
+                <Card 
+                  key={score.id} 
+                  className="cursor-pointer hover:shadow-md transition-all"
+                  onClick={() => {
+                    const client = clients.find(c => c.id === score.clientId);
+                    if (client) {
+                      setSelectedClient(client);
+                    }
+                  }}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-medium truncate">{score.clientName}</h3>
+                      <span className={`font-bold ${getScoreColor(score.score)}`}>{score.score}/10</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {score.date ? format(new Date(score.date), "MMM dd, yyyy") : "Not recorded"}
                     </p>
-                  </TableCell>
-                </TableRow>
-              )}
-              
-              {/* Show clients without scores */}
-              {clientsWithoutScores.map((client) => (
-                <TableRow key={client.id} className="hover:bg-gray-50 bg-gray-50/30">
-                  <TableCell className="font-medium">{client.clientName}</TableCell>
-                  <TableCell>{client.team}</TableCell>
-                  <TableCell>{client.csm}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">Not recorded</Badge>
-                  </TableCell>
-                  <TableCell>-</TableCell>
-                  <TableCell>-</TableCell>
-                  <TableCell className="text-right">
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={() => {
-                        const actualClient = clients.find(c => c.id === client.clientId);
-                        if (actualClient) {
-                          handleAddHealthScore(actualClient);
-                        }
-                      }}
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span className="sr-only">Add</span>
-                    </Button>
-                  </TableCell>
-                </TableRow>
+                  </CardContent>
+                </Card>
               ))}
-            </TableBody>
-          </Table>
-        </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </CardContent>
       
       {selectedClient && (

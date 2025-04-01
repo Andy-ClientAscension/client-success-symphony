@@ -8,6 +8,7 @@ import { TeamMetricCard } from "./TeamMetricCard";
 import { TeamStatusMetric } from "./TeamStatusMetric";
 import { SSCPerformanceTable } from "./SSCPerformanceTable";
 import { HealthScoreSheet } from "./HealthScoreSheet";
+import { HealthScoreHistory } from "./HealthScoreHistory";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 
@@ -101,6 +102,7 @@ export function TeamAnalytics() {
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="performance">Team Performance</TabsTrigger>
             <TabsTrigger value="health-scores">Health Score Sheet</TabsTrigger>
+            <TabsTrigger value="health-trends">Health Trends</TabsTrigger>
           </TabsList>
           
           <TabsContent value="overview">
@@ -182,6 +184,10 @@ export function TeamAnalytics() {
           
           <TabsContent value="health-scores">
             <HealthScoreSheet clients={clients} />
+          </TabsContent>
+          
+          <TabsContent value="health-trends">
+            <HealthScoreHistory />
           </TabsContent>
         </Tabs>
       </CardContent>
