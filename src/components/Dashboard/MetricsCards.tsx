@@ -62,13 +62,13 @@ export function MetricsCards() {
   ];
   
   return (
-    <div className="m-0">
-      <h2 className="text-lg font-semibold m-0">Company Overview</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-0.5">
+    <div className="mb-4">
+      <h2 className="text-lg font-semibold mb-2">Company Overview</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
         {metrics.map((metric, index) => (
-          <Card key={index} className="border-0 shadow-none">
-            <CardContent className="p-1">
-              <div className="text-sm text-gray-600 m-0">{metric.title}</div>
+          <Card key={index} className="shadow-sm">
+            <CardContent className="p-4">
+              <div className="text-sm text-gray-600">{metric.title}</div>
               <div className="text-xl font-semibold">{metric.value}</div>
               {metric.percent && (
                 <div className="text-xs px-1.5 py-0.5 bg-green-100 text-green-800 inline-block rounded">
