@@ -1,147 +1,125 @@
-
-import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  Users, 
-  BarChart2, 
-  Calendar, 
-  MessagesSquare, 
-  CreditCard, 
-  Settings, 
-  HelpCircle, 
-  Menu, 
-  X,
-  LogOut
+import {
+  Home,
+  Users,
+  Calendar,
+  Settings,
+  CreditCard,
+  LineChart,
+  Bell,
+  Heart,
+  LayoutDashboard,
+  ListChecks
 } from "lucide-react";
+import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/AuthContext";
+import { useDashboardPersistence } from "@/hooks/use-dashboard-persistence";
 
-export function Sidebar() {
-  const isMobile = useIsMobile();
-  const [isOpen, setIsOpen] = useState(!isMobile);
-  const location = useLocation();
-  const { logout, user } = useAuth();
+interface SidebarProps {
+  isMobile: boolean;
+  closeSidebar: () => void;
+}
 
-  // Close sidebar by default on mobile and update when isMobile changes
-  useEffect(() => {
-    if (isMobile) {
-      setIsOpen(false);
-    } else {
-      setIsOpen(true);
-    }
-  }, [isMobile]);
+export function Sidebar({ isMobile, closeSidebar }: SidebarProps) {
+  const { persistDashboard, togglePersistDashboard } = useDashboardPersistence();
 
-  const toggleSidebar = () => {
-    setIsOpen(!isOpen);
-  };
-
-  const navItems = [
-    { icon: LayoutDashboard, label: "Dashboard", href: "/" },
-    { icon: Users, label: "Clients", href: "/clients" },
-    { icon: BarChart2, label: "Analytics", href: "/analytics" },
-    { icon: Calendar, label: "Renewals", href: "/renewals" },
-    { icon: MessagesSquare, label: "Communications", href: "/communications" },
-    { icon: CreditCard, label: "Payments", href: "/payments" },
-    { icon: Settings, label: "Settings", href: "/settings" },
-    { icon: HelpCircle, label: "Help", href: "/help" }
+  const navigation = [
+    {
+      name: "Dashboard",
+      href: "/",
+      icon: <LayoutDashboard className="h-4 w-4" />,
+    },
+    {
+      name: "Clients",
+      href: "/clients",
+      icon: <Users className="h-4 w-4" />,
+    },
+    {
+      name: "Tasks",
+      href: "/tasks",
+      icon: <ListChecks className="h-4 w-4" />,
+    },
+    {
+      name: "Calendar",
+      href: "/calendar",
+      icon: <Calendar className="h-4 w-4" />,
+    },
+    {
+      name: "Billing",
+      href: "/billing",
+      icon: <CreditCard className="h-4 w-4" />,
+    },
+    {
+      name: "Health Scores",
+      href: "/health-scores",
+      icon: <Heart className="h-4 w-4" />,
+    },
+    {
+      name: "Settings",
+      href: "/settings",
+      icon: <Settings className="h-4 w-4" />,
+    },
   ];
 
-  const handleLogout = () => {
-    logout();
-  };
-
   return (
-    <>
-      {isMobile && !isOpen && (
-        <Button
-          variant="outline"
-          size="icon"
-          className="fixed top-4 left-4 z-50 shadow-md"
-          onClick={toggleSidebar}
-        >
-          <Menu size={20} />
+    <div className="flex flex-col h-full">
+      <div className="px-4 py-6">
+        <Button variant="ghost" className="pl-0 lg:hidden" onClick={closeSidebar}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-6 w-6"
+          >
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
         </Button>
-      )}
-      
-      <div
-        className={cn(
-          "bg-black fixed h-full w-56 flex flex-col text-white z-40 transition-all duration-300",
-          isOpen ? "left-0" : "-left-56",
-          isMobile ? "shadow-xl" : ""
-        )}
-      >
-        <div className="p-3 flex items-center justify-between">
-          <h1 className="text-lg font-bold text-white flex items-center gap-2">
-            <BarChart2 className="h-5 w-5 text-red-600" />
-            <span className="whitespace-nowrap">SSC Dashboard</span>
-          </h1>
-          {isMobile && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white"
-              onClick={toggleSidebar}
-            >
-              <X size={20} />
-            </Button>
-          )}
-        </div>
-        
-        <nav className="flex-1 px-1 overflow-y-auto">
-          <ul className="space-y-1">
-            {navItems.map((item, index) => {
-              const isActive = location.pathname === item.href;
-              return (
-                <li key={index}>
-                  <Link
-                    to={item.href}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2 text-white hover:bg-zinc-800 rounded-md transition-colors",
-                      isActive && "bg-zinc-800 font-medium"
-                    )}
-                    onClick={isMobile ? () => setIsOpen(false) : undefined}
-                  >
-                    <item.icon className={cn("h-4 w-4", isActive && "text-red-600")} />
-                    <span className="text-sm">{item.label}</span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-        
-        <div className="p-3 border-t border-zinc-800">
-          <div className="flex items-center gap-2 px-2 py-2">
-            <div className="rounded-full bg-zinc-800 h-7 w-7 flex items-center justify-center">
-              <span className="text-white font-medium text-xs">
-                {user?.email ? user.email.charAt(0).toUpperCase() : "U"}
-              </span>
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <div className="text-xs font-medium truncate">{user?.email || "User"}</div>
-              <div className="text-xs text-white/70">Administrator</div>
-            </div>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="text-white hover:bg-red-600/20 h-7 w-7"
-              onClick={handleLogout}
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
-          </div>
+        <h1 className="font-bold text-2xl">CRM Tool</h1>
+        <p className="text-sm text-muted-foreground">
+          Manage clients & track performance
+        </p>
+      </div>
+      <div className="flex-1 px-4 py-2">
+        <ul className="space-y-1">
+          {navigation.map((item) => (
+            <li key={item.name}>
+              <NavLink
+                to={item.href}
+                className={({ isActive }) =>
+                  `flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-secondary hover:text-foreground ${
+                    isActive ? "bg-secondary text-foreground" : "text-muted-foreground"
+                  }`
+                }
+                onClick={isMobile ? closeSidebar : undefined}
+              >
+                {item.icon}
+                {item.name}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="p-4">
+        <div className="border rounded-lg p-3 bg-secondary/50">
+          <h3 className="text-sm font-medium">Dashboard Persistence</h3>
+          <p className="text-xs text-muted-foreground">
+            Save dashboard data between sessions
+          </p>
+          <Button
+            variant="outline"
+            className="w-full mt-2 text-xs"
+            onClick={togglePersistDashboard}
+          >
+            {persistDashboard ? "Disable Auto-Save" : "Enable Auto-Save"}
+          </Button>
         </div>
       </div>
-      
-      {isOpen && isMobile && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-30 backdrop-blur-sm" 
-          onClick={toggleSidebar}
-        />
-      )}
-    </>
+    </div>
   );
 }

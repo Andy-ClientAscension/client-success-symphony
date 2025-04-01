@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -27,6 +26,7 @@ import Payments from "@/pages/Payments";
 import Settings from "@/pages/Settings";
 import Help from "@/pages/Help";
 import NotFound from "@/pages/NotFound";
+import HealthScoreDashboard from "./pages/HealthScoreDashboard";
 
 // Apply polyfills immediately for older browsers
 if (typeof window !== 'undefined') {
@@ -94,6 +94,7 @@ const App = () => {
                   
                     {/* Catch-all route */}
                     <Route path="*" element={<NotFound />} />
+                    <Route path="/health-scores" element={<HealthScoreDashboard />} />
                   </Routes>
                 </div>
               </AuthProvider>
