@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
 import { Toaster } from "@/components/ui/toaster";
@@ -16,11 +16,18 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const { theme } = useTheme();
   const isMobile = useIsMobile();
+  const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
+  
+  const closeSidebar = () => {
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  };
   
   return (
     <div className={`flex h-screen w-full overflow-hidden ${theme === 'dark' ? 'bg-gray-900 text-gray-200' : 'bg-slate-50 text-gray-900'}`}>
-      <Sidebar />
-      <div className={`flex-1 flex flex-col w-full min-w-0 ${isMobile ? 'ml-0' : 'ml-56'}`}>
+      {sidebarOpen && <Sidebar isMobile={isMobile} closeSidebar={closeSidebar} />}
+      <div className={`flex-1 flex flex-col w-full min-w-0 ${isMobile ? 'ml-0' : (sidebarOpen ? 'ml-56' : 'ml-0')}`}>
         <Header />
         <div className="flex items-center justify-end px-4 py-2 border-b">
           <RenewalNotifier />

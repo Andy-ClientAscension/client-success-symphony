@@ -3,6 +3,7 @@ import { Layout } from "@/components/Layout/Layout";
 import { HealthScoreSummary } from "@/components/Dashboard/HealthScore/HealthScoreSummary";
 import { HealthScoreOverview } from "@/components/Dashboard/HealthScore/HealthScoreOverview";
 import { HealthScoreSheet } from "@/components/Dashboard/HealthScoreSheet";
+import { HealthScoreHistory } from "@/components/Dashboard/HealthScoreHistory";
 import { getAllClients } from "@/lib/data";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
