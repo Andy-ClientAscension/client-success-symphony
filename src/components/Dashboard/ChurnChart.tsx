@@ -43,8 +43,8 @@ export function ChurnChart() {
   const churnDifference = Math.abs(currentChurn - previousChurn).toFixed(1);
   
   return (
-    <Card className="w-full shadow-sm border-0">
-      <CardHeader className="p-0.5 px-1 flex flex-row items-center justify-between">
+    <Card className="w-full border-0 shadow-none">
+      <CardHeader className="p-0 flex flex-row items-center justify-between">
         <div>
           <CardTitle className="text-xs font-semibold">Company Churn Rate</CardTitle>
           <div className="flex items-center space-x-2">
@@ -60,12 +60,12 @@ export function ChurnChart() {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-0.5 pt-0">
-        <div className="h-[70px]">
+      <CardContent className="p-0">
+        <div className="h-[60px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={data}
-              margin={{ top: 2, right: 5, left: 0, bottom: 2 }}
+              margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
             >
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis 
@@ -73,6 +73,7 @@ export function ChurnChart() {
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 7 }}
+                height={15}
               />
               <YAxis 
                 axisLine={false}
@@ -80,10 +81,11 @@ export function ChurnChart() {
                 tick={{ fontSize: 7 }}
                 tickFormatter={(value) => `${value}%`}
                 domain={['dataMin - 0.5', 'dataMax + 0.5']}
+                width={20}
               />
               <Tooltip 
                 formatter={(value) => [`${value}%`, 'Churn Rate']}
-                contentStyle={{ fontSize: '7px', padding: '3px' }}
+                contentStyle={{ fontSize: '7px', padding: '2px' }}
                 labelStyle={{ fontWeight: 'bold' }}
               />
               <ReferenceLine y={2} stroke="#ccc" strokeDasharray="3 3" />

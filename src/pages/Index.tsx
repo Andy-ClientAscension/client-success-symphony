@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout/Layout";
 import { MetricsCards } from "@/components/Dashboard/MetricsCards";
 import { ClientList } from "@/components/Dashboard/ClientList";
@@ -38,22 +37,22 @@ export default function Index() {
 
   return (
     <Layout>
-      <div className="w-full pt-0 px-1 m-0"> 
-        <div className="flex items-center justify-between flex-wrap gap-1 mb-1">
+      <div className="w-full m-0"> 
+        <div className="flex items-center justify-between flex-wrap mb-0.5">
           <div className="text-xl font-bold">Performance Report</div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center">
             <div className="hidden sm:flex flex-col">
               <div className="text-xs font-medium">Import Data</div>
               <div className="text-xs text-muted-foreground">Import client data</div>
             </div>
-            <Button className="bg-red-600 hover:bg-red-700 h-7 text-xs">
+            <Button className="bg-red-600 hover:bg-red-700 h-7 text-xs ml-1">
               <Import className="mr-1 h-3 w-3" /> Import
             </Button>
           </div>
         </div>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="border-b mb-1">
+          <div className="border-b">
             <TabsList className="w-full md:w-auto justify-start bg-transparent p-0 flex-nowrap mb-0">
               <TabsTrigger 
                 value="overview" 
@@ -100,28 +99,30 @@ export default function Index() {
             </TabsList>
           </div>
           
-          <TabsContent value="overview" className="m-0 p-0 space-y-1">
-            <MetricsCards />
-            
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-1">
-              <div className="col-span-1 sm:col-span-2">
-                <ChurnChart />
+          <TabsContent value="overview" className="m-0 p-0">
+            <div className="space-y-0.5">
+              <MetricsCards />
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-0.5">
+                <div className="col-span-1 sm:col-span-2">
+                  <ChurnChart />
+                </div>
+                <div className="col-span-1">
+                  <NPSChart />
+                </div>
               </div>
-              <div className="col-span-1">
-                <NPSChart />
+              
+              <div>
+                <ClientList />
               </div>
-            </div>
-            
-            <div>
-              <ClientList />
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-1 mb-1">
-              <div className="col-span-1 lg:col-span-2">
-                <KanbanBoard />
-              </div>
-              <div className="col-span-1">
-                <PaymentAlerts />
+              
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-0.5 mb-0.5">
+                <div className="col-span-1 lg:col-span-2">
+                  <KanbanBoard />
+                </div>
+                <div className="col-span-1">
+                  <PaymentAlerts />
+                </div>
               </div>
             </div>
           </TabsContent>
