@@ -9,7 +9,7 @@ interface StudentPaymentAlertProps {
 }
 
 export function StudentPaymentAlert({ paymentStatus }: StudentPaymentAlertProps) {
-  if (!paymentStatus.isOverdue) return null;
+  if (!paymentStatus || !paymentStatus.isOverdue) return null;
   
   return (
     <div className="flex items-center justify-between w-full mt-2 text-xs border-t pt-2 border-gray-100">

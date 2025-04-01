@@ -1,6 +1,6 @@
 
 import { Layout } from "@/components/Layout/Layout";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ClientList } from "@/components/Dashboard/ClientList";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,10 +13,29 @@ import {
 } from "@/components/ui/tabs";
 import { TeamAnalytics } from "@/components/Dashboard/TeamAnalytics";
 import { EnhancedKanbanBoard } from "@/components/Dashboard/EnhancedKanbanBoard";
+import { useToast } from "@/hooks/use-toast";
+import { useKanbanStore } from "@/utils/kanbanStore";
 
 export default function Clients() {
   const [activeTab, setActiveTab] = useState("all");
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { initializeStore } = useKanbanStore();
+
+  useEffect(() => {
+    // Initialize the kanban store when the component mounts
+    try {
+      initializeStore();
+      console.log("Kanban store initialized in Clients.tsx");
+    } catch (error) {
+      console.error("Error initializing kanban store:", error);
+      toast({
+        title: "Error Loading Students",
+        description: "There was an issue loading the student data. Please refresh the page.",
+        variant: "destructive",
+      });
+    }
+  }, []);
 
   const handleAddNewClient = () => {
     navigate("/add-client");

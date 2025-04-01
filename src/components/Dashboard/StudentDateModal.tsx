@@ -12,6 +12,7 @@ import {
 import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 interface StudentDateModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ interface StudentDateModalProps {
   showReasonField?: boolean;
   reason?: string;
   onReasonChange?: (reason: string) => void;
+  isPauseModal?: boolean;
 }
 
 export function StudentDateModal({ 
@@ -32,15 +34,33 @@ export function StudentDateModal({
   defaultDate,
   showReasonField = false,
   reason = "",
-  onReasonChange
+  onReasonChange,
+  isPauseModal = false
 }: StudentDateModalProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(defaultDate);
   const [pauseReason, setPauseReason] = useState<string>(reason);
+  const { toast } = useToast();
   
   const handleConfirm = () => {
     if (selectedDate) {
-      onConfirm(selectedDate, showReasonField ? pauseReason : undefined);
-      onClose();
+      try {
+        onConfirm(selectedDate, showReasonField ? pauseReason : undefined);
+        onClose();
+        
+        if (isPauseModal && pauseReason) {
+          toast({
+            title: "Student Paused",
+            description: `Student has been paused until ${format(selectedDate, "MMM d, yyyy")}.`,
+          });
+        }
+      } catch (error) {
+        console.error("Error in StudentDateModal handleConfirm:", error);
+        toast({
+          title: "Error",
+          description: "There was an error processing your request.",
+          variant: "destructive",
+        });
+      }
     }
   };
   
@@ -52,7 +72,7 @@ export function StudentDateModal({
   };
   
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
@@ -68,13 +88,14 @@ export function StudentDateModal({
           
           {showReasonField && (
             <div className="mt-4">
-              <Label htmlFor="pause-reason">Reason for pause</Label>
+              <Label htmlFor="pause-reason">Reason for {isPauseModal ? "pause" : "leaving"}</Label>
               <Textarea
                 id="pause-reason"
-                placeholder="Enter reason for pause"
+                placeholder={`Enter reason for ${isPauseModal ? "pause" : "leaving"}`}
                 value={pauseReason}
                 onChange={handleReasonChange}
                 className="mt-1"
+                rows={3}
               />
             </div>
           )}
