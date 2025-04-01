@@ -48,6 +48,7 @@ export function StudentTeamEdit({
       // Only transfer bi-weekly notes if studentId is provided
       if (studentId) {
         transferBiWeeklyNotes(studentId, currentTeam, selectedTeam);
+        transferHealthScores(studentId, selectedTeam);
       }
 
       toast({
@@ -74,6 +75,27 @@ export function StudentTeamEdit({
       saveData(notesKey, updatedNotes);
       
       console.log(`Transferred ${studentNotes.length} bi-weekly notes from ${oldTeam} to ${newTeam}`);
+    }
+  };
+  
+  const transferHealthScores = (studentId: string, newTeam: string) => {
+    // Update health scores for this student
+    const healthScoresKey = STORAGE_KEYS.HEALTH_SCORES;
+    const healthScores = loadData(healthScoresKey, []);
+    
+    if (healthScores.length > 0) {
+      const updatedScores = healthScores.map((score: any) => {
+        if (score.clientId === studentId) {
+          return {
+            ...score,
+            team: newTeam
+          };
+        }
+        return score;
+      });
+      
+      // Save updated health scores
+      saveData(healthScoresKey, updatedScores);
     }
   };
 

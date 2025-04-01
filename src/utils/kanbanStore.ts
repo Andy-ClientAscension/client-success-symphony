@@ -76,7 +76,11 @@ const generateFakeStudents = (count: number): Record<string, Student> => {
     const id = `s${i + 9}`; // Start from s10 since we already have s1-s9
     const randomName = names[Math.floor(Math.random() * names.length)] || `Student ${id}`;
     const randomProgress = Math.floor(Math.random() * 101);
-    const randomTeam = teams[Math.floor(Math.random() * teams.length)];
+    
+    // Ensure even distribution across teams
+    const teamIndex = i % teams.length;
+    const randomTeam = teams[teamIndex];
+    
     const contractDuration = Math.random() > 0.5 ? "6months" : "1year";
     
     // Generate random dates
@@ -133,9 +137,9 @@ const generateFakeStudents = (count: number): Record<string, Student> => {
       }
     }
     
-    // Backend or Olympia enrollments
-    const backendEnrolled = Math.random() > 0.7;
-    const olympiaEnrolled = !backendEnrolled && Math.random() > 0.8;
+    // Backend or Olympia enrollments - distribute somewhat evenly
+    const backendEnrolled = i % 5 === 0;
+    const olympiaEnrolled = i % 7 === 0 && !backendEnrolled;
     
     students[id] = {
       id,

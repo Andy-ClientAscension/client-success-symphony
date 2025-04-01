@@ -28,7 +28,7 @@ const TEAMS = [
 interface ClientBulkActionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  actionType: 'status' | 'team' | null;
+  actionType: 'status' | 'team' | 'column' | null;
   selectedCount: number;
   onValueChange: (value: string) => void;
   onConfirm: () => void;
@@ -42,15 +42,24 @@ export function ClientBulkActionDialog({
   onValueChange,
   onConfirm
 }: ClientBulkActionDialogProps) {
+  const getTitle = () => {
+    switch (actionType) {
+      case 'status': return 'Update Status';
+      case 'team': return 'Assign Team';
+      case 'column': return 'Move to Column';
+      default: return 'Bulk Action';
+    }
+  };
+  
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            {actionType === 'status' ? 'Update Status' : 'Assign Team'}
+            {getTitle()}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            This action will update {selectedCount} selected clients. This action cannot be undone.
+            This action will update {selectedCount} selected {selectedCount === 1 ? 'item' : 'items'}. This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         
@@ -83,9 +92,25 @@ export function ClientBulkActionDialog({
           </Select>
         )}
         
+        {actionType === 'column' && (
+          <Select onValueChange={onValueChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select column" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Active Students</SelectItem>
+              <SelectItem value="backend">Backend Students</SelectItem>
+              <SelectItem value="olympia">Olympia Students</SelectItem>
+              <SelectItem value="paused">Paused Students</SelectItem>
+              <SelectItem value="graduated">Graduated Students</SelectItem>
+              <SelectItem value="churned">Churned Students</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
+        
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Confirm</AlertDialogAction>
+          <AlertDialogAction onClick={onConfirm} className="bg-red-600 hover:bg-red-700">Confirm</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

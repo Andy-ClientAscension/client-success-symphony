@@ -12,7 +12,7 @@ export function StudentPaymentAlert({ paymentStatus }: StudentPaymentAlertProps)
   if (!paymentStatus.isOverdue) return null;
   
   return (
-    <div className="flex items-center justify-between w-full mt-1.5 text-xs">
+    <div className="flex items-center justify-between w-full mt-2 text-xs border-t pt-2 border-gray-100">
       <div className="text-xs font-medium text-gray-700 flex items-center gap-1">
         {paymentStatus.amountDue && (
           <span className="text-gray-500">${paymentStatus.amountDue.toFixed(2)}</span>
