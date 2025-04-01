@@ -20,12 +20,12 @@ export default function Clients() {
   const [activeTab, setActiveTab] = useState("all");
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { initializeStore } = useKanbanStore();
+  const { loadPersistedData } = useKanbanStore();
 
   useEffect(() => {
     // Initialize the kanban store when the component mounts
     try {
-      initializeStore();
+      loadPersistedData();
       console.log("Kanban store initialized in Clients.tsx");
     } catch (error) {
       console.error("Error initializing kanban store:", error);
