@@ -18,10 +18,17 @@ export function MetricsCards() {
   const companyMetrics = getClientMetricsByTeam();
   const averageNPS = getAverageNPS();
   
+  // Add total property if it doesn't exist
+  const total = clientCounts.active + clientCounts["at-risk"] + clientCounts.new + clientCounts.churned || 5;
+  const clientCountsWithTotal = {
+    ...clientCounts,
+    total: total
+  };
+  
   const metrics = [
     { 
       title: "Total Clients", 
-      value: clientCounts.total || 5,
+      value: clientCountsWithTotal.total,
       trend: '+12% growth',
       trendDirection: 'up'
     },

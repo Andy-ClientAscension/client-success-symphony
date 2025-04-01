@@ -2,11 +2,12 @@
 import {
   LayoutDashboard,
   Users,
-  ListChecks,
+  BarChart,
   Calendar,
   CreditCard,
-  Heart,
   Settings,
+  HelpCircle,
+  MessageSquare
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -32,58 +33,68 @@ export function Sidebar({ isMobile, closeSidebar }: SidebarProps) {
       icon: <Users className="h-5 w-5" />,
     },
     {
-      name: "Tasks",
-      href: "/tasks",
-      icon: <ListChecks className="h-5 w-5" />,
+      name: "Analytics",
+      href: "/analytics",
+      icon: <BarChart className="h-5 w-5" />,
     },
     {
-      name: "Calendar",
-      href: "/calendar",
+      name: "Renewals",
+      href: "/renewals",
       icon: <Calendar className="h-5 w-5" />,
     },
     {
-      name: "Billing",
-      href: "/billing",
-      icon: <CreditCard className="h-5 w-5" />,
+      name: "Communications",
+      href: "/communications",
+      icon: <MessageSquare className="h-5 w-5" />,
     },
     {
-      name: "Health Scores",
-      href: "/health-scores",
-      icon: <Heart className="h-5 w-5" />,
+      name: "Payments",
+      href: "/payments",
+      icon: <CreditCard className="h-5 w-5" />,
     },
     {
       name: "Settings",
       href: "/settings",
       icon: <Settings className="h-5 w-5" />,
     },
+    {
+      name: "Help",
+      href: "/help",
+      icon: <HelpCircle className="h-5 w-5" />,
+    },
   ];
 
   return (
     <div className="flex flex-col h-full bg-black text-white w-64">
-      <div className="px-6 py-6 border-b border-gray-800">
-        <Button variant="ghost" className="pl-0 lg:hidden text-white" onClick={closeSidebar}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-6 w-6"
-          >
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </Button>
-        <h1 className="font-bold text-2xl text-white">SSC Dashboard</h1>
-        <p className="text-sm text-gray-400 mt-1">
-          Manage clients & track performance
-        </p>
+      <div className="px-6 py-6 border-b border-gray-800 flex items-center">
+        {isMobile && (
+          <Button variant="ghost" className="pl-0 mr-2 lg:hidden text-white" onClick={closeSidebar}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-6 w-6"
+            >
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </Button>
+        )}
+        <div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-6 bg-red-600"></div>
+            <h1 className="font-bold text-2xl text-white">SSC Dashboard</h1>
+          </div>
+        </div>
       </div>
-      <div className="flex-1 px-3 py-4">
+      
+      <div className="flex-1 px-2 py-4">
         <ul className="space-y-1">
           {navigation.map((item) => (
             <li key={item.name}>
@@ -102,21 +113,6 @@ export function Sidebar({ isMobile, closeSidebar }: SidebarProps) {
             </li>
           ))}
         </ul>
-      </div>
-      <div className="p-4 border-t border-gray-800">
-        <div className="rounded-lg p-3 bg-gray-800">
-          <h3 className="text-sm font-medium text-gray-200">Dashboard Persistence</h3>
-          <p className="text-xs text-gray-400">
-            Save dashboard data between sessions
-          </p>
-          <Button
-            variant="outline"
-            className="w-full mt-2 text-xs bg-transparent border-gray-600 text-gray-300 hover:bg-gray-700"
-            onClick={togglePersistDashboard}
-          >
-            {persistDashboard ? "Disable Auto-Save" : "Enable Auto-Save"}
-          </Button>
-        </div>
       </div>
     </div>
   );

@@ -7,7 +7,6 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTheme } from "@/components/ThemeProvider";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { RenewalNotifier } from "@/components/Dashboard/RenewalNotifier";
 
 interface LayoutProps {
   children: React.ReactNode;
