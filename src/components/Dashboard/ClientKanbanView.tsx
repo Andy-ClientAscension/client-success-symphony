@@ -22,12 +22,18 @@ export function ClientKanbanView({ clients, onEditMetrics, onUpdateNPS }: Client
     const groups: Record<string, Client[]> = {
       'new': [],
       'active': [],
+      'backend': [],
+      'olympia': [],
       'at-risk': [],
       'churned': []
     };
     
     clients.forEach(client => {
-      if (groups[client.status]) {
+      if (client.status === 'backend') {
+        groups['backend'].push(client);
+      } else if (client.status === 'olympia') {
+        groups['olympia'].push(client);
+      } else if (groups[client.status]) {
         groups[client.status].push(client);
       }
     });
@@ -39,6 +45,8 @@ export function ClientKanbanView({ clients, onEditMetrics, onUpdateNPS }: Client
     switch (status) {
       case 'new': return 'New';
       case 'active': return 'Active';
+      case 'backend': return 'Backend';
+      case 'olympia': return 'Olympia';
       case 'at-risk': return 'At Risk';
       case 'churned': return 'Churned';
       default: return status;
@@ -49,6 +57,8 @@ export function ClientKanbanView({ clients, onEditMetrics, onUpdateNPS }: Client
     switch (status) {
       case 'new': return 'bg-brand-100 text-brand-800';
       case 'active': return 'bg-success-100 text-success-800';
+      case 'backend': return 'bg-purple-100 text-purple-800';
+      case 'olympia': return 'bg-indigo-100 text-indigo-800';
       case 'at-risk': return 'bg-warning-100 text-warning-800';
       case 'churned': return 'bg-danger-100 text-danger-800';
       default: return 'bg-muted text-muted-foreground';
@@ -127,7 +137,7 @@ export function ClientKanbanView({ clients, onEditMetrics, onUpdateNPS }: Client
   };
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
       {Object.entries(clientsByStatus).map(([status, statusClients]) => (
         <div key={status} className="bg-card rounded-lg p-3 border">
           <div className="flex items-center justify-between mb-3">
