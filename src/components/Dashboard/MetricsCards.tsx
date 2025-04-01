@@ -20,96 +20,67 @@ export function MetricsCards() {
   
   const metrics = [
     { 
-      title: "At Risk Clients", 
-      value: clientCounts["at-risk"],
-      secondaryText: "-1 this month",
-      trend: 'down' as const,
-      icon: ArrowDown,
-      color: "text-red-600" as const
+      title: "Total Clients", 
+      value: clientCounts.total || 5,
+      trend: '+12% growth',
+      trendDirection: 'up'
     },
     { 
-      title: "Company Churn Rate", 
-      value: "2.1%",
-      secondaryText: "-0.3% from last month",
-      trend: 'down' as const,
-      icon: ArrowDown,
-      color: "text-red-600" as const
+      title: "Active Clients", 
+      value: clientCounts.active || 2,
+      percent: "40%"
     },
     { 
-      title: "Upcoming Renewals", 
-      value: 3,
-      secondaryText: "Next in 22 days",
-      trend: 'neutral' as const,
-      icon: Calendar,
-      color: "text-gray-500" as const
+      title: "At Risk", 
+      value: clientCounts["at-risk"] || 1,
+      percent: "20%"
     },
     { 
-      title: "Total MRR", 
-      value: `$${companyMetrics.totalMRR}`,
-      secondaryText: "+5% from last month",
-      trend: 'up' as const,
-      icon: ArrowUp,
-      color: "text-green-600" as const
+      title: "New Clients", 
+      value: clientCounts.new || 1,
+      percent: "20%"
     },
     { 
-      title: "Company NPS Score", 
-      value: averageNPS,
-      secondaryText: "+0.5 this quarter",
-      trend: 'up' as const,
-      icon: ArrowUp,
-      color: "text-green-600" as const
+      title: "Success Rate", 
+      value: "84%",
+      trend: "+2.5% this quarter",
+      trendDirection: 'up'
     },
     { 
-      title: "Total Calls Booked", 
-      value: 40,
-      secondaryText: "+12 this month",
-      trend: 'up' as const,
-      icon: ArrowUp,
-      color: "text-green-600" as const
+      title: "Churn Rate", 
+      value: "1.7%",
+      trend: "-0.2% this month",
+      trendDirection: 'down'
     }
   ];
   
   return (
     <div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <h2 className="text-lg font-semibold mb-4">Company Overview</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
         {metrics.map((metric, index) => (
-          <MetricCard 
-            key={index}
-            title={metric.title}
-            value={metric.value}
-            secondaryText={metric.secondaryText}
-            trend={metric.trend}
-            icon={metric.icon}
-            color={metric.color}
-          />
+          <Card key={index} className="border">
+            <CardContent className="p-4">
+              <div className="text-sm text-gray-600 mb-1">{metric.title}</div>
+              <div className="text-2xl font-semibold">{metric.value}</div>
+              {metric.percent && (
+                <div className="text-xs px-2 py-1 bg-green-100 text-green-800 inline-block rounded mt-1">
+                  {metric.percent}
+                </div>
+              )}
+              {metric.trend && (
+                <div className={`flex items-center text-xs ${metric.trendDirection === 'up' ? 'text-green-600' : 'text-red-600'} mt-1`}>
+                  {metric.trendDirection === 'up' ? (
+                    <ArrowUp className="h-3 w-3 mr-1" />
+                  ) : (
+                    <ArrowDown className="h-3 w-3 mr-1" />
+                  )}
+                  <span>{metric.trend}</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         ))}
-      </div>
-    </div>
-  );
-}
-
-const MetricCard = ({ 
-  title, 
-  value, 
-  secondaryText,
-  trend,
-  icon: Icon,
-  color
-}: { 
-  title: string;
-  value: string | number;
-  secondaryText: string;
-  trend: 'up' | 'down' | 'neutral';
-  icon: any;
-  color: string;
-}) => {  
-  return (
-    <div className="bg-white p-5 rounded-lg shadow-sm">
-      <div className="mb-1 text-sm text-gray-600">{title}</div>
-      <div className="text-3xl font-semibold">{value}</div>
-      <div className={`flex items-center text-xs ${color} mt-1`}>
-        <Icon className="h-3 w-3 mr-1" />
-        <span>{secondaryText}</span>
       </div>
     </div>
   );

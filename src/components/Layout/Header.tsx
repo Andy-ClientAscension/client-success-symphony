@@ -74,7 +74,7 @@ export function Header() {
           <img 
             src="/lovable-uploads/be8819c9-875b-4531-a156-fca2f462bc66.png" 
             alt="Client Ascension Logo" 
-            className="h-10"
+            className="h-8"
           />
         </div>
         
@@ -127,6 +127,10 @@ export function Header() {
         
         <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white ml-2">
           <Upload className="h-3.5 w-3.5 mr-1" /> Import
+        </Button>
+        
+        <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white ml-1">
+          Connect API
         </Button>
       </div>
     </header>

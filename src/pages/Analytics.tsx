@@ -1,6 +1,6 @@
 
 import { Layout } from "@/components/Layout/Layout";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowLeft, RefreshCw, Home } from "lucide-react";
@@ -14,6 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { CompanyMetrics } from "@/components/Dashboard/CompanyMetrics";
 import { TeamAnalytics } from "@/components/Dashboard/TeamAnalytics";
 import { ClientAnalytics } from "@/components/Dashboard/ClientAnalytics";
+import { MetricsCards } from "@/components/Dashboard/MetricsCards";
 import { NPSChart } from "@/components/Dashboard/NPSChart";
 
 export default function Analytics() {
@@ -56,15 +57,15 @@ export default function Analytics() {
 
   return (
     <Layout>
-      <div className="flex-1 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div className="flex items-center space-x-2">
+      <div className="flex-1 space-y-6">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
             <Link to="/">
-              <Button variant="outline" size="sm" className="h-8 w-8">
+              <Button variant="outline" size="sm" className="h-8 w-8 p-0">
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             </Link>
-            <h2 className="text-lg md:text-xl font-bold tracking-tight">Analytics Dashboard</h2>
+            <h2 className="text-xl font-bold">Analytics Dashboard</h2>
           </div>
           
           <div className="flex gap-2">
@@ -72,13 +73,13 @@ export default function Analytics() {
               variant="outline" 
               onClick={handleRefreshData}
               disabled={isRefreshing}
-              className="h-8 text-xs w-full sm:w-auto px-2"
+              className="h-8 gap-1"
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-              {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Refresh Data
             </Button>
             
-            <Button asChild variant="destructive" className="gap-2 text-white bg-red-600 hover:bg-red-700 text-xs h-8 w-full sm:w-auto px-2">
+            <Button asChild variant="destructive" className="text-white bg-red-600 hover:bg-red-700 h-8 gap-1">
               <Link to="/">
                 <Home className="h-4 w-4" />
                 Return to Home
@@ -87,52 +88,114 @@ export default function Analytics() {
           </div>
         </div>
         
-        <div className="space-y-4">
-          {/* Company Overview */}
-          <ErrorBoundary 
-            fallback={
-              <Card className="min-h-[100px] flex items-center justify-center">
-                <ValidationError 
-                  message="Something went wrong loading the company metrics." 
-                  type="error"
-                  className="text-sm"
-                />
-              </Card>
-            }
-            onReset={handleNPSErrorReset}
-          >
-            <CompanyMetrics />
+        <div className="space-y-6">
+          <ErrorBoundary onReset={handleNPSErrorReset}>
+            <MetricsCards />
           </ErrorBoundary>
           
-          {/* Team Analytics */}
-          <ErrorBoundary 
-            fallback={
-              <Card className="min-h-[100px] flex items-center justify-center">
-                <ValidationError 
-                  message="Something went wrong loading the team analytics." 
-                  type="error"
-                  className="text-sm"
-                />
-              </Card>
-            }
-            onReset={handleNPSErrorReset}
-          >
-            <TeamAnalytics />
-          </ErrorBoundary>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Growth & Retention</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <div className="text-sm text-gray-600 mb-1">Growth Rate</div>
+                    <div className="text-xl font-semibold text-green-600">12%</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-600 mb-1">Avg. Client Value</div>
+                    <div className="text-xl font-semibold">$1200</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-600 mb-1">Client Lifetime</div>
+                    <div className="text-xl font-semibold">14.5 months</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-600 mb-1">Time to Value</div>
+                    <div className="text-xl font-semibold">3.2 months</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Performance Trends</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <NPSChart />
+              </CardContent>
+            </Card>
+          </div>
           
-          {/* Client Analytics */}
-          <ErrorBoundary 
-            fallback={
-              <Card className="min-h-[100px] flex items-center justify-center">
-                <ValidationError 
-                  message="Something went wrong loading the client analytics." 
-                  type="error"
-                  className="text-sm"
-                />
-              </Card>
-            }
-            onReset={handleNPSErrorReset}
-          >
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Team Analytics</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <div className="p-4 border rounded-md">
+                  <div className="text-sm text-gray-600">Total MRR</div>
+                  <div className="text-2xl font-semibold">$4950</div>
+                  <div className="text-xs text-green-600">↑ 8%</div>
+                </div>
+                <div className="p-4 border rounded-md">
+                  <div className="text-sm text-gray-600">Calls Booked</div>
+                  <div className="text-2xl font-semibold">40</div>
+                  <div className="text-xs text-green-600">↑ 12%</div>
+                </div>
+                <div className="p-4 border rounded-md">
+                  <div className="text-sm text-gray-600">Deals Closed</div>
+                  <div className="text-2xl font-semibold">9</div>
+                  <div className="text-xs text-green-600">↑ 5%</div>
+                </div>
+                <div className="p-4 border rounded-md">
+                  <div className="text-sm text-gray-600">Client Count</div>
+                  <div className="text-2xl font-semibold">5</div>
+                  <div className="text-xs text-green-600">↑ 3%</div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 border rounded-md">
+                  <div className="flex justify-between mb-2">
+                    <div className="text-sm font-medium">Retention Rate</div>
+                    <div className="text-sm font-semibold text-green-600">40%</div>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                    <div className="bg-green-500 h-2 rounded-full" style={{ width: '40%' }}></div>
+                  </div>
+                  <div className="text-xs text-gray-600">2 active clients</div>
+                </div>
+                
+                <div className="p-4 border rounded-md">
+                  <div className="flex justify-between mb-2">
+                    <div className="text-sm font-medium">At Risk Rate</div>
+                    <div className="text-sm font-semibold text-amber-600">20%</div>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                    <div className="bg-amber-500 h-2 rounded-full" style={{ width: '20%' }}></div>
+                  </div>
+                  <div className="text-xs text-gray-600">1 at-risk client</div>
+                </div>
+                
+                <div className="p-4 border rounded-md">
+                  <div className="flex justify-between mb-2">
+                    <div className="text-sm font-medium">Churn Rate</div>
+                    <div className="text-sm font-semibold text-red-600">20%</div>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                    <div className="bg-red-500 h-2 rounded-full" style={{ width: '20%' }}></div>
+                  </div>
+                  <div className="text-xs text-gray-600">1 churned client</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <ErrorBoundary onReset={handleNPSErrorReset}>
             <ClientAnalytics />
           </ErrorBoundary>
         </div>
