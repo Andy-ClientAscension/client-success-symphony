@@ -37,7 +37,7 @@ export default function Index() {
 
   return (
     <Layout>
-      <div className="w-full"> 
+      <div className="w-full p-4"> 
         <div className="flex items-center justify-between flex-wrap mb-4">
           <div className="text-xl font-bold">Performance Report</div>
           <div className="flex items-center">

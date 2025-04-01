@@ -43,8 +43,8 @@ export function ChurnChart() {
   const churnDifference = Math.abs(currentChurn - previousChurn).toFixed(1);
   
   return (
-    <Card className="w-full shadow-sm mb-4">
-      <CardHeader className="p-4 flex flex-row items-center justify-between">
+    <Card className="w-full shadow-sm">
+      <CardHeader className="p-3 flex flex-row items-center justify-between">
         <div>
           <CardTitle className="text-base font-semibold">Company Churn Rate</CardTitle>
           <div className="flex items-center space-x-2">
@@ -60,12 +60,12 @@ export function ChurnChart() {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-4 pt-0">
-        <div className="h-[250px]">
+      <CardContent className="p-3 pt-0">
+        <div className="h-[220px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={data}
-              margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
+              margin={{ top: 5, right: 20, left: 5, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
@@ -88,13 +88,13 @@ export function ChurnChart() {
                 dataKey="rate" 
                 stroke="#8884d8" 
                 strokeWidth={2}
-                dot={{ r: 4 }}
-                activeDot={{ r: 6 }}
+                dot={{ r: 3 }}
+                activeDot={{ r: 5 }}
               />
             </LineChart>
           </ResponsiveContainer>
         </div>
-        <div className="text-xs text-muted-foreground mt-2">
+        <div className="text-xs text-muted-foreground mt-1">
           <p>Industry average: <span className="font-medium">2.0%</span></p>
         </div>
       </CardContent>
