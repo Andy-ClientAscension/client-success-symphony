@@ -30,14 +30,33 @@ interface BiWeeklyNote {
   healthScore: number;
   notes: string;
   createdBy: string;
+  team?: string;
+}
+
+interface HealthScoreEntry {
+  id: string;
+  clientId: string;
+  clientName: string;
+  team: string;
+  csm: string;
+  score: number;
+  notes: string;
+  date: string;
 }
 
 interface ClientBiWeeklyNotesProps {
   clientId: string;
   clientName: string;
+  team?: string;
+  csm?: string;
 }
 
-export function ClientBiWeeklyNotes({ clientId, clientName }: ClientBiWeeklyNotesProps) {
+export function ClientBiWeeklyNotes({ 
+  clientId, 
+  clientName,
+  team = "",
+  csm = ""
+}: ClientBiWeeklyNotesProps) {
   const [notes, setNotes] = useState<BiWeeklyNote[]>([]);
   const [currentNote, setCurrentNote] = useState<Partial<BiWeeklyNote>>({
     clientId,
@@ -49,7 +68,8 @@ export function ClientBiWeeklyNotes({ clientId, clientName }: ClientBiWeeklyNote
     bookedCalls: 0,
     healthScore: 7,
     notes: "",
-    createdBy: "Current User" // In a real app, get from auth context
+    createdBy: "Current User", // In a real app, get from auth context
+    team
   });
   
   const { toast } = useToast();
@@ -78,11 +98,15 @@ export function ClientBiWeeklyNotes({ clientId, clientName }: ClientBiWeeklyNote
       id: Date.now().toString(),
       clientId,
       date: new Date().toISOString(),
+      team // Make sure team is included
     };
     
     const updatedNotes = [...notes, newNote];
     setNotes(updatedNotes);
     saveData(`${STORAGE_KEYS.CLIENT_NOTES}_biweekly_${clientId}`, updatedNotes);
+    
+    // Also save health score to centralized health scores storage
+    saveHealthScore(newNote);
     
     // Reset form
     setCurrentNote({
@@ -95,13 +119,33 @@ export function ClientBiWeeklyNotes({ clientId, clientName }: ClientBiWeeklyNote
       bookedCalls: 0,
       healthScore: 7,
       notes: "",
-      createdBy: "Current User"
+      createdBy: "Current User",
+      team
     });
     
     toast({
       title: "Note Saved",
       description: "Your bi-weekly note has been saved successfully.",
     });
+  };
+
+  // Save health score to centralized storage
+  const saveHealthScore = (note: BiWeeklyNote) => {
+    const healthScores = loadData<HealthScoreEntry[]>(STORAGE_KEYS.HEALTH_SCORES, []);
+    
+    const healthScoreEntry: HealthScoreEntry = {
+      id: `health-${Date.now()}`,
+      clientId: note.clientId,
+      clientName: clientName,
+      team: note.team || team,
+      csm: csm,
+      score: note.healthScore,
+      notes: note.notes,
+      date: note.date
+    };
+    
+    healthScores.push(healthScoreEntry);
+    saveData(STORAGE_KEYS.HEALTH_SCORES, healthScores);
   };
   
   const getHealthScoreColor = (score: number) => {

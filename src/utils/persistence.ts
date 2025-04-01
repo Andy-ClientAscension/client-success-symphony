@@ -15,7 +15,8 @@ const STORAGE_KEYS = {
   USER_PREFERENCES: "userPreferences",
   CUSTOM_FIELDS: "customFields",
   CLIENT_CUSTOM_FIELDS: "clientCustomFields",
-  TASKS: "tasksList"
+  TASKS: "tasksList",
+  HEALTH_SCORES: "clientHealthScores"
 };
 
 /**

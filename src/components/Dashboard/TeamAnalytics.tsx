@@ -7,9 +7,12 @@ import { CheckCircle2, AlertTriangle, ArrowDownRight, Users, TrendingUp, Trendin
 import { TeamMetricCard } from "./TeamMetricCard";
 import { TeamStatusMetric } from "./TeamStatusMetric";
 import { SSCPerformanceTable } from "./SSCPerformanceTable";
+import { HealthScoreSheet } from "./HealthScoreSheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function TeamAnalytics() {
   const [selectedTeam, setSelectedTeam] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState<string>("overview");
   
   // Get list of unique teams from client data
   const clients = getAllClients();
@@ -92,78 +95,94 @@ export function TeamAnalytics() {
       </CardHeader>
       
       <CardContent className="pb-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-          <TeamMetricCard 
-            title="Total MRR" 
-            value={`$${teamMetrics.totalMRR}`}
-            trend={8}
-          />
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="performance">Team Performance</TabsTrigger>
+            <TabsTrigger value="health-scores">Health Score Sheet</TabsTrigger>
+          </TabsList>
           
-          <TeamMetricCard 
-            title="Calls Booked" 
-            value={teamMetrics.totalCallsBooked}
-            trend={12}
-          />
-          
-          <TeamMetricCard 
-            title="Deals Closed" 
-            value={teamMetrics.totalDealsClosed}
-            trend={5}
-          />
-          
-          <TeamMetricCard 
-            title="Client Count" 
-            value={statusCounts.total}
-            trend={3}
-          />
-        </div>
+          <TabsContent value="overview">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <TeamMetricCard 
+                title="Total MRR" 
+                value={`$${teamMetrics.totalMRR}`}
+                trend={8}
+              />
+              
+              <TeamMetricCard 
+                title="Calls Booked" 
+                value={teamMetrics.totalCallsBooked}
+                trend={12}
+              />
+              
+              <TeamMetricCard 
+                title="Deals Closed" 
+                value={teamMetrics.totalDealsClosed}
+                trend={5}
+              />
+              
+              <TeamMetricCard 
+                title="Client Count" 
+                value={statusCounts.total}
+                trend={3}
+              />
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <TeamStatusMetric 
-            title="Retention Rate"
-            value={retentionRate}
-            color="text-green-600"
-            icon={<CheckCircle2 className="h-3 w-3 mr-1 text-green-500" />}
-            count={statusCounts.active}
-            label="active clients"
-            trend={{
-              value: retentionTrend,
-              indicator: getTrendIndicator(retentionTrend)
-            }}
-          />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <TeamStatusMetric 
+                title="Retention Rate"
+                value={retentionRate}
+                color="text-green-600"
+                icon={<CheckCircle2 className="h-3 w-3 mr-1 text-green-500" />}
+                count={statusCounts.active}
+                label="active clients"
+                trend={{
+                  value: retentionTrend,
+                  indicator: getTrendIndicator(retentionTrend)
+                }}
+              />
+              
+              <TeamStatusMetric 
+                title="At Risk Rate"
+                value={atRiskRate}
+                color="text-amber-600"
+                icon={<AlertTriangle className="h-3 w-3 mr-1 text-amber-500" />}
+                count={statusCounts.atRisk}
+                label="at-risk clients"
+                trend={{
+                  value: -atRiskTrend,
+                  indicator: getTrendIndicator(-atRiskTrend)
+                }}
+              />
+              
+              <TeamStatusMetric 
+                title="Churn Rate"
+                value={churnRate}
+                color="text-red-600"
+                icon={<ArrowDownRight className="h-3 w-3 mr-1 text-red-500" />}
+                count={statusCounts.churned}
+                label="churned clients"
+                trend={{
+                  value: -churnTrend,
+                  indicator: getTrendIndicator(-churnTrend)
+                }}
+              />
+            </div>
+          </TabsContent>
           
-          <TeamStatusMetric 
-            title="At Risk Rate"
-            value={atRiskRate}
-            color="text-amber-600"
-            icon={<AlertTriangle className="h-3 w-3 mr-1 text-amber-500" />}
-            count={statusCounts.atRisk}
-            label="at-risk clients"
-            trend={{
-              value: -atRiskTrend,
-              indicator: getTrendIndicator(-atRiskTrend)
-            }}
-          />
+          <TabsContent value="performance">
+            <SSCPerformanceTable 
+              csmList={csmList}
+              clients={clients}
+              selectedTeam={selectedTeam}
+            />
+          </TabsContent>
           
-          <TeamStatusMetric 
-            title="Churn Rate"
-            value={churnRate}
-            color="text-red-600"
-            icon={<ArrowDownRight className="h-3 w-3 mr-1 text-red-500" />}
-            count={statusCounts.churned}
-            label="churned clients"
-            trend={{
-              value: -churnTrend,
-              indicator: getTrendIndicator(-churnTrend)
-            }}
-          />
-        </div>
-
-        <SSCPerformanceTable 
-          csmList={csmList}
-          clients={clients}
-          selectedTeam={selectedTeam}
-        />
+          <TabsContent value="health-scores">
+            <HealthScoreSheet clients={clients} />
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
