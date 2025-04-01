@@ -15,7 +15,6 @@ export function TeamAnalytics() {
   const [selectedTeam, setSelectedTeam] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<string>("overview");
   
-  // Get list of unique teams from client data
   const clients = getAllClients();
   const teamSet = new Set<string>();
   clients.forEach(client => {
@@ -27,16 +26,13 @@ export function TeamAnalytics() {
   const teams = Array.from(teamSet);
   const csmList = getCSMList();
   
-  // Filter clients by selected team
   const teamClients = selectedTeam === "all" 
     ? clients 
     : clients.filter(client => client.team === selectedTeam);
   
-  // Calculate team metrics
   const metrics = getClientMetricsByTeam();
   const teamMetrics = selectedTeam === "all" ? metrics : getClientMetricsByTeam(selectedTeam);
   
-  // Calculate status counts for selected team
   const statusCounts = {
     active: teamClients.filter(client => client.status === 'active').length,
     atRisk: teamClients.filter(client => client.status === 'at-risk').length,
@@ -45,7 +41,6 @@ export function TeamAnalytics() {
     total: teamClients.length
   };
   
-  // Calculate rates first
   const retentionRate = statusCounts.total > 0 
     ? Math.round((statusCounts.active / statusCounts.total) * 100) 
     : 0;
@@ -58,18 +53,14 @@ export function TeamAnalytics() {
     ? Math.round((statusCounts.churned / statusCounts.total) * 100) 
     : 0;
   
-  // Calculate previous period metrics (simulated for this example)
-  // In a real app, this would come from historical data
   const prevPeriodRetention = Math.max(0, Math.round(retentionRate - (Math.random() * 10 - 5)));
   const prevPeriodAtRisk = Math.max(0, Math.round(atRiskRate - (Math.random() * 10 - 3)));
   const prevPeriodChurn = Math.max(0, Math.round(churnRate - (Math.random() * 10 - 2)));
   
-  // Calculate trends
   const retentionTrend = retentionRate - prevPeriodRetention;
   const atRiskTrend = atRiskRate - prevPeriodAtRisk;
   const churnTrend = churnRate - prevPeriodChurn;
 
-  // Helper function to get trend indicator component
   const getTrendIndicator = (trend: number) => {
     if (trend > 0) return <TrendingUp className="h-3 w-3 ml-1" />;
     if (trend < 0) return <TrendingDown className="h-3 w-3 ml-1" />;
@@ -88,7 +79,10 @@ export function TeamAnalytics() {
             <SelectContent>
               <SelectItem value="all">All Teams</SelectItem>
               {teams.map((team) => (
-                <SelectItem key={team} value={team}>{team}</SelectItem>
+                <SelectItem key={team} value={team}>{team === "Team-Andy" ? "Team Andy" : 
+                                                    team === "Team-Chris" ? "Team Chris" : 
+                                                    team === "Team-Alex" ? "Team Alex" : 
+                                                    team === "Team-Cillin" ? "Team Cillin" : team}</SelectItem>
               ))}
             </SelectContent>
           </Select>
