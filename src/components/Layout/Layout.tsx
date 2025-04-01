@@ -25,16 +25,13 @@ export function Layout({ children }: LayoutProps) {
   };
   
   return (
-    <div className={`flex h-screen w-full overflow-hidden ${theme === 'dark' ? 'bg-gray-900 text-gray-200' : 'bg-slate-50 text-gray-900'}`}>
+    <div className={`flex h-screen w-full overflow-hidden ${theme === 'dark' ? 'bg-gray-900 text-gray-200' : 'bg-white text-gray-900'}`}>
       {sidebarOpen && <Sidebar isMobile={isMobile} closeSidebar={closeSidebar} />}
-      <div className={`flex-1 flex flex-col w-full min-w-0 ${isMobile ? 'ml-0' : (sidebarOpen ? 'ml-56' : 'ml-0')}`}>
+      <div className={`flex-1 flex flex-col w-full min-w-0 ${isMobile ? 'ml-0' : (sidebarOpen ? 'ml-64' : 'ml-0')}`}>
         <Header />
-        <div className="flex items-center justify-end px-4 py-2 border-b">
-          <RenewalNotifier />
-        </div>
-        <main className="flex-1 overflow-hidden w-full">
+        <main className="flex-1 overflow-hidden w-full bg-slate-50 dark:bg-gray-900">
           <ScrollArea className="h-full w-full" orientation="both">
-            <div className="p-4">
+            <div className="px-6 py-4">
               <ErrorBoundary>
                 {children}
               </ErrorBoundary>

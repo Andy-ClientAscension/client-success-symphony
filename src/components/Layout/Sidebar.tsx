@@ -1,14 +1,12 @@
+
 import {
-  Home,
-  Users,
-  Calendar,
-  Settings,
-  CreditCard,
-  LineChart,
-  Bell,
-  Heart,
   LayoutDashboard,
-  ListChecks
+  Users,
+  ListChecks,
+  Calendar,
+  CreditCard,
+  Heart,
+  Settings,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -26,43 +24,43 @@ export function Sidebar({ isMobile, closeSidebar }: SidebarProps) {
     {
       name: "Dashboard",
       href: "/",
-      icon: <LayoutDashboard className="h-4 w-4" />,
+      icon: <LayoutDashboard className="h-5 w-5" />,
     },
     {
       name: "Clients",
       href: "/clients",
-      icon: <Users className="h-4 w-4" />,
+      icon: <Users className="h-5 w-5" />,
     },
     {
       name: "Tasks",
       href: "/tasks",
-      icon: <ListChecks className="h-4 w-4" />,
+      icon: <ListChecks className="h-5 w-5" />,
     },
     {
       name: "Calendar",
       href: "/calendar",
-      icon: <Calendar className="h-4 w-4" />,
+      icon: <Calendar className="h-5 w-5" />,
     },
     {
       name: "Billing",
       href: "/billing",
-      icon: <CreditCard className="h-4 w-4" />,
+      icon: <CreditCard className="h-5 w-5" />,
     },
     {
       name: "Health Scores",
       href: "/health-scores",
-      icon: <Heart className="h-4 w-4" />,
+      icon: <Heart className="h-5 w-5" />,
     },
     {
       name: "Settings",
       href: "/settings",
-      icon: <Settings className="h-4 w-4" />,
+      icon: <Settings className="h-5 w-5" />,
     },
   ];
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="px-4 py-6">
+    <div className="flex flex-col h-full bg-white dark:bg-gray-900 border-r w-64">
+      <div className="px-6 py-6 border-b">
         <Button variant="ghost" className="pl-0 lg:hidden" onClick={closeSidebar}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -81,19 +79,19 @@ export function Sidebar({ isMobile, closeSidebar }: SidebarProps) {
           </svg>
         </Button>
         <h1 className="font-bold text-2xl">CRM Tool</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground mt-1">
           Manage clients & track performance
         </p>
       </div>
-      <div className="flex-1 px-4 py-2">
+      <div className="flex-1 px-3 py-4">
         <ul className="space-y-1">
           {navigation.map((item) => (
             <li key={item.name}>
               <NavLink
                 to={item.href}
                 className={({ isActive }) =>
-                  `flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-secondary hover:text-foreground ${
-                    isActive ? "bg-secondary text-foreground" : "text-muted-foreground"
+                  `flex items-center gap-3 rounded-md px-4 py-2.5 text-base font-medium transition-colors hover:bg-slate-100 dark:hover:bg-gray-800 ${
+                    isActive ? "bg-slate-100 dark:bg-gray-800" : "text-gray-700 dark:text-gray-300"
                   }`
                 }
                 onClick={isMobile ? closeSidebar : undefined}
@@ -105,8 +103,8 @@ export function Sidebar({ isMobile, closeSidebar }: SidebarProps) {
           ))}
         </ul>
       </div>
-      <div className="p-4">
-        <div className="border rounded-lg p-3 bg-secondary/50">
+      <div className="p-4 border-t">
+        <div className="rounded-lg p-3 bg-slate-50 dark:bg-gray-800">
           <h3 className="text-sm font-medium">Dashboard Persistence</h3>
           <p className="text-xs text-muted-foreground">
             Save dashboard data between sessions
