@@ -40,7 +40,7 @@ export function Sidebar() {
 
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/" },
-    { icon: Users, label: "Clients", href: "/add-client" },
+    { icon: Users, label: "Clients", href: "/clients" },
     { icon: BarChart2, label: "Analytics", href: "/analytics" },
     { icon: Calendar, label: "Renewals", href: "/renewals" },
     { icon: MessagesSquare, label: "Communications", href: "/communications" },

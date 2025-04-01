@@ -12,12 +12,14 @@ import {
 } from "@/components/ui/select";
 import { CSM_TEAMS } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
+import { STORAGE_KEYS, loadData, saveData } from "@/utils/persistence";
 
 interface StudentTeamEditProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (teamId: string) => void;
   studentName: string;
+  studentId: string;
   currentTeam?: string;
 }
 
@@ -26,6 +28,7 @@ export function StudentTeamEdit({
   onClose,
   onSubmit,
   studentName,
+  studentId,
   currentTeam = "all",
 }: StudentTeamEditProps) {
   const [selectedTeam, setSelectedTeam] = useState<string>(currentTeam);
@@ -38,12 +41,38 @@ export function StudentTeamEdit({
   }, [currentTeam]);
 
   const handleSubmit = () => {
-    onSubmit(selectedTeam);
-    toast({
-      title: "Team Assignment Updated",
-      description: `${studentName} is now assigned to ${CSM_TEAMS.find(team => team.id === selectedTeam)?.name || selectedTeam}`,
-    });
+    if (currentTeam !== selectedTeam) {
+      // Update team assignment
+      onSubmit(selectedTeam);
+
+      // Transfer bi-weekly notes to the new team
+      transferBiWeeklyNotes(studentId, currentTeam, selectedTeam);
+
+      toast({
+        title: "Team Assignment Updated",
+        description: `${studentName} is now assigned to ${CSM_TEAMS.find(team => team.id === selectedTeam)?.name || selectedTeam}`,
+      });
+    }
     onClose();
+  };
+
+  const transferBiWeeklyNotes = (studentId: string, oldTeam: string, newTeam: string) => {
+    // Load bi-weekly notes for this student
+    const notesKey = `${STORAGE_KEYS.CLIENT_NOTES}_biweekly_${studentId}`;
+    const studentNotes = loadData(notesKey, []);
+
+    if (studentNotes.length > 0) {
+      // Update team information in the notes
+      const updatedNotes = studentNotes.map((note: any) => ({
+        ...note,
+        team: newTeam
+      }));
+
+      // Save updated notes
+      saveData(notesKey, updatedNotes);
+      
+      console.log(`Transferred ${studentNotes.length} bi-weekly notes from ${oldTeam} to ${newTeam}`);
+    }
   };
 
   return (

@@ -4,13 +4,14 @@ import { useState } from "react";
 import { ClientList } from "@/components/Dashboard/ClientList";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, BarChart2 } from "lucide-react";
 import { 
   Tabs, 
   TabsContent, 
   TabsList, 
   TabsTrigger 
 } from "@/components/ui/tabs";
+import { TeamAnalytics } from "@/components/Dashboard/TeamAnalytics";
 
 export default function Clients() {
   const [activeTab, setActiveTab] = useState("all");
@@ -66,6 +67,13 @@ export default function Clients() {
               >
                 Churned
               </TabsTrigger>
+              <TabsTrigger 
+                value="team-health" 
+                className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-3 py-1 bg-transparent text-xs whitespace-nowrap"
+              >
+                <BarChart2 className="h-3 w-3 mr-1" />
+                Team Health
+              </TabsTrigger>
             </TabsList>
           </div>
           
@@ -87,6 +95,10 @@ export default function Clients() {
           
           <TabsContent value="churned" className="m-0">
             <ClientList statusFilter="churned" />
+          </TabsContent>
+          
+          <TabsContent value="team-health" className="m-0">
+            <TeamAnalytics />
           </TabsContent>
         </Tabs>
       </div>

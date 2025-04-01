@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MoreHorizontal, ChevronRight, PlusCircle, Phone, BarChart2, DollarSign, Edit, TrendingUp, Users, Search, Download, Check, CheckSquare, Square } from "lucide-react";
+import { MoreHorizontal, ChevronRight, PlusCircle, Phone, BarChart2, DollarSign, Edit, TrendingUp, Users, Search, Download, Check, CheckSquare, Square, CalendarIcon } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import {
@@ -44,6 +44,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ClientBiWeeklyNotes } from "./ClientBiWeeklyNotes";
 
 const TEAMS = [
   { id: "all", name: "All Teams" },
@@ -416,6 +417,7 @@ export function ClientList({ statusFilter }: ClientListProps) {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
+                      <ClientBiWeeklyNotes clientId={client.id} clientName={client.name} />
                       <Button 
                         variant="ghost" 
                         size="icon" 
