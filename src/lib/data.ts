@@ -1,9 +1,10 @@
+
 import { format, addDays, subDays } from "date-fns";
 
 export interface Client {
   id: string;
   name: string;
-  status: "new" | "active" | "at-risk" | "churned";
+  status: "new" | "active" | "backend" | "olympia" | "at-risk" | "churned";
   team?: string;
   csm?: string;
   startDate: string;

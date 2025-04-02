@@ -1,4 +1,3 @@
-
 import { useMemo, useState } from "react";
 import { Client } from "@/lib/data";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,7 +15,7 @@ interface ClientKanbanViewProps {
   onUpdateNPS: (client: Client) => void;
 }
 
-// Define a type for the status groups to fix TypeScript errors
+// Define a type for the status groups
 type StatusGroup = 'new' | 'active' | 'backend' | 'olympia' | 'at-risk' | 'churned';
 
 export function ClientKanbanView({ clients, onEditMetrics, onUpdateNPS }: ClientKanbanViewProps) {
@@ -37,11 +36,7 @@ export function ClientKanbanView({ clients, onEditMetrics, onUpdateNPS }: Client
     
     localClients.forEach(client => {
       const status = client.status as StatusGroup;
-      if (status === 'backend') {
-        groups['backend'].push(client);
-      } else if (status === 'olympia') {
-        groups['olympia'].push(client);
-      } else if (groups[status]) {
+      if (groups[status]) {
         groups[status].push(client);
       }
     });
