@@ -26,41 +26,49 @@ export function Sidebar({ isMobile, closeSidebar }: SidebarProps) {
       name: "Dashboard",
       href: "/",
       icon: <LayoutDashboard className="h-5 w-5" />,
+      color: "border-green-400" // Active clients color
     },
     {
       name: "Clients",
       href: "/clients",
       icon: <Users className="h-5 w-5" />,
+      color: "border-blue-400" // Graduated color
     },
     {
       name: "Analytics",
       href: "/analytics",
       icon: <BarChart className="h-5 w-5" />,
+      color: "border-purple-400" // Backend color
     },
     {
       name: "Renewals",
       href: "/renewals",
       icon: <Calendar className="h-5 w-5" />,
+      color: "border-indigo-400" // Olympia color
     },
     {
       name: "Communications",
       href: "/communications",
       icon: <MessageSquare className="h-5 w-5" />,
+      color: "border-amber-400" // Paused color
     },
     {
       name: "Payments",
       href: "/payments",
       icon: <CreditCard className="h-5 w-5" />,
+      color: "border-red-400" // Churned color
     },
     {
       name: "Settings",
       href: "/settings",
       icon: <Settings className="h-5 w-5" />,
+      color: "border-gray-400"
     },
     {
       name: "Help",
       href: "/help",
       icon: <HelpCircle className="h-5 w-5" />,
+      color: "border-gray-400"
     },
   ];
 
@@ -100,11 +108,13 @@ export function Sidebar({ isMobile, closeSidebar }: SidebarProps) {
             <li key={item.name}>
               <NavLink
                 to={item.href}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-md px-4 py-2.5 text-base font-medium transition-colors hover:bg-gray-800 ${
-                    isActive ? "bg-gray-800" : "text-gray-300"
-                  }`
-                }
+                className={({ isActive }) => {
+                  return `flex items-center gap-3 rounded-md pl-3 py-2.5 text-base font-medium transition-colors hover:bg-gray-800 border-l-4 ${
+                    isActive 
+                      ? `bg-gray-800 ${item.color}` 
+                      : "text-gray-300 border-transparent"
+                  }`;
+                }}
                 onClick={isMobile ? closeSidebar : undefined}
               >
                 {item.icon}
