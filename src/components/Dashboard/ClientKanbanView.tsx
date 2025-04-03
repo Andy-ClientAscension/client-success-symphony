@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+
+import { useMemo, useState, useEffect } from "react";
 import { Client } from "@/lib/data";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +9,7 @@ import { Phone, BarChart2, DollarSign, ChevronRight, Edit, TrendingUp, Move } fr
 import { useNavigate } from "react-router-dom";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useToast } from "@/hooks/use-toast";
+import { saveData, STORAGE_KEYS, loadData } from "@/utils/persistence";
 
 interface ClientKanbanViewProps {
   clients: Client[];
@@ -22,6 +24,22 @@ export function ClientKanbanView({ clients, onEditMetrics, onUpdateNPS }: Client
   const navigate = useNavigate();
   const { toast } = useToast();
   const [localClients, setLocalClients] = useState<Client[]>(clients);
+  
+  // Update local state when clients prop changes
+  useEffect(() => {
+    setLocalClients(clients);
+  }, [clients]);
+
+  // Save client status changes to persistence
+  const saveClientChanges = (updatedClients: Client[]) => {
+    setLocalClients(updatedClients);
+    // Optionally persist the changes if you want them to be remembered across page refreshes
+    try {
+      saveData(STORAGE_KEYS.CLIENT_STATUS, updatedClients);
+    } catch (error) {
+      console.error("Error saving client status changes:", error);
+    }
+  };
   
   // Group clients by status
   const clientsByStatus = useMemo(() => {
@@ -103,8 +121,8 @@ export function ClientKanbanView({ clients, onEditMetrics, onUpdateNPS }: Client
       return client;
     });
     
-    // Update local state
-    setLocalClients(updatedClients);
+    // Update local state and persist changes
+    saveClientChanges(updatedClients);
     
     // Show toast notification
     toast({
