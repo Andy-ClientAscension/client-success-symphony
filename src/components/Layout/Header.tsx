@@ -3,7 +3,6 @@ import { Bell, Search, HelpCircle, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { FileUp } from "lucide-react";
@@ -11,7 +10,11 @@ import { SearchResults } from "@/components/Search/SearchResults";
 import { searchAll } from "@/services/searchService";
 import { useDebounce } from "@/hooks/use-debounce";
 
-export function Header() {
+interface HeaderProps {
+  toggleSidebar?: () => void;
+}
+
+export function Header({ toggleSidebar }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -71,6 +74,32 @@ export function Header() {
     <header className="border-b bg-white dark:bg-gray-900 h-16 flex items-center justify-between px-6">
       <div className="flex items-center gap-4 w-full">
         <div className="flex items-center">
+          {toggleSidebar && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={toggleSidebar}
+              className="mr-2 text-gray-600 dark:text-gray-300"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-6 w-6"
+              >
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+              <span className="sr-only">Toggle Sidebar</span>
+            </Button>
+          )}
           <img 
             src="/lovable-uploads/be8819c9-875b-4531-a156-fca2f462bc66.png" 
             alt="Client Ascension Logo" 
