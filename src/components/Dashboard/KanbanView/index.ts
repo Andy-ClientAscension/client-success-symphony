@@ -1,0 +1,2 @@
+
+export { ClientKanbanView } from './ClientKanbanView';
