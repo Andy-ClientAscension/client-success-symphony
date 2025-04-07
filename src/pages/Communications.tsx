@@ -6,18 +6,11 @@ import { ExternalLink, FileText, Link as LinkIcon, Phone, Users, Home } from "lu
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { CommunicationLog } from "@/components/Dashboard/CommunicationLog";
 import { ClientActivityLog } from "@/components/Dashboard/ClientActivityLog";
+import { TaskManager } from "@/components/Dashboard/TaskManager";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MOCK_CLIENTS } from "@/lib/data";
 import { Link } from "react-router-dom";
-
-const allCommunications = MOCK_CLIENTS.flatMap(client => 
-  client.communicationLog.map(comm => ({
-    ...comm,
-    clientName: client.name
-  }))
-).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
 interface ResourceLink {
   id: string;
@@ -161,13 +154,13 @@ export default function Communications() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2">
-            <Tabs defaultValue="recent" className="w-full">
+            <Tabs defaultValue="tasks" className="w-full">
               <TabsList className="w-full justify-start mb-4 bg-gray-100 p-1">
                 <TabsTrigger 
-                  value="recent" 
+                  value="tasks" 
                   className="data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:font-medium"
                 >
-                  Recent Communications
+                  Task Manager
                 </TabsTrigger>
                 <TabsTrigger 
                   value="activity" 
@@ -183,8 +176,8 @@ export default function Communications() {
                 </TabsTrigger>
               </TabsList>
               
-              <TabsContent value="recent">
-                <CommunicationLog communications={allCommunications} />
+              <TabsContent value="tasks">
+                <TaskManager />
               </TabsContent>
 
               <TabsContent value="activity">
