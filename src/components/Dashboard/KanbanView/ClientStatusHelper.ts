@@ -1,14 +1,14 @@
 
 import { Client } from "@/lib/data";
 
-export type StatusGroup = 'new' | 'active' | 'backend' | 'olympia' | 'at-risk' | 'churned';
+export type StatusGroup = 'new' | 'active' | 'backend' | 'olympia' | 'at-risk' | 'churned' | 'paused' | 'graduated';
 
 export const getStatusLabel = (status: string): string => {
   switch (status) {
     case 'new':
       return 'New Clients';
     case 'active':
-      return 'Active Clients';
+      return 'Active Students';
     case 'backend':
       return 'Backend Students';
     case 'olympia':
@@ -16,7 +16,11 @@ export const getStatusLabel = (status: string): string => {
     case 'at-risk':
       return 'At Risk';
     case 'churned':
-      return 'Churned';
+      return 'Churned Students';
+    case 'paused':
+      return 'Paused Students';
+    case 'graduated':
+      return 'Graduated Students';
     default:
       return status.charAt(0).toUpperCase() + status.slice(1);
   }
@@ -36,7 +40,32 @@ export const getStatusColor = (status: string): string => {
       return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400';
     case 'churned':
       return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+    case 'paused':
+      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+    case 'graduated':
+      return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400';
     default:
       return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400';
   }
+};
+
+// Convert client status to kanban column
+export const clientStatusToKanbanColumn = (status: Client['status']): StatusGroup => {
+  switch (status) {
+    case 'new':
+      return 'new';
+    case 'active':
+      return 'active';
+    case 'at-risk':
+      return 'at-risk';
+    case 'churned':
+      return 'churned';
+    default:
+      return 'active'; // Default to active for any unrecognized status
+  }
+};
+
+// Get default column order for kanban board
+export const getDefaultColumnOrder = (): StatusGroup[] => {
+  return ['new', 'active', 'backend', 'olympia', 'at-risk', 'paused', 'churned', 'graduated'];
 };

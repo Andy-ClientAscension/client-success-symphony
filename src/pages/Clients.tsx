@@ -35,7 +35,7 @@ export default function Clients() {
         variant: "destructive",
       });
     }
-  }, []);
+  }, [loadPersistedData, toast]);
 
   const handleAddNewClient = () => {
     navigate("/add-client");
