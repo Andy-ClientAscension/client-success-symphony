@@ -152,7 +152,7 @@ export function ClientList({ statusFilter }: ClientListProps) {
           searchQuery={searchQuery}
           onSearchChange={handleSearchChange}
           selectedClientCount={selectedClientIds.length}
-          onOpenBulkActions={() => {}}
+          onOpenBulkActions={() => openBulkActionDialog('status')}
         />
 
         <ClientListContent 

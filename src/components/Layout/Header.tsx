@@ -1,3 +1,4 @@
+
 import { Bell, Search, HelpCircle, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -155,9 +156,13 @@ export function Header({ toggleSidebar }: HeaderProps) {
           <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-600 rounded-full" />
         </Button>
         
-        <Dialog>
+        <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white ml-2">
+            <Button 
+              size="sm" 
+              className="bg-red-600 hover:bg-red-700 text-white ml-2"
+              onClick={() => setImportDialogOpen(true)}
+            >
               <Upload className="h-3.5 w-3.5 mr-1" /> Import
             </Button>
           </DialogTrigger>

@@ -1,27 +1,42 @@
 
-// Define a type for the status groups
+import { Client } from "@/lib/data";
+
 export type StatusGroup = 'new' | 'active' | 'backend' | 'olympia' | 'at-risk' | 'churned';
 
 export const getStatusLabel = (status: string): string => {
   switch (status) {
-    case 'new': return 'New';
-    case 'active': return 'Active';
-    case 'backend': return 'Backend';
-    case 'olympia': return 'Olympia';
-    case 'at-risk': return 'At Risk';
-    case 'churned': return 'Churned';
-    default: return status;
+    case 'new':
+      return 'New Clients';
+    case 'active':
+      return 'Active Clients';
+    case 'backend':
+      return 'Backend Students';
+    case 'olympia':
+      return 'Olympia Students';
+    case 'at-risk':
+      return 'At Risk';
+    case 'churned':
+      return 'Churned';
+    default:
+      return status.charAt(0).toUpperCase() + status.slice(1);
   }
 };
 
 export const getStatusColor = (status: string): string => {
   switch (status) {
-    case 'new': return 'bg-brand-100 text-brand-800';
-    case 'active': return 'bg-success-100 text-success-800';
-    case 'backend': return 'bg-purple-100 text-purple-800';
-    case 'olympia': return 'bg-indigo-100 text-indigo-800';
-    case 'at-risk': return 'bg-warning-100 text-warning-800';
-    case 'churned': return 'bg-danger-100 text-danger-800';
-    default: return 'bg-muted text-muted-foreground';
+    case 'new':
+      return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
+    case 'active':
+      return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+    case 'backend':
+      return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400';
+    case 'olympia':
+      return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
+    case 'at-risk':
+      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400';
+    case 'churned':
+      return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+    default:
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400';
   }
 };

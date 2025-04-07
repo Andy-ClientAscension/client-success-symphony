@@ -86,13 +86,19 @@ const ClientRow = memo(({
   };
 
   return (
-    <TableRow key={client.id}>
+    <TableRow key={client.id} className={isSelected ? "bg-muted/50" : ""}>
       <TableCell>
-        <div className="flex items-center justify-center" onClick={() => onSelectClient(client.id)}>
+        <div 
+          className="flex items-center justify-center cursor-pointer" 
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelectClient(client.id);
+          }}
+        >
           {isSelected ? (
-            <CheckSquare className="h-4 w-4 cursor-pointer" />
+            <CheckSquare className="h-4 w-4" />
           ) : (
-            <Square className="h-4 w-4 cursor-pointer" />
+            <Square className="h-4 w-4" />
           )}
         </div>
       </TableCell>
@@ -151,7 +157,10 @@ const ClientRow = memo(({
             variant="ghost" 
             size="icon" 
             className="h-6 w-6"
-            onClick={() => onUpdateNPS(client)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onUpdateNPS(client);
+            }}
             title="Update NPS"
           >
             <TrendingUp className="h-3 w-3 text-muted-foreground" />
@@ -164,7 +173,10 @@ const ClientRow = memo(({
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={() => onEditMetrics(client)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditMetrics(client);
+            }}
             title="Edit metrics"
           >
             <Edit className="h-4 w-4" />
@@ -172,13 +184,20 @@ const ClientRow = memo(({
           <Button 
             variant="ghost" 
             size="icon"
-            onClick={() => onViewDetails(client)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewDetails(client);
+            }}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -220,11 +239,14 @@ export function ClientsTable({
         <TableHeader>
           <TableRow>
             <TableHead className="w-[40px]">
-              <div className="flex items-center justify-center" onClick={onSelectAll}>
+              <div 
+                className="flex items-center justify-center cursor-pointer" 
+                onClick={() => onSelectAll()}
+              >
                 {selectedClientIds.length === clients.length && clients.length > 0 ? (
-                  <CheckSquare className="h-4 w-4 cursor-pointer" />
+                  <CheckSquare className="h-4 w-4" />
                 ) : (
-                  <Square className="h-4 w-4 cursor-pointer" />
+                  <Square className="h-4 w-4" />
                 )}
               </div>
             </TableHead>

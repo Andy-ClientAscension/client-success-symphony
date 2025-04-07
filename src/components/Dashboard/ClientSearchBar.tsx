@@ -2,7 +2,7 @@
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileUp } from "lucide-react";
+import { FileUp, Layers } from "lucide-react";
 
 interface ClientSearchBarProps {
   searchQuery: string;
@@ -34,7 +34,15 @@ export function ClientSearchBar({
           <span className="text-sm font-medium">
             {selectedClientCount} selected
           </span>
-          <Button variant="outline" size="sm" onClick={onOpenBulkActions}>Bulk Actions</Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onOpenBulkActions}
+            className="flex items-center"
+          >
+            <Layers className="h-3.5 w-3.5 mr-1.5" />
+            Bulk Actions
+          </Button>
         </div>
       )}
     </div>

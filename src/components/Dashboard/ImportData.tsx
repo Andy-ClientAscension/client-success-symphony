@@ -170,17 +170,15 @@ export function ImportData() {
           <LoadingState message="Importing..." size="sm" />
         ) : (
           <>
-            <Button 
-              type="button" 
-              variant="outline"
-              onClick={() => {
-                const closeButton = document.querySelector('[data-radix-dialog-close]') as HTMLButtonElement | null;
-                if (closeButton) closeButton.click();
-              }}
-              size="sm"
-            >
-              Cancel
-            </Button>
+            <DialogClose asChild>
+              <Button 
+                type="button" 
+                variant="outline"
+                size="sm"
+              >
+                Cancel
+              </Button>
+            </DialogClose>
             <Button 
               type="button" 
               onClick={handleImport}
