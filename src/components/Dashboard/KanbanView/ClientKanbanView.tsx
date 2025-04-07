@@ -28,7 +28,7 @@ export function ClientKanbanView({ clients, onEditMetrics, onUpdateNPS }: Client
           <KanbanColumn
             key={status}
             status={status}
-            clients={statusClients}
+            clients={statusClients as unknown as Client[]}
             getStatusColor={getStatusColor}
             getStatusLabel={getStatusLabel}
             onUpdateNPS={onUpdateNPS}

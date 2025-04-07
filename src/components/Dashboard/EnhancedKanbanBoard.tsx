@@ -55,100 +55,129 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
   const { toast } = useToast();
   
   useEffect(() => {
-    loadPersistedData();
-    console.log("Loaded kanban data:", data);
-    console.log("Filtered kanban data:", filteredData);
-    
-    Object.keys(data.columns).forEach(columnId => {
-      console.log(`Column ${columnId} has ${data.columns[columnId].studentIds.length} students`);
-    });
+    try {
+      loadPersistedData();
+      console.log("Loaded kanban data:", data);
+      console.log("Filtered kanban data:", filteredData);
+    } catch (error) {
+      console.error("Error loading kanban data:", error);
+      toast({
+        title: "Error Loading Data",
+        description: "There was a problem loading the kanban board data.",
+        variant: "destructive"
+      });
+    }
   }, []);
   
   useEffect(() => {
-    const checkAllStudentPayments = async () => {
-      const updatedStudents = { ...data.students };
-      let hasPaymentIssues = false;
-      
-      for (const studentId in updatedStudents) {
-        const student = updatedStudents[studentId];
-        if (data.columns.active.studentIds.includes(studentId) || 
-            data.columns.backend.studentIds.includes(studentId) ||
-            data.columns.olympia.studentIds.includes(studentId)) {
-          const paymentStatus = await checkStudentPaymentStatus(
-            student.id, 
-            student.name,
-            28
-          );
-          
-          if (paymentStatus.isOverdue) {
-            hasPaymentIssues = true;
-          }
-          
-          updatedStudents[studentId] = {
-            ...student,
-            paymentStatus: {
-              isOverdue: paymentStatus.isOverdue,
-              daysOverdue: paymentStatus.daysOverdue,
-              amountDue: paymentStatus.amountDue
-            }
-          };
+    try {
+      const checkAllStudentPayments = async () => {
+        if (!data?.students || !data?.columns) {
+          console.warn("Kanban data not fully initialized for payment check");
+          return;
         }
-      }
+
+        const updatedStudents = { ...data.students };
+        let hasPaymentIssues = false;
+        
+        for (const studentId in updatedStudents) {
+          const student = updatedStudents[studentId];
+          const isActive = data.columns.active?.studentIds.includes(studentId) || 
+                           data.columns.backend?.studentIds.includes(studentId) ||
+                           data.columns.olympia?.studentIds.includes(studentId);
+          
+          if (isActive) {
+            const paymentStatus = await checkStudentPaymentStatus(
+              student.id, 
+              student.name,
+              28
+            );
+            
+            if (paymentStatus.isOverdue) {
+              hasPaymentIssues = true;
+            }
+          }
+        }
+        
+        if (hasPaymentIssues) {
+          toast({
+            title: "Payment Alerts",
+            description: "Some students have overdue payments",
+            variant: "destructive",
+          });
+        }
+      };
       
-      if (hasPaymentIssues) {
-        toast({
-          title: "Payment Alerts",
-          description: "Some students have overdue payments",
-          variant: "destructive",
-        });
-      }
-    };
-    
-    checkAllStudentPayments();
-  }, []);
+      checkAllStudentPayments().catch(err => {
+        console.error("Error checking student payments:", err);
+      });
+    } catch (error) {
+      console.error("Error checking payments:", error);
+    }
+  }, [data]);
   
   const onDragEnd = (result) => {
-    const { destination, source, draggableId } = result;
-    
-    if (!destination) {
-      return;
+    try {
+      const { destination, source, draggableId } = result;
+      
+      if (!destination) {
+        return;
+      }
+      
+      if (
+        destination.droppableId === source.droppableId &&
+        destination.index === source.index
+      ) {
+        return;
+      }
+      
+      // Check if the data and columns are properly initialized
+      if (!data?.columns || !filteredData?.columns) {
+        console.error("Kanban data not properly initialized for drag operation");
+        toast({
+          title: "Operation Failed",
+          description: "Could not move student due to data initialization issue.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (destination.droppableId === 'churned' && source.droppableId !== 'churned') {
+        setSelectedStudent(data.students[draggableId]);
+        setDateModalType("churn");
+        setDateModalOpen(true);
+        return;
+      }
+      
+      if (destination.droppableId === 'paused' && source.droppableId !== 'paused') {
+        setSelectedStudent(data.students[draggableId]);
+        setDateModalType("pause");
+        setDateModalOpen(true);
+        return;
+      }
+      
+      if (source.droppableId === 'paused' && destination.droppableId !== 'paused') {
+        setSelectedStudent(data.students[draggableId]);
+        setDateModalType("resume");
+        setDateModalOpen(true);
+        return;
+      }
+      
+      moveStudent(
+        draggableId, 
+        source.droppableId, 
+        destination.droppableId, 
+        source.index, 
+        destination.index
+      );
+    } catch (error) {
+      console.error("Error in drag operation:", error);
+      toast({
+        title: "Operation Failed",
+        description: "There was an error moving the student.",
+        variant: "destructive"
+      });
     }
-    
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) {
-      return;
-    }
-    
-    if (destination.droppableId === 'churned' && source.droppableId !== 'churned') {
-      setSelectedStudent(data.students[draggableId]);
-      setDateModalType("churn");
-      setDateModalOpen(true);
-      return;
-    }
-    
-    if (destination.droppableId === 'paused' && source.droppableId !== 'paused') {
-      setSelectedStudent(data.students[draggableId]);
-      setDateModalType("pause");
-      setDateModalOpen(true);
-      return;
-    }
-    
-    if (source.droppableId === 'paused' && destination.droppableId !== 'paused') {
-      setSelectedStudent(data.students[draggableId]);
-      setDateModalType("resume");
-      setDateModalOpen(true);
-      return;
-    }
-    
-    moveStudent(
-      draggableId, 
-      source.droppableId, 
-      destination.droppableId, 
-      source.index, 
-      destination.index
-    );
   };
 
   const handleChurnDateConfirm = (date: Date) => {
@@ -262,30 +291,56 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
   };
   
   const teamStats = () => {
-    if (selectedTeam === "all") {
+    try {
+      if (!data?.students || !data?.columns || !filteredData?.columns) {
+        console.warn("Kanban data not fully initialized for team stats calculation");
+        return {
+          total: 0,
+          active: 0,
+          graduated: 0,
+          churned: 0,
+          paused: 0,
+          backend: 0,
+          olympia: 0,
+        };
+      }
+      
+      if (selectedTeam === "all") {
+        return {
+          total: Object.keys(data.students).length,
+          active: data.columns.active?.studentIds?.length || 0,
+          graduated: data.columns.graduated?.studentIds?.length || 0,
+          churned: data.columns.churned?.studentIds?.length || 0,
+          paused: data.columns.paused?.studentIds?.length || 0,
+          backend: data.columns.backend?.studentIds?.length || 0,
+          olympia: data.columns.olympia?.studentIds?.length || 0,
+        };
+      }
+      
+      const teamStudents = Object.values(data.students).filter(student => student.csm === selectedTeam);
+      const teamIds = teamStudents.map(student => student.id);
+      
       return {
-        total: Object.keys(data.students).length,
-        active: data.columns.active.studentIds.length,
-        graduated: data.columns.graduated.studentIds.length,
-        churned: data.columns.churned.studentIds.length,
-        paused: data.columns.paused.studentIds.length,
-        backend: data.columns.backend.studentIds.length,
-        olympia: data.columns.olympia.studentIds.length,
+        total: teamStudents.length,
+        active: (data.columns.active?.studentIds || []).filter(id => teamIds.includes(id)).length,
+        graduated: (data.columns.graduated?.studentIds || []).filter(id => teamIds.includes(id)).length,
+        churned: (data.columns.churned?.studentIds || []).filter(id => teamIds.includes(id)).length,
+        paused: (data.columns.paused?.studentIds || []).filter(id => teamIds.includes(id)).length,
+        backend: (data.columns.backend?.studentIds || []).filter(id => teamIds.includes(id)).length,
+        olympia: (data.columns.olympia?.studentIds || []).filter(id => teamIds.includes(id)).length,
+      };
+    } catch (error) {
+      console.error("Error calculating team stats:", error);
+      return { 
+        total: 0, 
+        active: 0, 
+        graduated: 0, 
+        churned: 0,
+        paused: 0,
+        backend: 0,
+        olympia: 0
       };
     }
-    
-    const teamStudents = Object.values(data.students).filter(student => student.csm === selectedTeam);
-    const teamIds = teamStudents.map(student => student.id);
-    
-    return {
-      total: teamStudents.length,
-      active: data.columns.active.studentIds.filter(id => teamIds.includes(id)).length,
-      graduated: data.columns.graduated.studentIds.filter(id => teamIds.includes(id)).length,
-      churned: data.columns.churned.studentIds.filter(id => teamIds.includes(id)).length,
-      paused: data.columns.paused.studentIds.filter(id => teamIds.includes(id)).length,
-      backend: data.columns.backend.studentIds.filter(id => teamIds.includes(id)).length,
-      olympia: data.columns.olympia.studentIds.filter(id => teamIds.includes(id)).length,
-    };
   };
   
   const stats = teamStats();
@@ -322,6 +377,37 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
   
   console.log("Rendering kanban with data:", filteredData);
   console.log("Column order:", filteredData.columnOrder);
+  
+  // If data is not properly loaded, show a loading state
+  if (!filteredData?.columns || !filteredData?.columnOrder || filteredData.columnOrder.length === 0) {
+    return (
+      <Card className={`${expanded ? 'fixed inset-0 z-50 m-4 rounded-lg' : 'mt-4'} overflow-hidden`}>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div className="flex items-center gap-2">
+            <KanbanSquare className="h-5 w-5 text-red-600" />
+            <CardTitle>Student Tracking</CardTitle>
+          </div>
+          <Button 
+            size="icon" 
+            variant="ghost" 
+            onClick={() => setExpanded(!expanded)}
+            className="h-8 w-8"
+          >
+            {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </Button>
+        </CardHeader>
+        <CardContent className="p-6 text-center">
+          <div className="flex flex-col items-center justify-center h-60 gap-4">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-current border-t-transparent text-red-600"></div>
+            <div className="text-lg font-medium">Loading student data...</div>
+            <div className="text-sm text-muted-foreground max-w-md">
+              If this takes too long, please refresh the page or check the console for errors.
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
   
   return (
     <Card className={`${expanded ? 'fixed inset-0 z-50 m-4 rounded-lg' : 'mt-4'} overflow-hidden`}>
@@ -404,7 +490,14 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
             <div className={`grid grid-cols-1 ${expanded ? 'lg:grid-cols-6' : 'md:grid-cols-3 lg:grid-cols-6'} gap-4 pb-4 overflow-x-auto`}>
               {filteredData.columnOrder.map(columnId => {
                 const column = filteredData.columns[columnId];
-                const students = column.studentIds.map(studentId => data.students[studentId]).filter(Boolean);
+                if (!column || !column.studentIds) {
+                  console.warn(`Column ${columnId} is missing or has no studentIds array`);
+                  return null;
+                }
+                
+                const students = column.studentIds
+                  .map(studentId => data.students?.[studentId])
+                  .filter(Boolean);
                 
                 const getColumnStyle = () => {
                   switch(columnId) {
@@ -418,7 +511,7 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
                 };
                 
                 return (
-                  <div key={column.id} className={`flex flex-col bg-secondary/50 rounded-lg p-3 min-w-[250px] ${getColumnStyle()}`}>
+                  <div key={columnId} className={`flex flex-col bg-secondary/50 rounded-lg p-3 min-w-[250px] ${getColumnStyle()}`}>
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center">
                         <h3 className="font-medium">{column.title}</h3>

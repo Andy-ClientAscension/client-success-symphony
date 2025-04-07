@@ -25,6 +25,10 @@ export default function Clients() {
   useEffect(() => {
     // Initialize the kanban store when the component mounts
     try {
+      // Enable data persistence
+      localStorage.setItem("persistDashboard", "true");
+      
+      // Load the kanban data
       loadPersistedData();
       console.log("Kanban store initialized in Clients.tsx");
     } catch (error) {

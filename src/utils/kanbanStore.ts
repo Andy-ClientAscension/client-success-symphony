@@ -386,8 +386,8 @@ interface KanbanStore {
 }
 
 export const useKanbanStore = create<KanbanStore>((set, get) => ({
-  data: POPULATED_DATA || createEmptyState(),
-  filteredData: POPULATED_DATA || createEmptyState(),
+  data: createEmptyState(),
+  filteredData: createEmptyState(),
   selectedTeam: "all",
 
   setSelectedTeam: (team) => {
@@ -467,11 +467,17 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
   
   moveStudent: (studentId, sourceColumnId, destinationColumnId, sourceIndex, destinationIndex) => {
     const { data } = get();
+    
+    if (!data || !data.columns || !data.columns[sourceColumnId] || !data.columns[destinationColumnId]) {
+      console.error("Cannot move student: kanban data not properly initialized");
+      return;
+    }
+    
     const newData = { ...data };
     
     if (sourceColumnId === destinationColumnId) {
       const column = { ...newData.columns[sourceColumnId] };
-      const newStudentIds = Array.from(column.studentIds);
+      const newStudentIds = Array.from(column.studentIds || []);
       newStudentIds.splice(sourceIndex, 1);
       newStudentIds.splice(destinationIndex, 0, studentId);
       
@@ -482,8 +488,8 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       const sourceColumn = { ...newData.columns[sourceColumnId] };
       const destinationColumn = { ...newData.columns[destinationColumnId] };
       
-      const sourceStudentIds = Array.from(sourceColumn.studentIds);
-      const destStudentIds = Array.from(destinationColumn.studentIds);
+      const sourceStudentIds = Array.from(sourceColumn.studentIds || []);
+      const destStudentIds = Array.from(destinationColumn.studentIds || []);
       
       sourceStudentIds.splice(sourceIndex, 1);
       destStudentIds.splice(destinationIndex, 0, studentId);
@@ -584,20 +590,55 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
   loadPersistedData: () => {
     try {
       const persistEnabled = localStorage.getItem("persistDashboard") === "true";
+      let dataToUse = POPULATED_DATA;
+      
       if (persistEnabled) {
-        const savedData = loadData(STORAGE_KEYS.KANBAN, POPULATED_DATA);
+        const savedData = loadData(STORAGE_KEYS.KANBAN, null);
+        
         if (savedData && savedData.columns && savedData.students && savedData.columnOrder) {
-          set({ data: savedData, filteredData: savedData });
+          dataToUse = savedData;
         } else {
           console.warn("Loaded kanban data has invalid structure, using default data");
-          set({ data: POPULATED_DATA, filteredData: POPULATED_DATA });
         }
-      } else {
-        set({ data: POPULATED_DATA, filteredData: POPULATED_DATA });
       }
+      
+      const emptyState = createEmptyState();
+      const requiredColumns = Object.keys(emptyState.columns);
+      
+      let needsUpdate = false;
+      const updatedData = { ...dataToUse };
+      
+      requiredColumns.forEach(columnId => {
+        if (!updatedData.columns[columnId]) {
+          updatedData.columns[columnId] = emptyState.columns[columnId];
+          needsUpdate = true;
+          console.info(`Added missing column: ${columnId}`);
+        }
+      });
+      
+      if (!updatedData.columnOrder.includes('paused') || !updatedData.columnOrder.includes('graduated')) {
+        updatedData.columnOrder = emptyState.columnOrder;
+        needsUpdate = true;
+        console.info("Updated column order to include new columns");
+      }
+      
+      if (needsUpdate) {
+        if (persistEnabled) {
+          saveData(STORAGE_KEYS.KANBAN, updatedData);
+        }
+      }
+      
+      set({ 
+        data: updatedData, 
+        filteredData: updatedData 
+      });
     } catch (error) {
       console.error("Error loading persisted kanban data:", error);
-      set({ data: POPULATED_DATA, filteredData: POPULATED_DATA });
+      const safeState = createEmptyState();
+      set({ 
+        data: safeState, 
+        filteredData: safeState 
+      });
     }
   }
 }));
