@@ -16,8 +16,6 @@ import {
   TabsList, 
   TabsTrigger 
 } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
 
 export default function Index() {
   const isMobile = useIsMobile();
@@ -62,30 +60,6 @@ export default function Index() {
               >
                 Tasks
               </TabsTrigger>
-              <TabsTrigger 
-                value="agents" 
-                className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-4 py-2 bg-transparent"
-              >
-                Agents
-              </TabsTrigger>
-              <TabsTrigger 
-                value="deals" 
-                className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-4 py-2 bg-transparent"
-              >
-                Deals
-              </TabsTrigger>
-              <TabsTrigger 
-                value="commissions" 
-                className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-4 py-2 bg-transparent"
-              >
-                Commissions
-              </TabsTrigger>
-              <TabsTrigger 
-                value="activities" 
-                className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-4 py-2 bg-transparent"
-              >
-                Activities
-              </TabsTrigger>
             </TabsList>
           </div>
           
@@ -127,32 +101,6 @@ export default function Index() {
           <TabsContent value="tasks" className="m-0">
             <div className="space-y-4">
               <TaskManager />
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="agents" className="m-0">
-            <div className="text-center p-4 text-muted-foreground">
-              Agents section coming soon
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="deals" className="m-0">
-            <div className="text-center p-4 text-muted-foreground">
-              Deals section coming soon
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="commissions" className="m-0">
-            <div className="text-center p-4 text-muted-foreground">
-              Commissions section coming soon
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="activities" className="m-0">
-            <div className="space-y-4">
-              <div className="text-center p-4 text-muted-foreground">
-                Activities section coming soon
-              </div>
             </div>
           </TabsContent>
         </Tabs>
