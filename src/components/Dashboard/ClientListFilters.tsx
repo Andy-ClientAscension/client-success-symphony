@@ -18,6 +18,9 @@ const TEAMS = [
   { id: "Team-Chris", name: "Team Chris" },
   { id: "Team-Alex", name: "Team Alex" },
   { id: "Team-Cillin", name: "Team Cillin" },
+  { id: "Enterprise", name: "Enterprise" },
+  { id: "SMB", name: "SMB" },
+  { id: "Mid-Market", name: "Mid Market" },
 ];
 
 interface ClientListFiltersProps {

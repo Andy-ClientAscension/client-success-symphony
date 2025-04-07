@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,13 @@ import {
 import { CSM_TEAMS } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { STORAGE_KEYS, loadData, saveData } from "@/utils/persistence";
+
+// Add custom teams to supplement the ones from lib/data
+const ADDITIONAL_TEAMS = [
+  { id: "Enterprise", name: "Enterprise" },
+  { id: "SMB", name: "SMB" },
+  { id: "Mid-Market", name: "Mid Market" },
+];
 
 interface StudentTeamEditProps {
   isOpen: boolean;
@@ -106,6 +114,11 @@ export function StudentTeamEdit({
               </SelectTrigger>
               <SelectContent>
                 {CSM_TEAMS.filter(team => team.id !== "all").map((team) => (
+                  <SelectItem key={team.id} value={team.id}>
+                    {team.name}
+                  </SelectItem>
+                ))}
+                {ADDITIONAL_TEAMS.map((team) => (
                   <SelectItem key={team.id} value={team.id}>
                     {team.name}
                   </SelectItem>

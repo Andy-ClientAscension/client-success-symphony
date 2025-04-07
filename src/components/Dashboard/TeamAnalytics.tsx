@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,6 +11,12 @@ import { HealthScoreHistory } from "./HealthScoreHistory";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 
+const ADDITIONAL_TEAMS = [
+  { id: "Enterprise", name: "Enterprise" },
+  { id: "SMB", name: "SMB" },
+  { id: "Mid-Market", name: "Mid Market" },
+];
+
 export function TeamAnalytics() {
   const [selectedTeam, setSelectedTeam] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<string>("overview");
@@ -24,6 +29,7 @@ export function TeamAnalytics() {
         set.add(client.team);
       }
     });
+    ADDITIONAL_TEAMS.forEach(team => set.add(team.id));
     return set;
   }, [clients]);
   
@@ -67,8 +73,6 @@ export function TeamAnalytics() {
       : 0;
   }, [statusCounts]);
   
-  // For demo purposes, we're still using random values for previous period
-  // In a production app, this would come from historical data
   const prevPeriodRetention = useMemo(() => {
     return Math.max(0, Math.round(retentionRate - (Math.random() * 10 - 5)));
   }, [retentionRate]);
@@ -103,10 +107,15 @@ export function TeamAnalytics() {
             <SelectContent>
               <SelectItem value="all">All Teams</SelectItem>
               {teams.map((team) => (
-                <SelectItem key={team} value={team}>{team === "Team-Andy" ? "Team Andy" : 
-                                                    team === "Team-Chris" ? "Team Chris" : 
-                                                    team === "Team-Alex" ? "Team Alex" : 
-                                                    team === "Team-Cillin" ? "Team Cillin" : team}</SelectItem>
+                <SelectItem key={team} value={team}>
+                  {team === "Team-Andy" ? "Team Andy" : 
+                   team === "Team-Chris" ? "Team Chris" : 
+                   team === "Team-Alex" ? "Team Alex" : 
+                   team === "Team-Cillin" ? "Team Cillin" :
+                   team === "Enterprise" ? "Enterprise" :
+                   team === "SMB" ? "SMB" :
+                   team === "Mid-Market" ? "Mid Market" : team}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
