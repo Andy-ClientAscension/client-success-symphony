@@ -17,7 +17,7 @@ import {
   TabsTrigger 
 } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Import } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 
 export default function Index() {
   const isMobile = useIsMobile();
@@ -39,15 +39,6 @@ export default function Index() {
       <div className="w-full p-0 px-2"> 
         <div className="flex items-center justify-between flex-wrap mb-2">
           <div className="text-xl font-bold">Performance Report</div>
-          <div className="flex items-center">
-            <div className="hidden sm:flex flex-col">
-              <div className="text-xs font-medium">Import Data</div>
-              <div className="text-xs text-muted-foreground">Import client data</div>
-            </div>
-            <Button className="bg-red-600 hover:bg-red-700 h-9 text-sm ml-2">
-              <Import className="mr-2 h-4 w-4" /> Import
-            </Button>
-          </div>
         </div>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

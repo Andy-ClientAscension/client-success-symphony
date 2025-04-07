@@ -9,6 +9,8 @@ import { FileUp } from "lucide-react";
 import { SearchResults } from "@/components/Search/SearchResults";
 import { searchAll } from "@/services/searchService";
 import { useDebounce } from "@/hooks/use-debounce";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { ImportData } from "@/components/Dashboard/ImportData";
 
 interface HeaderProps {
   toggleSidebar?: () => void;
@@ -22,6 +24,7 @@ export function Header({ toggleSidebar }: HeaderProps) {
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   useEffect(() => {
     if (debouncedSearchQuery.trim().length > 2) {
@@ -154,9 +157,14 @@ export function Header({ toggleSidebar }: HeaderProps) {
           <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-600 rounded-full" />
         </Button>
         
-        <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white ml-2">
-          <Upload className="h-3.5 w-3.5 mr-1" /> Import
-        </Button>
+        <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white ml-2">
+              <Upload className="h-3.5 w-3.5 mr-1" /> Import
+            </Button>
+          </DialogTrigger>
+          <ImportData />
+        </Dialog>
         
         <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white ml-1">
           Connect API
