@@ -1,4 +1,3 @@
-
 import { Bell, Search, HelpCircle, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,7 +54,6 @@ export function Header({ toggleSidebar }: HeaderProps) {
     }
   };
 
-  // Click outside handler
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -157,7 +155,7 @@ export function Header({ toggleSidebar }: HeaderProps) {
           <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-600 rounded-full" />
         </Button>
         
-        <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+        <Dialog>
           <DialogTrigger asChild>
             <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white ml-2">
               <Upload className="h-3.5 w-3.5 mr-1" /> Import

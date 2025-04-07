@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { LoadingState } from "@/components/LoadingState";
@@ -172,8 +172,11 @@ export function ImportData() {
           <>
             <Button 
               type="button" 
-              variant="outline" 
-              onClick={() => document.querySelector('[data-radix-dialog-close]')?.click()}
+              variant="outline"
+              onClick={() => {
+                const closeButton = document.querySelector('[data-radix-dialog-close]') as HTMLButtonElement | null;
+                if (closeButton) closeButton.click();
+              }}
               size="sm"
             >
               Cancel
