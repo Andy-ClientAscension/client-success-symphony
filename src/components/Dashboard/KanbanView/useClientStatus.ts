@@ -5,21 +5,28 @@ import { StatusGroup } from "./ClientStatusHelper";
 import { saveData, STORAGE_KEYS } from "@/utils/persistence";
 import { useToast } from "@/hooks/use-toast";
 
+// Define a type that extends Client to support our expanded status types
+type ExtendedClient = Omit<Client, 'status'> & { 
+  status: StatusGroup 
+};
+
 export function useClientStatus(initialClients: Client[]) {
-  const [localClients, setLocalClients] = useState<Client[]>(initialClients);
+  // Cast the initialClients to our ExtendedClient type for internal use
+  const [localClients, setLocalClients] = useState<ExtendedClient[]>(initialClients as ExtendedClient[]);
   const { toast } = useToast();
   
   // Update local state when clients prop changes
   useEffect(() => {
-    setLocalClients(initialClients);
+    setLocalClients(initialClients as ExtendedClient[]);
   }, [initialClients]);
   
   // Save client status changes to persistence
-  const saveClientChanges = (updatedClients: Client[]) => {
+  const saveClientChanges = (updatedClients: ExtendedClient[]) => {
     setLocalClients(updatedClients);
     // Persist the changes to be remembered across page refreshes
     try {
-      saveData(STORAGE_KEYS.CLIENT_STATUS, updatedClients);
+      // Cast back to Client[] when saving to maintain compatibility with other components
+      saveData(STORAGE_KEYS.CLIENT_STATUS, updatedClients as unknown as Client[]);
     } catch (error) {
       console.error("Error saving client status changes:", error);
     }
@@ -27,13 +34,15 @@ export function useClientStatus(initialClients: Client[]) {
   
   // Group clients by status
   const clientsByStatus = useMemo(() => {
-    const groups: Record<string, Client[]> = {
+    const groups: Record<string, ExtendedClient[]> = {
       'new': [],
       'active': [],
       'backend': [],
       'olympia': [],
       'at-risk': [],
-      'churned': []
+      'churned': [],
+      'paused': [],
+      'graduated': []
     };
     
     localClients.forEach(client => {
