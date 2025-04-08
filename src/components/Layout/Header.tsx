@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { FileUp } from "lucide-react";
+import { FileUp, Loader } from "lucide-react";
 import { SearchResults } from "@/components/Search/SearchResults";
 import { searchAll } from "@/services/searchService";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -53,18 +53,40 @@ export function Header({ toggleSidebar }: HeaderProps) {
   useEffect(() => {
     if (debouncedSearchQuery.trim().length > 2) {
       setIsSearching(true);
-      const results = searchAll(debouncedSearchQuery);
-      setSearchResults(results);
-      setShowResults(true);
-      setIsSearching(false);
+      // Add a slight delay to make the loading state visible for better UX
+      setTimeout(() => {
+        try {
+          const results = searchAll(debouncedSearchQuery);
+          console.log('Search results:', results);
+          setSearchResults(results);
+          if (results.length > 0) {
+            setShowResults(true);
+          }
+        } catch (error) {
+          console.error('Search error:', error);
+          toast({
+            title: "Search Error",
+            description: "There was a problem with your search. Please try again.",
+            variant: "destructive"
+          });
+        } finally {
+          setIsSearching(false);
+        }
+      }, 600);
     } else {
       setSearchResults([]);
-      setShowResults(false);
+      if (showResults && debouncedSearchQuery.trim().length <= 2) {
+        setShowResults(false);
+      }
     }
-  }, [debouncedSearchQuery]);
+  }, [debouncedSearchQuery, toast]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
+    if (e.target.value.trim().length > 2 && !showResults) {
+      setShowResults(true);
+      setIsSearching(true);
+    }
   };
 
   const handleCloseSearch = () => {
@@ -161,7 +183,11 @@ export function Header({ toggleSidebar }: HeaderProps) {
         
         <div className="flex-1 max-w-xl hidden sm:block relative">
           <div className="relative">
-            <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${isSearching ? 'animate-pulse text-red-600' : 'text-muted-foreground'}`} />
+            {isSearching ? (
+              <Loader className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-red-600" />
+            ) : (
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            )}
             <Input
               ref={searchInputRef}
               type="search"
@@ -170,7 +196,6 @@ export function Header({ toggleSidebar }: HeaderProps) {
               value={searchQuery}
               onChange={handleSearchChange}
               onFocus={handleSearchFocus}
-              onClick={() => setCommandOpen(true)}
             />
             {searchQuery && (
               <Button 
@@ -190,6 +215,7 @@ export function Header({ toggleSidebar }: HeaderProps) {
                   isOpen={showResults}
                   onClose={handleCloseSearch}
                   searchQuery={searchQuery}
+                  isSearching={isSearching}
                 />
               </div>
             )}

@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { Loader } from "lucide-react";
 
 export interface SearchResult {
   id: string;
@@ -22,9 +23,10 @@ interface SearchResultsProps {
   isOpen: boolean;
   onClose: () => void;
   searchQuery: string;
+  isSearching?: boolean;
 }
 
-export function SearchResults({ results, isOpen, onClose, searchQuery }: SearchResultsProps) {
+export function SearchResults({ results, isOpen, onClose, searchQuery, isSearching = false }: SearchResultsProps) {
   const navigate = useNavigate();
 
   if (!isOpen) return null;
@@ -96,7 +98,14 @@ export function SearchResults({ results, isOpen, onClose, searchQuery }: SearchR
     <Card className="absolute top-full left-0 right-0 mt-1 z-50 shadow-lg max-h-[70vh] overflow-hidden bg-background">
       <div className="flex items-center justify-between p-4 border-b">
         <h3 className="font-medium">
-          Search results for "{searchQuery}" ({results.length})
+          {isSearching ? (
+            <div className="flex items-center">
+              <Loader className="animate-spin h-4 w-4 mr-2" />
+              Searching...
+            </div>
+          ) : (
+            <>Search results for "{searchQuery}" ({results.length})</>
+          )}
         </h3>
         <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
           <X className="h-4 w-4" />
@@ -104,9 +113,17 @@ export function SearchResults({ results, isOpen, onClose, searchQuery }: SearchR
       </div>
       
       <ScrollArea className="max-h-[60vh]">
-        {!hasResults ? (
-          <div className="p-6 text-center text-muted-foreground">
-            No results found for "{searchQuery}"
+        {isSearching ? (
+          <div className="p-6 text-center">
+            <Loader className="animate-spin h-6 w-6 mx-auto mb-2" />
+            <p className="text-muted-foreground">Searching across all resources...</p>
+          </div>
+        ) : !hasResults ? (
+          <div className="p-6 text-center">
+            <div className="text-muted-foreground mb-2">No results found for "{searchQuery}"</div>
+            <p className="text-sm text-muted-foreground">
+              Try using different keywords or check your spelling
+            </p>
           </div>
         ) : (
           <div className="p-2">
