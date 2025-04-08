@@ -1,6 +1,5 @@
-
 import React from "react";
-import { X, User, FileText, Link, Calendar, Phone, UserCircle2, Bookmark, School, SearchX } from "lucide-react";
+import { X, User, FileText, Link, Calendar, Phone, UserCircle2, Bookmark, School, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
@@ -37,11 +36,9 @@ export function SearchResults({ results, isOpen, onClose, searchQuery, isSearchi
         navigate(`/client/${result.id}`);
         break;
       case 'student':
-        // Navigate to student detail or highlight in kanban board
         navigate('/#student-' + result.id);
         break;
       case 'ssc':
-        // Navigate to SSC profile or highlight in team view
         navigate('/analytics?team=' + result.team);
         break;
       case 'resource':
@@ -83,7 +80,6 @@ export function SearchResults({ results, isOpen, onClose, searchQuery, isSearchi
     }
   };
 
-  // Group results by type for better organization
   const groupedResults = results.reduce((acc, result) => {
     const group = acc[result.type] || [];
     group.push(result);
@@ -91,7 +87,6 @@ export function SearchResults({ results, isOpen, onClose, searchQuery, isSearchi
     return acc;
   }, {} as Record<string, SearchResult[]>);
 
-  // Determine if we have results
   const hasResults = Object.keys(groupedResults).length > 0;
 
   return (
@@ -123,7 +118,7 @@ export function SearchResults({ results, isOpen, onClose, searchQuery, isSearchi
           </div>
         ) : !hasResults ? (
           <div className="p-8 text-center">
-            <SearchX className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+            <Search className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
             <div className="text-base font-medium text-muted-foreground mb-2">No results found for "{searchQuery}"</div>
             <div className="space-y-2 max-w-sm mx-auto">
               <p className="text-sm text-muted-foreground">

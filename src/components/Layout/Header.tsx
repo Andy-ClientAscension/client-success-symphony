@@ -1,5 +1,4 @@
-
-import { Bell, Search, HelpCircle, Upload, UserSearch, FileSearch, KeySquare, XCircle } from "lucide-react";
+import { Bell, Search, HelpCircle, Upload, UserSearch, FileSearch, KeySquare, XCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -37,12 +36,10 @@ export function Header({ toggleSidebar }: HeaderProps) {
   const [commandOpen, setCommandOpen] = useState(false);
   const navigate = useNavigate();
 
-  // Handle keyboard shortcut to open search and command dialog
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        // Focus the search input when Ctrl+K is pressed
         if (searchInputRef.current) {
           searchInputRef.current.focus();
         }
@@ -62,7 +59,6 @@ export function Header({ toggleSidebar }: HeaderProps) {
     if (debouncedSearchQuery.trim().length > 2) {
       setIsSearching(true);
       setShowResults(true);
-      // Add a slight delay to make the loading state visible for better UX
       setTimeout(() => {
         try {
           const results = searchAll(debouncedSearchQuery);
@@ -133,7 +129,6 @@ export function Header({ toggleSidebar }: HeaderProps) {
     setCommandOpen(false);
   };
 
-  // Handle clicks outside of search results
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -271,7 +266,7 @@ export function Header({ toggleSidebar }: HeaderProps) {
         <CommandList>
           <CommandEmpty>
             <div className="py-6 text-center">
-              <SearchX className="h-10 w-10 mx-auto mb-2 text-muted-foreground opacity-50" />
+              <Search className="h-10 w-10 mx-auto mb-2 text-muted-foreground opacity-50" />
               <p className="text-muted-foreground">No results found</p>
             </div>
           </CommandEmpty>
