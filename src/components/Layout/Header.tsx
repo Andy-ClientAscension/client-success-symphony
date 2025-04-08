@@ -1,5 +1,5 @@
 
-import { Bell, Search, HelpCircle, Upload } from "lucide-react";
+import { Bell, Search, HelpCircle, Upload, UserSearch, FileSearch } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -11,6 +11,15 @@ import { searchAll } from "@/services/searchService";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { ImportData } from "@/components/Dashboard/ImportData";
+import { useNavigate } from "react-router-dom";
+import { 
+  CommandDialog, 
+  CommandInput, 
+  CommandList, 
+  CommandEmpty, 
+  CommandGroup, 
+  CommandItem 
+} from "@/components/ui/command";
 
 interface HeaderProps {
   toggleSidebar?: () => void;
@@ -25,6 +34,21 @@ export function Header({ toggleSidebar }: HeaderProps) {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [commandOpen, setCommandOpen] = useState(false);
+  const navigate = useNavigate();
+
+  // Handle keyboard shortcut to open command dialog
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setCommandOpen((open) => !open);
+      }
+    };
+    
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, []);
 
   useEffect(() => {
     if (debouncedSearchQuery.trim().length > 2) {
@@ -53,6 +77,32 @@ export function Header({ toggleSidebar }: HeaderProps) {
     if (searchQuery.trim().length > 2) {
       setShowResults(true);
     }
+  };
+
+  const handleCommandSelect = (type: string) => {
+    switch (type) {
+      case "clients":
+        navigate("/clients");
+        break;
+      case "communications":
+        navigate("/communications");
+        break;
+      case "analytics":
+        navigate("/analytics");
+        break;
+      case "payments":
+        navigate("/payments");
+        break;
+      case "renewals":
+        navigate("/renewals");
+        break;
+      case "help":
+        navigate("/help");
+        break;
+      default:
+        break;
+    }
+    setCommandOpen(false);
   };
 
   useEffect(() => {
@@ -109,17 +159,18 @@ export function Header({ toggleSidebar }: HeaderProps) {
           />
         </div>
         
-        <div className="flex-1 max-w-xl hidden sm:block">
+        <div className="flex-1 max-w-xl hidden sm:block relative">
           <div className="relative">
             <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${isSearching ? 'animate-pulse text-red-600' : 'text-muted-foreground'}`} />
             <Input
               ref={searchInputRef}
               type="search"
-              placeholder="Search clients, students, resources..."
+              placeholder="Search clients, students, resources... (Ctrl+K)"
               className="w-full pl-10 pr-4"
               value={searchQuery}
               onChange={handleSearchChange}
               onFocus={handleSearchFocus}
+              onClick={() => setCommandOpen(true)}
             />
             {searchQuery && (
               <Button 
@@ -173,6 +224,41 @@ export function Header({ toggleSidebar }: HeaderProps) {
           Connect API
         </Button>
       </div>
+
+      <CommandDialog open={commandOpen} onOpenChange={setCommandOpen}>
+        <CommandInput placeholder="Type a command or search..." />
+        <CommandList>
+          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandGroup heading="Navigation">
+            <CommandItem onSelect={() => handleCommandSelect("clients")}>
+              <UserSearch className="mr-2 h-4 w-4" />
+              <span>Clients</span>
+            </CommandItem>
+            <CommandItem onSelect={() => handleCommandSelect("communications")}>
+              <Bell className="mr-2 h-4 w-4" />
+              <span>Communications</span>
+            </CommandItem>
+            <CommandItem onSelect={() => handleCommandSelect("analytics")}>
+              <FileSearch className="mr-2 h-4 w-4" />
+              <span>Analytics</span>
+            </CommandItem>
+          </CommandGroup>
+          <CommandGroup heading="Search Categories">
+            <CommandItem onSelect={() => setCommandOpen(false)}>
+              <UserSearch className="mr-2 h-4 w-4" />
+              <span>Find SSCs</span>
+            </CommandItem>
+            <CommandItem onSelect={() => setCommandOpen(false)}>
+              <FileSearch className="mr-2 h-4 w-4" />
+              <span>Find Resources</span>
+            </CommandItem>
+            <CommandItem onSelect={() => setCommandOpen(false)}>
+              <Search className="mr-2 h-4 w-4" />
+              <span>Find Students</span>
+            </CommandItem>
+          </CommandGroup>
+        </CommandList>
+      </CommandDialog>
     </header>
   );
 }

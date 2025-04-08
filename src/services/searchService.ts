@@ -1,6 +1,59 @@
+
 import { format } from "date-fns";
 import { getAllClients, Client, Communication } from "@/lib/data";
 import { SearchResult } from "@/components/Search/SearchResults";
+
+// Mock SSC data
+const sscTeamMembers = [
+  {
+    id: "ssc1",
+    name: "Andy Johnson",
+    team: "Enterprise",
+    role: "Client Success Coach",
+    clients: ["client1", "client5", "client9"],
+    joinedDate: "2023-04-15"
+  },
+  {
+    id: "ssc2",
+    name: "Chris Smith",
+    team: "SMB",
+    role: "Client Success Coach",
+    clients: ["client2", "client6", "client10"],
+    joinedDate: "2023-02-10"
+  },
+  {
+    id: "ssc3",
+    name: "Cillin Brown",
+    team: "Mid Market",
+    role: "Client Success Coach",
+    clients: ["client3", "client7", "client11"],
+    joinedDate: "2023-05-22"
+  },
+  {
+    id: "ssc4",
+    name: "Dana Wilson",
+    team: "Enterprise",
+    role: "Client Success Coach",
+    clients: ["client4", "client8", "client12"],
+    joinedDate: "2023-01-05"
+  },
+  {
+    id: "ssc5",
+    name: "Eve Taylor",
+    team: "SMB",
+    role: "Client Success Coach",
+    clients: ["client13", "client16", "client19"],
+    joinedDate: "2023-03-15"
+  },
+  {
+    id: "ssc6",
+    name: "Frank Miller",
+    team: "Mid Market",
+    role: "Client Success Coach",
+    clients: ["client14", "client17", "client20"],
+    joinedDate: "2023-07-10"
+  },
+];
 
 // Mock resources data
 const resources = [
@@ -32,6 +85,20 @@ const resources = [
     url: "https://example.com/team-training",
     tags: ["training", "team", "onboarding"]
   },
+  {
+    id: "r5",
+    title: "SSC Handbook",
+    description: "Comprehensive guide for Client Success Coaches",
+    url: "https://example.com/ssc-handbook",
+    tags: ["ssc", "handbook", "guide"]
+  },
+  {
+    id: "r6",
+    title: "Client Health Score Guide",
+    description: "How to interpret and improve client health scores",
+    url: "https://example.com/health-score-guide",
+    tags: ["health", "score", "metrics"]
+  },
 ];
 
 // Mock links data
@@ -53,6 +120,18 @@ const links = [
     title: "Team Calendar",
     url: "https://calendar.example.com",
     category: "scheduling"
+  },
+  {
+    id: "l4",
+    title: "SSC Training Portal",
+    url: "https://training.example.com",
+    category: "education"
+  },
+  {
+    id: "l5",
+    title: "Resource Library",
+    url: "https://resources.example.com",
+    category: "knowledge"
   },
 ];
 
@@ -76,6 +155,18 @@ const events = [
     date: format(new Date(2024, 0, 5), "yyyy-MM-dd"),
     description: "Official launch of Olympia project"
   },
+  {
+    id: "e4",
+    title: "SSC Team Alignment",
+    date: format(new Date(2024, 1, 10), "yyyy-MM-dd"),
+    description: "Alignment session for Client Success Coaches"
+  },
+  {
+    id: "e5",
+    title: "Client Success Strategy Meeting",
+    date: format(new Date(2024, 1, 15), "yyyy-MM-dd"),
+    description: "Review success strategies and share best practices"
+  },
 ];
 
 // Convert client to search result
@@ -85,7 +176,8 @@ function clientToSearchResult(client: Client): SearchResult {
     type: 'client',
     title: client.name,
     description: `${client.status} - ${client.csm || 'Unassigned'}`,
-    date: format(new Date(client.lastCommunication), 'MMM dd, yyyy')
+    date: format(new Date(client.lastCommunication), 'MMM dd, yyyy'),
+    team: client.team
   };
 }
 
@@ -133,21 +225,36 @@ function eventToSearchResult(event: any): SearchResult {
   };
 }
 
+// Convert SSC team member to search result
+function sscToSearchResult(ssc: any): SearchResult {
+  return {
+    id: ssc.id,
+    type: 'ssc',
+    title: ssc.name,
+    description: `${ssc.role} - ${ssc.clients.length} clients`,
+    date: `Joined: ${format(new Date(ssc.joinedDate), 'MMM dd, yyyy')}`,
+    team: ssc.team
+  };
+}
+
 // Convert students from kanban board to search results
 function getStudentResults(query: string): SearchResult[] {
   try {
     // This would normally pull from actual student data
     // For now using mock data
     const mockStudents = [
-      { id: 's1', name: 'Alice Johnson', team: 'Team-Andy', progress: 75 },
-      { id: 's2', name: 'Bob Smith', team: 'Team-Chris', progress: 60 },
-      { id: 's3', name: 'Carol Davis', team: 'Team-Andy', progress: 80 },
-      { id: 's4', name: 'Dave Wilson', team: 'Team-Cillin', progress: 45 },
-      { id: 's5', name: 'Eve Brown', team: 'Team-Chris', progress: 50 },
-      { id: 's6', name: 'Frank Miller', team: 'Team-Cillin', progress: 70 },
-      { id: 's7', name: 'Grace Lee', team: 'Team-Andy', progress: 30 },
-      { id: 's8', name: 'Henry Taylor', team: 'Team-Cillin', progress: 100 },
-      { id: 's9', name: 'Ivy Robinson', team: 'Team-Andy', progress: 100 },
+      { id: 's1', name: 'Alice Johnson', team: 'Enterprise', progress: 75 },
+      { id: 's2', name: 'Bob Smith', team: 'SMB', progress: 60 },
+      { id: 's3', name: 'Carol Davis', team: 'Enterprise', progress: 80 },
+      { id: 's4', name: 'Dave Wilson', team: 'Mid Market', progress: 45 },
+      { id: 's5', name: 'Eve Brown', team: 'SMB', progress: 50 },
+      { id: 's6', name: 'Frank Miller', team: 'Mid Market', progress: 70 },
+      { id: 's7', name: 'Grace Lee', team: 'Enterprise', progress: 30 },
+      { id: 's8', name: 'Henry Taylor', team: 'Mid Market', progress: 100 },
+      { id: 's9', name: 'Ivy Robinson', team: 'Enterprise', progress: 95 },
+      { id: 's10', name: 'Jack Wilson', team: 'SMB', progress: 88 },
+      { id: 's11', name: 'Karen Martin', team: 'Mid Market', progress: 40 },
+      { id: 's12', name: 'Leo James', team: 'Enterprise', progress: 65 },
     ];
     
     return mockStudents
@@ -159,7 +266,8 @@ function getStudentResults(query: string): SearchResult[] {
         id: student.id,
         type: 'student',
         title: student.name,
-        description: `${student.team} - Progress: ${student.progress}%`
+        description: `Progress: ${student.progress}%`,
+        team: student.team
       }));
   } catch (error) {
     console.error("Error getting student results:", error);
@@ -183,12 +291,27 @@ export function searchAll(query: string): SearchResult[] {
         .filter(client => 
           client.name.toLowerCase().includes(query) ||
           client.status.toLowerCase().includes(query) ||
-          (client.csm && client.csm.toLowerCase().includes(query))
+          (client.csm && client.csm.toLowerCase().includes(query)) ||
+          (client.team && client.team.toLowerCase().includes(query))
         )
         .map(clientToSearchResult);
       results.push(...clientResults);
     } catch (error) {
       console.error("Error searching clients:", error);
+    }
+
+    // Search SSC team members
+    try {
+      const sscResults = sscTeamMembers
+        .filter(ssc => 
+          ssc.name.toLowerCase().includes(query) || 
+          ssc.role.toLowerCase().includes(query) ||
+          ssc.team.toLowerCase().includes(query)
+        )
+        .map(sscToSearchResult);
+      results.push(...sscResults);
+    } catch (error) {
+      console.error("Error searching SSC team members:", error);
     }
 
     // Search communications
