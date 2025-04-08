@@ -1,6 +1,6 @@
 
 import React from "react";
-import { X, User, FileText, Link, Calendar, Phone, UserCircle2, Bookmark, School } from "lucide-react";
+import { X, User, FileText, Link, Calendar, Phone, UserCircle2, Bookmark, School, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
@@ -114,16 +114,28 @@ export function SearchResults({ results, isOpen, onClose, searchQuery, isSearchi
       
       <ScrollArea className="max-h-[60vh]">
         {isSearching ? (
-          <div className="p-6 text-center">
-            <Loader className="animate-spin h-6 w-6 mx-auto mb-2" />
+          <div className="p-8 text-center">
+            <Loader className="animate-spin h-8 w-8 mx-auto mb-4 text-muted-foreground" />
             <p className="text-muted-foreground">Searching across all resources...</p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Looking in clients, students, resources, and team members
+            </p>
           </div>
         ) : !hasResults ? (
-          <div className="p-6 text-center">
-            <div className="text-muted-foreground mb-2">No results found for "{searchQuery}"</div>
-            <p className="text-sm text-muted-foreground">
-              Try using different keywords or check your spelling
-            </p>
+          <div className="p-8 text-center">
+            <SearchX className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+            <div className="text-base font-medium text-muted-foreground mb-2">No results found for "{searchQuery}"</div>
+            <div className="space-y-2 max-w-sm mx-auto">
+              <p className="text-sm text-muted-foreground">
+                Try adjusting your search or try these suggestions:
+              </p>
+              <ul className="text-xs text-muted-foreground text-left pl-6 list-disc">
+                <li>Check spelling and try again</li>
+                <li>Use more generic keywords</li>
+                <li>Search for a client name, SSC, or specific resource</li>
+                <li>Try abbreviations or full names</li>
+              </ul>
+            </div>
           </div>
         ) : (
           <div className="p-2">

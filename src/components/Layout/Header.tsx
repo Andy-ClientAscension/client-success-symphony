@@ -1,11 +1,11 @@
 
-import { Bell, Search, HelpCircle, Upload, UserSearch, FileSearch } from "lucide-react";
+import { Bell, Search, HelpCircle, Upload, UserSearch, FileSearch, KeySquare, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { FileUp, Loader } from "lucide-react";
+import { Loader } from "lucide-react";
 import { SearchResults } from "@/components/Search/SearchResults";
 import { searchAll } from "@/services/searchService";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -37,10 +37,18 @@ export function Header({ toggleSidebar }: HeaderProps) {
   const [commandOpen, setCommandOpen] = useState(false);
   const navigate = useNavigate();
 
-  // Handle keyboard shortcut to open command dialog
+  // Handle keyboard shortcut to open search and command dialog
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        // Focus the search input when Ctrl+K is pressed
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+        }
+      } else if (e.key === "Escape" && showResults) {
+        setShowResults(false);
+      } else if (e.key === "/" || (e.key === "p" && (e.metaKey || e.ctrlKey))) {
         e.preventDefault();
         setCommandOpen((open) => !open);
       }
@@ -48,20 +56,18 @@ export function Header({ toggleSidebar }: HeaderProps) {
     
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
-  }, []);
+  }, [showResults]);
 
   useEffect(() => {
     if (debouncedSearchQuery.trim().length > 2) {
       setIsSearching(true);
+      setShowResults(true);
       // Add a slight delay to make the loading state visible for better UX
       setTimeout(() => {
         try {
           const results = searchAll(debouncedSearchQuery);
           console.log('Search results:', results);
           setSearchResults(results);
-          if (results.length > 0) {
-            setShowResults(true);
-          }
         } catch (error) {
           console.error('Search error:', error);
           toast({
@@ -69,14 +75,14 @@ export function Header({ toggleSidebar }: HeaderProps) {
             description: "There was a problem with your search. Please try again.",
             variant: "destructive"
           });
+          setSearchResults([]);
         } finally {
           setIsSearching(false);
         }
       }, 600);
     } else {
-      setSearchResults([]);
-      if (showResults && debouncedSearchQuery.trim().length <= 2) {
-        setShowResults(false);
+      if (debouncedSearchQuery.trim().length <= 2 && !isSearching) {
+        setSearchResults([]);
       }
     }
   }, [debouncedSearchQuery, toast]);
@@ -127,6 +133,7 @@ export function Header({ toggleSidebar }: HeaderProps) {
     setCommandOpen(false);
   };
 
+  // Handle clicks outside of search results
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -184,30 +191,38 @@ export function Header({ toggleSidebar }: HeaderProps) {
         <div className="flex-1 max-w-xl hidden sm:block relative">
           <div className="relative">
             {isSearching ? (
-              <Loader className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-red-600" />
+              <Loader className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
             ) : (
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             )}
             <Input
               ref={searchInputRef}
               type="search"
-              placeholder="Search clients, students, resources... (Ctrl+K)"
-              className="w-full pl-10 pr-4"
+              placeholder="Search clients, students, resources..."
+              className="w-full pl-10 pr-20 ring-offset-background transition-all focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-2"
               value={searchQuery}
               onChange={handleSearchChange}
               onFocus={handleSearchFocus}
+              aria-label="Global search"
             />
-            {searchQuery && (
+            
+            {searchQuery ? (
               <Button 
                 variant="ghost" 
                 size="icon" 
                 className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
                 onClick={handleCloseSearch}
+                aria-label="Clear search"
               >
-                <span className="sr-only">Clear search</span>
-                <FileUp className="h-4 w-4 rotate-45" />
+                <XCircle className="h-4 w-4" />
               </Button>
+            ) : (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
+                <KeySquare className="h-3.5 w-3.5 text-muted-foreground opacity-70" />
+                <span className="text-xs text-muted-foreground opacity-70">Ctrl+K</span>
+              </div>
             )}
+            
             {showResults && (
               <div className="search-results">
                 <SearchResults 
@@ -254,7 +269,12 @@ export function Header({ toggleSidebar }: HeaderProps) {
       <CommandDialog open={commandOpen} onOpenChange={setCommandOpen}>
         <CommandInput placeholder="Type a command or search..." />
         <CommandList>
-          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandEmpty>
+            <div className="py-6 text-center">
+              <SearchX className="h-10 w-10 mx-auto mb-2 text-muted-foreground opacity-50" />
+              <p className="text-muted-foreground">No results found</p>
+            </div>
+          </CommandEmpty>
           <CommandGroup heading="Navigation">
             <CommandItem onSelect={() => handleCommandSelect("clients")}>
               <UserSearch className="mr-2 h-4 w-4" />
