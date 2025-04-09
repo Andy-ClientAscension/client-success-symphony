@@ -7,18 +7,22 @@ import {
   CreditCard,
   Settings,
   HelpCircle,
-  MessageSquare
+  MessageSquare,
+  ChevronLeft
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useDashboardPersistence } from "@/hooks/use-dashboard-persistence";
+import { cn } from "@/lib/utils";
 
 interface SidebarProps {
   isMobile: boolean;
   closeSidebar: () => void;
+  collapsed?: boolean;
+  toggleCollapse?: () => void;
 }
 
-export function Sidebar({ isMobile, closeSidebar }: SidebarProps) {
+export function Sidebar({ isMobile, closeSidebar, collapsed = false, toggleCollapse }: SidebarProps) {
   const { persistDashboard, togglePersistDashboard } = useDashboardPersistence();
 
   const navigation = [
@@ -73,56 +77,68 @@ export function Sidebar({ isMobile, closeSidebar }: SidebarProps) {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-black text-white w-64 border-0">
-      <div className="px-6 py-6 border-b border-gray-800 flex items-center">
-        {isMobile && (
-          <Button variant="ghost" className="pl-0 mr-2 lg:hidden text-white" onClick={closeSidebar}>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-6 w-6"
-            >
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
+    <div className={cn(
+      "flex flex-col h-full bg-sidebar text-sidebar-foreground w-64 border-r border-sidebar-border transition-all duration-300 ease-in-out",
+      collapsed && !isMobile && "w-20"
+    )}>
+      <div className="px-6 py-6 border-b border-sidebar-border flex items-center justify-between">
+        {isMobile ? (
+          <Button variant="ghost" className="p-0 mr-2 text-sidebar-foreground" onClick={closeSidebar} aria-label="Close sidebar">
+            <ChevronLeft className="h-6 w-6" />
+          </Button>
+        ) : null}
+        
+        <div className={cn("flex items-center gap-2", collapsed && !isMobile && "justify-center w-full")}>
+          <div className="w-4 h-6 bg-red-600 shrink-0"></div>
+          {(!collapsed || isMobile) && <h1 className="font-bold text-xl text-sidebar-foreground">SSC Dashboard</h1>}
+        </div>
+        
+        {!isMobile && toggleCollapse && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="p-1 ml-2 text-sidebar-foreground hover:bg-sidebar-accent" 
+            onClick={toggleCollapse}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            <ChevronLeft className={cn("h-5 w-5 transition-transform", collapsed && "rotate-180")} />
           </Button>
         )}
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-6 bg-red-600"></div>
-            <h1 className="font-bold text-2xl text-white">SSC Dashboard</h1>
-          </div>
-        </div>
       </div>
       
-      <div className="flex-1 px-2 py-4">
+      <div className="flex-1 px-2 py-4 overflow-y-auto">
         <ul className="space-y-1">
           {navigation.map((item) => (
             <li key={item.name}>
               <NavLink
                 to={item.href}
                 className={({ isActive }) => {
-                  return `flex items-center gap-3 rounded-md pl-3 py-2.5 text-base font-medium transition-colors hover:bg-gray-800 border-l-4 ${
+                  return cn(
+                    "flex items-center gap-3 rounded-md pl-3 py-2.5 text-base font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border-l-4",
                     isActive 
-                      ? `bg-gray-800 ${item.color}` 
-                      : "text-gray-300 border-transparent"
-                  }`;
+                      ? `bg-sidebar-accent ${item.color} text-sidebar-accent-foreground` 
+                      : "text-sidebar-foreground/80 border-transparent",
+                    collapsed && !isMobile && "justify-center pl-0 border-l-0 border-r-4"
+                  );
                 }}
                 onClick={isMobile ? closeSidebar : undefined}
+                aria-label={item.name}
               >
-                {item.icon}
-                {item.name}
+                <span className="shrink-0">{item.icon}</span>
+                {(!collapsed || isMobile) && <span>{item.name}</span>}
               </NavLink>
             </li>
           ))}
         </ul>
+      </div>
+      
+      <div className="p-4 border-t border-sidebar-border">
+        <div className={cn(
+          "text-xs text-sidebar-foreground/60 flex items-center",
+          collapsed && !isMobile && "justify-center"
+        )}>
+          {!collapsed && <span>© 2025 Client Ascension</span>}
+        </div>
       </div>
     </div>
   );

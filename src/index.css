@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -35,13 +36,14 @@
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 10%;
+    /* Sidebar specific variables - updated for better visual integration */
+    --sidebar-background: 240 10% 10%;  /* Dark gray with subtle blue tint */
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 0 93% 47%; /* Matched to primary */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent: 240 10% 15%; /* Slightly lighter than background */
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 15%;
+    --sidebar-border: 240 10% 16%; /* Slightly lighter than accent for borders */
     --sidebar-ring: 0 93% 60%; /* Increased brightness */
     
     /* Brand colors to match the Client Ascension red */
@@ -60,22 +62,22 @@
 
   .dark {
     /* Dark mode variables - significantly improved contrast for text visibility */
-    --background: 0 0% 10%;
+    --background: 240 10% 10%;
     --foreground: 0 0% 98%;
 
-    --card: 0 0% 15%;
+    --card: 240 10% 15%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 15%;
+    --popover: 240 10% 15%;
     --popover-foreground: 0 0% 98%;
 
     --primary: 0 93% 65%; /* Brightened for better visibility/contrast */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 20%;
+    --secondary: 240 10% 20%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 0 0% 20%;
+    --muted: 240 10% 20%;
     --muted-foreground: 0 0% 90%; /* Increased brightness for better visibility */
 
     --accent: 0 93% 30%; /* Matched to primary */
@@ -84,18 +86,18 @@
     --destructive: 0 84.2% 65%; /* Brightened for visibility */
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 30%; /* Increased border brightness */
-    --input: 0 0% 30%; /* Increased input brightness */
+    --border: 240 10% 30%; /* Increased border brightness */
+    --input: 240 10% 30%; /* Increased input brightness */
     --ring: 0 93% 65%; /* Matched to primary */
 
-    /* Keep sidebar variables the same in dark mode */
-    --sidebar-background: 0 0% 10%;
+    /* Sidebar variables for dark mode - more cohesive with dark theme */
+    --sidebar-background: 240 10% 6%;  /* Darker than body background */
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 0 93% 60%; /* Better contrast */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent: 240 10% 12%; /* Slightly lighter than background */
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 15%;
+    --sidebar-border: 240 10% 14%; /* Slightly lighter than accent for borders */
     --sidebar-ring: 0 93% 65%; /* Better contrast */
   }
 }
