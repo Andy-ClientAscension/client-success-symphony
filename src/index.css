@@ -5,7 +5,7 @@
 
 @layer base {
   :root {
-    /* Light mode variables */
+    /* Light mode variables - simplified color palette */
     --background: 0 0% 100%;
     --foreground: 0 0% 10%;
 
@@ -15,8 +15,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
 
-    --primary: 0 93% 47%; /* Adjusted for better contrast */
-    --primary-foreground: 0 0% 100%;
+    --primary: 0 93% 47%; /* Brand red */
+    --primary-foreground: 0 0% 100%; /* White for good contrast */
 
     --secondary: 0 0% 96%;
     --secondary-foreground: 0 0% 10%;
@@ -25,45 +25,45 @@
     --muted-foreground: 0 0% 45%;
 
     --accent: 0 100% 95%;
-    --accent-foreground: 0 93% 47%; /* Matched to primary */
+    --accent-foreground: 0 93% 47%; /* Brand red */
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 0 0% 90%;
     --input: 0 0% 90%;
-    --ring: 0 93% 47%; /* Matched to primary */
+    --ring: 0 93% 47%; /* Brand red */
 
     --radius: 0.5rem;
 
-    /* Sidebar specific variables - updated for better visual integration */
-    --sidebar-background: 240 10% 10%;  /* Dark gray with subtle blue tint */
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 0 93% 47%; /* Matched to primary */
+    /* Sidebar specific variables - simplified */
+    --sidebar-background: 240 10% 10%;  /* Dark gray for sidebar */
+    --sidebar-foreground: 0 0% 100%;    /* White text */
+    --sidebar-primary: 0 93% 47%;       /* Brand red */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 10% 15%; /* Slightly lighter than background */
+    --sidebar-accent: 240 10% 15%;      /* Subtle contrast from background */
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 240 10% 16%; /* Slightly lighter than accent for borders */
-    --sidebar-ring: 0 93% 60%; /* Increased brightness */
+    --sidebar-border: 240 10% 16%;      /* Subtle border */
+    --sidebar-ring: 0 93% 47%;          /* Brand red */
     
-    /* Brand colors to match the Client Ascension red */
+    /* Brand colors - simplified to red, black, white palette */
     --brand-50: 0 100% 98%;
     --brand-100: 0 100% 95%;
     --brand-200: 0 100% 89%;
     --brand-300: 0 100% 80%;
     --brand-400: 0 100% 70%;
-    --brand-500: 0 100% 60%;
-    --brand-600: 0 93% 47%; /* Adjusted for better contrast */
-    --brand-700: 0 100% 40%;
-    --brand-800: 0 100% 30%;
-    --brand-900: 0 100% 25%;
-    --brand-950: 0 100% 15%;
+    --brand-500: 0 93% 47%; /* Main brand red */
+    --brand-600: 0 93% 47%; /* Consistent red */
+    --brand-700: 0 93% 40%;
+    --brand-800: 0 93% 30%;
+    --brand-900: 0 0% 20%;  /* Near black */
+    --brand-950: 0 0% 10%;  /* Black */
   }
 
   .dark {
-    /* Dark mode variables - significantly improved contrast for text visibility */
-    --background: 240 10% 10%;
-    --foreground: 0 0% 98%;
+    /* Dark mode variables - simplified with focus on red, black, white */
+    --background: 240 10% 10%; /* Near black */
+    --foreground: 0 0% 98%;    /* Near white */
 
     --card: 240 10% 15%;
     --card-foreground: 0 0% 98%;
@@ -71,34 +71,34 @@
     --popover: 240 10% 15%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 0 93% 65%; /* Brightened for better visibility/contrast */
+    --primary: 0 93% 60%; /* Brand red, brightened for dark mode */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 240 10% 20%;
     --secondary-foreground: 0 0% 98%;
 
     --muted: 240 10% 20%;
-    --muted-foreground: 0 0% 90%; /* Increased brightness for better visibility */
+    --muted-foreground: 0 0% 90%;
 
-    --accent: 0 93% 30%; /* Matched to primary */
+    --accent: 0 93% 25%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 65%; /* Brightened for visibility */
+    --destructive: 0 84% 65%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 10% 30%; /* Increased border brightness */
-    --input: 240 10% 30%; /* Increased input brightness */
-    --ring: 0 93% 65%; /* Matched to primary */
+    --border: 240 10% 30%;
+    --input: 240 10% 30%;
+    --ring: 0 93% 60%;
 
-    /* Sidebar variables for dark mode - more cohesive with dark theme */
-    --sidebar-background: 240 10% 6%;  /* Darker than body background */
+    /* Sidebar variables - simplified */
+    --sidebar-background: 240 10% 6%;
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 0 93% 60%; /* Better contrast */
+    --sidebar-primary: 0 93% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 10% 12%; /* Slightly lighter than background */
+    --sidebar-accent: 240 10% 12%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 240 10% 14%; /* Slightly lighter than accent for borders */
-    --sidebar-ring: 0 93% 65%; /* Better contrast */
+    --sidebar-border: 240 10% 14%;
+    --sidebar-ring: 0 93% 60%;
   }
 }
 

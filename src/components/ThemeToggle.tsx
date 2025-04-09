@@ -29,8 +29,8 @@ export function ThemeToggle() {
     
     toast({
       title: `Theme Changed`,
-      description: `Switched to ${newTheme} mode. Refresh the page if you notice any display issues.`,
-      duration: 5000,
+      description: `Switched to ${newTheme} mode.`,
+      duration: 3000,
     });
   };
 
@@ -44,9 +44,9 @@ export function ThemeToggle() {
       className="transition-colors"
     >
       {theme === "dark" ? (
-        <Sun className="h-[1.2rem] w-[1.2rem] transition-transform text-yellow-400" aria-hidden="true" />
+        <Sun className="h-[1.2rem] w-[1.2rem] transition-transform text-primary" aria-hidden="true" />
       ) : (
-        <Moon className="h-[1.2rem] w-[1.2rem] transition-transform text-slate-700" aria-hidden="true" />
+        <Moon className="h-[1.2rem] w-[1.2rem] transition-transform text-primary" aria-hidden="true" />
       )}
       <span className="sr-only">Toggle theme</span>
     </Button>

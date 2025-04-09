@@ -63,7 +63,7 @@ export default function Payments() {
               <h1 className="text-2xl font-bold">Payment History</h1>
               <p className="text-muted-foreground">View and manage client payments and transactions.</p>
             </div>
-            <Button asChild variant="destructive" className="gap-2 text-white bg-red-600 hover:bg-red-700 text-base px-6 py-2">
+            <Button asChild variant="default" className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 text-base px-6 py-2">
               <Link to="/">
                 <Home className="h-5 w-5" />
                 Back to Dashboard
@@ -72,20 +72,20 @@ export default function Payments() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <Card>
+            <Card className="border border-border bg-card">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center">
-                  <DollarSign className="mr-2 h-5 w-5 text-green-500" />
+                  <DollarSign className="mr-2 h-5 w-5 text-primary" />
                   <span className="text-2xl font-bold">$10,200.00</span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">+12% from last month</p>
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="border border-border bg-card">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Successful Payments</CardTitle>
               </CardHeader>
@@ -95,7 +95,7 @@ export default function Payments() {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="border border-border bg-card">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Failed Payments</CardTitle>
               </CardHeader>
@@ -106,7 +106,7 @@ export default function Payments() {
             </Card>
           </div>
           
-          <Card>
+          <Card className="border border-border bg-card">
             <CardHeader>
               <CardTitle>Recent Payments</CardTitle>
             </CardHeader>
@@ -124,13 +124,13 @@ export default function Payments() {
                 <TableBody>
                   {payments.map((payment) => (
                     <TableRow key={payment.id}>
-                      <TableCell>{payment.clientName}</TableCell>
+                      <TableCell className="font-medium">{payment.clientName}</TableCell>
                       <TableCell>{payment.amount}</TableCell>
                       <TableCell>
-                        <Badge variant={
-                          payment.status === "succeeded" ? "success" :
-                          payment.status === "processing" ? "outline" :
-                          "destructive"
+                        <Badge className={
+                          payment.status === "succeeded" ? "bg-primary/10 text-primary border-primary/20" :
+                          payment.status === "processing" ? "bg-secondary/80 text-secondary-foreground border-secondary/30" :
+                          "bg-destructive/10 text-destructive border-destructive/20"
                         }>
                           {payment.status}
                         </Badge>
