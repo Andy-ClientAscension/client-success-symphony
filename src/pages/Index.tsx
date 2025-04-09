@@ -20,11 +20,14 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { BarChart2, Users, CheckSquare } from "lucide-react";
+import { BarChart2, Users, CheckSquare, ChevronDown, ChevronUp } from "lucide-react";
 import { useDashboardPersistence } from "@/hooks/use-dashboard-persistence";
 import { FocusModeToggle } from "@/components/Dashboard/FocusModeToggle";
 import { Separator } from "@/components/ui/separator";
 import { Card } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { HealthScoreSummary } from "@/components/Dashboard/HealthScore/HealthScoreSummary";
+import { getAllClients } from "@/lib/data";
 
 export default function Index() {
   const isMobile = useIsMobile();
@@ -32,6 +35,16 @@ export default function Index() {
   const [activeTab, setActiveTab] = useState("overview");
   const [focusMode, setFocusMode] = useState(false);
   const { persistDashboard, togglePersistDashboard } = useDashboardPersistence();
+  const [expandedSections, setExpandedSections] = useState({
+    metrics: true,
+    teamAnalytics: true,
+    clientList: true,
+    kanban: false,
+    healthScore: true
+  });
+  
+  // Get all clients for the health score summary
+  const allClients = getAllClients();
 
   useEffect(() => {
     const persistEnabled = localStorage.getItem("persistDashboard") === "true";
@@ -46,6 +59,33 @@ export default function Index() {
   const toggleFocusMode = (enabled: boolean) => {
     setFocusMode(enabled);
   };
+  
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+  
+  const SectionHeader = ({ 
+    title, 
+    section 
+  }: { 
+    title: string; 
+    section: keyof typeof expandedSections 
+  }) => (
+    <CollapsibleTrigger 
+      className="flex items-center justify-between w-full p-4 font-medium border-b"
+      onClick={() => toggleSection(section)}
+    >
+      <span>{title}</span>
+      {expandedSections[section] ? (
+        <ChevronUp className="h-4 w-4" />
+      ) : (
+        <ChevronDown className="h-4 w-4" />
+      )}
+    </CollapsibleTrigger>
+  );
 
   return (
     <Layout>
@@ -111,31 +151,53 @@ export default function Index() {
           <TabsContent value="overview" className="m-0 p-0" role="tabpanel" id="overview-tab">
             <div className="space-y-6">
               {/* Key Metrics at the top */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-                <CompanyMetrics />
-              </div>
+              <Collapsible open={expandedSections.metrics} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                <SectionHeader title="Company Metrics" section="metrics" />
+                <CollapsibleContent>
+                  <CompanyMetrics />
+                </CollapsibleContent>
+              </Collapsible>
+              
+              {/* Health Score Summary */}
+              <Collapsible open={expandedSections.healthScore} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                <SectionHeader title="Health Score Overview" section="healthScore" />
+                <CollapsibleContent className="p-4">
+                  <HealthScoreSummary clients={allClients} />
+                </CollapsibleContent>
+              </Collapsible>
               
               {/* Team Analytics */}
               {!focusMode && (
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-                  <TeamAnalytics />
-                </div>
+                <Collapsible open={expandedSections.teamAnalytics} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                  <SectionHeader title="Team Analytics" section="teamAnalytics" />
+                  <CollapsibleContent>
+                    <TeamAnalytics />
+                  </CollapsibleContent>
+                </Collapsible>
               )}
               
               {/* Client Management */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
-                <ClientList />
-              </div>
+              <Collapsible open={expandedSections.clientList} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                <SectionHeader title="Client Management" section="clientList" />
+                <CollapsibleContent className="p-4">
+                  <ClientList />
+                </CollapsibleContent>
+              </Collapsible>
               
               {!focusMode && (
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                  <div className="col-span-1 lg:col-span-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
-                    <KanbanBoard />
-                  </div>
-                  <div className="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
-                    <PaymentAlerts />
-                  </div>
-                </div>
+                <Collapsible open={expandedSections.kanban} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                  <SectionHeader title="Workflow Board" section="kanban" />
+                  <CollapsibleContent>
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 p-4">
+                      <div className="col-span-1 lg:col-span-3">
+                        <KanbanBoard />
+                      </div>
+                      <div className="col-span-1">
+                        <PaymentAlerts />
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               )}
             </div>
           </TabsContent>
