@@ -24,7 +24,7 @@ import { BarChart2, Users, CheckSquare, ChevronDown, ChevronUp } from "lucide-re
 import { useDashboardPersistence } from "@/hooks/use-dashboard-persistence";
 import { FocusModeToggle } from "@/components/Dashboard/FocusModeToggle";
 import { Separator } from "@/components/ui/separator";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { HealthScoreSummary } from "@/components/Dashboard/HealthScore/HealthScoreSummary";
 import { getAllClients } from "@/lib/data";
@@ -149,11 +149,11 @@ export default function Index() {
           </div>
           
           <TabsContent value="overview" className="m-0 p-0" role="tabpanel" id="overview-tab">
-            <div className="space-y-6">
+            <div className="grid gap-6">
               {/* Key Metrics at the top */}
               <Collapsible open={expandedSections.metrics} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
                 <SectionHeader title="Company Metrics" section="metrics" />
-                <CollapsibleContent>
+                <CollapsibleContent className="p-0">
                   <CompanyMetrics />
                 </CollapsibleContent>
               </Collapsible>
@@ -170,7 +170,7 @@ export default function Index() {
               {!focusMode && (
                 <Collapsible open={expandedSections.teamAnalytics} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
                   <SectionHeader title="Team Analytics" section="teamAnalytics" />
-                  <CollapsibleContent>
+                  <CollapsibleContent className="p-0">
                     <TeamAnalytics />
                   </CollapsibleContent>
                 </Collapsible>
@@ -188,11 +188,11 @@ export default function Index() {
                 <Collapsible open={expandedSections.kanban} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
                   <SectionHeader title="Workflow Board" section="kanban" />
                   <CollapsibleContent>
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 p-4">
-                      <div className="col-span-1 lg:col-span-3">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 p-4">
+                      <div className="col-span-1 lg:col-span-9">
                         <KanbanBoard />
                       </div>
-                      <div className="col-span-1">
+                      <div className="col-span-1 lg:col-span-3">
                         <PaymentAlerts />
                       </div>
                     </div>
@@ -203,38 +203,51 @@ export default function Index() {
           </TabsContent>
           
           <TabsContent value="clients" className="m-0" role="tabpanel" id="clients-tab">
-            <div className="space-y-6">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
-                <ClientList />
-              </div>
+            <div className="grid gap-6">
+              <Card className="shadow-sm">
+                <CardContent className="p-0">
+                  <ClientList />
+                </CardContent>
+              </Card>
+              
               {!focusMode && (
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
-                  <KanbanBoard />
-                </div>
+                <Card className="shadow-sm">
+                  <CardContent className="p-0">
+                    <KanbanBoard />
+                  </CardContent>
+                </Card>
               )}
             </div>
           </TabsContent>
           
           <TabsContent value="tasks" className="m-0" role="tabpanel" id="tasks-tab">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
-              <TaskManager />
-            </div>
+            <Card className="shadow-sm">
+              <CardContent className="p-0">
+                <TaskManager />
+              </CardContent>
+            </Card>
           </TabsContent>
           
           {!focusMode && (
             <TabsContent value="analytics" className="m-0" role="tabpanel" id="analytics-tab">
-              <div className="space-y-6">
+              <div className="grid gap-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
-                    <ChurnChart />
-                  </div>
-                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
-                    <NPSChart />
-                  </div>
+                  <Card className="shadow-sm">
+                    <CardContent className="p-0">
+                      <ChurnChart />
+                    </CardContent>
+                  </Card>
+                  <Card className="shadow-sm">
+                    <CardContent className="p-0">
+                      <NPSChart />
+                    </CardContent>
+                  </Card>
                 </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
-                  <PaymentAlerts />
-                </div>
+                <Card className="shadow-sm">
+                  <CardContent className="p-0">
+                    <PaymentAlerts />
+                  </CardContent>
+                </Card>
               </div>
             </TabsContent>
           )}
