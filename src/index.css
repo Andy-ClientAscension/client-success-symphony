@@ -5,7 +5,7 @@
 
 @layer base {
   :root {
-    /* Light mode variables - simplified color palette */
+    /* Light mode variables - brand colors: red, black, white */
     --background: 0 0% 100%;
     --foreground: 0 0% 10%;
 
@@ -36,8 +36,8 @@
 
     --radius: 0.5rem;
 
-    /* Sidebar specific variables - simplified */
-    --sidebar-background: 240 10% 10%;  /* Dark gray for sidebar */
+    /* Sidebar specific variables - black and red theme */
+    --sidebar-background: 240 10% 10%;  /* Dark gray/black for sidebar */
     --sidebar-foreground: 0 0% 100%;    /* White text */
     --sidebar-primary: 0 93% 47%;       /* Brand red */
     --sidebar-primary-foreground: 0 0% 100%;
@@ -46,7 +46,7 @@
     --sidebar-border: 240 10% 16%;      /* Subtle border */
     --sidebar-ring: 0 93% 47%;          /* Brand red */
     
-    /* Brand colors - simplified to red, black, white palette */
+    /* Brand colors - red, black, white palette */
     --brand-50: 0 100% 98%;
     --brand-100: 0 100% 95%;
     --brand-200: 0 100% 89%;
@@ -61,7 +61,7 @@
   }
 
   .dark {
-    /* Dark mode variables - simplified with focus on red, black, white */
+    /* Dark mode variables - red, black, white theme */
     --background: 240 10% 10%; /* Near black */
     --foreground: 0 0% 98%;    /* Near white */
 
@@ -90,7 +90,7 @@
     --input: 240 10% 30%;
     --ring: 0 93% 60%;
 
-    /* Sidebar variables - simplified */
+    /* Sidebar variables - darker theme */
     --sidebar-background: 240 10% 6%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 0 93% 60%;

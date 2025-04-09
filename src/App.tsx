@@ -71,6 +71,7 @@ const App = () => {
         <TooltipProvider>
           <ErrorBoundary>
             <Toaster />
+            {/* Move Sonner inside ThemeProvider to fix the context error */}
             <Sonner />
             <OfflineDetector />
             <BrowserCompatibilityCheck />
