@@ -8,12 +8,14 @@ import {
   Settings,
   HelpCircle,
   MessageSquare,
-  ChevronLeft
+  ChevronLeft,
+  LogOut
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useDashboardPersistence } from "@/hooks/use-dashboard-persistence";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SidebarProps {
   isMobile: boolean;
@@ -24,6 +26,7 @@ interface SidebarProps {
 
 export function Sidebar({ isMobile, closeSidebar, collapsed = false, toggleCollapse }: SidebarProps) {
   const { persistDashboard, togglePersistDashboard } = useDashboardPersistence();
+  const { logout } = useAuth();
 
   const navigation = [
     {
@@ -134,10 +137,29 @@ export function Sidebar({ isMobile, closeSidebar, collapsed = false, toggleColla
       
       <div className="p-4 border-t border-sidebar-border">
         <div className={cn(
-          "text-xs text-sidebar-foreground/60 flex items-center",
-          collapsed && !isMobile && "justify-center"
+          "flex flex-col gap-3",
+          collapsed && !isMobile && "items-center"
         )}>
-          {!collapsed && <span>© 2025 Client Ascension</span>}
+          <div className={cn(
+            "text-xs text-sidebar-foreground/60",
+            collapsed && !isMobile && "text-center"
+          )}>
+            {!collapsed && <span>© 2025 Client Ascension</span>}
+          </div>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={logout}
+            className={cn(
+              "flex items-center gap-2 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent w-full",
+              collapsed && !isMobile && "justify-center px-0"
+            )}
+            aria-label="Logout from dashboard"
+          >
+            <LogOut className="h-5 w-5" />
+            {(!collapsed || isMobile) && <span>Logout</span>}
+          </Button>
         </div>
       </div>
     </div>
