@@ -20,11 +20,13 @@ import {
   CommandItem 
 } from "@/components/ui/command";
 
-interface HeaderProps {
+export interface HeaderProps {
   toggleSidebar?: () => void;
+  sidebarVisible?: boolean;
+  sidebarCollapsed?: boolean;
 }
 
-export function Header({ toggleSidebar }: HeaderProps) {
+export function Header({ toggleSidebar, sidebarVisible, sidebarCollapsed }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);

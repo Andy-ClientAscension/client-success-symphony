@@ -73,7 +73,11 @@ export function Layout({ children }: LayoutProps) {
         !isMobile && sidebarOpen && !sidebarCollapsed && "md:ml-0",
         !isMobile && sidebarOpen && sidebarCollapsed && "md:ml-0"
       )}>
-        <Header toggleSidebar={toggleSidebar} sidebarVisible={sidebarOpen} sidebarCollapsed={sidebarCollapsed} />
+        <Header 
+          toggleSidebar={toggleSidebar} 
+          sidebarVisible={sidebarOpen} 
+          sidebarCollapsed={sidebarCollapsed} 
+        />
         <main className="flex-1 w-full overflow-auto bg-gradient-to-br from-background to-background/95 rounded-tl-xl" role="main">
           <ErrorBoundary>
             {children}
