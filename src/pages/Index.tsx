@@ -150,104 +150,126 @@ export default function Index() {
           
           <TabsContent value="overview" className="m-0 p-0" role="tabpanel" id="overview-tab">
             <div className="grid gap-6">
-              {/* Key Metrics at the top */}
-              <Collapsible open={expandedSections.metrics} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-                <SectionHeader title="Company Metrics" section="metrics" />
-                <CollapsibleContent className="p-0">
-                  <CompanyMetrics />
-                </CollapsibleContent>
-              </Collapsible>
-              
-              {/* Health Score Summary */}
-              <Collapsible open={expandedSections.healthScore} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-                <SectionHeader title="Health Score Overview" section="healthScore" />
-                <CollapsibleContent className="p-4">
-                  <HealthScoreSummary clients={allClients} />
-                </CollapsibleContent>
-              </Collapsible>
-              
-              {/* Team Analytics */}
-              {!focusMode && (
-                <Collapsible open={expandedSections.teamAnalytics} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-                  <SectionHeader title="Team Analytics" section="teamAnalytics" />
+              {/* Key Metrics section with subtle background */}
+              <div className="bg-brand-50/30 dark:bg-brand-950/30 p-4 rounded-lg border border-brand-100 dark:border-brand-900/50">
+                <Collapsible open={expandedSections.metrics} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+                  <SectionHeader title="Company Metrics" section="metrics" />
                   <CollapsibleContent className="p-0">
-                    <TeamAnalytics />
+                    <CompanyMetrics />
                   </CollapsibleContent>
                 </Collapsible>
+              </div>
+              
+              {/* Health Score section with subtle background */}
+              <div className="bg-success-50/30 dark:bg-success-950/30 p-4 rounded-lg border border-success-100 dark:border-success-900/50">
+                <Collapsible open={expandedSections.healthScore} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+                  <SectionHeader title="Health Score Overview" section="healthScore" />
+                  <CollapsibleContent className="p-4">
+                    <HealthScoreSummary clients={allClients} />
+                  </CollapsibleContent>
+                </Collapsible>
+              </div>
+              
+              {/* Team Analytics section with subtle background */}
+              {!focusMode && (
+                <div className="bg-blue-50/30 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-100 dark:border-blue-900/50">
+                  <Collapsible open={expandedSections.teamAnalytics} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+                    <SectionHeader title="Team Analytics" section="teamAnalytics" />
+                    <CollapsibleContent className="p-0">
+                      <TeamAnalytics />
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
               )}
               
-              {/* Client Management */}
-              <Collapsible open={expandedSections.clientList} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-                <SectionHeader title="Client Management" section="clientList" />
-                <CollapsibleContent className="p-4">
-                  <ClientList />
-                </CollapsibleContent>
-              </Collapsible>
-              
-              {!focusMode && (
-                <Collapsible open={expandedSections.kanban} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-                  <SectionHeader title="Workflow Board" section="kanban" />
-                  <CollapsibleContent>
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 p-4">
-                      <div className="col-span-1 lg:col-span-9">
-                        <KanbanBoard />
-                      </div>
-                      <div className="col-span-1 lg:col-span-3">
-                        <PaymentAlerts />
-                      </div>
-                    </div>
+              {/* Client Management section with subtle background */}
+              <div className="bg-purple-50/30 dark:bg-purple-950/30 p-4 rounded-lg border border-purple-100 dark:border-purple-900/50">
+                <Collapsible open={expandedSections.clientList} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+                  <SectionHeader title="Client Management" section="clientList" />
+                  <CollapsibleContent className="p-4">
+                    <ClientList />
                   </CollapsibleContent>
                 </Collapsible>
+              </div>
+              
+              {/* Workflow section with subtle background */}
+              {!focusMode && (
+                <div className="bg-amber-50/30 dark:bg-amber-950/30 p-4 rounded-lg border border-amber-100 dark:border-amber-900/50">
+                  <Collapsible open={expandedSections.kanban} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+                    <SectionHeader title="Workflow Board" section="kanban" />
+                    <CollapsibleContent>
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 p-4">
+                        <div className="col-span-1 lg:col-span-9">
+                          <KanbanBoard />
+                        </div>
+                        <div className="col-span-1 lg:col-span-3">
+                          <PaymentAlerts />
+                        </div>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
               )}
             </div>
           </TabsContent>
           
           <TabsContent value="clients" className="m-0" role="tabpanel" id="clients-tab">
             <div className="grid gap-6">
-              <Card className="shadow-sm">
-                <CardContent className="p-0">
-                  <ClientList />
-                </CardContent>
-              </Card>
-              
-              {!focusMode && (
+              <div className="bg-purple-50/30 dark:bg-purple-950/30 p-4 rounded-lg border border-purple-100 dark:border-purple-900/50">
                 <Card className="shadow-sm">
                   <CardContent className="p-0">
-                    <KanbanBoard />
+                    <ClientList />
                   </CardContent>
                 </Card>
+              </div>
+              
+              {!focusMode && (
+                <div className="bg-amber-50/30 dark:bg-amber-950/30 p-4 rounded-lg border border-amber-100 dark:border-amber-900/50">
+                  <Card className="shadow-sm">
+                    <CardContent className="p-0">
+                      <KanbanBoard />
+                    </CardContent>
+                  </Card>
+                </div>
               )}
             </div>
           </TabsContent>
           
           <TabsContent value="tasks" className="m-0" role="tabpanel" id="tasks-tab">
-            <Card className="shadow-sm">
-              <CardContent className="p-0">
-                <TaskManager />
-              </CardContent>
-            </Card>
+            <div className="bg-green-50/30 dark:bg-green-950/30 p-4 rounded-lg border border-green-100 dark:border-green-900/50">
+              <Card className="shadow-sm">
+                <CardContent className="p-0">
+                  <TaskManager />
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
           
           {!focusMode && (
             <TabsContent value="analytics" className="m-0" role="tabpanel" id="analytics-tab">
               <div className="grid gap-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-red-50/30 dark:bg-red-950/30 p-4 rounded-lg border border-red-100 dark:border-red-900/50">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Card className="shadow-sm">
+                      <CardContent className="p-0">
+                        <ChurnChart />
+                      </CardContent>
+                    </Card>
+                    <Card className="shadow-sm">
+                      <CardContent className="p-0">
+                        <NPSChart />
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+                
+                <div className="bg-amber-50/30 dark:bg-amber-950/30 p-4 rounded-lg border border-amber-100 dark:border-amber-900/50">
                   <Card className="shadow-sm">
                     <CardContent className="p-0">
-                      <ChurnChart />
-                    </CardContent>
-                  </Card>
-                  <Card className="shadow-sm">
-                    <CardContent className="p-0">
-                      <NPSChart />
+                      <PaymentAlerts />
                     </CardContent>
                   </Card>
                 </div>
-                <Card className="shadow-sm">
-                  <CardContent className="p-0">
-                    <PaymentAlerts />
-                  </CardContent>
-                </Card>
               </div>
             </TabsContent>
           )}
