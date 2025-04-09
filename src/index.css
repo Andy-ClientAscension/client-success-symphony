@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -15,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
 
-    --primary: 0 100% 50%;
+    --primary: 0 93% 47%; /* Adjusted for better contrast */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 96%;
@@ -25,25 +24,25 @@
     --muted-foreground: 0 0% 45%;
 
     --accent: 0 100% 95%;
-    --accent-foreground: 0 100% 50%;
+    --accent-foreground: 0 93% 47%; /* Matched to primary */
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 0 0% 90%;
     --input: 0 0% 90%;
-    --ring: 0 100% 50%;
+    --ring: 0 93% 47%; /* Matched to primary */
 
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 10%;
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 0 100% 50%;
+    --sidebar-primary: 0 93% 47%; /* Matched to primary */
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 15%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 0 100% 60%;
+    --sidebar-ring: 0 93% 60%; /* Increased brightness */
     
     /* Brand colors to match the Client Ascension red */
     --brand-50: 0 100% 98%;
@@ -52,7 +51,7 @@
     --brand-300: 0 100% 80%;
     --brand-400: 0 100% 70%;
     --brand-500: 0 100% 60%;
-    --brand-600: 0 100% 50%; /* Client Ascension Red */
+    --brand-600: 0 93% 47%; /* Adjusted for better contrast */
     --brand-700: 0 100% 40%;
     --brand-800: 0 100% 30%;
     --brand-900: 0 100% 25%;
@@ -70,7 +69,7 @@
     --popover: 0 0% 15%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 0 100% 65%; /* Brightened even more for better visibility */
+    --primary: 0 93% 65%; /* Brightened for better visibility/contrast */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 20%;
@@ -79,7 +78,7 @@
     --muted: 0 0% 20%;
     --muted-foreground: 0 0% 90%; /* Increased brightness for better visibility */
 
-    --accent: 0 100% 30%;
+    --accent: 0 93% 30%; /* Matched to primary */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 65%; /* Brightened for visibility */
@@ -87,17 +86,17 @@
 
     --border: 0 0% 30%; /* Increased border brightness */
     --input: 0 0% 30%; /* Increased input brightness */
-    --ring: 0 100% 65%;
+    --ring: 0 93% 65%; /* Matched to primary */
 
     /* Keep sidebar variables the same in dark mode */
     --sidebar-background: 0 0% 10%;
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 0 100% 50%;
+    --sidebar-primary: 0 93% 60%; /* Better contrast */
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 15%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 0 100% 60%;
+    --sidebar-ring: 0 93% 65%; /* Better contrast */
   }
 }
 

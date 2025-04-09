@@ -34,17 +34,26 @@ export function Layout({ children }: LayoutProps) {
   };
   
   return (
-    <div className="flex h-screen w-full bg-gray-50 dark:bg-gray-950 overflow-hidden">
+    <div className="flex h-screen w-full bg-gray-50 dark:bg-gray-950 overflow-hidden" role="application">
       {sidebarOpen && (
-        <div className={`${isMobile ? 'fixed inset-0 z-40 bg-black bg-opacity-50' : ''}`} onClick={isMobile ? closeSidebar : undefined}>
-          <div className={`${isMobile ? 'w-[280px] relative z-50' : ''}`} onClick={e => e.stopPropagation()}>
+        <div 
+          className={`${isMobile ? 'fixed inset-0 z-40 bg-black bg-opacity-50' : ''}`} 
+          onClick={isMobile ? closeSidebar : undefined}
+          aria-hidden={!isMobile}
+        >
+          <div 
+            className={`${isMobile ? 'w-[280px] relative z-50' : ''}`} 
+            onClick={e => e.stopPropagation()}
+            role="navigation"
+            aria-label="Main navigation"
+          >
             <Sidebar isMobile={isMobile} closeSidebar={closeSidebar} />
           </div>
         </div>
       )}
       <div className="flex-1 flex flex-col w-full min-w-0">
         <Header toggleSidebar={toggleSidebar} />
-        <main className="flex-1 w-full overflow-auto">
+        <main className="flex-1 w-full overflow-auto" role="main">
           <ErrorBoundary>
             {children}
           </ErrorBoundary>

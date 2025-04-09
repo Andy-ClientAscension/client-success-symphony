@@ -32,9 +32,14 @@ export function FocusModeToggle({ focusMode, onChange }: FocusModeToggleProps) {
       size={isMobile ? "default" : "sm"} 
       onClick={handleToggle}
       className={`gap-2 text-sm bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 shadow-sm ${isMobile ? 'h-10 px-3' : 'h-9'}`}
-      aria-label={focusMode ? "Expand View" : "Focus Mode"}
+      aria-label={focusMode ? "Disable Focus Mode" : "Enable Focus Mode"}
+      title={focusMode ? "Show all components" : "Hide non-essential components"}
     >
-      {focusMode ? <MaximizeIcon className="h-4 w-4" /> : <MinimizeIcon className="h-4 w-4" />}
+      {focusMode ? (
+        <MaximizeIcon className="h-4 w-4" aria-hidden="true" />
+      ) : (
+        <MinimizeIcon className="h-4 w-4" aria-hidden="true" />
+      )}
       {!isMobile && (focusMode ? "Expand View" : "Focus Mode")}
     </Button>
   );

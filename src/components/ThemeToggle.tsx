@@ -40,12 +40,13 @@ export function ThemeToggle() {
       size="icon" 
       onClick={toggleTheme} 
       aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+      title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
       className="transition-colors"
     >
       {theme === "dark" ? (
-        <Sun className="h-[1.2rem] w-[1.2rem] transition-transform text-yellow-400" />
+        <Sun className="h-[1.2rem] w-[1.2rem] transition-transform text-yellow-400" aria-hidden="true" />
       ) : (
-        <Moon className="h-[1.2rem] w-[1.2rem] transition-transform text-slate-700" />
+        <Moon className="h-[1.2rem] w-[1.2rem] transition-transform text-slate-700" aria-hidden="true" />
       )}
       <span className="sr-only">Toggle theme</span>
     </Button>

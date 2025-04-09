@@ -47,7 +47,7 @@ export default function Index() {
 
   return (
     <Layout>
-      <div className="w-full p-4 px-6 bg-gray-50 dark:bg-gray-900"> 
+      <div className="w-full p-4 px-6 bg-gray-50 dark:bg-gray-900" role="region" aria-label="Performance Dashboard"> 
         <div className="flex items-center justify-between flex-wrap mb-6 pb-4 border-b border-gray-200 dark:border-gray-800">
           <div className="text-xl font-bold">Performance Report</div>
           <div className="flex items-center gap-4">
@@ -56,6 +56,7 @@ export default function Index() {
                 id="dashboard-persistence" 
                 checked={persistDashboard}
                 onCheckedChange={togglePersistDashboard}
+                aria-label="Auto-save dashboard settings"
               />
               <Label htmlFor="dashboard-persistence" className="text-sm text-gray-600 dark:text-gray-400">
                 Auto-save
@@ -68,32 +69,36 @@ export default function Index() {
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="border-b mb-6 bg-white dark:bg-gray-800 rounded-t-lg shadow-sm">
-            <TabsList className="w-full md:w-auto justify-start bg-transparent p-0">
+            <TabsList className="w-full md:w-auto justify-start bg-transparent p-0" aria-label="Dashboard sections">
               <TabsTrigger 
                 value="overview" 
                 className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-5 py-3 bg-transparent"
+                aria-controls="overview-tab"
               >
-                <BarChart2 className="h-4 w-4 mr-2" />
+                <BarChart2 className="h-4 w-4 mr-2" aria-hidden="true" />
                 Overview
               </TabsTrigger>
               <TabsTrigger 
                 value="clients" 
                 className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-5 py-3 bg-transparent"
+                aria-controls="clients-tab"
               >
-                <Users className="h-4 w-4 mr-2" />
+                <Users className="h-4 w-4 mr-2" aria-hidden="true" />
                 Clients
               </TabsTrigger>
               <TabsTrigger 
                 value="tasks" 
                 className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-5 py-3 bg-transparent"
+                aria-controls="tasks-tab"
               >
-                <CheckSquare className="h-4 w-4 mr-2" />
+                <CheckSquare className="h-4 w-4 mr-2" aria-hidden="true" />
                 Tasks
               </TabsTrigger>
               {!focusMode && (
                 <TabsTrigger 
                   value="analytics" 
                   className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-5 py-3 bg-transparent"
+                  aria-controls="analytics-tab"
                 >
                   Advanced Analytics
                 </TabsTrigger>
@@ -101,7 +106,7 @@ export default function Index() {
             </TabsList>
           </div>
           
-          <TabsContent value="overview" className="m-0 p-0">
+          <TabsContent value="overview" className="m-0 p-0" role="tabpanel" id="overview-tab">
             <div className="space-y-6">
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
                 <MetricsCards />
@@ -135,7 +140,7 @@ export default function Index() {
             </div>
           </TabsContent>
           
-          <TabsContent value="clients" className="m-0">
+          <TabsContent value="clients" className="m-0" role="tabpanel" id="clients-tab">
             <div className="space-y-6">
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
                 <ClientList />
@@ -148,14 +153,14 @@ export default function Index() {
             </div>
           </TabsContent>
           
-          <TabsContent value="tasks" className="m-0">
+          <TabsContent value="tasks" className="m-0" role="tabpanel" id="tasks-tab">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
               <TaskManager />
             </div>
           </TabsContent>
           
           {!focusMode && (
-            <TabsContent value="analytics" className="m-0">
+            <TabsContent value="analytics" className="m-0" role="tabpanel" id="analytics-tab">
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
