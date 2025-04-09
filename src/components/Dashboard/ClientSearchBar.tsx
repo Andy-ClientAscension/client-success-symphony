@@ -35,7 +35,7 @@ export function ClientSearchBar({
   }, []);
 
   return (
-    <div className="flex flex-wrap gap-2 mb-4">
+    <div className="flex flex-wrap gap-3 mb-5">
       <div className="relative flex-grow">
         {isSearching ? (
           <Loader className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
@@ -48,7 +48,7 @@ export function ClientSearchBar({
           onChange={onSearchChange}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          className={`pl-9 pr-8 ${isFocused ? 'ring-1 ring-ring' : ''}`}
+          className={`pl-9 pr-8 h-10 bg-white dark:bg-gray-800 ${isFocused ? 'ring-1 ring-ring shadow-sm' : 'shadow-sm'}`}
           aria-label="Search clients"
         />
         {searchQuery ? (
@@ -71,14 +71,14 @@ export function ClientSearchBar({
       
       {selectedClientCount > 0 && (
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">
+          <span className="text-sm font-medium bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
             {selectedClientCount} selected
           </span>
           <Button 
             variant="outline" 
             size="sm" 
             onClick={onOpenBulkActions}
-            className="flex items-center"
+            className="flex items-center bg-white dark:bg-gray-800 shadow-sm"
           >
             <Layers className="h-3.5 w-3.5 mr-1.5" />
             Bulk Actions

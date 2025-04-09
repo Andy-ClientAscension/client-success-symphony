@@ -29,9 +29,9 @@ export function FocusModeToggle({ focusMode, onChange }: FocusModeToggleProps) {
       variant="outline" 
       size="sm" 
       onClick={handleToggle}
-      className="h-8 gap-1 text-xs"
+      className="h-9 gap-2 text-sm bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 shadow-sm"
     >
-      {focusMode ? <MaximizeIcon className="h-3.5 w-3.5" /> : <MinimizeIcon className="h-3.5 w-3.5" />}
+      {focusMode ? <MaximizeIcon className="h-4 w-4" /> : <MinimizeIcon className="h-4 w-4" />}
       {focusMode ? "Expand View" : "Focus Mode"}
     </Button>
   );

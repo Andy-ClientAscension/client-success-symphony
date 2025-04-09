@@ -27,11 +27,11 @@ export function Layout({ children }: LayoutProps) {
   };
   
   return (
-    <div className="flex h-screen w-full bg-white dark:bg-gray-950 overflow-hidden">
+    <div className="flex h-screen w-full bg-gray-50 dark:bg-gray-950 overflow-hidden">
       {sidebarOpen && <Sidebar isMobile={isMobile} closeSidebar={closeSidebar} />}
       <div className="flex-1 flex flex-col w-full min-w-0">
         <Header toggleSidebar={toggleSidebar} />
-        <main className="flex-1 w-full bg-white dark:bg-gray-950 overflow-auto p-0">
+        <main className="flex-1 w-full overflow-auto">
           <ErrorBoundary>
             {children}
           </ErrorBoundary>
