@@ -9,23 +9,14 @@ export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
 
-  // Log current theme on component mount and when theme changes
+  // Apply theme data attribute when theme changes
   useEffect(() => {
-    console.log("Current theme:", theme);
-    
-    // Apply a data attribute to the body for additional CSS targeting if needed
     document.documentElement.setAttribute('data-theme', theme);
-    
-    // Check text visibility in current theme
-    const bgColor = getComputedStyle(document.documentElement).backgroundColor;
-    const textColor = getComputedStyle(document.documentElement).color;
-    console.log(`Theme colors - Background: ${bgColor}, Text: ${textColor}`);
   }, [theme]);
 
   const toggleTheme = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
     setTheme(newTheme);
-    console.log(`Toggling theme to: ${newTheme}`);
     
     toast({
       title: `Theme Changed`,
