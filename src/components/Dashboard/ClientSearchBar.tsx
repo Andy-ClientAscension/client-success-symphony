@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FileUp, Layers, KeySquare } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ClientSearchBarProps {
   searchQuery: string;
@@ -24,18 +25,25 @@ export function ClientSearchBar({
 }: ClientSearchBarProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [isShortcutVisible, setIsShortcutVisible] = useState(false);
+  const isMobile = useIsMobile();
 
   // Show keyboard shortcut hint after a brief delay
   useEffect(() => {
     const timer = setTimeout(() => {
-      setIsShortcutVisible(true);
+      if (!isMobile) {
+        setIsShortcutVisible(true);
+      }
     }, 2000);
     
     return () => clearTimeout(timer);
-  }, []);
+  }, [isMobile]);
+
+  const handleClear = () => {
+    onSearchChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>);
+  };
 
   return (
-    <div className="flex flex-wrap gap-3 mb-5">
+    <div className={`flex ${isMobile ? "flex-col" : "flex-wrap"} gap-3 mb-5`}>
       <div className="relative flex-grow">
         {isSearching ? (
           <Loader className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
@@ -48,15 +56,15 @@ export function ClientSearchBar({
           onChange={onSearchChange}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          className={`pl-9 pr-8 h-10 bg-white dark:bg-gray-800 ${isFocused ? 'ring-1 ring-ring shadow-sm' : 'shadow-sm'}`}
+          className={`pl-9 pr-8 ${isMobile ? "h-11" : "h-10"} bg-white dark:bg-gray-800 ${isFocused ? 'ring-1 ring-ring shadow-sm' : 'shadow-sm'}`}
           aria-label="Search clients"
         />
         {searchQuery ? (
           <Button 
             variant="ghost" 
             size="icon" 
-            className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
-            onClick={() => onSearchChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
+            className={`absolute right-1 top-1/2 -translate-y-1/2 ${isMobile ? "h-9 w-9" : "h-8 w-8"}`}
+            onClick={handleClear}
             aria-label="Clear search"
           >
             <XCircle className="h-4 w-4" />
@@ -70,17 +78,17 @@ export function ClientSearchBar({
       </div>
       
       {selectedClientCount > 0 && (
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
+        <div className={`flex items-center ${isMobile ? "justify-center w-full" : "gap-2"}`}>
+          <span className="text-sm font-medium bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-md mr-2">
             {selectedClientCount} selected
           </span>
           <Button 
             variant="outline" 
-            size="sm" 
+            size={isMobile ? "default" : "sm"} 
             onClick={onOpenBulkActions}
-            className="flex items-center bg-white dark:bg-gray-800 shadow-sm"
+            className={`flex items-center bg-white dark:bg-gray-800 shadow-sm ${isMobile ? "flex-1 py-2" : ""}`}
           >
-            <Layers className="h-3.5 w-3.5 mr-1.5" />
+            <Layers className="h-4 w-4 mr-1.5" />
             Bulk Actions
           </Button>
         </div>

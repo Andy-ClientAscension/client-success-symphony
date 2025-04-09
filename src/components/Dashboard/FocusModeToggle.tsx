@@ -3,6 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { MaximizeIcon, MinimizeIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface FocusModeToggleProps {
   focusMode: boolean;
@@ -11,6 +12,7 @@ interface FocusModeToggleProps {
 
 export function FocusModeToggle({ focusMode, onChange }: FocusModeToggleProps) {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const handleToggle = () => {
     const newState = !focusMode;
@@ -27,12 +29,13 @@ export function FocusModeToggle({ focusMode, onChange }: FocusModeToggleProps) {
   return (
     <Button 
       variant="outline" 
-      size="sm" 
+      size={isMobile ? "default" : "sm"} 
       onClick={handleToggle}
-      className="h-9 gap-2 text-sm bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 shadow-sm"
+      className={`gap-2 text-sm bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 shadow-sm ${isMobile ? 'h-10 px-3' : 'h-9'}`}
+      aria-label={focusMode ? "Expand View" : "Focus Mode"}
     >
       {focusMode ? <MaximizeIcon className="h-4 w-4" /> : <MinimizeIcon className="h-4 w-4" />}
-      {focusMode ? "Expand View" : "Focus Mode"}
+      {!isMobile && (focusMode ? "Expand View" : "Focus Mode")}
     </Button>
   );
 }
