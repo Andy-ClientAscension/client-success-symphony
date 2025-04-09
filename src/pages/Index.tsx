@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { BarChart2, Users, CheckSquare, ChevronDown, ChevronUp } from "lucide-react";
 import { useDashboardPersistence } from "@/hooks/use-dashboard-persistence";
 import { FocusModeToggle } from "@/components/Dashboard/FocusModeToggle";
@@ -85,6 +84,64 @@ export default function Index() {
         <ChevronDown className="h-4 w-4" />
       )}
     </CollapsibleTrigger>
+  );
+
+  // Shared components to reduce duplication
+  const ClientManagementSection = () => (
+    <div className="bg-purple-50/30 dark:bg-purple-950/30 p-4 rounded-lg border border-purple-100 dark:border-purple-900/50">
+      <Card className="shadow-sm">
+        <CardContent className="p-0">
+          <ClientList />
+        </CardContent>
+      </Card>
+    </div>
+  );
+  
+  const KanbanSection = () => (
+    <div className="bg-amber-50/30 dark:bg-amber-950/30 p-4 rounded-lg border border-amber-100 dark:border-amber-900/50">
+      <Card className="shadow-sm">
+        <CardContent className="p-0">
+          <KanbanBoard />
+        </CardContent>
+      </Card>
+    </div>
+  );
+  
+  const PaymentAlertsSection = () => (
+    <div className="bg-amber-50/30 dark:bg-amber-950/30 p-4 rounded-lg border border-amber-100 dark:border-amber-900/50">
+      <Card className="shadow-sm">
+        <CardContent className="p-0">
+          <PaymentAlerts />
+        </CardContent>
+      </Card>
+    </div>
+  );
+  
+  const AnalyticsChartsSection = () => (
+    <div className="bg-red-50/30 dark:bg-red-950/30 p-4 rounded-lg border border-red-100 dark:border-red-900/50">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="shadow-sm">
+          <CardContent className="p-0">
+            <ChurnChart />
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm">
+          <CardContent className="p-0">
+            <NPSChart />
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+  
+  const TaskManagerSection = () => (
+    <div className="bg-green-50/30 dark:bg-green-950/30 p-4 rounded-lg border border-green-100 dark:border-green-900/50">
+      <Card className="shadow-sm">
+        <CardContent className="p-0">
+          <TaskManager />
+        </CardContent>
+      </Card>
+    </div>
   );
 
   return (
@@ -215,61 +272,21 @@ export default function Index() {
           
           <TabsContent value="clients" className="m-0" role="tabpanel" id="clients-tab">
             <div className="grid gap-6">
-              <div className="bg-purple-50/30 dark:bg-purple-950/30 p-4 rounded-lg border border-purple-100 dark:border-purple-900/50">
-                <Card className="shadow-sm">
-                  <CardContent className="p-0">
-                    <ClientList />
-                  </CardContent>
-                </Card>
-              </div>
+              <ClientManagementSection />
               
-              {!focusMode && (
-                <div className="bg-amber-50/30 dark:bg-amber-950/30 p-4 rounded-lg border border-amber-100 dark:border-amber-900/50">
-                  <Card className="shadow-sm">
-                    <CardContent className="p-0">
-                      <KanbanBoard />
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
+              {!focusMode && <KanbanSection />}
             </div>
           </TabsContent>
           
           <TabsContent value="tasks" className="m-0" role="tabpanel" id="tasks-tab">
-            <div className="bg-green-50/30 dark:bg-green-950/30 p-4 rounded-lg border border-green-100 dark:border-green-900/50">
-              <Card className="shadow-sm">
-                <CardContent className="p-0">
-                  <TaskManager />
-                </CardContent>
-              </Card>
-            </div>
+            <TaskManagerSection />
           </TabsContent>
           
           {!focusMode && (
             <TabsContent value="analytics" className="m-0" role="tabpanel" id="analytics-tab">
               <div className="grid gap-6">
-                <div className="bg-red-50/30 dark:bg-red-950/30 p-4 rounded-lg border border-red-100 dark:border-red-900/50">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Card className="shadow-sm">
-                      <CardContent className="p-0">
-                        <ChurnChart />
-                      </CardContent>
-                    </Card>
-                    <Card className="shadow-sm">
-                      <CardContent className="p-0">
-                        <NPSChart />
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
-                
-                <div className="bg-amber-50/30 dark:bg-amber-950/30 p-4 rounded-lg border border-amber-100 dark:border-amber-900/50">
-                  <Card className="shadow-sm">
-                    <CardContent className="p-0">
-                      <PaymentAlerts />
-                    </CardContent>
-                  </Card>
-                </div>
+                <AnalyticsChartsSection />
+                <PaymentAlertsSection />
               </div>
             </TabsContent>
           )}
