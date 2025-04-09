@@ -1,6 +1,7 @@
 
 import { Layout } from "@/components/Layout/Layout";
-import { MetricsCards } from "@/components/Dashboard/MetricsCards";
+import { CompanyMetrics } from "@/components/Dashboard/CompanyMetrics";
+import { TeamAnalytics } from "@/components/Dashboard/TeamAnalytics";
 import { ClientList } from "@/components/Dashboard/ClientList";
 import { ChurnChart } from "@/components/Dashboard/ChurnChart";
 import { NPSChart } from "@/components/Dashboard/NPSChart";
@@ -19,10 +20,11 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { MaximizeIcon, MinimizeIcon, BarChart2, Users, CheckSquare } from "lucide-react";
+import { BarChart2, Users, CheckSquare } from "lucide-react";
 import { useDashboardPersistence } from "@/hooks/use-dashboard-persistence";
 import { FocusModeToggle } from "@/components/Dashboard/FocusModeToggle";
 import { Separator } from "@/components/ui/separator";
+import { Card } from "@/components/ui/card";
 
 export default function Index() {
   const isMobile = useIsMobile();
@@ -108,27 +110,25 @@ export default function Index() {
           
           <TabsContent value="overview" className="m-0 p-0" role="tabpanel" id="overview-tab">
             <div className="space-y-6">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
-                <MetricsCards />
+              {/* Key Metrics at the top */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                <CompanyMetrics />
               </div>
               
+              {/* Team Analytics */}
               {!focusMode && (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  <div className="col-span-1 sm:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
-                    <ChurnChart />
-                  </div>
-                  <div className="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
-                    <NPSChart />
-                  </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                  <TeamAnalytics />
                 </div>
               )}
               
+              {/* Client Management */}
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
                 <ClientList />
               </div>
               
               {!focusMode && (
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                   <div className="col-span-1 lg:col-span-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
                     <KanbanBoard />
                   </div>
