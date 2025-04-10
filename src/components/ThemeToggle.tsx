@@ -11,7 +11,10 @@ export function ThemeToggle() {
 
   // Apply theme data attribute when theme changes
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
+    // Check if document is available (for SSR)
+    if (typeof document !== "undefined") {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
   }, [theme]);
 
   const toggleTheme = () => {
@@ -35,7 +38,7 @@ export function ThemeToggle() {
       className="transition-colors"
     >
       {theme === "dark" ? (
-        <Sun className="h-[1.2rem] w-[1.2rem] transition-transform text-primary" aria-hidden="true" />
+        <Sun className="h-[1.2rem] w-[1.2rem] transition-transform text-yellow-400" aria-hidden="true" />
       ) : (
         <Moon className="h-[1.2rem] w-[1.2rem] transition-transform text-primary" aria-hidden="true" />
       )}
