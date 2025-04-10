@@ -2,10 +2,8 @@
 import { Layout } from "@/components/Layout/Layout";
 import { CompanyMetrics } from "@/components/Dashboard/CompanyMetrics";
 import { TeamAnalytics } from "@/components/Dashboard/TeamAnalytics";
-import { ClientList } from "@/components/Dashboard/ClientList";
 import { ChurnChart } from "@/components/Dashboard/ChurnChart";
 import { NPSChart } from "@/components/Dashboard/NPSChart";
-import { KanbanBoard } from "@/components/Dashboard/KanbanBoard";
 import { PaymentAlerts } from "@/components/Dashboard/PaymentAlerts";
 import { TaskManager } from "@/components/Dashboard/TaskManager";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -38,12 +36,10 @@ export default function Index() {
   const [expandedSections, setExpandedSections] = useState({
     metrics: true,
     teamAnalytics: true,
-    clientList: true,
-    kanban: false,
     healthScore: true
   });
   
-  // New performance mode state
+  // Performance mode state
   const [performanceMode, setPerformanceMode] = useState(false);
   
   // Get all clients for the health score summary
@@ -91,36 +87,6 @@ export default function Index() {
   );
 
   // Shared components to reduce duplication
-  const ClientManagementSection = () => (
-    <div className="bg-purple-50/30 dark:bg-purple-950/30 p-4 rounded-lg border border-purple-100 dark:border-purple-900/50">
-      <Card className="shadow-sm">
-        <CardContent className="p-0">
-          <ClientList />
-        </CardContent>
-      </Card>
-    </div>
-  );
-  
-  const KanbanSection = () => (
-    <div className="bg-amber-50/30 dark:bg-amber-950/30 p-4 rounded-lg border border-amber-100 dark:border-amber-900/50">
-      <Card className="shadow-sm">
-        <CardContent className="p-0">
-          <KanbanBoard />
-        </CardContent>
-      </Card>
-    </div>
-  );
-  
-  const PaymentAlertsSection = () => (
-    <div className="bg-amber-50/30 dark:bg-amber-950/30 p-4 rounded-lg border border-amber-100 dark:border-amber-900/50">
-      <Card className="shadow-sm">
-        <CardContent className="p-0">
-          <PaymentAlerts />
-        </CardContent>
-      </Card>
-    </div>
-  );
-  
   const AnalyticsChartsSection = () => (
     <div className="bg-red-50/30 dark:bg-red-950/30 p-4 rounded-lg border border-red-100 dark:border-red-900/50">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -143,6 +109,16 @@ export default function Index() {
       <Card className="shadow-sm">
         <CardContent className="p-0">
           <TaskManager />
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const PaymentAlertsSection = () => (
+    <div className="bg-amber-50/30 dark:bg-amber-950/30 p-4 rounded-lg border border-amber-100 dark:border-amber-900/50">
+      <Card className="shadow-sm">
+        <CardContent className="p-0">
+          <PaymentAlerts />
         </CardContent>
       </Card>
     </div>
@@ -193,14 +169,6 @@ export default function Index() {
               >
                 <BarChart2 className="h-4 w-4 mr-2" aria-hidden="true" />
                 Overview
-              </TabsTrigger>
-              <TabsTrigger 
-                value="clients" 
-                className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-5 py-3 bg-transparent"
-                aria-controls="clients-tab"
-              >
-                <Users className="h-4 w-4 mr-2" aria-hidden="true" />
-                Clients
               </TabsTrigger>
               <TabsTrigger 
                 value="tasks" 
@@ -256,61 +224,10 @@ export default function Index() {
                 </div>
               )}
               
-              {/* Client Management section with subtle background - conditional based on performance mode */}
-              {!performanceMode && (
-                <div className="bg-purple-50/30 dark:bg-purple-950/30 p-4 rounded-lg border border-purple-100 dark:border-purple-900/50">
-                  <Collapsible open={expandedSections.clientList} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
-                    <SectionHeader title="Client Management" section="clientList" />
-                    <CollapsibleContent className="p-4">
-                      <ClientList />
-                    </CollapsibleContent>
-                  </Collapsible>
-                </div>
-              )}
-              
-              {/* Workflow section with subtle background - conditional based on performance mode */}
+              {/* Payment Alerts section */}
               {!focusMode && !performanceMode && (
-                <div className="bg-amber-50/30 dark:bg-amber-950/30 p-4 rounded-lg border border-amber-100 dark:border-amber-900/50">
-                  <Collapsible open={expandedSections.kanban} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
-                    <SectionHeader title="Workflow Board" section="kanban" />
-                    <CollapsibleContent>
-                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 p-4">
-                        <div className="col-span-1 lg:col-span-9">
-                          <KanbanBoard />
-                        </div>
-                        <div className="col-span-1 lg:col-span-3">
-                          <PaymentAlerts />
-                        </div>
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                </div>
+                <PaymentAlertsSection />
               )}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="clients" className="m-0" role="tabpanel" id="clients-tab">
-            <div className="grid gap-6">
-              {performanceMode ? (
-                <div className="p-8 text-center bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-                  <h3 className="text-lg font-medium mb-2">Performance Mode Enabled</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Client management view is disabled to improve dashboard performance.
-                  </p>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setPerformanceMode(false)}
-                    className="mx-auto"
-                  >
-                    Show Client Management
-                  </Button>
-                </div>
-              ) : (
-                <ClientManagementSection />
-              )}
-              
-              {!focusMode && !performanceMode && <KanbanSection />}
             </div>
           </TabsContent>
           
@@ -335,8 +252,8 @@ export default function Index() {
               <div>
                 <h3 className="font-medium text-green-800 dark:text-green-300">Performance Mode Active</h3>
                 <p className="text-sm text-green-700 dark:text-green-400 mt-1">
-                  Client management and Kanban components are disabled to improve dashboard performance.
-                  These components can consume significant resources when rendered.
+                  Heavy components like the Client List and Kanban Board have been moved to the Clients page 
+                  to improve dashboard performance.
                 </p>
               </div>
             </div>
