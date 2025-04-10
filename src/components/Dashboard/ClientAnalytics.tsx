@@ -81,10 +81,10 @@ export function ClientAnalytics() {
       </CardHeader>
       
       <CardContent>
-        <div className="border rounded-lg overflow-hidden">
+        <div className="border rounded-lg overflow-hidden bg-card text-card-foreground dark:border-gray-700">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="bg-muted/50 dark:bg-gray-800/50">
                 <TableHead>Client</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Progress</TableHead>
@@ -120,13 +120,13 @@ export function ClientAnalytics() {
                     <TableCell>{client.csm || "Unassigned"}</TableCell>
                     <TableCell>
                       <div className="flex items-center">
-                        <DollarSign className="h-3 w-3 mr-1 text-green-600" />
+                        <DollarSign className="h-3 w-3 mr-1 text-green-600 dark:text-green-400" />
                         {client.mrr}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center">
-                        <Phone className="h-3 w-3 mr-1 text-blue-600" />
+                        <Phone className="h-3 w-3 mr-1 text-blue-600 dark:text-blue-400" />
                         {client.callsBooked}
                       </div>
                     </TableCell>
@@ -134,14 +134,14 @@ export function ClientAnalytics() {
                       <div className="flex items-center gap-2">
                         <div className="flex items-center" title="TrustPilot Review">
                           {client.trustPilotReview?.rating ? 
-                            <CheckCircle className="h-4 w-4 text-green-600" /> :
-                            <XCircle className="h-4 w-4 text-gray-400" />
+                            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" /> :
+                            <XCircle className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                           }
                         </div>
                         <div className="flex items-center" title="Case Study">
                           {client.caseStudyInterview?.completed ? 
-                            <CheckCircle className="h-4 w-4 text-green-600" /> :
-                            <XCircle className="h-4 w-4 text-gray-400" />
+                            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" /> :
+                            <XCircle className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                           }
                         </div>
                       </div>
@@ -194,7 +194,7 @@ export function ClientAnalytics() {
                     key={i}
                     variant={pageToShow === currentPage ? "default" : "outline"}
                     size="sm"
-                    className={`h-8 w-8 p-0 ${pageToShow === currentPage ? 'bg-red-600 hover:bg-red-700' : ''}`}
+                    className={`h-8 w-8 p-0 ${pageToShow === currentPage ? 'bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700' : ''}`}
                     onClick={() => paginate(pageToShow)}
                   >
                     {pageToShow}

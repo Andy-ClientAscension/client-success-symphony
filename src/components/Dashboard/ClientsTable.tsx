@@ -61,13 +61,13 @@ const ClientRow = memo(({
   const getStatusBadge = (status: Client['status']) => {
     switch (status) {
       case 'active':
-        return <Badge className="bg-success-100 text-success-800 hover:bg-success-200">Active</Badge>;
+        return <Badge className="bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400 hover:bg-success-200 dark:hover:bg-success-900/50">Active</Badge>;
       case 'at-risk':
-        return <Badge className="bg-warning-100 text-warning-800 hover:bg-warning-200">At Risk</Badge>;
+        return <Badge className="bg-warning-100 text-warning-800 dark:bg-warning-900/30 dark:text-warning-400 hover:bg-warning-200 dark:hover:bg-warning-900/50">At Risk</Badge>;
       case 'churned':
-        return <Badge className="bg-danger-100 text-danger-800 hover:bg-danger-200">Churned</Badge>;
+        return <Badge className="bg-danger-100 text-danger-800 dark:bg-danger-900/30 dark:text-danger-400 hover:bg-danger-200 dark:hover:bg-danger-900/50">Churned</Badge>;
       case 'new':
-        return <Badge className="bg-brand-100 text-brand-800 hover:bg-brand-200">New</Badge>;
+        return <Badge className="bg-brand-100 text-brand-800 dark:bg-brand-900/30 dark:text-brand-400 hover:bg-brand-200 dark:hover:bg-brand-900/50">New</Badge>;
       default:
         return null;
     }
@@ -86,7 +86,7 @@ const ClientRow = memo(({
   };
 
   return (
-    <TableRow key={client.id} className={isSelected ? "bg-muted/50" : ""}>
+    <TableRow key={client.id} className={isSelected ? "bg-muted/50 dark:bg-gray-800/30" : ""}>
       <TableCell>
         <div 
           className="flex items-center justify-center cursor-pointer" 
@@ -106,7 +106,7 @@ const ClientRow = memo(({
       <TableCell>{getStatusBadge(client.status)}</TableCell>
       <TableCell>
         <div className="flex items-center gap-2">
-          <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+          <div className="w-24 h-2 bg-muted rounded-full overflow-hidden dark:bg-gray-700">
             <div 
               className={`h-full ${getProgressColor(client.progress)}`} 
               style={{ width: `${client.progress}%` }} 
@@ -124,19 +124,19 @@ const ClientRow = memo(({
       <TableCell>{client.csm || 'Unassigned'}</TableCell>
       <TableCell>
         <div className="flex items-center">
-          <Phone className="h-3 w-3 mr-1 text-red-600" />
+          <Phone className="h-3 w-3 mr-1 text-red-600 dark:text-red-400" />
           <span>{client.callsBooked}</span>
         </div>
       </TableCell>
       <TableCell>
         <div className="flex items-center">
-          <BarChart2 className="h-3 w-3 mr-1 text-red-600" />
+          <BarChart2 className="h-3 w-3 mr-1 text-red-600 dark:text-red-400" />
           <span>{client.dealsClosed}</span>
         </div>
       </TableCell>
       <TableCell>
         <div className="flex items-center">
-          <DollarSign className="h-3 w-3 mr-1 text-red-600" />
+          <DollarSign className="h-3 w-3 mr-1 text-red-600 dark:text-red-400" />
           <span>${client.mrr}</span>
         </div>
       </TableCell>
@@ -144,9 +144,9 @@ const ClientRow = memo(({
         <div className="flex items-center gap-2">
           {client.npsScore !== null ? (
             <Badge className={
-              client.npsScore >= 8 ? "bg-success-100 text-success-800" :
-              client.npsScore >= 6 ? "bg-warning-100 text-warning-800" :
-              "bg-danger-100 text-danger-800"
+              client.npsScore >= 8 ? "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400" :
+              client.npsScore >= 6 ? "bg-warning-100 text-warning-800 dark:bg-warning-900/30 dark:text-warning-400" :
+              "bg-danger-100 text-danger-800 dark:bg-danger-900/30 dark:text-danger-400"
             }>
               {client.npsScore}
             </Badge>
@@ -237,7 +237,7 @@ export function ClientsTable({
     <div className="overflow-x-auto">
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className="bg-muted/50 dark:bg-gray-800/50">
             <TableHead className="w-[40px]">
               <div 
                 className="flex items-center justify-center cursor-pointer" 

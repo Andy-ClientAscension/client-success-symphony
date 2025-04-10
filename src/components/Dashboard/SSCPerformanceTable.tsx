@@ -38,10 +38,10 @@ export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerfo
           </Tooltip>
         </TooltipProvider>
       </div>
-      <div className="border rounded-lg overflow-hidden bg-white overflow-x-auto">
+      <div className="border rounded-lg overflow-hidden bg-card text-card-foreground dark:border-gray-700">
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-50">
+            <TableRow className="bg-muted/50 dark:bg-gray-800/50">
               <TableHead className={`py-4 text-sm ${isMobile ? 'w-[120px]' : 'w-[180px]'}`}>SSC</TableHead>
               <TableHead className={`text-center text-sm ${isMobile ? 'w-[70px]' : 'w-[100px]'}`}>Clients</TableHead>
               <TableHead className={`text-center text-sm ${isMobile ? 'hidden' : 'w-[180px]'}`}>Backend Students</TableHead>

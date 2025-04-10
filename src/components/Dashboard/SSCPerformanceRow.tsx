@@ -76,22 +76,22 @@ export function SSCPerformanceRow({ csm, clients, isMobile = false }: SSCPerform
   let grade;
   let color;
   
-  if (healthScore >= 97) { grade = "A+"; color = "text-green-600"; }
-  else if (healthScore >= 93) { grade = "A"; color = "text-green-600"; }
-  else if (healthScore >= 90) { grade = "A-"; color = "text-green-600"; }
-  else if (healthScore >= 87) { grade = "B+"; color = "text-green-500"; }
-  else if (healthScore >= 83) { grade = "B"; color = "text-green-500"; }
-  else if (healthScore >= 80) { grade = "B-"; color = "text-green-500"; }
-  else if (healthScore >= 77) { grade = "C+"; color = "text-amber-500"; }
-  else if (healthScore >= 73) { grade = "C"; color = "text-amber-500"; }
-  else if (healthScore >= 70) { grade = "C-"; color = "text-amber-500"; }
-  else if (healthScore >= 67) { grade = "D+"; color = "text-red-500"; }
-  else if (healthScore >= 63) { grade = "D"; color = "text-red-500"; }
-  else if (healthScore >= 60) { grade = "D-"; color = "text-red-500"; }
-  else { grade = "F"; color = "text-red-600"; }
+  if (healthScore >= 97) { grade = "A+"; color = "text-green-600 dark:text-green-400"; }
+  else if (healthScore >= 93) { grade = "A"; color = "text-green-600 dark:text-green-400"; }
+  else if (healthScore >= 90) { grade = "A-"; color = "text-green-600 dark:text-green-400"; }
+  else if (healthScore >= 87) { grade = "B+"; color = "text-green-500 dark:text-green-400"; }
+  else if (healthScore >= 83) { grade = "B"; color = "text-green-500 dark:text-green-400"; }
+  else if (healthScore >= 80) { grade = "B-"; color = "text-green-500 dark:text-green-400"; }
+  else if (healthScore >= 77) { grade = "C+"; color = "text-amber-500 dark:text-amber-400"; }
+  else if (healthScore >= 73) { grade = "C"; color = "text-amber-500 dark:text-amber-400"; }
+  else if (healthScore >= 70) { grade = "C-"; color = "text-amber-500 dark:text-amber-400"; }
+  else if (healthScore >= 67) { grade = "D+"; color = "text-red-500 dark:text-red-400"; }
+  else if (healthScore >= 63) { grade = "D"; color = "text-red-500 dark:text-red-400"; }
+  else if (healthScore >= 60) { grade = "D-"; color = "text-red-500 dark:text-red-400"; }
+  else { grade = "F"; color = "text-red-600 dark:text-red-400"; }
   
   return (
-    <TableRow className="hover:bg-gray-50">
+    <TableRow className="hover:bg-muted/50 dark:hover:bg-gray-800/50">
       <TableCell className="font-medium py-3">{csm}</TableCell>
       <TableCell className="text-center">{csmClients.length}</TableCell>
       {!isMobile && <TableCell className="text-center">{backendStudents}</TableCell>}
@@ -102,7 +102,7 @@ export function SSCPerformanceRow({ csm, clients, isMobile = false }: SSCPerform
             <span className={`font-medium ${color}`}>Grade: {grade}</span>
           </div>
           
-          <div className={`flex ${isMobile ? 'flex-col space-y-1' : 'items-center space-x-3'} text-sm text-gray-600`}>
+          <div className={`flex ${isMobile ? 'flex-col space-y-1' : 'items-center space-x-3'} text-sm text-gray-600 dark:text-gray-300`}>
             <span>NPS: {avgNPS}</span>
             <span>Retention: {retentionRate}%</span>
             <span>${totalMRR.toLocaleString()}</span>
