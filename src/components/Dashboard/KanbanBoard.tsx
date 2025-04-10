@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { KanbanSquare, Plus, MoreVertical, Calendar, Users, MessageSquare, AlertTriangle, UserCheck } from "lucide-react";
@@ -28,7 +29,8 @@ import { StudentPaymentAlert } from "./StudentPaymentAlert";
 import { StudentTeamEdit } from "./StudentTeamEdit";
 import { checkStudentPaymentStatus } from "@/lib/payment-monitor";
 import { CSM_TEAMS } from "@/lib/data";
-import { useKanbanStore } from "@/utils/kanbanStore";
+import { useKanbanStore, Student } from "@/utils/kanbanStore";
+import { getDefaultColumnOrder } from "./KanbanView/ClientStatusHelper";
 
 export function KanbanBoard() {
   const {
@@ -44,7 +46,7 @@ export function KanbanBoard() {
   } = useKanbanStore();
   
   const [dateModalOpen, setDateModalOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [dateModalType, setDateModalType] = useState<"churn" | "other">("churn");
   const [expandedStudentId, setExpandedStudentId] = useState<string | null>(null);
   const [teamEditOpen, setTeamEditOpen] = useState(false);
@@ -163,7 +165,7 @@ export function KanbanBoard() {
     }
   };
 
-  const handleViewDates = (student: any) => {
+  const handleViewDates = (student: Student) => {
     setSelectedStudent(student);
     setDateModalType("other");
     setDateModalOpen(true);
@@ -178,7 +180,7 @@ export function KanbanBoard() {
     });
   };
 
-  const handleEditTeam = (student: any) => {
+  const handleEditTeam = (student: Student) => {
     setSelectedStudent(student);
     setTeamEditOpen(true);
   };
@@ -189,7 +191,7 @@ export function KanbanBoard() {
     updateStudentTeam(selectedStudent.id, teamId);
   };
 
-  const formatDateInfo = (student: any) => {
+  const formatDateInfo = (student: Student) => {
     if (student.startDate) {
       return (
         <div className="text-xs text-muted-foreground mt-1">
@@ -328,7 +330,7 @@ export function KanbanBoard() {
                 
                 const students = (column.studentIds || [])
                   .map(studentId => data.students?.[studentId])
-                  .filter(Boolean);
+                  .filter(Boolean) as Student[];
                 
                 return (
                   <div key={column.id} className="flex flex-col bg-secondary/50 rounded-lg p-3 min-w-[250px]">

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { STORAGE_KEYS, saveData, loadData } from '@/utils/persistence';
-import { format, addDays, subDays, subMonths } from 'date-fns';
+import { format, addDays, subDays } from 'date-fns';
 import { getDefaultColumnOrder } from '@/components/Dashboard/KanbanView/ClientStatusHelper';
 
 export interface Note {
@@ -418,14 +418,14 @@ interface KanbanStoreType {
   loadPersistedData: () => void;
 }
 
-export const useKanbanStore = create<KanbanStoreType>((set, get) => ({
+export const useKanbanStore = create<KanbanStoreType>((setState, getState, store) => ({
   data: createEmptyState(),
   filteredData: createEmptyState(),
   selectedTeam: "all",
 
   setSelectedTeam: (team) => {
-    set({ selectedTeam: team });
-    const { data } = get();
+    setState({ selectedTeam: team });
+    const { data } = getState();
     
     if (!data || !data.columns) {
       console.error("Kanban data is not initialized properly");
@@ -433,7 +433,7 @@ export const useKanbanStore = create<KanbanStoreType>((set, get) => ({
     }
     
     if (team === "all") {
-      set({ filteredData: data });
+      setState({ filteredData: data });
       return;
     }
     
@@ -458,7 +458,7 @@ export const useKanbanStore = create<KanbanStoreType>((set, get) => ({
       }
     });
     
-    set({ filteredData: newData });
+    setState({ filteredData: newData });
   },
 
   updateData: (newData) => {
@@ -467,8 +467,8 @@ export const useKanbanStore = create<KanbanStoreType>((set, get) => ({
       return;
     }
     
-    set({ data: newData });
-    const { selectedTeam } = get();
+    setState({ data: newData });
+    const { selectedTeam } = getState();
     
     if (selectedTeam !== "all") {
       const filteredData = { ...newData };
@@ -487,9 +487,9 @@ export const useKanbanStore = create<KanbanStoreType>((set, get) => ({
         }
       });
       
-      set({ filteredData });
+      setState({ filteredData });
     } else {
-      set({ filteredData: newData });
+      setState({ filteredData: newData });
     }
     
     const persistEnabled = localStorage.getItem("persistDashboard") === "true";
@@ -499,7 +499,7 @@ export const useKanbanStore = create<KanbanStoreType>((set, get) => ({
   },
   
   moveStudent: (studentId, sourceColumnId, destinationColumnId, sourceIndex, destinationIndex) => {
-    const { data } = get();
+    const { data } = getState();
     
     if (!data || !data.columns || !data.columns[sourceColumnId] || !data.columns[destinationColumnId]) {
       console.error("Cannot move student: kanban data not properly initialized");
@@ -534,12 +534,12 @@ export const useKanbanStore = create<KanbanStoreType>((set, get) => ({
       newData.columns[destinationColumnId] = destinationColumn;
     }
     
-    set({ data: newData });
-    get().updateData(newData);
+    setState({ data: newData });
+    getState().updateData(newData);
   },
   
   addChurnDate: (studentId, date) => {
-    const { data } = get();
+    const { data } = getState();
     const newData = { ...data };
     
     if (newData.students[studentId]) {
@@ -548,12 +548,12 @@ export const useKanbanStore = create<KanbanStoreType>((set, get) => ({
         churnDate: format(date, 'yyyy-MM-dd')
       };
       
-      get().updateData(newData);
+      getState().updateData(newData);
     }
   },
   
   addPauseDate: (studentId, date, reason) => {
-    const { data } = get();
+    const { data } = getState();
     const newData = { ...data };
     
     if (newData.students[studentId]) {
@@ -563,12 +563,12 @@ export const useKanbanStore = create<KanbanStoreType>((set, get) => ({
         pauseReason: reason
       };
       
-      get().updateData(newData);
+      getState().updateData(newData);
     }
   },
   
   resumeFromPause: (studentId, date) => {
-    const { data } = get();
+    const { data } = getState();
     const newData = { ...data };
     
     if (newData.students[studentId]) {
@@ -577,12 +577,12 @@ export const useKanbanStore = create<KanbanStoreType>((set, get) => ({
         resumeDate: format(date, 'yyyy-MM-dd')
       };
       
-      get().updateData(newData);
+      getState().updateData(newData);
     }
   },
   
   addNote: (studentId, note) => {
-    const { data } = get();
+    const { data } = getState();
     const newData = { ...data };
     
     if (newData.students[studentId]) {
@@ -597,12 +597,12 @@ export const useKanbanStore = create<KanbanStoreType>((set, get) => ({
         notes: [...(newData.students[studentId].notes || []), newNote]
       };
       
-      get().updateData(newData);
+      getState().updateData(newData);
     }
   },
   
   updateStudentTeam: (studentId, teamId) => {
-    const { data } = get();
+    const { data } = getState();
     const newData = { ...data };
     
     if (newData.students[studentId]) {
@@ -611,12 +611,12 @@ export const useKanbanStore = create<KanbanStoreType>((set, get) => ({
         csm: teamId
       };
       
-      get().updateData(newData);
+      getState().updateData(newData);
     }
   },
   
   reorderColumn: (columnId, startIndex, endIndex) => {
-    const { data } = get();
+    const { data } = getState();
     const newData = { ...data };
     
     if (newData.columns[columnId]) {
@@ -629,7 +629,7 @@ export const useKanbanStore = create<KanbanStoreType>((set, get) => ({
       column.studentIds = newStudentIds;
       newData.columns[columnId] = column;
       
-      get().updateData(newData);
+      getState().updateData(newData);
     }
   },
   
@@ -677,14 +677,14 @@ export const useKanbanStore = create<KanbanStoreType>((set, get) => ({
         }
       }
       
-      set({ 
+      setState({ 
         data: updatedData, 
         filteredData: updatedData 
       });
     } catch (error) {
       console.error("Error loading persisted kanban data:", error);
       const safeState = createEmptyState();
-      set({ 
+      setState({ 
         data: safeState, 
         filteredData: safeState 
       });

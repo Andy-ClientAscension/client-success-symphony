@@ -25,12 +25,12 @@ export function ClientKanbanView({ clients, onEditMetrics, onUpdateNPS }: Client
   
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 overflow-x-auto">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4 overflow-x-auto">
         {columnOrder.map((status) => (
           <KanbanColumn
             key={status}
             status={status}
-            clients={clientsByStatus[status] as unknown as Client[]}
+            clients={clientsByStatus[status] || []}
             getStatusColor={getStatusColor}
             getStatusLabel={getStatusLabel}
             onUpdateNPS={onUpdateNPS}

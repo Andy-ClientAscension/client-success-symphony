@@ -28,7 +28,7 @@ import { StudentPaymentAlert } from "./StudentPaymentAlert";
 import { StudentTeamEdit } from "./StudentTeamEdit";
 import { checkStudentPaymentStatus } from "@/lib/payment-monitor";
 import { CSM_TEAMS } from "@/lib/data";
-import { useKanbanStore } from "@/utils/kanbanStore";
+import { useKanbanStore, Student } from "@/utils/kanbanStore";
 import { getDefaultColumnOrder } from "./KanbanView/ClientStatusHelper";
 
 export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boolean }) {
@@ -47,7 +47,7 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
   } = useKanbanStore();
   
   const [dateModalOpen, setDateModalOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [dateModalType, setDateModalType] = useState<"churn" | "pause" | "resume" | "other">("churn");
   const [expandedStudentId, setExpandedStudentId] = useState<string | null>(null);
   const [teamEditOpen, setTeamEditOpen] = useState(false);
@@ -57,16 +57,12 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
   
   useEffect(() => {
     try {
-      // Get the default column order from our helper
       const columnOrder = getDefaultColumnOrder();
       
-      // Initialize the store with our preferred column order
       loadPersistedData();
       
-      // If column order in the store doesn't match our preferred order, update it
       if (data && data.columnOrder && JSON.stringify(data.columnOrder) !== JSON.stringify(columnOrder)) {
         console.log("Updating column order to:", columnOrder);
-        // This will be handled by the store's update logic
       }
       
     } catch (error) {
@@ -141,7 +137,6 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
         return;
       }
       
-      // Check if the data and columns are properly initialized
       if (!data?.columns || !filteredData?.columns) {
         console.error("Kanban data not properly initialized for drag operation");
         toast({
@@ -200,15 +195,19 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
         description: `${selectedStudent.name} marked as churned on ${format(date, 'MMMM d, yyyy')}.`,
       });
       
-      moveStudent(
-        selectedStudent.id,
-        filteredData.columnOrder.find(id => 
-          filteredData.columns[id].studentIds.includes(selectedStudent.id)
-        ) || '',
-        'churned',
-        0,
-        0
-      );
+      if (filteredData && filteredData.columns) {
+        const sourceColumn = filteredData.columnOrder.find(id => 
+          filteredData.columns[id]?.studentIds.includes(selectedStudent.id)
+        ) || '';
+        
+        moveStudent(
+          selectedStudent.id,
+          sourceColumn,
+          'churned',
+          0,
+          0
+        );
+      }
     }
   };
   
@@ -221,15 +220,19 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
         description: `${selectedStudent.name} placed on pause from ${format(date, 'MMMM d, yyyy')}.`,
       });
       
-      moveStudent(
-        selectedStudent.id,
-        filteredData.columnOrder.find(id => 
-          filteredData.columns[id].studentIds.includes(selectedStudent.id)
-        ) || '',
-        'paused',
-        0,
-        0
-      );
+      if (filteredData && filteredData.columns) {
+        const sourceColumn = filteredData.columnOrder.find(id => 
+          filteredData.columns[id]?.studentIds.includes(selectedStudent.id)
+        ) || '';
+        
+        moveStudent(
+          selectedStudent.id,
+          sourceColumn,
+          'paused',
+          0,
+          0
+        );
+      }
       
       setPauseReason("");
     }
@@ -255,7 +258,7 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
   };
 
   
-  const handleViewDates = (student: any) => {
+  const handleViewDates = (student: Student) => {
     setSelectedStudent(student);
     setDateModalType("other");
     setDateModalOpen(true);
@@ -270,7 +273,7 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
     });
   };
 
-  const handleEditTeam = (student: any) => {
+  const handleEditTeam = (student: Student) => {
     setSelectedStudent(student);
     setTeamEditOpen(true);
   };
@@ -281,7 +284,7 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
     updateStudentTeam(selectedStudent.id, teamId);
   };
 
-  const formatDateInfo = (student: any) => {
+  const formatDateInfo = (student: Student) => {
     if (student.startDate) {
       return (
         <div className="text-xs text-muted-foreground mt-1">
@@ -369,7 +372,7 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
   };
   
   
-  const getStudentMetricsRow = (student) => {
+  const getStudentMetricsRow = (student: Student) => {
     if (!student.mrr && !student.npsScore) return null;
     
     return (
@@ -395,13 +398,9 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
   console.log("Rendering kanban with data:", filteredData);
   console.log("Column order:", filteredData.columnOrder);
   
-  // Use the default column order
   const columnOrder = filteredData?.columnOrder || getDefaultColumnOrder();
   
-  
-  // If data is not properly loaded, show a loading state
   if (!filteredData?.columns || !filteredData?.columnOrder || filteredData.columnOrder.length === 0) {
-    
     return (
       <Card className={`${expanded ? 'fixed inset-0 z-50 m-4 rounded-lg' : 'mt-4'} overflow-hidden`}>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -519,7 +518,7 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
                 
                 const students = column.studentIds
                   .map(studentId => data.students?.[studentId])
-                  .filter(Boolean);
+                  .filter(Boolean) as Student[];
                 
                 const getColumnStyle = () => {
                   switch(columnId) {
