@@ -1,113 +1,60 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { ThemeProvider } from "@/components/ThemeProvider";
-import { OfflineDetector } from "@/components/OfflineDetector";
-import { BrowserCompatibilityCheck } from "@/components/BrowserCompatibilityCheck";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { useEffect } from "react";
-import { applyPolyfills } from "@/utils/browserCompatibility";
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ThemeProvider } from './components/theme-provider';
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { Toaster } from "@/components/ui/toaster"
+import { ErrorBoundary } from 'react-error-boundary';
+import Index from './pages/Index';
+import Login from './pages/Login';
+import SignUp from './pages/SignUp';
+import Clients from './pages/Clients';
+import ClientDetails from './pages/ClientDetails';
+import AddClient from './pages/AddClient';
+import Analytics from './pages/Analytics';
+import Communications from './pages/Communications';
+import HealthScoreDashboard from './pages/HealthScoreDashboard';
+import Payments from './pages/Payments';
+import Renewals from './pages/Renewals';
+import Settings from './pages/Settings';
+import Help from './pages/Help';
+import NotFound from './pages/NotFound';
+import OfflineDetector from './components/OfflineDetector';
+import Automations from './pages/Automations';
 
-// Import page components
-import Login from "@/pages/Login";
-import SignUp from "@/pages/SignUp";
-import Index from "@/pages/Index";
-import AddClient from "@/pages/AddClient";
-import ClientDetailsPage from "@/pages/ClientDetails";
-import Clients from "@/pages/Clients";
-import Analytics from "@/pages/Analytics";
-import Communications from "@/pages/Communications";
-import Renewals from "@/pages/Renewals";
-import Payments from "@/pages/Payments";
-import Settings from "@/pages/Settings";
-import Help from "@/pages/Help";
-import NotFound from "@/pages/NotFound";
-import HealthScoreDashboard from "./pages/HealthScoreDashboard";
+const queryClient = new QueryClient();
 
-// Apply polyfills immediately for older browsers
-if (typeof window !== 'undefined') {
-  applyPolyfills();
-}
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    },
-  },
-});
-
-const App = () => {
-  useEffect(() => {
-    // Add support for passive event listeners to improve performance on mobile
-    try {
-      const opts = Object.defineProperty({}, 'passive', {
-        get: function() {
-          // This proves the browser supports passive events
-          return true;
-        }
-      });
-      window.addEventListener('testPassive', null as any, opts);
-      window.removeEventListener('testPassive', null as any, opts);
-      console.log("Passive event listeners are supported");
-    } catch (e) {
-      console.log("Passive event listeners are not supported");
-    }
-    
-    // Log initial route for debugging
-    console.log("Initial route:", window.location.pathname);
-  }, []);
-
+function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <BrowserRouter>
       <ThemeProvider>
-        <TooltipProvider>
+        <QueryClientProvider client={queryClient}>
           <ErrorBoundary>
-            {/* Both toasters inside ThemeProvider for context access */}
-            <Toaster />
-            <Sonner />
+            <div className="app">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<SignUp />} />
+                <Route path="/clients" element={<Clients />} />
+                <Route path="/clients/:id" element={<ClientDetails />} />
+                <Route path="/add-client" element={<AddClient />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/communications" element={<Communications />} />
+                <Route path="/health-score" element={<HealthScoreDashboard />} />
+                <Route path="/payments" element={<Payments />} />
+                <Route path="/renewals" element={<Renewals />} />
+                <Route path="/automations" element={<Automations />} />  {/* Add this line */}
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/help" element={<Help />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
             <OfflineDetector />
-            <BrowserCompatibilityCheck />
-            <BrowserRouter>
-              <AuthProvider>
-                <div className="min-h-screen overflow-auto">
-                  <Routes>
-                    {/* Public routes */}
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/signup" element={<SignUp />} />
-                  
-                    {/* Protected routes */}
-                    <Route element={<ProtectedRoute />}>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/add-client" element={<AddClient />} />
-                      <Route path="/clients" element={<Clients />} />
-                      <Route path="/client/:clientId" element={<ClientDetailsPage />} />
-                      <Route path="/analytics" element={<Analytics />} />
-                      <Route path="/communications" element={<Communications />} />
-                      <Route path="/renewals" element={<Renewals />} />
-                      <Route path="/payments" element={<Payments />} />
-                      <Route path="/health-scores" element={<HealthScoreDashboard />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="/help" element={<Help />} />
-                    </Route>
-                  
-                    {/* Catch-all route */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </div>
-              </AuthProvider>
-            </BrowserRouter>
+            <Toaster />
           </ErrorBoundary>
-        </TooltipProvider>
+        </QueryClientProvider>
       </ThemeProvider>
-    </QueryClientProvider>
+    </BrowserRouter>
   );
-};
+}
 
 export default App;

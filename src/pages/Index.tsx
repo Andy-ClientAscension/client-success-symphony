@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/Layout/Layout";
 import { CompanyMetrics } from "@/components/Dashboard/CompanyMetrics";
 import { TeamAnalytics } from "@/components/Dashboard/TeamAnalytics";
@@ -18,7 +19,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { BarChart2, Users, CheckSquare, ChevronDown, ChevronUp, Cpu } from "lucide-react";
+import { BarChart2, Users, CheckSquare, ChevronDown, ChevronUp, Cpu, Zap } from "lucide-react";
 import { useDashboardPersistence } from "@/hooks/use-dashboard-persistence";
 import { FocusModeToggle } from "@/components/Dashboard/FocusModeToggle";
 import { Separator } from "@/components/ui/separator";
@@ -26,6 +27,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { HealthScoreSummary } from "@/components/Dashboard/HealthScore/HealthScoreSummary";
 import { getAllClients } from "@/lib/data";
+import { AutomationManager } from "@/components/Dashboard/AutomationManager";
 
 export default function Index() {
   const isMobile = useIsMobile();
@@ -121,6 +123,16 @@ export default function Index() {
     </div>
   );
 
+  const AutomationSection = () => (
+    <div className="bg-purple-50/30 dark:bg-purple-950/30 p-4 rounded-lg border border-purple-100 dark:border-purple-900/50">
+      <Card className="shadow-sm">
+        <CardContent>
+          <AutomationManager />
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   return (
     <Layout>
       <div className="w-full p-4 px-6 bg-gray-50 dark:bg-gray-900" role="region" aria-label="Performance Dashboard"> 
@@ -174,6 +186,14 @@ export default function Index() {
               >
                 <CheckSquare className="h-4 w-4 mr-2" aria-hidden="true" />
                 Tasks
+              </TabsTrigger>
+              <TabsTrigger 
+                value="automations" 
+                className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-5 py-3 bg-transparent"
+                aria-controls="automations-tab"
+              >
+                <Zap className="h-4 w-4 mr-2" aria-hidden="true" />
+                Automations
               </TabsTrigger>
               {!focusMode && (
                 <TabsTrigger 
@@ -236,6 +256,10 @@ export default function Index() {
           
           <TabsContent value="tasks" className="m-0" role="tabpanel" id="tasks-tab">
             <TaskManagerSection />
+          </TabsContent>
+          
+          <TabsContent value="automations" className="m-0" role="tabpanel" id="automations-tab">
+            <AutomationSection />
           </TabsContent>
           
           {!focusMode && (
