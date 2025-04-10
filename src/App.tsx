@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -70,8 +69,8 @@ const App = () => {
       <ThemeProvider>
         <TooltipProvider>
           <ErrorBoundary>
+            {/* Both toasters inside ThemeProvider for context access */}
             <Toaster />
-            {/* Move Sonner inside ThemeProvider to fix the context error */}
             <Sonner />
             <OfflineDetector />
             <BrowserCompatibilityCheck />
