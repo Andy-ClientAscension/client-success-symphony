@@ -5,28 +5,21 @@ import { StatusGroup, getDefaultColumnOrder } from "./ClientStatusHelper";
 import { saveData, STORAGE_KEYS } from "@/utils/persistence";
 import { useToast } from "@/hooks/use-toast";
 
-// Define a type that extends Client to support our expanded status types
-type ExtendedClient = Omit<Client, 'status'> & { 
-  status: StatusGroup 
-};
-
 export function useClientStatus(initialClients: Client[]) {
-  // Cast the initialClients to our ExtendedClient type for internal use
-  const [localClients, setLocalClients] = useState<ExtendedClient[]>(initialClients as ExtendedClient[]);
+  const [localClients, setLocalClients] = useState<Client[]>(initialClients);
   const { toast } = useToast();
   
   // Update local state when clients prop changes
   useEffect(() => {
-    setLocalClients(initialClients as ExtendedClient[]);
+    setLocalClients(initialClients);
   }, [initialClients]);
   
   // Save client status changes to persistence
-  const saveClientChanges = (updatedClients: ExtendedClient[]) => {
+  const saveClientChanges = (updatedClients: Client[]) => {
     setLocalClients(updatedClients);
     // Persist the changes to be remembered across page refreshes
     try {
-      // Cast back to Client[] when saving to maintain compatibility with other components
-      saveData(STORAGE_KEYS.CLIENT_STATUS, updatedClients as unknown as Client[]);
+      saveData(STORAGE_KEYS.CLIENT_STATUS, updatedClients);
     } catch (error) {
       console.error("Error saving client status changes:", error);
     }
@@ -37,7 +30,7 @@ export function useClientStatus(initialClients: Client[]) {
     const columnOrder = getDefaultColumnOrder();
     
     // Initialize groups with all column types
-    const groups: Record<string, ExtendedClient[]> = {};
+    const groups: Record<string, Client[]> = {};
     columnOrder.forEach(status => {
       groups[status] = [];
     });

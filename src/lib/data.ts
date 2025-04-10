@@ -1,10 +1,9 @@
-
 import { format, addDays, subDays } from "date-fns";
 
 export interface Client {
   id: string;
   name: string;
-  status: "new" | "active" | "backend" | "olympia" | "at-risk" | "churned";
+  status: "new" | "active" | "backend" | "olympia" | "at-risk" | "churned" | "paused" | "graduated";
   team?: string;
   csm?: string;
   startDate: string;
@@ -1274,7 +1273,7 @@ const BASE_CLIENTS: Client[] = [
 ];
 
 function generateMockClients(startId: number, count: number): Client[] {
-  const statuses: ("new" | "active" | "at-risk" | "churned")[] = ["new", "active", "at-risk", "churned"];
+  const statuses: ("new" | "active" | "at-risk" | "churned" | "paused" | "graduated")[] = ["new", "active", "at-risk", "churned", "paused", "graduated"];
   const teams = ["Team-Andy", "Team-Chris", "Team-Alex", "Team-Cillin"];
   const csms = ["Andy", "Chris", "Alex", "Cillin"];
   const companyPrefixes = ["Global", "Advanced", "Prime", "Modern", "Elite", "Tech", "Digital", "Smart", "Innovative", "Next", "Future", "Strategic", "Synergy", "Dynamic", "Creative"];
@@ -1364,7 +1363,9 @@ export function getClientsCountByStatus() {
     active: 0,
     "at-risk": 0,
     new: 0,
-    churned: 0
+    churned: 0,
+    paused: 0,
+    graduated: 0
   };
   
   CLIENTS.forEach(client => {
