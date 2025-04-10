@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, CheckCircle, Link, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { apiIntegrations } from "@/lib/api";
+import { availableApiServices, validateApiKey, saveApiSettings } from "@/lib/api";
 
 interface APIConnectionDialogProps {
   open: boolean;
@@ -42,28 +42,29 @@ export function APIConnectionDialog({ open, onOpenChange }: APIConnectionDialogP
     setConnectionStatus("connecting");
 
     try {
-      // Simulate API connection
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Validate the API key
+      const isValid = await validateApiKey(apiType, apiKey);
       
-      // Store the API key securely (for demo purposes, just log it)
-      console.log(`Connecting to ${apiType} API with key: ${apiKey}`);
-      
-      // Here you would normally validate the API key with the actual service
-      // For now, we'll simulate a successful connection
-      setConnectionStatus("success");
-      
-      toast({
-        title: "API Connected",
-        description: `Successfully connected to ${getAPIDisplayName(apiType)}`,
-      });
-      
-      // Reset form after short delay
-      setTimeout(() => {
-        setApiKey("");
-        setApiType("select");
-        setConnectionStatus("idle");
-        onOpenChange(false);
-      }, 1500);
+      if (isValid) {
+        // Save the API connection
+        saveApiSettings(apiType, apiKey);
+        setConnectionStatus("success");
+        
+        toast({
+          title: "API Connected",
+          description: `Successfully connected to ${getAPIDisplayName(apiType)}`,
+        });
+        
+        // Reset form after short delay
+        setTimeout(() => {
+          setApiKey("");
+          setApiType("select");
+          setConnectionStatus("idle");
+          onOpenChange(false);
+        }, 1500);
+      } else {
+        throw new Error("Invalid API key");
+      }
     } catch (error) {
       console.error("API connection error:", error);
       setConnectionStatus("error");
@@ -76,20 +77,8 @@ export function APIConnectionDialog({ open, onOpenChange }: APIConnectionDialogP
   };
 
   const getAPIDisplayName = (apiTypeValue: string): string => {
-    switch (apiTypeValue) {
-      case "slack":
-        return "Slack";
-      case "airtable":
-        return "Airtable";
-      case "stripe":
-        return "Stripe";
-      case "zapier":
-        return "Zapier";
-      case "hubspot":
-        return "HubSpot";
-      default:
-        return apiTypeValue;
-    }
+    const apiService = availableApiServices.find(service => service.id === apiTypeValue);
+    return apiService ? apiService.name : apiTypeValue;
   };
 
   return (
@@ -118,13 +107,13 @@ export function APIConnectionDialog({ open, onOpenChange }: APIConnectionDialogP
               <SelectTrigger id="api-type" className="col-span-3">
                 <SelectValue placeholder="Select API type" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[300px]">
                 <SelectItem value="select" disabled>Select API type</SelectItem>
-                <SelectItem value="slack">Slack</SelectItem>
-                <SelectItem value="airtable">Airtable</SelectItem>
-                <SelectItem value="stripe">Stripe</SelectItem>
-                <SelectItem value="zapier">Zapier</SelectItem>
-                <SelectItem value="hubspot">HubSpot</SelectItem>
+                {availableApiServices.map((service) => (
+                  <SelectItem key={service.id} value={service.id}>
+                    {service.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
