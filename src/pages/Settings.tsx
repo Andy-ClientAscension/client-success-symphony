@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,10 +8,23 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { User, Bell, Shield, Key, Globe, Users, FileText, RefreshCw } from "lucide-react";
+import { User, Bell, Shield, Key, Globe, Users, FileText, RefreshCw, Link, AlertTriangle } from "lucide-react";
+import { availableApiServices, isApiConnected } from "@/lib/api";
+import { APIConnectionDialog } from "@/components/Dashboard/APIConnectionDialog";
 
 export default function Settings() {
   const [apiStatus, setApiStatus] = useState("disconnected");
+  const [activeConnections, setActiveConnections] = useState<Record<string, boolean>>({});
+  const [apiDialogOpen, setApiDialogOpen] = useState(false);
+  
+  // Load saved API connections
+  useEffect(() => {
+    const connections: Record<string, boolean> = {};
+    availableApiServices.forEach(service => {
+      connections[service.id] = isApiConnected(service.id);
+    });
+    setActiveConnections(connections);
+  }, [apiDialogOpen]); // Refresh when dialog closes
   
   return (
     <Layout>
@@ -256,56 +269,63 @@ export default function Settings() {
           <TabsContent value="api">
             <Card>
               <CardHeader>
-                <CardTitle>API Integration</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Link className="h-5 w-5" />
+                  API Integration
+                </CardTitle>
                 <CardDescription>Connect and manage external service APIs.</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  <div className="border rounded-md p-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        <Globe className="h-8 w-8 text-blue-500" />
-                        <div>
-                          <h3 className="font-medium">CRM Integration</h3>
-                          <p className="text-sm text-muted-foreground">Connect to your CRM system (Salesforce, HubSpot, etc.)</p>
+                  {availableApiServices.map((service) => (
+                    <div key={service.id} className="border rounded-md p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-3">
+                          <Globe className="h-8 w-8 text-blue-500" />
+                          <div>
+                            <h3 className="font-medium">{service.name}</h3>
+                            <p className="text-sm text-muted-foreground">{service.description}</p>
+                          </div>
                         </div>
+                        <Badge variant={activeConnections[service.id] ? "default" : "outline"} className={activeConnections[service.id] ? "bg-green-500" : ""}>
+                          {activeConnections[service.id] ? "Connected" : "Not Connected"}
+                        </Badge>
                       </div>
-                      <Badge variant={apiStatus === "connected" ? "success" : "destructive"}>
-                        {apiStatus === "connected" ? "Connected" : "Disconnected"}
-                      </Badge>
+                      <Button
+                        className={`w-full ${activeConnections[service.id] ? "bg-red-100 text-red-600 hover:bg-red-200 border border-red-200" : "bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-100"}`}
+                        variant="outline"
+                        onClick={() => {
+                          if (activeConnections[service.id]) {
+                            // Disconnect logic would go here
+                            const connections = {...activeConnections};
+                            connections[service.id] = false;
+                            setActiveConnections(connections);
+                            
+                            // Remove from localStorage
+                            const apiSettings = JSON.parse(localStorage.getItem('apiSettings') || '{}');
+                            if (apiSettings[service.id]) {
+                              apiSettings[service.id].connected = false;
+                              localStorage.setItem('apiSettings', JSON.stringify(apiSettings));
+                            }
+                          } else {
+                            setApiDialogOpen(true);
+                          }
+                        }}
+                      >
+                        {activeConnections[service.id] ? (
+                          <>
+                            <AlertTriangle className="mr-2 h-4 w-4" />
+                            Disconnect
+                          </>
+                        ) : (
+                          <>
+                            <Link className="mr-2 h-4 w-4" />
+                            Connect
+                          </>
+                        )}
+                      </Button>
                     </div>
-                    <Button className="w-full" onClick={() => setApiStatus(apiStatus === "connected" ? "disconnected" : "connected")}>
-                      {apiStatus === "connected" ? "Disconnect" : "Connect"} CRM
-                    </Button>
-                  </div>
-                  
-                  <div className="border rounded-md p-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        <Users className="h-8 w-8 text-green-500" />
-                        <div>
-                          <h3 className="font-medium">Support System</h3>
-                          <p className="text-sm text-muted-foreground">Integrate with your help desk (Zendesk, Intercom, etc.)</p>
-                        </div>
-                      </div>
-                      <Badge variant="outline">Not Connected</Badge>
-                    </div>
-                    <Button className="w-full" variant="outline">Connect Support System</Button>
-                  </div>
-                  
-                  <div className="border rounded-md p-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        <FileText className="h-8 w-8 text-purple-500" />
-                        <div>
-                          <h3 className="font-medium">Document Storage</h3>
-                          <p className="text-sm text-muted-foreground">Connect to cloud storage (Google Drive, Dropbox, etc.)</p>
-                        </div>
-                      </div>
-                      <Badge variant="outline">Not Connected</Badge>
-                    </div>
-                    <Button className="w-full" variant="outline">Connect Document Storage</Button>
-                  </div>
+                  ))}
                   
                   <div className="mt-6">
                     <Button variant="outline" className="w-full flex items-center justify-center">
@@ -316,6 +336,11 @@ export default function Settings() {
                 </div>
               </CardContent>
             </Card>
+            
+            <APIConnectionDialog
+              open={apiDialogOpen}
+              onOpenChange={setApiDialogOpen}
+            />
           </TabsContent>
         </Tabs>
       </div>

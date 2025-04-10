@@ -1,4 +1,4 @@
-import { Bell, Search, HelpCircle, Upload, UserSearch, FileSearch, KeySquare, XCircle, X } from "lucide-react";
+import { Bell, Search, HelpCircle, Upload, UserSearch, FileSearch, KeySquare, XCircle, X, Link } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -11,6 +11,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { ImportData } from "@/components/Dashboard/ImportData";
 import { useNavigate } from "react-router-dom";
+import { APIConnectionDialog } from "@/components/Dashboard/APIConnectionDialog";
 import { 
   CommandDialog, 
   CommandInput, 
@@ -35,6 +36,7 @@ export function Header({ toggleSidebar, sidebarVisible, sidebarCollapsed }: Head
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [apiDialogOpen, setApiDialogOpen] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -258,9 +260,18 @@ export function Header({ toggleSidebar, sidebarVisible, sidebarCollapsed }: Head
           <ImportData />
         </Dialog>
         
-        <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white ml-1">
-          Connect API
+        <Button 
+          size="sm" 
+          className="bg-red-600 hover:bg-red-700 text-white ml-1"
+          onClick={() => setApiDialogOpen(true)}
+        >
+          <Link className="h-3.5 w-3.5 mr-1" /> Connect API
         </Button>
+        
+        <APIConnectionDialog 
+          open={apiDialogOpen}
+          onOpenChange={setApiDialogOpen}
+        />
       </div>
 
       <CommandDialog open={commandOpen} onOpenChange={setCommandOpen}>
