@@ -36,7 +36,12 @@ export const availableApiServices = [
   { id: "intercom", name: "Intercom", description: "Connect to Intercom for customer messaging" },
   { id: "zendesk", name: "Zendesk", description: "Connect to Zendesk for customer support" },
   { id: "trello", name: "Trello", description: "Connect to Trello for task management" },
-  { id: "google", name: "Google Workspace", description: "Connect to Google Workspace for productivity" }
+  { id: "google", name: "Google Workspace", description: "Connect to Google Workspace for productivity" },
+  // Add the new API services
+  { id: "calendly", name: "Calendly", description: "Connect to Calendly for scheduling and appointments" },
+  { id: "kajabi", name: "Kajabi", description: "Connect to Kajabi for online courses and digital products" },
+  { id: "make", name: "Make (Integromat)", description: "Connect to Make for advanced workflow automation" },
+  { id: "fathom", name: "Fathom Analytics", description: "Connect to Fathom for privacy-focused analytics" }
 ];
 
 // Mock API integrations that can be replaced with actual implementations later
@@ -294,6 +299,94 @@ export const apiIntegrations = {
       return {
         success: true,
         data: { id: `event_${Date.now()}` }
+      };
+    }
+  },
+  
+  // New API integrations
+  calendly: {
+    getEvents: async (): Promise<ApiResponse<any[]>> => {
+      console.log(`Fetching Calendly events`);
+      return {
+        success: true,
+        data: []
+      };
+    },
+    createEvent: async (eventData: any): Promise<ApiResponse<any>> => {
+      console.log(`Creating Calendly event:`, eventData);
+      return {
+        success: true,
+        data: { id: `event_${Date.now()}` }
+      };
+    },
+    getSchedulingLinks: async (): Promise<ApiResponse<any[]>> => {
+      console.log(`Fetching Calendly scheduling links`);
+      return {
+        success: true,
+        data: []
+      };
+    }
+  },
+  
+  kajabi: {
+    getCourses: async (): Promise<ApiResponse<any[]>> => {
+      console.log(`Fetching Kajabi courses`);
+      return {
+        success: true,
+        data: []
+      };
+    },
+    getMembers: async (): Promise<ApiResponse<any[]>> => {
+      console.log(`Fetching Kajabi members`);
+      return {
+        success: true,
+        data: []
+      };
+    },
+    createOffer: async (offerData: any): Promise<ApiResponse<any>> => {
+      console.log(`Creating Kajabi offer:`, offerData);
+      return {
+        success: true,
+        data: { id: `offer_${Date.now()}` }
+      };
+    }
+  },
+  
+  make: {
+    triggerScenario: async (scenarioId: string, payload: any): Promise<ApiResponse<any>> => {
+      console.log(`Triggering Make scenario ${scenarioId}:`, payload);
+      return {
+        success: true,
+        data: { execution_id: `exec_${Date.now()}` }
+      };
+    },
+    getScenarios: async (): Promise<ApiResponse<any[]>> => {
+      console.log(`Fetching Make scenarios`);
+      return {
+        success: true,
+        data: []
+      };
+    }
+  },
+  
+  fathom: {
+    getSiteStats: async (siteId: string): Promise<ApiResponse<any>> => {
+      console.log(`Fetching Fathom stats for site ${siteId}`);
+      return {
+        success: true,
+        data: {
+          pageviews: 12500,
+          visitors: 5200,
+          bounce_rate: 42.5,
+          avg_duration: 125
+        }
+      };
+    },
+    getEvents: async (siteId: string): Promise<ApiResponse<any[]>> => {
+      console.log(`Fetching Fathom events for site ${siteId}`);
+      return {
+        success: true,
+        data: []
       };
     }
   }

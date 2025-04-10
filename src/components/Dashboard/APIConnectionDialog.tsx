@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,11 +7,29 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, CheckCircle, Link, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { availableApiServices, validateApiKey, saveApiSettings } from "@/lib/api";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuGroup, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 interface APIConnectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+// Group API services by type for better organization
+const groupedApiServices = {
+  communication: ["slack", "intercom", "zendesk"],
+  data: ["airtable", "notion", "monday", "trello"],
+  marketing: ["mailchimp", "hubspot", "kajabi", "fathom"],
+  payment: ["stripe"],
+  productivity: ["google", "asana", "jira", "salesforce"],
+  automation: ["zapier", "make"]
+};
 
 export function APIConnectionDialog({ open, onOpenChange }: APIConnectionDialogProps) {
   const [apiType, setApiType] = useState("select");
@@ -81,6 +98,12 @@ export function APIConnectionDialog({ open, onOpenChange }: APIConnectionDialogP
     return apiService ? apiService.name : apiTypeValue;
   };
 
+  // Get API service by category
+  const getServicesByCategory = (category: string): any[] => {
+    const serviceIds = groupedApiServices[category as keyof typeof groupedApiServices] || [];
+    return availableApiServices.filter(service => serviceIds.includes(service.id));
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -109,11 +132,78 @@ export function APIConnectionDialog({ open, onOpenChange }: APIConnectionDialogP
               </SelectTrigger>
               <SelectContent className="max-h-[300px]">
                 <SelectItem value="select" disabled>Select API type</SelectItem>
-                {availableApiServices.map((service) => (
+                
+                {/* Communication Services */}
+                <SelectItem value="communication" disabled className="font-semibold bg-muted">
+                  Communication Services
+                </SelectItem>
+                {getServicesByCategory("communication").map((service) => (
                   <SelectItem key={service.id} value={service.id}>
                     {service.name}
                   </SelectItem>
                 ))}
+                
+                {/* Data Management */}
+                <SelectItem value="data" disabled className="font-semibold bg-muted">
+                  Data Management
+                </SelectItem>
+                {getServicesByCategory("data").map((service) => (
+                  <SelectItem key={service.id} value={service.id}>
+                    {service.name}
+                  </SelectItem>
+                ))}
+                
+                {/* Marketing Tools */}
+                <SelectItem value="marketing" disabled className="font-semibold bg-muted">
+                  Marketing Tools
+                </SelectItem>
+                {getServicesByCategory("marketing").map((service) => (
+                  <SelectItem key={service.id} value={service.id}>
+                    {service.name}
+                  </SelectItem>
+                ))}
+                
+                {/* Payment Processing */}
+                <SelectItem value="payment" disabled className="font-semibold bg-muted">
+                  Payment Processing
+                </SelectItem>
+                {getServicesByCategory("payment").map((service) => (
+                  <SelectItem key={service.id} value={service.id}>
+                    {service.name}
+                  </SelectItem>
+                ))}
+                
+                {/* Productivity Tools */}
+                <SelectItem value="productivity" disabled className="font-semibold bg-muted">
+                  Productivity Tools
+                </SelectItem>
+                {getServicesByCategory("productivity").map((service) => (
+                  <SelectItem key={service.id} value={service.id}>
+                    {service.name}
+                  </SelectItem>
+                ))}
+                
+                {/* Automation */}
+                <SelectItem value="automation" disabled className="font-semibold bg-muted">
+                  Automation Tools
+                </SelectItem>
+                {getServicesByCategory("automation").map((service) => (
+                  <SelectItem key={service.id} value={service.id}>
+                    {service.name}
+                  </SelectItem>
+                ))}
+                
+                {/* Other Services */}
+                <SelectItem value="other" disabled className="font-semibold bg-muted">
+                  Other Services
+                </SelectItem>
+                {availableApiServices
+                  .filter(service => !Object.values(groupedApiServices).flat().includes(service.id))
+                  .map((service) => (
+                    <SelectItem key={service.id} value={service.id}>
+                      {service.name}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
