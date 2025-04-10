@@ -6,7 +6,7 @@ export type StatusGroup = 'new' | 'active' | 'backend' | 'olympia' | 'at-risk' |
 export const getStatusLabel = (status: string): string => {
   switch (status) {
     case 'new':
-      return 'New Clients';
+      return 'New Students';
     case 'active':
       return 'Active Students';
     case 'backend':
@@ -14,7 +14,7 @@ export const getStatusLabel = (status: string): string => {
     case 'olympia':
       return 'Olympia Students';
     case 'at-risk':
-      return 'At Risk';
+      return 'At Risk Students';
     case 'churned':
       return 'Churned Students';
     case 'paused':
@@ -65,7 +65,7 @@ export const clientStatusToKanbanColumn = (status: Client['status']): StatusGrou
   }
 };
 
-// Get default column order for kanban board
+// Get default column order for kanban board - updated with the new order
 export const getDefaultColumnOrder = (): StatusGroup[] => {
-  return ['new', 'active', 'backend', 'olympia', 'at-risk', 'paused', 'churned', 'graduated'];
+  return ['new', 'active', 'at-risk', 'backend', 'olympia', 'graduated', 'churned', 'paused'];
 };

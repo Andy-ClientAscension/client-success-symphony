@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { STORAGE_KEYS, saveData, loadData } from '@/utils/persistence';
 import { format, addDays, subDays, subMonths } from 'date-fns';
+import { getDefaultColumnOrder } from '@/components/Dashboard/KanbanView/ClientStatusHelper';
 
 export interface Note {
   id: string;
@@ -157,10 +158,20 @@ const generateFakeStudents = (count: number): Record<string, Student> => {
 
 const INITIAL_DATA: KanbanState = {
   columns: {
+    'new': {
+      id: 'new',
+      title: 'New Students',
+      studentIds: []
+    },
     'active': {
       id: 'active',
       title: 'Active Students',
       studentIds: ['s1', 's2', 's3']
+    },
+    'at-risk': {
+      id: 'at-risk',
+      title: 'At Risk Students',
+      studentIds: []
     },
     'backend': {
       id: 'backend',
@@ -318,17 +329,21 @@ const INITIAL_DATA: KanbanState = {
     },
     ...generateFakeStudents(100)
   },
-  columnOrder: ['active', 'backend', 'olympia', 'paused', 'churned', 'graduated']
+  columnOrder: getDefaultColumnOrder()
 };
 
 const distributeStudents = () => {
   const newData = {...INITIAL_DATA};
+  
+  Object.keys(newData.columns).forEach(columnId => {
+    newData.columns[columnId].studentIds = [];
+  });
+  
   newData.columns.active.studentIds = ['s1', 's2', 's3'];
   newData.columns.backend.studentIds = ['s4', 's5'];
   newData.columns.olympia.studentIds = ['s6'];
   newData.columns.churned.studentIds = ['s7'];
   newData.columns.graduated.studentIds = ['s8', 's9'];
-  newData.columns.paused.studentIds = [];
   
   for (let i = 10; i <= 109; i++) {
     const id = `s${i}`;
@@ -347,7 +362,14 @@ const distributeStudents = () => {
     } else if (student.olympiaEnrolled) {
       newData.columns.olympia.studentIds.push(id);
     } else {
-      newData.columns.active.studentIds.push(id);
+      const rand = Math.random();
+      if (rand < 0.1) {
+        newData.columns.new.studentIds.push(id);
+      } else if (rand < 0.2) {
+        newData.columns.at.risk.studentIds.push(id);
+      } else {
+        newData.columns.active.studentIds.push(id);
+      }
     }
   }
   
@@ -356,36 +378,25 @@ const distributeStudents = () => {
 
 const POPULATED_DATA = distributeStudents();
 
-const createEmptyState = (): KanbanState => ({
-  columns: {
-    'active': { id: 'active', title: 'Active Students', studentIds: [] },
-    'backend': { id: 'backend', title: 'Backend Students', studentIds: [] },
-    'olympia': { id: 'olympia', title: 'Olympia Students', studentIds: [] },
-    'paused': { id: 'paused', title: 'Paused Students', studentIds: [] },
-    'churned': { id: 'churned', title: 'Churned Students', studentIds: [] },
-    'graduated': { id: 'graduated', title: 'Graduated Students', studentIds: [] }
-  },
-  students: {},
-  columnOrder: ['active', 'backend', 'olympia', 'paused', 'churned', 'graduated']
-});
+const createEmptyState = (): KanbanState => {
+  const columns: Record<string, KanbanColumn> = {};
+  
+  getDefaultColumnOrder().forEach(columnId => {
+    columns[columnId] = { 
+      id: columnId, 
+      title: columnId.charAt(0).toUpperCase() + columnId.slice(1) + ' Students', 
+      studentIds: [] 
+    };
+  });
+  
+  return {
+    columns,
+    students: {},
+    columnOrder: getDefaultColumnOrder()
+  };
+};
 
-interface KanbanStore {
-  data: KanbanState;
-  filteredData: KanbanState;
-  selectedTeam: string;
-  setSelectedTeam: (team: string) => void;
-  updateData: (newData: KanbanState) => void;
-  moveStudent: (studentId: string, sourceColumnId: string, destinationColumnId: string, sourceIndex: number, destinationIndex: number) => void;
-  addChurnDate: (studentId: string, date: Date) => void;
-  addPauseDate: (studentId: string, date: Date, reason: string) => void;
-  resumeFromPause: (studentId: string, date: Date) => void;
-  addNote: (studentId: string, note: Omit<Note, "id" | "timestamp">) => void;
-  updateStudentTeam: (studentId: string, teamId: string) => void;
-  reorderColumn: (columnId: string, startIndex: number, endIndex: number) => void;
-  loadPersistedData: () => void;
-}
-
-export const useKanbanStore = create<KanbanStore>((set, get) => ({
+const KanbanStore = {
   data: createEmptyState(),
   filteredData: createEmptyState(),
   selectedTeam: "all",
@@ -616,10 +627,13 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
         }
       });
       
-      if (!updatedData.columnOrder.includes('paused') || !updatedData.columnOrder.includes('graduated')) {
-        updatedData.columnOrder = emptyState.columnOrder;
+      const defaultOrder = getDefaultColumnOrder();
+      const hasAllColumns = defaultOrder.every(col => updatedData.columnOrder.includes(col));
+      
+      if (!hasAllColumns || updatedData.columnOrder.length !== defaultOrder.length) {
+        updatedData.columnOrder = defaultOrder;
         needsUpdate = true;
-        console.info("Updated column order to include new columns");
+        console.info("Updated column order to match required columns");
       }
       
       if (needsUpdate) {
@@ -641,4 +655,6 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       });
     }
   }
-}));
+};
+
+export const useKanbanStore = create<KanbanStore>(KanbanStore);

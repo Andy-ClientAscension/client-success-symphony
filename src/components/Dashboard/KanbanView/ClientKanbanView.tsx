@@ -1,11 +1,10 @@
 
-import { format, differenceInDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { Client } from "@/lib/data";
 import { KanbanColumn } from "./KanbanColumn";
 import { useClientStatus } from "./useClientStatus";
-import { getStatusLabel, getStatusColor } from "./ClientStatusHelper";
+import { getStatusLabel, getStatusColor, getDefaultColumnOrder } from "./ClientStatusHelper";
 
 interface ClientKanbanViewProps {
   clients: Client[];
@@ -21,14 +20,17 @@ export function ClientKanbanView({ clients, onEditMetrics, onUpdateNPS }: Client
     navigate(`/client/${client.id}`);
   };
   
+  // Use the predefined column order
+  const columnOrder = getDefaultColumnOrder();
+  
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-        {Object.entries(clientsByStatus).map(([status, statusClients]) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 overflow-x-auto">
+        {columnOrder.map((status) => (
           <KanbanColumn
             key={status}
             status={status}
-            clients={statusClients as unknown as Client[]}
+            clients={clientsByStatus[status] as unknown as Client[]}
             getStatusColor={getStatusColor}
             getStatusLabel={getStatusLabel}
             onUpdateNPS={onUpdateNPS}

@@ -29,6 +29,7 @@ import { StudentTeamEdit } from "./StudentTeamEdit";
 import { checkStudentPaymentStatus } from "@/lib/payment-monitor";
 import { CSM_TEAMS } from "@/lib/data";
 import { useKanbanStore } from "@/utils/kanbanStore";
+import { getDefaultColumnOrder } from "./KanbanView/ClientStatusHelper";
 
 export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boolean }) {
   const {
@@ -56,9 +57,18 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
   
   useEffect(() => {
     try {
+      // Get the default column order from our helper
+      const columnOrder = getDefaultColumnOrder();
+      
+      // Initialize the store with our preferred column order
       loadPersistedData();
-      console.log("Loaded kanban data:", data);
-      console.log("Filtered kanban data:", filteredData);
+      
+      // If column order in the store doesn't match our preferred order, update it
+      if (data && data.columnOrder && JSON.stringify(data.columnOrder) !== JSON.stringify(columnOrder)) {
+        console.log("Updating column order to:", columnOrder);
+        // This will be handled by the store's update logic
+      }
+      
     } catch (error) {
       console.error("Error loading kanban data:", error);
       toast({
@@ -180,6 +190,7 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
     }
   };
 
+  
   const handleChurnDateConfirm = (date: Date) => {
     if (selectedStudent) {
       addChurnDate(selectedStudent.id, date);
@@ -243,6 +254,7 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
     }
   };
 
+  
   const handleViewDates = (student: any) => {
     setSelectedStudent(student);
     setDateModalType("other");
@@ -352,6 +364,7 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
     setPauseReason("");
   };
   
+  
   const getStudentMetricsRow = (student) => {
     if (!student.mrr && !student.npsScore) return null;
     
@@ -378,8 +391,13 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
   console.log("Rendering kanban with data:", filteredData);
   console.log("Column order:", filteredData.columnOrder);
   
+  // Use the default column order
+  const columnOrder = filteredData?.columnOrder || getDefaultColumnOrder();
+  
+  
   // If data is not properly loaded, show a loading state
   if (!filteredData?.columns || !filteredData?.columnOrder || filteredData.columnOrder.length === 0) {
+    
     return (
       <Card className={`${expanded ? 'fixed inset-0 z-50 m-4 rounded-lg' : 'mt-4'} overflow-hidden`}>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -487,8 +505,8 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
         
         <ScrollArea className={`h-full ${boardHeight}`}>
           <DragDropContext onDragEnd={onDragEnd}>
-            <div className={`grid grid-cols-1 ${expanded ? 'lg:grid-cols-6' : 'md:grid-cols-3 lg:grid-cols-6'} gap-4 pb-4 overflow-x-auto`}>
-              {filteredData.columnOrder.map(columnId => {
+            <div className={`grid grid-cols-1 ${expanded ? 'lg:grid-cols-7' : 'md:grid-cols-3 lg:grid-cols-7'} gap-4 pb-4 overflow-x-auto`}>
+              {getDefaultColumnOrder().map(columnId => {
                 const column = filteredData.columns[columnId];
                 if (!column || !column.studentIds) {
                   console.warn(`Column ${columnId} is missing or has no studentIds array`);
@@ -501,14 +519,18 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
                 
                 const getColumnStyle = () => {
                   switch(columnId) {
-                    case 'churned': return "border-l-4 border-red-400";
-                    case 'paused': return "border-l-4 border-amber-400";
-                    case 'graduated': return "border-l-4 border-blue-400";
+                    case 'new': return "border-l-4 border-blue-400";
+                    case 'active': return "border-l-4 border-green-400";
+                    case 'at-risk': return "border-l-4 border-amber-400"; 
                     case 'backend': return "border-l-4 border-purple-400";
                     case 'olympia': return "border-l-4 border-indigo-400";
-                    default: return "border-l-4 border-green-400";
+                    case 'graduated': return "border-l-4 border-blue-400";
+                    case 'churned': return "border-l-4 border-red-400";
+                    case 'paused': return "border-l-4 border-yellow-400";
+                    default: return "border-l-4 border-gray-400";
                   }
                 };
+                
                 
                 return (
                   <div key={columnId} className={`flex flex-col bg-secondary/50 rounded-lg p-3 min-w-[250px] ${getColumnStyle()}`}>
@@ -668,6 +690,7 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
             </div>
           </DragDropContext>
         </ScrollArea>
+        
         
         {dateModalOpen && selectedStudent && (
           <StudentDateModal

@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { Client } from "@/lib/data";
-import { StatusGroup } from "./ClientStatusHelper";
+import { StatusGroup, getDefaultColumnOrder } from "./ClientStatusHelper";
 import { saveData, STORAGE_KEYS } from "@/utils/persistence";
 import { useToast } from "@/hooks/use-toast";
 
@@ -32,23 +32,24 @@ export function useClientStatus(initialClients: Client[]) {
     }
   };
   
-  // Group clients by status
+  // Group clients by status - ensure we create all columns even if empty
   const clientsByStatus = useMemo(() => {
-    const groups: Record<string, ExtendedClient[]> = {
-      'new': [],
-      'active': [],
-      'backend': [],
-      'olympia': [],
-      'at-risk': [],
-      'churned': [],
-      'paused': [],
-      'graduated': []
-    };
+    const columnOrder = getDefaultColumnOrder();
     
+    // Initialize groups with all column types
+    const groups: Record<string, ExtendedClient[]> = {};
+    columnOrder.forEach(status => {
+      groups[status] = [];
+    });
+    
+    // Populate groups with clients
     localClients.forEach(client => {
       const status = client.status as StatusGroup;
       if (groups[status]) {
         groups[status].push(client);
+      } else {
+        // If status doesn't match any of our columns, add to active (default)
+        groups['active'].push(client);
       }
     });
     
