@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { BarChart2, Users, CheckSquare, ChevronDown, ChevronUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { BarChart2, Users, CheckSquare, ChevronDown, ChevronUp, Cpu } from "lucide-react";
 import { useDashboardPersistence } from "@/hooks/use-dashboard-persistence";
 import { FocusModeToggle } from "@/components/Dashboard/FocusModeToggle";
 import { Separator } from "@/components/ui/separator";
@@ -41,6 +42,9 @@ export default function Index() {
     kanban: false,
     healthScore: true
   });
+  
+  // New performance mode state
+  const [performanceMode, setPerformanceMode] = useState(false);
   
   // Get all clients for the health score summary
   const allClients = getAllClients();
@@ -162,6 +166,19 @@ export default function Index() {
               </Label>
             </div>
             
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="performance-mode" 
+                checked={performanceMode}
+                onCheckedChange={setPerformanceMode}
+                aria-label="Toggle performance mode"
+              />
+              <Label htmlFor="performance-mode" className="text-sm text-gray-600 dark:text-gray-400 flex items-center">
+                <Cpu className="h-3.5 w-3.5 mr-1" />
+                Performance Mode
+              </Label>
+            </div>
+            
             <FocusModeToggle focusMode={focusMode} onChange={toggleFocusMode} />
           </div>
         </div>
@@ -239,18 +256,20 @@ export default function Index() {
                 </div>
               )}
               
-              {/* Client Management section with subtle background */}
-              <div className="bg-purple-50/30 dark:bg-purple-950/30 p-4 rounded-lg border border-purple-100 dark:border-purple-900/50">
-                <Collapsible open={expandedSections.clientList} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
-                  <SectionHeader title="Client Management" section="clientList" />
-                  <CollapsibleContent className="p-4">
-                    <ClientList />
-                  </CollapsibleContent>
-                </Collapsible>
-              </div>
+              {/* Client Management section with subtle background - conditional based on performance mode */}
+              {!performanceMode && (
+                <div className="bg-purple-50/30 dark:bg-purple-950/30 p-4 rounded-lg border border-purple-100 dark:border-purple-900/50">
+                  <Collapsible open={expandedSections.clientList} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+                    <SectionHeader title="Client Management" section="clientList" />
+                    <CollapsibleContent className="p-4">
+                      <ClientList />
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
+              )}
               
-              {/* Workflow section with subtle background */}
-              {!focusMode && (
+              {/* Workflow section with subtle background - conditional based on performance mode */}
+              {!focusMode && !performanceMode && (
                 <div className="bg-amber-50/30 dark:bg-amber-950/30 p-4 rounded-lg border border-amber-100 dark:border-amber-900/50">
                   <Collapsible open={expandedSections.kanban} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
                     <SectionHeader title="Workflow Board" section="kanban" />
@@ -272,9 +291,26 @@ export default function Index() {
           
           <TabsContent value="clients" className="m-0" role="tabpanel" id="clients-tab">
             <div className="grid gap-6">
-              <ClientManagementSection />
+              {performanceMode ? (
+                <div className="p-8 text-center bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                  <h3 className="text-lg font-medium mb-2">Performance Mode Enabled</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Client management view is disabled to improve dashboard performance.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setPerformanceMode(false)}
+                    className="mx-auto"
+                  >
+                    Show Client Management
+                  </Button>
+                </div>
+              ) : (
+                <ClientManagementSection />
+              )}
               
-              {!focusMode && <KanbanSection />}
+              {!focusMode && !performanceMode && <KanbanSection />}
             </div>
           </TabsContent>
           
@@ -291,6 +327,21 @@ export default function Index() {
             </TabsContent>
           )}
         </Tabs>
+
+        {performanceMode && (
+          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg dark:bg-green-900/20 dark:border-green-900/30">
+            <div className="flex items-start">
+              <Cpu className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 mr-2" />
+              <div>
+                <h3 className="font-medium text-green-800 dark:text-green-300">Performance Mode Active</h3>
+                <p className="text-sm text-green-700 dark:text-green-400 mt-1">
+                  Client management and Kanban components are disabled to improve dashboard performance.
+                  These components can consume significant resources when rendered.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );
