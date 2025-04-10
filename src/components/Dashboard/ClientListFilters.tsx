@@ -1,5 +1,5 @@
 
-import { Search, Users, Download, PlusCircle } from "lucide-react";
+import { Search, Users, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -105,12 +105,6 @@ export function ClientListFilters({
         title="Export to CSV"
       >
         <Download className="h-3 w-3" /> Export
-      </Button>
-      <Button 
-        onClick={onAddNewClient}
-        className="bg-red-600 hover:bg-red-700"
-      >
-        <PlusCircle className="mr-2 h-4 w-4" /> Add New Client
       </Button>
     </div>
   );

@@ -52,9 +52,10 @@ export default function Clients() {
           <div className="text-lg font-bold">Clients Management</div>
           <Button 
             onClick={handleAddNewClient}
-            className="bg-red-600 hover:bg-red-700"
+            className="bg-red-600 hover:bg-red-700 px-6 py-2.5 text-base"
+            size="lg"
           >
-            <PlusCircle className="mr-2 h-4 w-4" /> Add New Client
+            <PlusCircle className="mr-2 h-5 w-5" /> Add New Client
           </Button>
         </div>
         
