@@ -9,7 +9,8 @@ import {
   HelpCircle,
   MessageSquare,
   ChevronLeft,
-  LogOut
+  LogOut,
+  Zap
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -58,6 +59,12 @@ export function Sidebar({ isMobile, closeSidebar, collapsed = false, toggleColla
       href: "/communications",
       icon: <MessageSquare className="h-5 w-5" />,
       color: "border-amber-400" // Paused color
+    },
+    {
+      name: "Automations",
+      href: "/automations",
+      icon: <Zap className="h-5 w-5" />,
+      color: "border-purple-400" // Using purple color
     },
     {
       name: "Payments",
