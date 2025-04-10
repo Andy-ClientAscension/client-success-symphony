@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { ThemeProvider } from './components/theme-provider';
-import { QueryClient, QueryClientProvider } from 'react-query';
-import { Toaster } from "@/components/ui/toaster"
+import { ThemeProvider } from './components/ThemeProvider';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from "@/components/ui/toaster";
 import { ErrorBoundary } from 'react-error-boundary';
 import Index from './pages/Index';
 import Login from './pages/Login';
@@ -18,7 +19,7 @@ import Renewals from './pages/Renewals';
 import Settings from './pages/Settings';
 import Help from './pages/Help';
 import NotFound from './pages/NotFound';
-import OfflineDetector from './components/OfflineDetector';
+import { OfflineDetector } from './components/OfflineDetector';
 import Automations from './pages/Automations';
 
 const queryClient = new QueryClient();
@@ -42,7 +43,7 @@ function App() {
                 <Route path="/health-score" element={<HealthScoreDashboard />} />
                 <Route path="/payments" element={<Payments />} />
                 <Route path="/renewals" element={<Renewals />} />
-                <Route path="/automations" element={<Automations />} />  {/* Add this line */}
+                <Route path="/automations" element={<Automations />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/help" element={<Help />} />
                 <Route path="*" element={<NotFound />} />
