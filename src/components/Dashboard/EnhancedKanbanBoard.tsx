@@ -295,7 +295,11 @@ export function EnhancedKanbanBoard({ fullScreen = false }: { fullScreen?: boole
             </div>
           )}
           {student.pauseReason && <div className="text-amber-500 italic">{student.pauseReason}</div>}
-          {student.csm && <div className="font-semibold mt-1">{CSM_TEAMS.find(team => team.id === student.csm)?.name || student.csm}</div>}
+          {student.csm && (
+            <div className="font-semibold mt-1">
+              {CSM_TEAMS.find(team => team.id === student.csm)?.name || student.csm}
+            </div>
+          )}
         </div>
       );
     }

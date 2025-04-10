@@ -366,7 +366,7 @@ const distributeStudents = () => {
       if (rand < 0.1) {
         newData.columns.new.studentIds.push(id);
       } else if (rand < 0.2) {
-        newData.columns.at.risk.studentIds.push(id);
+        newData.columns['at-risk'].studentIds.push(id);
       } else {
         newData.columns.active.studentIds.push(id);
       }
@@ -396,7 +396,29 @@ const createEmptyState = (): KanbanState => {
   };
 };
 
-const KanbanStore = {
+interface KanbanStoreType {
+  data: KanbanState;
+  filteredData: KanbanState;
+  selectedTeam: string;
+  setSelectedTeam: (team: string) => void;
+  updateData: (newData: KanbanState) => void;
+  moveStudent: (
+    studentId: string, 
+    sourceColumnId: string, 
+    destinationColumnId: string, 
+    sourceIndex: number, 
+    destinationIndex: number
+  ) => void;
+  addChurnDate: (studentId: string, date: Date) => void;
+  addPauseDate: (studentId: string, date: Date, reason: string) => void;
+  resumeFromPause: (studentId: string, date: Date) => void;
+  addNote: (studentId: string, note: Omit<Note, 'id' | 'timestamp'>) => void;
+  updateStudentTeam: (studentId: string, teamId: string) => void;
+  reorderColumn: (columnId: string, startIndex: number, endIndex: number) => void;
+  loadPersistedData: () => void;
+}
+
+export const useKanbanStore = create<KanbanStoreType>((set, get) => ({
   data: createEmptyState(),
   filteredData: createEmptyState(),
   selectedTeam: "all",
@@ -520,82 +542,95 @@ const KanbanStore = {
     const { data } = get();
     const newData = { ...data };
     
-    newData.students[studentId] = {
-      ...newData.students[studentId],
-      churnDate: format(date, 'yyyy-MM-dd')
-    };
-    
-    get().updateData(newData);
+    if (newData.students[studentId]) {
+      newData.students[studentId] = {
+        ...newData.students[studentId],
+        churnDate: format(date, 'yyyy-MM-dd')
+      };
+      
+      get().updateData(newData);
+    }
   },
   
   addPauseDate: (studentId, date, reason) => {
     const { data } = get();
     const newData = { ...data };
     
-    newData.students[studentId] = {
-      ...newData.students[studentId],
-      pauseDate: format(date, 'yyyy-MM-dd'),
-      pauseReason: reason
-    };
-    
-    get().updateData(newData);
+    if (newData.students[studentId]) {
+      newData.students[studentId] = {
+        ...newData.students[studentId],
+        pauseDate: format(date, 'yyyy-MM-dd'),
+        pauseReason: reason
+      };
+      
+      get().updateData(newData);
+    }
   },
   
   resumeFromPause: (studentId, date) => {
     const { data } = get();
     const newData = { ...data };
     
-    newData.students[studentId] = {
-      ...newData.students[studentId],
-      resumeDate: format(date, 'yyyy-MM-dd')
-    };
-    
-    get().updateData(newData);
+    if (newData.students[studentId]) {
+      newData.students[studentId] = {
+        ...newData.students[studentId],
+        resumeDate: format(date, 'yyyy-MM-dd')
+      };
+      
+      get().updateData(newData);
+    }
   },
   
   addNote: (studentId, note) => {
     const { data } = get();
     const newData = { ...data };
     
-    const newNote = {
-      id: `n${Date.now()}`,
-      ...note,
-      timestamp: format(new Date(), 'yyyy-MM-dd HH:mm:ss')
-    };
-    
-    newData.students[studentId] = {
-      ...newData.students[studentId],
-      notes: [...(newData.students[studentId].notes || []), newNote]
-    };
-    
-    get().updateData(newData);
+    if (newData.students[studentId]) {
+      const newNote = {
+        id: `n${Date.now()}`,
+        ...note,
+        timestamp: format(new Date(), 'yyyy-MM-dd HH:mm:ss')
+      };
+      
+      newData.students[studentId] = {
+        ...newData.students[studentId],
+        notes: [...(newData.students[studentId].notes || []), newNote]
+      };
+      
+      get().updateData(newData);
+    }
   },
   
   updateStudentTeam: (studentId, teamId) => {
     const { data } = get();
     const newData = { ...data };
     
-    newData.students[studentId] = {
-      ...newData.students[studentId],
-      csm: teamId
-    };
-    
-    get().updateData(newData);
+    if (newData.students[studentId]) {
+      newData.students[studentId] = {
+        ...newData.students[studentId],
+        csm: teamId
+      };
+      
+      get().updateData(newData);
+    }
   },
   
   reorderColumn: (columnId, startIndex, endIndex) => {
     const { data } = get();
     const newData = { ...data };
-    const column = { ...newData.columns[columnId] };
-    const newStudentIds = Array.from(column.studentIds);
     
-    const [removed] = newStudentIds.splice(startIndex, 1);
-    newStudentIds.splice(endIndex, 0, removed);
-    
-    column.studentIds = newStudentIds;
-    newData.columns[columnId] = column;
-    
-    get().updateData(newData);
+    if (newData.columns[columnId]) {
+      const column = { ...newData.columns[columnId] };
+      const newStudentIds = Array.from(column.studentIds);
+      
+      const [removed] = newStudentIds.splice(startIndex, 1);
+      newStudentIds.splice(endIndex, 0, removed);
+      
+      column.studentIds = newStudentIds;
+      newData.columns[columnId] = column;
+      
+      get().updateData(newData);
+    }
   },
   
   loadPersistedData: () => {
@@ -655,6 +690,4 @@ const KanbanStore = {
       });
     }
   }
-};
-
-export const useKanbanStore = create<KanbanStore>(KanbanStore);
+}));

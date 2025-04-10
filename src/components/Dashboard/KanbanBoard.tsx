@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { KanbanSquare, Plus, MoreVertical, Calendar, Users, MessageSquare, AlertTriangle, UserCheck } from "lucide-react";
@@ -137,7 +136,6 @@ export function KanbanBoard() {
     }
   };
 
-  // Add the missing handleChurnDateConfirm function
   const handleChurnDateConfirm = (date: Date) => {
     if (selectedStudent) {
       addChurnDate(selectedStudent.id, date);
@@ -147,7 +145,6 @@ export function KanbanBoard() {
         description: `${selectedStudent.name} marked as churned on ${format(date, 'MMMM d, yyyy')}.`,
       });
       
-      // Move the student to the churned column
       if (filteredData && filteredData.columns) {
         const sourceColumn = filteredData.columnOrder.find(id => 
           filteredData.columns[id]?.studentIds?.includes(selectedStudent.id)
@@ -199,7 +196,11 @@ export function KanbanBoard() {
           {student.startDate && <div>Start: {format(new Date(student.startDate), 'MMM d, yyyy')}</div>}
           {student.endDate && <div>End: {format(new Date(student.endDate), 'MMM d, yyyy')}</div>}
           {student.churnDate && <div className="text-red-500">Churned: {format(new Date(student.churnDate), 'MMM d, yyyy')}</div>}
-          {student.csm && <div className="font-semibold mt-1">{CSM_TEAMS.find(team => team.id === student.csm)?.name}</div>}
+          {student.csm && (
+            <div className="font-semibold mt-1">
+              {CSM_TEAMS.find(team => team.id === student.csm)?.name || student.csm}
+            </div>
+          )}
         </div>
       );
     }
@@ -243,7 +244,6 @@ export function KanbanBoard() {
   
   const stats = teamStats();
   
-  // If data is not properly loaded, show a loading state
   if (!filteredData || !filteredData.columns || !filteredData.columnOrder) {
     return (
       <Card className="mt-4 overflow-hidden">
