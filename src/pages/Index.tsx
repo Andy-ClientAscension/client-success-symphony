@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout/Layout";
 import { CompanyMetrics } from "@/components/Dashboard/CompanyMetrics";
 import { TeamAnalytics } from "@/components/Dashboard/TeamAnalytics";
@@ -6,6 +5,7 @@ import { ChurnChart } from "@/components/Dashboard/ChurnChart";
 import { NPSChart } from "@/components/Dashboard/NPSChart";
 import { PaymentAlerts } from "@/components/Dashboard/PaymentAlerts";
 import { TaskManager } from "@/components/Dashboard/TaskManager";
+import { UpcomingRenewals } from "@/components/Dashboard/UpcomingRenewals";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -39,10 +39,8 @@ export default function Index() {
     healthScore: true
   });
   
-  // Performance mode state
   const [performanceMode, setPerformanceMode] = useState(false);
   
-  // Get all clients for the health score summary
   const allClients = getAllClients();
 
   useEffect(() => {
@@ -86,7 +84,6 @@ export default function Index() {
     </CollapsibleTrigger>
   );
 
-  // Shared components to reduce duplication
   const AnalyticsChartsSection = () => (
     <div className="bg-red-50/30 dark:bg-red-950/30 p-4 rounded-lg border border-red-100 dark:border-red-900/50">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -192,7 +189,6 @@ export default function Index() {
           
           <TabsContent value="overview" className="m-0 p-0" role="tabpanel" id="overview-tab">
             <div className="grid gap-6">
-              {/* Key Metrics section with subtle background */}
               <div className="bg-brand-50/30 dark:bg-brand-950/30 p-4 rounded-lg border border-brand-100 dark:border-brand-900/50">
                 <Collapsible open={expandedSections.metrics} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
                   <SectionHeader title="Company Metrics" section="metrics" />
@@ -202,7 +198,6 @@ export default function Index() {
                 </Collapsible>
               </div>
               
-              {/* Health Score section with subtle background */}
               <div className="bg-success-50/30 dark:bg-success-950/30 p-4 rounded-lg border border-success-100 dark:border-success-900/50">
                 <Collapsible open={expandedSections.healthScore} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
                   <SectionHeader title="Health Score Overview" section="healthScore" />
@@ -212,22 +207,30 @@ export default function Index() {
                 </Collapsible>
               </div>
               
-              {/* Team Analytics section with subtle background */}
-              {!focusMode && (
-                <div className="bg-blue-50/30 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-100 dark:border-blue-900/50">
-                  <Collapsible open={expandedSections.teamAnalytics} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
-                    <SectionHeader title="Team Analytics" section="teamAnalytics" />
-                    <CollapsibleContent className="p-0">
-                      <TeamAnalytics />
-                    </CollapsibleContent>
-                  </Collapsible>
-                </div>
-              )}
+              <div className="bg-blue-50/30 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-100 dark:border-blue-900/50">
+                <Collapsible open={expandedSections.teamAnalytics} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+                  <SectionHeader title="Team Analytics" section="teamAnalytics" />
+                  <CollapsibleContent className="p-0">
+                    <TeamAnalytics />
+                  </CollapsibleContent>
+                </Collapsible>
+              </div>
               
-              {/* Payment Alerts section */}
-              {!focusMode && !performanceMode && (
-                <PaymentAlertsSection />
-              )}
+              <div className="bg-blue-50/30 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-100 dark:border-blue-900/50">
+                <Card className="shadow-sm">
+                  <CardContent className="p-0">
+                    <UpcomingRenewals />
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div className="bg-amber-50/30 dark:bg-amber-950/30 p-4 rounded-lg border border-amber-100 dark:border-amber-900/50">
+                <Card className="shadow-sm">
+                  <CardContent className="p-0">
+                    <PaymentAlerts />
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </TabsContent>
           
@@ -239,6 +242,15 @@ export default function Index() {
             <TabsContent value="analytics" className="m-0" role="tabpanel" id="analytics-tab">
               <div className="grid gap-6">
                 <AnalyticsChartsSection />
+                
+                <div className="bg-blue-50/30 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-100 dark:border-blue-900/50">
+                  <Card className="shadow-sm">
+                    <CardContent className="p-0">
+                      <UpcomingRenewals />
+                    </CardContent>
+                  </Card>
+                </div>
+                
                 <PaymentAlertsSection />
               </div>
             </TabsContent>
