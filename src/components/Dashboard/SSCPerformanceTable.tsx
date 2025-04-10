@@ -13,8 +13,25 @@ interface SSCPerformanceTableProps {
   selectedTeam: string;
 }
 
+// List of SSCs to exclude from the display
+const excludedSSCs = [
+  "John Smith",
+  "Sarah Johnson",
+  "Michael Brown",
+  "Emily Davis",
+  "David Wilson",
+  "Jennifer Taylor",
+  "Robert Anderson",
+  "Jessica Thomas",
+  "William Martinez",
+  "Sophia Martinez"
+];
+
 export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerformanceTableProps) {
   const isMobile = useIsMobile();
+  
+  // Filter out the excluded SSCs
+  const filteredCsmList = csmList.filter(csm => !excludedSSCs.includes(csm));
   
   return (
     <div className="mt-6">
@@ -54,7 +71,7 @@ export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerfo
             </TableRow>
           </TableHeader>
           <TableBody>
-            {csmList.filter(csm => {
+            {filteredCsmList.filter(csm => {
               if (selectedTeam === "all") return true;
               return clients.some(client => client.csm === csm && client.team === selectedTeam);
             }).map((csm) => (
