@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout/Layout";
 import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,10 +9,12 @@ import { Button } from "@/components/ui/button";
 import { AlertCircle, InfoIcon, Zap } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { isApiConnected } from "@/lib/api";
+import { CreateAutomationDialog } from "@/components/Dashboard/CreateAutomationDialog";
 
 export default function Automations() {
   const [activeTab, setActiveTab] = useState("automations");
   const [apiCount, setApiCount] = useState(0);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   
   useEffect(() => {
     // Check how many APIs are connected
@@ -21,6 +22,10 @@ export default function Automations() {
     const connectedCount = services.filter(service => isApiConnected(service)).length;
     setApiCount(connectedCount);
   }, []);
+
+  const handleCreateAutomation = () => {
+    setShowCreateDialog(true);
+  };
 
   return (
     <Layout>
@@ -33,7 +38,10 @@ export default function Automations() {
             </p>
           </div>
           <div>
-            <Button className="bg-purple-600 hover:bg-purple-700 gap-2">
+            <Button 
+              className="bg-purple-600 hover:bg-purple-700 gap-2"
+              onClick={handleCreateAutomation}
+            >
               <Zap className="h-4 w-4" />
               Create New Automation
             </Button>
@@ -203,6 +211,14 @@ export default function Automations() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <CreateAutomationDialog 
+        open={showCreateDialog} 
+        onOpenChange={setShowCreateDialog} 
+        onAutomationCreated={() => {
+          window.dispatchEvent(new CustomEvent('automation-created'));
+        }}
+      />
     </Layout>
   );
 }
