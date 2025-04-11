@@ -17,7 +17,7 @@ export function ClientKanbanView({ clients, onEditMetrics, onUpdateNPS }: Client
   const { clientsByStatus, handleDragEnd } = useClientStatus(clients);
   
   const handleViewDetails = (client: Client) => {
-    navigate(`/client/${client.id}`);
+    navigate(`/clients/${client.id}`);
   };
   
   // Use the predefined column order

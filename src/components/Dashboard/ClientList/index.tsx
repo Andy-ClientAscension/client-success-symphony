@@ -57,7 +57,7 @@ export function ClientList({ statusFilter }: ClientListProps) {
   const { toast } = useToast();
   
   const handleViewDetails = (client: Client) => {
-    navigate(`/client/${client.id}`);
+    navigate(`/clients/${client.id}`);
   };
   
   const handleAddNewClient = () => {

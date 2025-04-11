@@ -148,7 +148,7 @@ export function ClientAnalytics() {
                     </TableCell>
                     <TableCell>
                       <Button asChild variant="outline" size="sm" className="h-7 text-xs">
-                        <Link to={`/client/${client.id}`}>
+                        <Link to={`/clients/${client.id}`}>
                           View Details
                         </Link>
                       </Button>
