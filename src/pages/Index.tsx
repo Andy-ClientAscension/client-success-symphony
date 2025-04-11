@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout/Layout";
 import { CompanyMetrics } from "@/components/Dashboard/CompanyMetrics";
 import { TeamAnalytics } from "@/components/Dashboard/TeamAnalytics";
@@ -19,15 +18,16 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { BarChart2, Users, CheckSquare, ChevronDown, ChevronUp, Cpu, Zap } from "lucide-react";
+import { BarChart2, Users, CheckSquare, ChevronDown, ChevronUp, Cpu, Zap, FileBarChart, ArrowUpRight } from "lucide-react";
 import { useDashboardPersistence } from "@/hooks/use-dashboard-persistence";
 import { FocusModeToggle } from "@/components/Dashboard/FocusModeToggle";
 import { Separator } from "@/components/ui/separator";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { HealthScoreSummary } from "@/components/Dashboard/HealthScore/HealthScoreSummary";
 import { getAllClients } from "@/lib/data";
 import { AutomationManager } from "@/components/Dashboard/AutomationManager";
+import { Link } from "react-router-dom";
 
 export default function Index() {
   const isMobile = useIsMobile();
@@ -88,15 +88,72 @@ export default function Index() {
 
   const AnalyticsChartsSection = () => (
     <div className="bg-red-50/30 dark:bg-red-950/30 p-4 rounded-lg border border-red-100 dark:border-red-900/50">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold flex items-center">
+          <FileBarChart className="h-5 w-5 mr-2 text-red-600" />
+          Key Performance Indicators
+        </h2>
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/analytics" className="flex items-center gap-1">
+            Full Analytics
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </Link>
+        </Button>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Customer Churn Analysis</CardTitle>
+          </CardHeader>
           <CardContent className="p-0">
             <ChurnChart />
           </CardContent>
         </Card>
         <Card className="shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">NPS Trend Analysis</CardTitle>
+          </CardHeader>
           <CardContent className="p-0">
             <NPSChart />
+          </CardContent>
+        </Card>
+      </div>
+      
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card className="shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-gray-500">Revenue at Risk</span>
+              <span className="text-xl font-bold text-red-600">$12,400</span>
+              <span className="text-xs text-red-600 flex items-center">
+                <ArrowUpRight className="h-3 w-3 rotate-45 mr-1" />
+                4.2% from last month
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-gray-500">Avg. Client Growth</span>
+              <span className="text-xl font-bold text-green-600">14.3%</span>
+              <span className="text-xs text-green-600 flex items-center">
+                <ArrowUpRight className="h-3 w-3 mr-1" />
+                2.1% from last month
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-gray-500">Client Satisfaction</span>
+              <span className="text-xl font-bold text-blue-600">87%</span>
+              <span className="text-xs text-blue-600 flex items-center">
+                <ArrowUpRight className="h-3 w-3 mr-1" />
+                3.5% from last month
+              </span>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -201,6 +258,7 @@ export default function Index() {
                   className="data-[state=active]:border-b-2 data-[state=active]:border-red-600 data-[state=active]:text-red-600 rounded-none px-5 py-3 bg-transparent"
                   aria-controls="analytics-tab"
                 >
+                  <FileBarChart className="h-4 w-4 mr-2" aria-hidden="true" />
                   Advanced Analytics
                 </TabsTrigger>
               )}
@@ -269,13 +327,84 @@ export default function Index() {
                 
                 <div className="bg-blue-50/30 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-100 dark:border-blue-900/50">
                   <Card className="shadow-sm">
-                    <CardContent className="p-0">
-                      <UpcomingRenewals />
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium">Revenue by Client Category</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                        <div className="p-3 bg-green-50 rounded-md">
+                          <div className="text-xs text-gray-600">Enterprise</div>
+                          <div className="text-lg font-semibold">$32,400</div>
+                          <div className="text-xs text-green-600">↑ 12%</div>
+                        </div>
+                        <div className="p-3 bg-blue-50 rounded-md">
+                          <div className="text-xs text-gray-600">Mid-Market</div>
+                          <div className="text-lg font-semibold">$18,750</div>
+                          <div className="text-xs text-green-600">↑ 8%</div>
+                        </div>
+                        <div className="p-3 bg-purple-50 rounded-md">
+                          <div className="text-xs text-gray-600">SMB</div>
+                          <div className="text-lg font-semibold">$9,200</div>
+                          <div className="text-xs text-amber-600">→ 0%</div>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-md">
+                          <div className="text-xs text-gray-600">Startups</div>
+                          <div className="text-lg font-semibold">$4,850</div>
+                          <div className="text-xs text-red-600">↓ 3%</div>
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                 </div>
                 
-                <PaymentAlertsSection />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card className="shadow-sm">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium">Critical Client Health Alerts</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between p-2 bg-red-50 rounded-md">
+                          <div className="flex items-center">
+                            <div className="h-2 w-2 bg-red-600 rounded-full mr-2"></div>
+                            <span className="font-medium">Acme Corp</span>
+                          </div>
+                          <div className="text-sm text-red-600">Health Score: 32%</div>
+                        </div>
+                        <div className="flex items-center justify-between p-2 bg-amber-50 rounded-md">
+                          <div className="flex items-center">
+                            <div className="h-2 w-2 bg-amber-600 rounded-full mr-2"></div>
+                            <span className="font-medium">TechStart Inc</span>
+                          </div>
+                          <div className="text-sm text-amber-600">Health Score: 58%</div>
+                        </div>
+                        <div className="flex items-center justify-between p-2 bg-amber-50 rounded-md">
+                          <div className="flex items-center">
+                            <div className="h-2 w-2 bg-amber-600 rounded-full mr-2"></div>
+                            <span className="font-medium">Global Services Ltd</span>
+                          </div>
+                          <div className="text-sm text-amber-600">Health Score: 61%</div>
+                        </div>
+                      </div>
+                      <div className="mt-3 text-center">
+                        <Button variant="outline" size="sm" asChild>
+                          <Link to="/health-score">View All Health Scores</Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <PaymentAlertsSection />
+                </div>
+                
+                <div className="flex justify-center mt-4">
+                  <Button asChild>
+                    <Link to="/analytics" className="flex items-center gap-2">
+                      <FileBarChart className="h-4 w-4" />
+                      Open Full Analytics Dashboard
+                    </Link>
+                  </Button>
+                </div>
               </div>
             </TabsContent>
           )}
