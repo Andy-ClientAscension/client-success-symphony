@@ -2,15 +2,17 @@
 import React from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Client } from "@/lib/data";
-import { Award } from "lucide-react";
+import { Award, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface SSCPerformanceRowProps {
   csm: string;
   clients: Client[];
   isMobile?: boolean;
+  onDelete?: (csm: string) => void;
 }
 
-export function SSCPerformanceRow({ csm, clients, isMobile = false }: SSCPerformanceRowProps) {
+export function SSCPerformanceRow({ csm, clients, isMobile = false, onDelete }: SSCPerformanceRowProps) {
   // Filter clients for this CSM
   const csmClients = clients.filter(client => client.csm === csm);
   
@@ -108,6 +110,17 @@ export function SSCPerformanceRow({ csm, clients, isMobile = false }: SSCPerform
             <span>${totalMRR.toLocaleString()}</span>
           </div>
         </div>
+      </TableCell>
+      <TableCell>
+        <Button 
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20"
+          onClick={() => onDelete && onDelete(csm)}
+          title="Delete account"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
       </TableCell>
     </TableRow>
   );

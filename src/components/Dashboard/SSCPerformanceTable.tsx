@@ -1,11 +1,22 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { TableCell, TableBody, TableHead, TableHeader, TableRow, Table } from "@/components/ui/table";
 import { SSCPerformanceRow } from "./SSCPerformanceRow";
 import { Client } from "@/lib/data";
 import { HelpCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface SSCPerformanceTableProps {
   csmList: string[];
@@ -29,9 +40,39 @@ const excludedSSCs = [
 
 export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerformanceTableProps) {
   const isMobile = useIsMobile();
+  const { toast } = useToast();
+  const [filteredCsmList, setFilteredCsmList] = useState<string[]>(
+    csmList.filter(csm => !excludedSSCs.includes(csm))
+  );
+  const [csmToDelete, setCsmToDelete] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
-  // Filter out the excluded SSCs
-  const filteredCsmList = csmList.filter(csm => !excludedSSCs.includes(csm));
+  const handleDeleteCSM = (csm: string) => {
+    setCsmToDelete(csm);
+    setShowDeleteDialog(true);
+  };
+  
+  const confirmDelete = () => {
+    if (csmToDelete) {
+      // Remove the CSM from the filtered list
+      setFilteredCsmList(prev => prev.filter(csm => csm !== csmToDelete));
+      
+      // Show success toast
+      toast({
+        title: "Account deleted",
+        description: `${csmToDelete} has been removed from the list.`,
+      });
+      
+      // Reset the state
+      setCsmToDelete(null);
+    }
+    setShowDeleteDialog(false);
+  };
+  
+  const cancelDelete = () => {
+    setCsmToDelete(null);
+    setShowDeleteDialog(false);
+  };
   
   return (
     <div className="mt-6">
@@ -68,6 +109,7 @@ export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerfo
                   <div className="flex-1 text-right">Metrics</div>
                 </div>
               </TableHead>
+              <TableHead className="text-center text-sm w-[60px]">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -75,11 +117,37 @@ export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerfo
               if (selectedTeam === "all") return true;
               return clients.some(client => client.csm === csm && client.team === selectedTeam);
             }).map((csm) => (
-              <SSCPerformanceRow key={csm} csm={csm} clients={clients} isMobile={isMobile} />
+              <SSCPerformanceRow 
+                key={csm} 
+                csm={csm} 
+                clients={clients} 
+                isMobile={isMobile}
+                onDelete={handleDeleteCSM}
+              />
             ))}
           </TableBody>
         </Table>
       </div>
+      
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Account</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {csmToDelete}? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDelete}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
