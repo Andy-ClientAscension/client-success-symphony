@@ -20,38 +20,52 @@ import { useToast } from "@/hooks/use-toast";
 import { HealthScoreEditor } from "@/components/Dashboard/HealthScoreEditor";
 
 export default function ClientDetailsPage() {
-  const { clientId } = useParams<{ clientId: string }>();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [client, setClient] = useState<Client | null>(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [healthScoreEditorOpen, setHealthScoreEditorOpen] = useState(false);
   const { toast } = useToast();
   
-  // Use a key to force re-render when clientId changes
-  const [componentKey, setComponentKey] = useState(clientId);
+  // Use a key to force re-render when id changes
+  const [componentKey, setComponentKey] = useState(id);
   
   useEffect(() => {
-    if (!clientId) return;
+    if (!id) {
+      setLoading(false);
+      return;
+    }
     
-    // Update key when clientId changes to force re-rendering of all components
-    setComponentKey(clientId);
+    // Update key when id changes to force re-rendering of all components
+    setComponentKey(id);
+    setLoading(true);
     
-    const clients = getAllClients();
-    const foundClient = clients.find(c => c.id === clientId);
-    
-    if (foundClient) {
-      setClient(foundClient);
-      // Reset to overview tab when changing clients for consistency
-      setActiveTab("overview");
-    } else {
-      // Show toast if client not found
+    try {
+      const clients = getAllClients();
+      const foundClient = clients.find(c => c.id === id);
+      
+      if (foundClient) {
+        console.log("Client found:", foundClient.name);
+        setClient(foundClient);
+        // Reset to overview tab when changing clients for consistency
+        setActiveTab("overview");
+      } else {
+        console.warn("Client not found with ID:", id);
+        // No need for toast here as we'll show a proper UI for client not found
+        setClient(null);
+      }
+    } catch (error) {
+      console.error("Error loading client:", error);
       toast({
-        title: "Client Not Found",
-        description: "The requested client could not be found.",
+        title: "Error Loading Client",
+        description: "There was a problem loading the client data.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
-  }, [clientId, toast]);
+  }, [id, toast]);
 
   const handleNavigateToClients = () => {
     navigate("/clients");
@@ -62,17 +76,32 @@ export default function ClientDetailsPage() {
     setActiveTab(value);
   };
 
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex min-h-[400px] items-center justify-center">
+          <div className="text-center">
+            <p className="text-muted-foreground">Loading client data...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   if (!client) {
     return (
       <Layout>
         <div className="flex min-h-[400px] items-center justify-center">
-          <Card className="p-8">
+          <Card className="p-8 max-w-md w-full bg-background border-red-100">
             <div className="text-center">
               <h2 className="text-2xl font-bold mb-4">Client Not Found</h2>
               <p className="mb-6 text-muted-foreground">
                 The client you're looking for doesn't exist or has been removed.
               </p>
-              <Button onClick={handleNavigateToClients}>
+              <Button 
+                onClick={handleNavigateToClients}
+                className="bg-red-600 hover:bg-red-700"
+              >
                 Return to Clients
               </Button>
             </div>
