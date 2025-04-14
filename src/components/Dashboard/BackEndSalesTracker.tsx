@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -56,10 +55,8 @@ export function BackEndSalesTracker() {
     },
   });
   
-  // Use useMemo to get the list of all clients once
   const allClients = useMemo(() => getAllClients(), []);
   
-  // Extract unique teams from clients
   const teams = useMemo(() => {
     const uniqueTeams = new Set<string>();
     allClients.forEach(client => {
@@ -74,7 +71,6 @@ export function BackEndSalesTracker() {
     const savedSales = loadData<BackEndSale[]>(STORAGE_KEYS.CHURN, []);
     
     if (savedSales.length === 0) {
-      // If no saved data exists, generate new data from actual client data
       const today = new Date();
       const mockSales: BackEndSale[] = allClients.slice(0, 30).map(client => {
         const status = Math.random() > 0.3 ? "renewed" : "churned";
@@ -100,11 +96,9 @@ export function BackEndSalesTracker() {
       saveData(STORAGE_KEYS.CHURN, mockSales);
     } else {
       try {
-        // Process saved data, ensuring date objects are properly handled
         const processedSales = savedSales.map(sale => {
           let renewalDate: Date;
           
-          // Handle different date formats properly
           if (typeof sale.renewalDate === 'string') {
             try {
               renewalDate = parseISO(sale.renewalDate);
@@ -121,7 +115,6 @@ export function BackEndSalesTracker() {
             }
           }
           
-          // Add team information if missing
           const client = allClients.find(c => c.id === sale.clientId);
           const team = sale.team || (client ? client.team : undefined);
           
@@ -140,26 +133,22 @@ export function BackEndSalesTracker() {
       }
     }
   }, [allClients]);
-
-  // Filter sales by selected team
+  
   const filteredByTeam = useMemo(() => {
     return selectedTeam === "all" 
       ? backEndSales 
       : backEndSales.filter(sale => sale.team === selectedTeam);
   }, [backEndSales, selectedTeam]);
-
-  // Filter sales by status tab
+  
   const filteredSales = useMemo(() => {
     return activeTab === "all" 
       ? filteredByTeam 
       : filteredByTeam.filter(sale => sale.status === activeTab);
   }, [filteredByTeam, activeTab]);
-
-  // Calculate team performance metrics
+  
   const teamPerformance = useMemo(() => {
     const teamStats: Record<string, TeamPerformance> = {};
     
-    // Initialize teams with data from all clients
     teams.forEach(team => {
       if (team !== "all") {
         teamStats[team] = {
@@ -168,12 +157,11 @@ export function BackEndSalesTracker() {
           renewedClients: 0,
           churnedClients: 0,
           renewalRate: 0,
-          trend: Math.floor(Math.random() * 20) - 10 // Random trend for demo
+          trend: Math.floor(Math.random() * 20) - 10
         };
       }
     });
     
-    // Calculate stats for each team
     backEndSales.forEach(sale => {
       if (sale.team && sale.team !== "all") {
         if (!teamStats[sale.team]) {
@@ -196,7 +184,6 @@ export function BackEndSalesTracker() {
       }
     });
     
-    // Calculate renewal rates
     Object.keys(teamStats).forEach(team => {
       const stats = teamStats[team];
       stats.renewalRate = stats.totalClients > 0 
@@ -206,8 +193,7 @@ export function BackEndSalesTracker() {
     
     return Object.values(teamStats).sort((a, b) => b.renewalRate - a.renewalRate);
   }, [backEndSales, teams]);
-
-  // Overall metrics
+  
   const totalClients = filteredByTeam.length;
   const renewedClients = filteredByTeam.filter(sale => sale.status === "renewed").length;
   const churnedClients = filteredByTeam.filter(sale => sale.status === "churned").length;
@@ -539,7 +525,7 @@ export function BackEndSalesTracker() {
                 <div className="flex flex-col items-center">
                   <ThumbsDown className="h-8 w-8 text-orange-500 mb-2" />
                   <p className="text-lg font-semibold">
-                    {teamPerformance.length > 0 ? 
+                    {teamPerformance.length > 0 && teamPerformance.length > 1 ? 
                       `${teamPerformance[teamPerformance.length-1].name}` : 
                       "No data"}
                   </p>
@@ -616,11 +602,9 @@ export function BackEndSalesTracker() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {teamPerformance.slice(0, 4).map((team) => {
-                  // Get churn reasons for this team
                   const teamSales = backEndSales.filter(sale => 
                     sale.team === team.name && sale.status === "churned");
                   
-                  // Count pain points
                   const painPoints: Record<string, number> = {};
                   teamSales.forEach(sale => {
                     sale.painPoints.forEach(point => {
@@ -628,7 +612,6 @@ export function BackEndSalesTracker() {
                     });
                   });
                   
-                  // Convert to array and sort
                   const sortedPainPoints = Object.entries(painPoints)
                     .sort(([, countA], [, countB]) => countB - countA)
                     .slice(0, 3);
@@ -638,8 +621,8 @@ export function BackEndSalesTracker() {
                       <h4 className="font-medium mb-2">{team.name}</h4>
                       {sortedPainPoints.length > 0 ? (
                         <ul className="space-y-2">
-                          {sortedPainPoints.map(([point, count]) => (
-                            <li key={point} className="text-sm flex justify-between">
+                          {sortedPainPoints.map(([point, count], index) => (
+                            <li key={`${team.name}-${point}-${index}`} className="text-sm flex justify-between">
                               <span>{point}</span>
                               <span className="text-amber-600">{count} {count === 1 ? 'client' : 'clients'}</span>
                             </li>
