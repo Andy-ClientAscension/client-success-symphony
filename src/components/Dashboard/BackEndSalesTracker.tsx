@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,13 +7,12 @@ import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { User, FileText, ThumbsUp, ThumbsDown, PieChart, BarChart3 } from "lucide-react";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import { MOCK_CLIENTS } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { saveData, loadData, STORAGE_KEYS } from "@/utils/persistence";
 
-// Define the structure for back-end sales data
 interface BackEndSale {
   id: string;
   clientId: string;
@@ -25,7 +23,6 @@ interface BackEndSale {
   painPoints: string[];
 }
 
-// Define the form data structure
 interface ChurnNotesFormData {
   notes: string;
   painPoints: string;
@@ -44,12 +41,10 @@ export function BackEndSalesTracker() {
     },
   });
   
-  // Load saved data or initialize with mock data
   useEffect(() => {
     const savedSales = loadData<BackEndSale[]>(STORAGE_KEYS.CHURN, []);
     
     if (savedSales.length === 0) {
-      // Initialize with mock data only if no saved data exists
       const today = new Date();
       const mockSales: BackEndSale[] = MOCK_CLIENTS.slice(0, 30).map(client => {
         const status = Math.random() > 0.3 ? "renewed" : "churned";
@@ -73,27 +68,34 @@ export function BackEndSalesTracker() {
       setBackEndSales(mockSales);
       saveData(STORAGE_KEYS.CHURN, mockSales);
     } else {
-      // Use saved data
-      setBackEndSales(savedSales.map(sale => ({
-        ...sale,
-        renewalDate: new Date(sale.renewalDate)
-      })));
+      try {
+        const processedSales = savedSales.map(sale => {
+          const renewalDate = new Date(sale.renewalDate);
+          return {
+            ...sale,
+            renewalDate: isValid(renewalDate) ? renewalDate : new Date()
+          };
+        });
+        
+        setBackEndSales(processedSales);
+      } catch (error) {
+        console.error("Error processing saved sales data:", error);
+        setBackEndSales([]);
+        saveData(STORAGE_KEYS.CHURN, []);
+      }
     }
   }, []);
 
-  // Calculate metrics
   const totalClients = backEndSales.length;
   const renewedClients = backEndSales.filter(sale => sale.status === "renewed").length;
   const churnedClients = backEndSales.filter(sale => sale.status === "churned").length;
   const renewalRate = totalClients > 0 ? (renewedClients / totalClients) * 100 : 0;
 
-  // Filter clients based on active tab
   const filteredSales = backEndSales.filter(sale => {
     if (activeTab === "all") return true;
     return sale.status === activeTab;
   });
 
-  // Handle form submission for churn notes
   const handleNotesSubmit = (data: ChurnNotesFormData) => {
     if (!selectedClient) return;
     
@@ -121,7 +123,6 @@ export function BackEndSalesTracker() {
     setSelectedClient(null);
   };
   
-  // Load client data into form when selected
   const handleSelectClient = (clientId: string) => {
     const client = backEndSales.find(sale => sale.clientId === clientId);
     if (client) {
@@ -130,7 +131,14 @@ export function BackEndSalesTracker() {
       form.setValue("painPoints", client.painPoints.join(", "));
     }
   };
-  
+
+  const formatDate = (date: Date): string => {
+    if (!date || !isValid(date)) {
+      return "Invalid date";
+    }
+    return format(date, "MMM d, yyyy");
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -199,7 +207,7 @@ export function BackEndSalesTracker() {
                       filteredSales.map((sale) => (
                         <TableRow key={sale.id}>
                           <TableCell className="font-medium">{sale.clientName}</TableCell>
-                          <TableCell>{format(sale.renewalDate, "MMM d, yyyy")}</TableCell>
+                          <TableCell>{formatDate(sale.renewalDate)}</TableCell>
                           <TableCell>
                             <Badge
                               variant={sale.status === "renewed" ? "outline" : "destructive"}
@@ -303,7 +311,7 @@ export function BackEndSalesTracker() {
                       filteredSales.map((sale) => (
                         <TableRow key={sale.id}>
                           <TableCell className="font-medium">{sale.clientName}</TableCell>
-                          <TableCell>{format(sale.renewalDate, "MMM d, yyyy")}</TableCell>
+                          <TableCell>{formatDate(sale.renewalDate)}</TableCell>
                           <TableCell>
                             <Badge variant="outline">Renewed</Badge>
                           </TableCell>
@@ -340,7 +348,7 @@ export function BackEndSalesTracker() {
                       filteredSales.map((sale) => (
                         <TableRow key={sale.id}>
                           <TableCell className="font-medium">{sale.clientName}</TableCell>
-                          <TableCell>{format(sale.renewalDate, "MMM d, yyyy")}</TableCell>
+                          <TableCell>{formatDate(sale.renewalDate)}</TableCell>
                           <TableCell>
                             <Badge variant="destructive">Churned</Badge>
                           </TableCell>
