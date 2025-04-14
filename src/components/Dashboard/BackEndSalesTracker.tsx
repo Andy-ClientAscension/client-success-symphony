@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { User, FileText, ThumbsUp, ThumbsDown, PieChart, BarChart3, Users, Award, TrendingUp, TrendingDown } from "lucide-react";
+import { User, FileText, ThumbsUp, ThumbsDown, PieChart, BarChart3, Users, Award, TrendingUp, TrendingDown, Plus } from "lucide-react";
 import { format, isValid, parseISO } from "date-fns";
 import { getAllClients } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +14,7 @@ import { useForm } from "react-hook-form";
 import { saveData, loadData, STORAGE_KEYS } from "@/utils/persistence";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
+import { BackEndSalesForm } from "./BackEndSalesForm";
 
 interface BackEndSale {
   id: string;
@@ -66,6 +67,7 @@ export function BackEndSalesTracker() {
   const [activeTab, setActiveTab] = useState("all");
   const [activeSection, setActiveSection] = useState("sales");
   const [selectedTeam, setSelectedTeam] = useState("all");
+  const [showAddForm, setShowAddForm] = useState(false);
   const { toast } = useToast();
   
   const form = useForm<ChurnNotesFormData>({
@@ -292,16 +294,48 @@ export function BackEndSalesTracker() {
       .map(point => [point, Math.floor(Math.random() * 5) + 1]);
   };
 
+  const handleAddNewSale = (data: any) => {
+    const newSale: BackEndSale = {
+      id: `bsale-${Date.now()}`,
+      clientId: data.clientId,
+      clientName: data.clientName,
+      status: data.status,
+      renewalDate: data.renewalDate,
+      notes: data.notes,
+      painPoints: data.status === "churned" ? [] : [],
+      team: data.team
+    };
+    
+    const updatedSales = [...backEndSales, newSale];
+    setBackEndSales(updatedSales);
+    saveData(STORAGE_KEYS.CHURN, updatedSales);
+    
+    toast({
+      title: "Client Added",
+      description: `${data.clientName} has been added to the Back End Sales Tracker.`,
+    });
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <BarChart3 className="h-5 w-5 text-primary" />
-          Back End Sales Tracking
-        </CardTitle>
-        <CardDescription>
-          Track client renewals, churn, and identify pain points to improve retention
-        </CardDescription>
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              Back End Sales Tracking
+            </CardTitle>
+            <CardDescription>
+              Track client renewals, churn, and identify pain points to improve retention
+            </CardDescription>
+          </div>
+          <Button 
+            onClick={() => setShowAddForm(true)}
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
+            <Plus className="h-4 w-4 mr-2" /> Add Client
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <Tabs value={activeSection} onValueChange={setActiveSection} className="mb-6">
@@ -675,6 +709,15 @@ export function BackEndSalesTracker() {
           </Card>
         </TabsContent>
       </CardContent>
+
+      {showAddForm && (
+        <BackEndSalesForm
+          isOpen={showAddForm}
+          onClose={() => setShowAddForm(false)}
+          onSubmit={handleAddNewSale}
+          teams={teams.filter(team => team !== "all")}
+        />
+      )}
     </Card>
   );
 }
