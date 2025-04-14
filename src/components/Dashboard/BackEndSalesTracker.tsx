@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import { MOCK_CLIENTS } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
+import { saveData, loadData, STORAGE_KEYS } from "@/utils/persistence";
 
 // Define the structure for back-end sales data
 interface BackEndSale {
@@ -43,69 +44,79 @@ export function BackEndSalesTracker() {
     },
   });
   
-  // Initialize with mock data based on the client renewals
+  // Load saved data or initialize with mock data
   useEffect(() => {
-    // Generate random back-end sales data
-    const today = new Date();
-    const mockSales: BackEndSale[] = MOCK_CLIENTS.slice(0, 30).map(client => {
-      // Randomly determine if the client renewed or churned
-      const status = Math.random() > 0.3 ? "renewed" : "churned";
-      
-      // Create a date in the past for the renewal
-      const randomDays = Math.floor(Math.random() * 90);
-      const renewalDate = new Date(today);
-      renewalDate.setDate(renewalDate.getDate() - randomDays);
-      
-      return {
-        id: `bsale-${client.id}`,
-        clientId: client.id,
-        clientName: client.name,
-        status,
-        renewalDate,
-        notes: status === "churned" ? "Client decided not to continue." : "",
-        painPoints: status === "churned" 
-          ? ["Price too high", "Not seeing value", "Changed business needs"].filter(() => Math.random() > 0.5)
-          : []
-      };
-    });
+    const savedSales = loadData<BackEndSale[]>(STORAGE_KEYS.CHURN, []);
     
-    setBackEndSales(mockSales);
+    if (savedSales.length === 0) {
+      // Initialize with mock data only if no saved data exists
+      const today = new Date();
+      const mockSales: BackEndSale[] = MOCK_CLIENTS.slice(0, 30).map(client => {
+        const status = Math.random() > 0.3 ? "renewed" : "churned";
+        const randomDays = Math.floor(Math.random() * 90);
+        const renewalDate = new Date(today);
+        renewalDate.setDate(renewalDate.getDate() - randomDays);
+        
+        return {
+          id: `bsale-${client.id}`,
+          clientId: client.id,
+          clientName: client.name,
+          status,
+          renewalDate,
+          notes: status === "churned" ? "Client decided not to continue." : "",
+          painPoints: status === "churned" 
+            ? ["Price too high", "Not seeing value", "Changed business needs"].filter(() => Math.random() > 0.5)
+            : []
+        };
+      });
+      
+      setBackEndSales(mockSales);
+      saveData(STORAGE_KEYS.CHURN, mockSales);
+    } else {
+      // Use saved data
+      setBackEndSales(savedSales.map(sale => ({
+        ...sale,
+        renewalDate: new Date(sale.renewalDate)
+      })));
+    }
   }, []);
-  
+
   // Calculate metrics
   const totalClients = backEndSales.length;
   const renewedClients = backEndSales.filter(sale => sale.status === "renewed").length;
   const churnedClients = backEndSales.filter(sale => sale.status === "churned").length;
   const renewalRate = totalClients > 0 ? (renewedClients / totalClients) * 100 : 0;
-  
+
   // Filter clients based on active tab
   const filteredSales = backEndSales.filter(sale => {
     if (activeTab === "all") return true;
     return sale.status === activeTab;
   });
-  
+
   // Handle form submission for churn notes
   const handleNotesSubmit = (data: ChurnNotesFormData) => {
     if (!selectedClient) return;
     
-    // Update the selected client's notes and pain points
-    setBackEndSales(prev => prev.map(sale => {
+    const updatedSales = backEndSales.map(sale => {
       if (sale.clientId === selectedClient) {
-        return {
+        const updatedSale = {
           ...sale,
           notes: data.notes,
           painPoints: data.painPoints.split(',').map(point => point.trim())
         };
+        return updatedSale;
       }
       return sale;
-    }));
+    });
+    
+    setBackEndSales(updatedSales);
+    saveData(STORAGE_KEYS.CHURN, updatedSales);
     
     toast({
       title: "Notes Updated",
       description: "Client churn notes have been saved successfully",
     });
     
-    // Reset the form
     form.reset();
     setSelectedClient(null);
   };
