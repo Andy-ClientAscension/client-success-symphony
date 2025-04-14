@@ -3,6 +3,18 @@ import { Client } from "@/lib/data";
 
 export type StatusGroup = 'new' | 'active' | 'backend' | 'olympia' | 'at-risk' | 'churned' | 'paused' | 'graduated';
 
+const VALID_STATUSES: StatusGroup[] = ['new', 'active', 'backend', 'olympia', 'at-risk', 'churned', 'paused', 'graduated'];
+
+/**
+ * Check if a status is valid
+ */
+export const isValidStatus = (status: string): boolean => {
+  return VALID_STATUSES.includes(status as StatusGroup);
+};
+
+/**
+ * Get a display label for a status
+ */
 export const getStatusLabel = (status: string): string => {
   switch (status) {
     case 'new':
@@ -26,6 +38,9 @@ export const getStatusLabel = (status: string): string => {
   }
 };
 
+/**
+ * Get a color class for a status badge
+ */
 export const getStatusColor = (status: string): string => {
   switch (status) {
     case 'new':
@@ -49,8 +64,14 @@ export const getStatusColor = (status: string): string => {
   }
 };
 
-// Convert client status to kanban column
+/**
+ * Convert client status to kanban column with validation
+ */
 export const clientStatusToKanbanColumn = (status: Client['status']): StatusGroup => {
+  if (!status || !isValidStatus(status)) {
+    return 'active'; // Default fallback
+  }
+  
   switch (status) {
     case 'new':
       return 'new';
@@ -60,12 +81,35 @@ export const clientStatusToKanbanColumn = (status: Client['status']): StatusGrou
       return 'at-risk';
     case 'churned':
       return 'churned';
+    case 'backend':
+      return 'backend';
+    case 'olympia':
+      return 'olympia';
+    case 'paused':
+      return 'paused';
+    case 'graduated':
+      return 'graduated';
     default:
       return 'active'; // Default to active for any unrecognized status
   }
 };
 
-// Get default column order for kanban board - updated with the new order
+/**
+ * Get default column order for kanban board
+ */
 export const getDefaultColumnOrder = (): StatusGroup[] => {
   return ['new', 'active', 'at-risk', 'backend', 'olympia', 'graduated', 'churned', 'paused'];
+};
+
+/**
+ * Validate and fix client status if needed
+ */
+export const validateClientStatus = (client: Client): Client => {
+  if (!client.status || !isValidStatus(client.status)) {
+    return {
+      ...client,
+      status: 'active' // Set to default if invalid
+    };
+  }
+  return client;
 };

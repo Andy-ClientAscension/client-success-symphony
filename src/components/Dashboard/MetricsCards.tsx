@@ -12,17 +12,53 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { getClientsCountByStatus, getAverageNPS, getClientMetricsByTeam } from "@/lib/data";
+import { useToast } from "@/hooks/use-toast";
+import { useEffect, useState } from "react";
 
 export function MetricsCards() {
-  const clientCounts = getClientsCountByStatus();
-  const companyMetrics = getClientMetricsByTeam();
-  const averageNPS = getAverageNPS();
+  const [metricsData, setMetricsData] = useState({
+    clientCounts: {
+      active: 0,
+      "at-risk": 0,
+      new: 0,
+      churned: 0
+    },
+    companyMetrics: {
+      totalMRR: 0,
+      totalCallsBooked: 0,
+      totalDealsClosed: 0
+    },
+    averageNPS: 0
+  });
   
-  // Calculate total with null handling
-  const active = clientCounts.active || 0;
-  const atRisk = clientCounts["at-risk"] || 0;
-  const newClients = clientCounts.new || 0;
-  const churned = clientCounts.churned || 0;
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    try {
+      const clientCounts = getClientsCountByStatus();
+      const companyMetrics = getClientMetricsByTeam();
+      const averageNPS = getAverageNPS();
+      
+      setMetricsData({
+        clientCounts,
+        companyMetrics,
+        averageNPS
+      });
+    } catch (error) {
+      console.error("Error loading metrics data:", error);
+      toast({
+        title: "Data Error",
+        description: "Could not load dashboard metrics. Please refresh the page.",
+        variant: "destructive"
+      });
+    }
+  }, [toast]);
+  
+  // Extract values with null handling
+  const active = metricsData.clientCounts.active || 0;
+  const atRisk = metricsData.clientCounts["at-risk"] || 0;
+  const newClients = metricsData.clientCounts.new || 0;
+  const churned = metricsData.clientCounts.churned || 0;
   const total = active + atRisk + newClients + churned;
   
   // Calculate percentages with zero-division protection
@@ -30,6 +66,7 @@ export function MetricsCards() {
   const atRiskPercent = total > 0 ? Math.round((atRisk / total) * 100) : 0;
   const newPercent = total > 0 ? Math.round((newClients / total) * 100) : 0;
   const churnedPercent = total > 0 ? Math.round((churned / total) * 100) : 0;
+  const successRate = total > 0 ? Math.round(((active + newClients) / total) * 100) : 0;
   
   const metrics = [
     { 
@@ -55,7 +92,7 @@ export function MetricsCards() {
     },
     { 
       title: "Success Rate", 
-      value: `${(total > 0 ? Math.round(((active + newClients) / total) * 100) : 0)}%`,
+      value: `${successRate}%`,
       trend: "+2.5% this quarter",
       trendDirection: 'up'
     },

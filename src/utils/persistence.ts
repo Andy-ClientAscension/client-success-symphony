@@ -21,12 +21,52 @@ const STORAGE_KEYS = {
 };
 
 /**
- * Saves data to localStorage
+ * Validates data being stored (basic type checking)
+ * @param data The data to validate
+ * @returns Whether the data is valid
+ */
+const validateData = <T>(data: T): boolean => {
+  if (data === undefined || data === null) {
+    return false;
+  }
+  
+  // Validate arrays have proper structure
+  if (Array.isArray(data)) {
+    return true; // We trust array content for now
+  }
+  
+  // Validate objects have proper structure
+  if (typeof data === 'object') {
+    return true; // We trust object structure for now
+  }
+  
+  return true;
+};
+
+/**
+ * Safely parse JSON with error handling
+ */
+const safeJSONParse = <T>(json: string, defaultValue: T): T => {
+  try {
+    return JSON.parse(json) as T;
+  } catch (error) {
+    console.error("Error parsing JSON data:", error);
+    return defaultValue;
+  }
+};
+
+/**
+ * Saves data to localStorage with validation
  * @param key The key to save under
  * @param data The data to save
  */
 export const saveData = <T>(key: string, data: T): void => {
   try {
+    if (!validateData(data)) {
+      console.warn(`Validation failed for data with key: ${key}`);
+      return;
+    }
+    
     const serializedData = JSON.stringify(data);
     localStorage.setItem(key, serializedData);
     console.log(`Saved data for key: ${key}`);
@@ -36,7 +76,7 @@ export const saveData = <T>(key: string, data: T): void => {
 };
 
 /**
- * Loads data from localStorage
+ * Loads data from localStorage with enhanced error handling
  * @param key The key to load from
  * @param defaultValue Default value if no data exists
  * @returns The loaded data or the default value
@@ -47,7 +87,16 @@ export const loadData = <T>(key: string, defaultValue: T): T => {
     if (serializedData === null) {
       return defaultValue;
     }
-    return JSON.parse(serializedData) as T;
+    
+    const parsedData = safeJSONParse<T>(serializedData, defaultValue);
+    
+    // If we got invalid data back, return the default
+    if (!validateData(parsedData)) {
+      console.warn(`Invalid data loaded for key: ${key}, using default value`);
+      return defaultValue;
+    }
+    
+    return parsedData;
   } catch (error) {
     console.error(`Error loading data for key: ${key}`, error);
     return defaultValue;

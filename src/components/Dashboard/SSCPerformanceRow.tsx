@@ -16,18 +16,18 @@ export function SSCPerformanceRow({ csm, clients, isMobile = false, onDelete }: 
   // Filter clients for this CSM
   const csmClients = clients.filter(client => client.csm === csm);
   
-  // Calculate backend students - with safe access
+  // Calculate backend students with safe access
   const backendStudents = csmClients.reduce((total, client) => {
     // Access with optional chaining and fallback to 0 if undefined
     return total + (client.backendStudents || 0);
   }, 0);
   
-  // Calculate average NPS with null handling
+  // Calculate average NPS with improved null handling
   let totalNPS = 0;
   let npsCount = 0;
   
   csmClients.forEach(client => {
-    if (client.npsScore !== null && client.npsScore !== undefined) {
+    if (client.npsScore !== null && client.npsScore !== undefined && !isNaN(client.npsScore)) {
       totalNPS += client.npsScore;
       npsCount++;
     }
@@ -35,44 +35,60 @@ export function SSCPerformanceRow({ csm, clients, isMobile = false, onDelete }: 
   
   const avgNPS = npsCount > 0 ? Math.round(totalNPS / npsCount) : "-";
   
-  // Calculate average retention
-  const activeClients = csmClients.filter(client => client.status === 'active').length;
-  const retentionRate = csmClients.length > 0 
-    ? Math.round((activeClients / csmClients.length) * 100) 
+  // Calculate average retention with null handling for status
+  const activeClients = csmClients.filter(client => 
+    client.status === 'active' || client.status === 'new'
+  ).length;
+  
+  const totalClientsWithStatus = csmClients.filter(client => 
+    client.status === 'active' || client.status === 'new' || 
+    client.status === 'at-risk' || client.status === 'churned'
+  ).length;
+  
+  const retentionRate = totalClientsWithStatus > 0 
+    ? Math.round((activeClients / totalClientsWithStatus) * 100) 
     : 0;
   
   // Calculate MRR with null handling
   const totalMRR = csmClients.reduce((total, client) => {
-    return total + (client.mrr || 0);
+    const clientMRR = client.mrr || 0;
+    // Verify MRR is a valid number
+    return total + (isNaN(clientMRR) ? 0 : clientMRR);
   }, 0);
   
-  // Calculate growth metrics with null handling
+  // Calculate growth metrics with improved null handling
   const growthMetric = csmClients.reduce((total, client) => {
-    // Access with optional chaining and fallback to 0 if undefined
-    return total + (client.growth || 0);
+    // Access with optional chaining and fallback to 0 if undefined or NaN
+    const growth = client.growth || 0;
+    return total + (isNaN(growth) ? 0 : growth);
   }, 0);
   
-  // Calculate health grade
+  // Calculate health grade with better validation
   // 30% NPS + 30% Retention + 20% Growth + 20% MRR trends
   let healthScore = 0;
   
   // NPS component (30%)
   if (npsCount > 0) {
     // Normalize NPS from 0-10 scale to 0-100 scale
-    const normalizedNPS = (totalNPS / npsCount) * 10;
+    const normalizedNPS = Math.min(100, Math.max(0, (totalNPS / npsCount) * 10));
     healthScore += normalizedNPS * 0.3;
   }
   
   // Retention component (30%)
-  healthScore += retentionRate * 0.3;
+  healthScore += Math.min(100, Math.max(0, retentionRate)) * 0.3;
   
-  // Growth component (20%) - simplified calculation
-  const growthScore = Math.min(100, (growthMetric / Math.max(1, csmClients.length)) * 20);
+  // Growth component (20%) - improved calculation
+  const growthScore = Math.min(100, Math.max(0, 
+    (growthMetric / Math.max(1, csmClients.length)) * 20
+  ));
   healthScore += growthScore * 0.2;
   
-  // MRR trends component (20%) - simplified calculation
-  const mrrScore = Math.min(100, (totalMRR / 10000) * 100);
+  // MRR trends component (20%) - improved calculation
+  const mrrScore = Math.min(100, Math.max(0, (totalMRR / 10000) * 100));
   healthScore += mrrScore * 0.2;
+  
+  // Ensure health score is within bounds
+  healthScore = Math.min(100, Math.max(0, healthScore));
   
   // Convert health score to letter grade
   let grade;

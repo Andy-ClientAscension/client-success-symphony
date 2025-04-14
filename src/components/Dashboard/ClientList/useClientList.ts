@@ -1,14 +1,29 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Client, getAllClients } from '@/lib/data';
-import { STORAGE_KEYS, saveData } from '@/utils/persistence';
+import { STORAGE_KEYS, saveData, loadData } from '@/utils/persistence';
+import { useToast } from "@/hooks/use-toast";
 
 interface UseClientListProps {
   statusFilter?: Client['status'];
 }
 
 export function useClientList({ statusFilter }: UseClientListProps) {
-  const defaultClients = useMemo(() => getAllClients(), []);
+  const { toast } = useToast();
+  const defaultClients = useMemo(() => {
+    try {
+      return getAllClients();
+    } catch (error) {
+      console.error("Error loading default clients:", error);
+      toast({
+        title: "Data Loading Error",
+        description: "Failed to load client data. Using fallback data.",
+        variant: "destructive",
+      });
+      return [];
+    }
+  }, [toast]);
+  
   const [clients, setClients] = useState<Client[]>(defaultClients);
   const [filteredClients, setFilteredClients] = useState<Client[]>(clients);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -24,15 +39,48 @@ export function useClientList({ statusFilter }: UseClientListProps) {
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
 
+  // Validate clients before using them
+  const validateClients = (clientList: Client[]): Client[] => {
+    if (!Array.isArray(clientList)) return [];
+    
+    return clientList.filter(client => {
+      if (!client || typeof client !== 'object') return false;
+      if (!client.id || typeof client.id !== 'string') return false;
+      if (!client.name || typeof client.name !== 'string') return false;
+      
+      // Ensure client status is valid
+      if (!client.status || !['active', 'at-risk', 'churned', 'new'].includes(client.status)) {
+        // Fix invalid status
+        client.status = 'active';
+      }
+      
+      // Fix numeric fields if they're invalid
+      if (client.mrr === undefined || client.mrr === null || isNaN(client.mrr)) {
+        client.mrr = 0;
+      }
+      
+      if (client.progress === undefined || client.progress === null || isNaN(client.progress)) {
+        client.progress = 0;
+      }
+      
+      return true;
+    });
+  };
+
   useEffect(() => {
     const persistEnabled = localStorage.getItem("persistDashboard") === "true";
+    
+    // Save data if persistence is enabled and there are changes
     if (persistEnabled && clients !== defaultClients) {
-      saveData(STORAGE_KEYS.CLIENTS, clients);
+      const validatedClients = validateClients(clients);
+      saveData(STORAGE_KEYS.CLIENTS, validatedClients);
     }
-
-    let filtered = clients;
+    
+    // Apply filters
+    let filtered = validateClients(clients);
+    
     if (statusFilter) {
-      filtered = clients.filter(client => client.status === statusFilter);
+      filtered = filtered.filter(client => client.status === statusFilter);
     }
 
     if (selectedTeam !== "all") {
@@ -51,16 +99,24 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     }
 
     setFilteredClients(filtered);
+    
+    // Reset to page 1 when filters change
     setCurrentPage(1);
   }, [clients, selectedTeam, statusFilter, searchQuery, defaultClients]);
 
+  // Calculate pagination values
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredClients.slice(indexOfFirstItem, Math.min(indexOfLastItem, filteredClients.length));
   const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
 
+  // Update clients when default clients change
+  useEffect(() => {
+    setClients(validateClients(defaultClients));
+  }, [defaultClients]);
+
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   };
 
   const handleItemsPerPageChange = (value: number) => {
