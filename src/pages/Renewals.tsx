@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Layout } from "@/components/Layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Pagination } from "@/components/Dashboard/Pagination";
 import { BackEndSalesTracker } from "@/components/Dashboard/BackEndSalesTracker";
+import { RenewalsSummary } from "@/components/Dashboard/RenewalsSummary";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Available teams for filtering
@@ -109,6 +111,7 @@ export default function Renewals() {
             <TabsList>
               <TabsTrigger value="renewals">Upcoming Renewals</TabsTrigger>
               <TabsTrigger value="backend-sales">Back End Sales</TabsTrigger>
+              <TabsTrigger value="summary">Renewals Summary</TabsTrigger>
             </TabsList>
             
             <TabsContent value="renewals" className="mt-0">
@@ -258,6 +261,10 @@ export default function Renewals() {
             
             <TabsContent value="backend-sales" className="mt-0">
               <BackEndSalesTracker />
+            </TabsContent>
+            
+            <TabsContent value="summary" className="mt-0">
+              <RenewalsSummary />
             </TabsContent>
           </Tabs>
         </div>
