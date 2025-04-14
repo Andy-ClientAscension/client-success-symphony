@@ -15,6 +15,14 @@ import { getClientsCountByStatus, getAverageNPS, getClientMetricsByTeam } from "
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 
+// Define a proper type for NPS data to match what's returned from getAverageNPS()
+interface NPSData {
+  current: number;
+  previous: number;
+  change: number;
+  trend: string;
+}
+
 export function MetricsCards() {
   const [metricsData, setMetricsData] = useState({
     clientCounts: {
@@ -28,7 +36,7 @@ export function MetricsCards() {
       totalCallsBooked: 0,
       totalDealsClosed: 0
     },
-    averageNPS: 0
+    averageNPS: { current: 0, previous: 0, change: 0, trend: 'neutral' } as NPSData
   });
   
   const { toast } = useToast();
@@ -68,6 +76,13 @@ export function MetricsCards() {
   const churnedPercent = total > 0 ? Math.round((churned / total) * 100) : 0;
   const successRate = total > 0 ? Math.round(((active + newClients) / total) * 100) : 0;
   
+  // Use the current NPS score from the NPS data
+  const npsScore = metricsData.averageNPS.current;
+  const npsTrend = metricsData.averageNPS.change > 0 
+    ? `+${metricsData.averageNPS.change} points` 
+    : `${metricsData.averageNPS.change} points`;
+  const npsTrendDirection = metricsData.averageNPS.trend === 'up' ? 'up' : 'down';
+  
   const metrics = [
     { 
       title: "Total Clients", 
@@ -101,13 +116,19 @@ export function MetricsCards() {
       value: `${churnedPercent}%`,
       trend: "-0.2% this month",
       trendDirection: 'down'
+    },
+    {
+      title: "NPS Score",
+      value: npsScore,
+      trend: npsTrend,
+      trendDirection: npsTrendDirection
     }
   ];
   
   return (
     <div className="mb-2">
       <h2 className="text-lg font-semibold mb-2">Company Overview</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2">
         {metrics.map((metric, index) => (
           <Card key={index} className="shadow-sm">
             <CardContent className="p-2">
