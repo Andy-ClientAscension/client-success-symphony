@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { User, FileText, ThumbsUp, ThumbsDown, Pie, BarChart3 } from "lucide-react";
+import { User, FileText, ThumbsUp, ThumbsDown, PieChart, BarChart3 } from "lucide-react";
 import { format } from "date-fns";
 import { MOCK_CLIENTS } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
@@ -156,7 +156,7 @@ export function BackEndSalesTracker() {
           <Card>
             <CardContent className="pt-6">
               <div className="flex flex-col items-center">
-                <Pie className="h-8 w-8 text-blue-500 mb-2" />
+                <PieChart className="h-8 w-8 text-blue-500 mb-2" />
                 <p className="text-lg font-semibold">{renewalRate.toFixed(1)}%</p>
                 <p className="text-sm text-muted-foreground">Renewal Rate</p>
               </div>
