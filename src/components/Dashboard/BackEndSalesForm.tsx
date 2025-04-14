@@ -13,13 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getAllClients } from "@/lib/data";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useKanbanStore, Student } from "@/utils/kanbanStore";
 
 interface BackEndSalesFormProps {
   isOpen: boolean;
@@ -29,8 +29,8 @@ interface BackEndSalesFormProps {
 }
 
 interface BackEndSaleFormValues {
-  clientName: string;
-  clientId: string;
+  studentName: string;
+  studentId: string;
   status: "renewed" | "churned";
   renewalDate: Date;
   team: string;
@@ -40,12 +40,13 @@ interface BackEndSaleFormValues {
 export function BackEndSalesForm({ isOpen, onClose, onSubmit, teams }: BackEndSalesFormProps) {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const { toast } = useToast();
-  const clients = getAllClients();
+  const { data } = useKanbanStore();
+  const students = Object.values(data.students || {});
 
   const form = useForm<BackEndSaleFormValues>({
     defaultValues: {
-      clientName: "",
-      clientId: "",
+      studentName: "",
+      studentId: "",
       status: "renewed",
       renewalDate: new Date(),
       team: teams[0] || "",
@@ -53,19 +54,19 @@ export function BackEndSalesForm({ isOpen, onClose, onSubmit, teams }: BackEndSa
     }
   });
 
-  const handleClientSelect = (clientId: string) => {
-    const selectedClient = clients.find(client => client.id === clientId);
-    if (selectedClient) {
-      form.setValue("clientName", selectedClient.name);
-      form.setValue("team", selectedClient.team || teams[0] || "");
+  const handleStudentSelect = (studentId: string) => {
+    const selectedStudent = students.find(student => student.id === studentId);
+    if (selectedStudent) {
+      form.setValue("studentName", selectedStudent.name);
+      form.setValue("team", selectedStudent.csm || teams[0] || "");
     }
   };
 
   const handleFormSubmit = (data: BackEndSaleFormValues) => {
-    if (!data.clientId) {
+    if (!data.studentId) {
       toast({
         title: "Error",
-        description: "Please select a client",
+        description: "Please select a student",
         variant: "destructive"
       });
       return;
@@ -86,9 +87,9 @@ export function BackEndSalesForm({ isOpen, onClose, onSubmit, teams }: BackEndSa
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add New Client</DialogTitle>
+          <DialogTitle>Add Student to Backend Sales</DialogTitle>
           <DialogDescription>
-            Add a client to the Back End Sales Tracker.
+            Add a student to the Back End Sales Tracker.
           </DialogDescription>
         </DialogHeader>
 
@@ -96,26 +97,26 @@ export function BackEndSalesForm({ isOpen, onClose, onSubmit, teams }: BackEndSa
           <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="clientId"
+              name="studentId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Client</FormLabel>
+                  <FormLabel>Student</FormLabel>
                   <Select 
                     onValueChange={(value) => {
                       field.onChange(value);
-                      handleClientSelect(value);
+                      handleStudentSelect(value);
                     }}
                     value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a client" />
+                        <SelectValue placeholder="Select a student" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {clients.map((client) => (
-                        <SelectItem key={client.id} value={client.id}>
-                          {client.name}
+                      {students.map((student) => (
+                        <SelectItem key={student.id} value={student.id}>
+                          {student.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -237,7 +238,7 @@ export function BackEndSalesForm({ isOpen, onClose, onSubmit, teams }: BackEndSa
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button type="submit">Add Client</Button>
+              <Button type="submit">Add Student</Button>
             </DialogFooter>
           </form>
         </Form>
