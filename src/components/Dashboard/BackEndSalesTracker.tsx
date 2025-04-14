@@ -40,6 +40,26 @@ interface TeamPerformance {
   trend: number;
 }
 
+const DEFAULT_TEAM_DATA: TeamPerformance[] = [
+  { name: "Team Andy", totalClients: 12, renewedClients: 10, churnedClients: 2, renewalRate: 83.3, trend: 5 },
+  { name: "Team Chris", totalClients: 15, renewedClients: 11, churnedClients: 4, renewalRate: 73.3, trend: -3 },
+  { name: "Team Alex", totalClients: 10, renewedClients: 8, churnedClients: 2, renewalRate: 80.0, trend: 2 },
+  { name: "Team Cillin", totalClients: 9, renewedClients: 6, churnedClients: 3, renewalRate: 66.7, trend: -1 },
+  { name: "Enterprise", totalClients: 7, renewedClients: 6, churnedClients: 1, renewalRate: 85.7, trend: 7 },
+  { name: "SMB", totalClients: 18, renewedClients: 12, churnedClients: 6, renewalRate: 66.7, trend: -2 }
+];
+
+const COMMON_PAIN_POINTS = [
+  "Price too high",
+  "Not seeing value",
+  "Changed business needs",
+  "Competitor offering",
+  "Poor support experience",
+  "Missing features",
+  "Technical issues",
+  "Internal reorganization"
+];
+
 export function BackEndSalesTracker() {
   const [backEndSales, setBackEndSales] = useState<BackEndSale[]>([]);
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
@@ -78,6 +98,10 @@ export function BackEndSalesTracker() {
         const renewalDate = new Date(today);
         renewalDate.setDate(renewalDate.getDate() - randomDays);
         
+        const randomPainPoints = COMMON_PAIN_POINTS
+          .sort(() => Math.random() - 0.5)
+          .slice(0, Math.floor(Math.random() * 3) + 1);
+        
         return {
           id: `bsale-${client.id}`,
           clientId: client.id,
@@ -85,9 +109,7 @@ export function BackEndSalesTracker() {
           status,
           renewalDate,
           notes: status === "churned" ? "Client decided not to continue." : "",
-          painPoints: status === "churned" 
-            ? ["Price too high", "Not seeing value", "Changed business needs"].filter(() => Math.random() > 0.5)
-            : [],
+          painPoints: status === "churned" ? randomPainPoints : [],
           team: client.team
         };
       });
@@ -180,14 +202,13 @@ export function BackEndSalesTracker() {
         : 0;
     });
     
-    const teamPerformanceList = Object.values(teamStats).length > 0 
-      ? Object.values(teamStats).sort((a, b) => b.renewalRate - a.renewalRate)
-      : [
-          { name: "Team Andy", totalClients: 10, renewedClients: 8, churnedClients: 2, renewalRate: 80, trend: 5 },
-          { name: "Team Chris", totalClients: 12, renewedClients: 9, churnedClients: 3, renewalRate: 75, trend: -3 }
-        ];
+    let teamPerformanceList = Object.values(teamStats);
     
-    return teamPerformanceList;
+    if (teamPerformanceList.length === 0) {
+      teamPerformanceList = [...DEFAULT_TEAM_DATA];
+    }
+    
+    return teamPerformanceList.sort((a, b) => b.renewalRate - a.renewalRate);
   }, [backEndSales, teams]);
   
   const totalClients = filteredByTeam.length;
@@ -246,6 +267,29 @@ export function BackEndSalesTracker() {
       console.error("Error formatting date:", error);
       return "Invalid date";
     }
+  };
+
+  const getTeamChurnReasons = (teamName: string) => {
+    const teamSales = backEndSales.filter(sale => 
+      sale.team === teamName && sale.status === "churned");
+    
+    if (teamSales.length > 0) {
+      const painPoints: Record<string, number> = {};
+      teamSales.forEach(sale => {
+        sale.painPoints.forEach(point => {
+          painPoints[point] = (painPoints[point] || 0) + 1;
+        });
+      });
+      
+      return Object.entries(painPoints)
+        .sort(([, countA], [, countB]) => countB - countA)
+        .slice(0, 3);
+    }
+    
+    return COMMON_PAIN_POINTS
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3)
+      .map(point => [point, Math.floor(Math.random() * 5) + 1]);
   };
 
   return (
@@ -605,27 +649,15 @@ export function BackEndSalesTracker() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {teamPerformance.slice(0, 4).map((team) => {
-                  const teamSales = backEndSales.filter(sale => 
-                    sale.team === team.name && sale.status === "churned");
-                  
-                  const painPoints: Record<string, number> = {};
-                  teamSales.forEach(sale => {
-                    sale.painPoints.forEach(point => {
-                      painPoints[point] = (painPoints[point] || 0) + 1;
-                    });
-                  });
-                  
-                  const sortedPainPoints = Object.entries(painPoints)
-                    .sort(([, countA], [, countB]) => countB - countA)
-                    .slice(0, 3);
+                {teamPerformance.slice(0, 4).map((team, teamIndex) => {
+                  const churnReasons = getTeamChurnReasons(team.name);
                   
                   return (
-                    <div key={team.name} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div key={`team-churn-${team.name}-${teamIndex}`} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                       <h4 className="font-medium mb-2">{team.name}</h4>
-                      {sortedPainPoints.length > 0 ? (
+                      {churnReasons.length > 0 ? (
                         <ul className="space-y-2">
-                          {sortedPainPoints.map(([point, count], index) => (
+                          {churnReasons.map(([point, count], index) => (
                             <li key={`${team.name}-${point}-${index}`} className="text-sm flex justify-between">
                               <span>{point}</span>
                               <span className="text-amber-600">{count} {count === 1 ? 'client' : 'clients'}</span>
