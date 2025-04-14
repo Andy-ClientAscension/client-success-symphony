@@ -23,6 +23,8 @@ interface ImportedClient {
   dealsClosed?: string | number;
   mrr?: string | number;
   npsScore?: string | number;
+  startDate?: string;
+  contractValue?: string | number;
 }
 
 export function ImportData() {
@@ -147,18 +149,35 @@ export function ImportData() {
         : client.npsScore) 
       : null;
     
+    const contractValue = client.contractValue
+      ? (typeof client.contractValue === 'string'
+        ? parseInt(client.contractValue, 10)
+        : client.contractValue)
+      : 10000; // Default contract value if not provided
+    
     // Validate status
     const validStatuses = ['active', 'at-risk', 'churned', 'new', 'backend', 'olympia', 'paused', 'graduated'];
     const status = validStatuses.includes(client.status) 
       ? client.status 
       : 'active';
     
+    // Set startDate to 6 months before endDate if not provided
+    const endDate = client.endDate;
+    const startDate = client.startDate || (() => {
+      const end = new Date(endDate);
+      const start = new Date(end);
+      start.setMonth(start.getMonth() - 6);
+      return start.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+    })();
+    
     return {
       id: `imported-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       name: client.name,
       status: status as any,
       progress: isNaN(progress) ? 0 : Math.min(100, Math.max(0, progress)),
+      startDate: startDate,
       endDate: client.endDate,
+      contractValue: isNaN(contractValue) ? 10000 : contractValue,
       csm: client.csm || 'Unassigned',
       callsBooked: isNaN(callsBooked) ? 0 : callsBooked,
       dealsClosed: isNaN(dealsClosed) ? 0 : dealsClosed,
