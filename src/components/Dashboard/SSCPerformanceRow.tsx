@@ -16,18 +16,18 @@ export function SSCPerformanceRow({ csm, clients, isMobile = false, onDelete }: 
   // Filter clients for this CSM
   const csmClients = clients.filter(client => client.csm === csm);
   
-  // Calculate backend students - with fallback if property doesn't exist
+  // Calculate backend students - with safe access
   const backendStudents = csmClients.reduce((total, client) => {
     // Access with optional chaining and fallback to 0 if undefined
     return total + (client.backendStudents || 0);
   }, 0);
   
-  // Calculate average NPS
+  // Calculate average NPS with null handling
   let totalNPS = 0;
   let npsCount = 0;
   
   csmClients.forEach(client => {
-    if (client.npsScore) {
+    if (client.npsScore !== null && client.npsScore !== undefined) {
       totalNPS += client.npsScore;
       npsCount++;
     }
@@ -41,12 +41,12 @@ export function SSCPerformanceRow({ csm, clients, isMobile = false, onDelete }: 
     ? Math.round((activeClients / csmClients.length) * 100) 
     : 0;
   
-  // Calculate MRR
+  // Calculate MRR with null handling
   const totalMRR = csmClients.reduce((total, client) => {
     return total + (client.mrr || 0);
   }, 0);
   
-  // Calculate growth metrics - with fallback if property doesn't exist
+  // Calculate growth metrics with null handling
   const growthMetric = csmClients.reduce((total, client) => {
     // Access with optional chaining and fallback to 0 if undefined
     return total + (client.growth || 0);
@@ -58,8 +58,8 @@ export function SSCPerformanceRow({ csm, clients, isMobile = false, onDelete }: 
   
   // NPS component (30%)
   if (npsCount > 0) {
-    // Normalize NPS from -100 to 100 scale to 0-100 scale
-    const normalizedNPS = ((totalNPS / npsCount) + 100) / 2;
+    // Normalize NPS from 0-10 scale to 0-100 scale
+    const normalizedNPS = (totalNPS / npsCount) * 10;
     healthScore += normalizedNPS * 0.3;
   }
   

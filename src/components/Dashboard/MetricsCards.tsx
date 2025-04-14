@@ -18,44 +18,50 @@ export function MetricsCards() {
   const companyMetrics = getClientMetricsByTeam();
   const averageNPS = getAverageNPS();
   
-  // Add total property if it doesn't exist
-  const total = clientCounts.active + clientCounts["at-risk"] + clientCounts.new + clientCounts.churned || 5;
-  const clientCountsWithTotal = {
-    ...clientCounts,
-    total: total
-  };
+  // Calculate total with null handling
+  const active = clientCounts.active || 0;
+  const atRisk = clientCounts["at-risk"] || 0;
+  const newClients = clientCounts.new || 0;
+  const churned = clientCounts.churned || 0;
+  const total = active + atRisk + newClients + churned;
+  
+  // Calculate percentages with zero-division protection
+  const activePercent = total > 0 ? Math.round((active / total) * 100) : 0;
+  const atRiskPercent = total > 0 ? Math.round((atRisk / total) * 100) : 0;
+  const newPercent = total > 0 ? Math.round((newClients / total) * 100) : 0;
+  const churnedPercent = total > 0 ? Math.round((churned / total) * 100) : 0;
   
   const metrics = [
     { 
       title: "Total Clients", 
-      value: clientCountsWithTotal.total,
+      value: total,
       trend: '+12% growth',
       trendDirection: 'up'
     },
     { 
       title: "Active Clients", 
-      value: clientCounts.active || 2,
-      percent: "40%"
+      value: active,
+      percent: `${activePercent}%`
     },
     { 
       title: "At Risk", 
-      value: clientCounts["at-risk"] || 1,
-      percent: "20%"
+      value: atRisk,
+      percent: `${atRiskPercent}%`
     },
     { 
       title: "New Clients", 
-      value: clientCounts.new || 1,
-      percent: "20%"
+      value: newClients,
+      percent: `${newPercent}%`
     },
     { 
       title: "Success Rate", 
-      value: "84%",
+      value: `${(total > 0 ? Math.round(((active + newClients) / total) * 100) : 0)}%`,
       trend: "+2.5% this quarter",
       trendDirection: 'up'
     },
     { 
       title: "Churn Rate", 
-      value: "1.7%",
+      value: `${churnedPercent}%`,
       trend: "-0.2% this month",
       trendDirection: 'down'
     }

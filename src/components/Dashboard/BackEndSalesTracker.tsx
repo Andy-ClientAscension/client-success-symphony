@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -7,8 +8,8 @@ import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { User, FileText, ThumbsUp, ThumbsDown, PieChart, BarChart3 } from "lucide-react";
-import { format, isValid } from "date-fns";
-import { MOCK_CLIENTS } from "@/lib/data";
+import { format, isValid, parseISO } from "date-fns";
+import { getAllClients } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { saveData, loadData, STORAGE_KEYS } from "@/utils/persistence";
@@ -18,7 +19,7 @@ interface BackEndSale {
   clientId: string;
   clientName: string;
   status: "renewed" | "churned";
-  renewalDate: Date;
+  renewalDate: Date | string;
   notes: string;
   painPoints: string[];
 }
@@ -41,12 +42,16 @@ export function BackEndSalesTracker() {
     },
   });
   
+  // Use useMemo to get the list of all clients once
+  const allClients = useMemo(() => getAllClients(), []);
+  
   useEffect(() => {
     const savedSales = loadData<BackEndSale[]>(STORAGE_KEYS.CHURN, []);
     
     if (savedSales.length === 0) {
+      // If no saved data exists, generate new data from actual client data
       const today = new Date();
-      const mockSales: BackEndSale[] = MOCK_CLIENTS.slice(0, 30).map(client => {
+      const mockSales: BackEndSale[] = allClients.slice(0, 30).map(client => {
         const status = Math.random() > 0.3 ? "renewed" : "churned";
         const randomDays = Math.floor(Math.random() * 90);
         const renewalDate = new Date(today);
@@ -69,11 +74,30 @@ export function BackEndSalesTracker() {
       saveData(STORAGE_KEYS.CHURN, mockSales);
     } else {
       try {
+        // Process saved data, ensuring date objects are properly handled
         const processedSales = savedSales.map(sale => {
-          const renewalDate = new Date(sale.renewalDate);
+          let renewalDate: Date;
+          
+          // Handle different date formats properly
+          if (typeof sale.renewalDate === 'string') {
+            try {
+              renewalDate = parseISO(sale.renewalDate);
+              if (!isValid(renewalDate)) {
+                renewalDate = new Date();
+              }
+            } catch (e) {
+              renewalDate = new Date();
+            }
+          } else {
+            renewalDate = new Date(sale.renewalDate);
+            if (!isValid(renewalDate)) {
+              renewalDate = new Date();
+            }
+          }
+          
           return {
             ...sale,
-            renewalDate: isValid(renewalDate) ? renewalDate : new Date()
+            renewalDate
           };
         });
         
@@ -84,7 +108,7 @@ export function BackEndSalesTracker() {
         saveData(STORAGE_KEYS.CHURN, []);
       }
     }
-  }, []);
+  }, [allClients]);
 
   const totalClients = backEndSales.length;
   const renewedClients = backEndSales.filter(sale => sale.status === "renewed").length;
@@ -104,7 +128,7 @@ export function BackEndSalesTracker() {
         const updatedSale = {
           ...sale,
           notes: data.notes,
-          painPoints: data.painPoints.split(',').map(point => point.trim())
+          painPoints: data.painPoints.split(',').map(point => point.trim()).filter(Boolean)
         };
         return updatedSale;
       }
@@ -132,11 +156,21 @@ export function BackEndSalesTracker() {
     }
   };
 
-  const formatDate = (date: Date): string => {
-    if (!date || !isValid(date)) {
+  const formatDate = (date: Date | string): string => {
+    if (!date) {
       return "Invalid date";
     }
-    return format(date, "MMM d, yyyy");
+    
+    try {
+      const dateObj = typeof date === 'string' ? parseISO(date) : date;
+      if (!isValid(dateObj)) {
+        return "Invalid date";
+      }
+      return format(dateObj, "MMM d, yyyy");
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "Invalid date";
+    }
   };
 
   return (
