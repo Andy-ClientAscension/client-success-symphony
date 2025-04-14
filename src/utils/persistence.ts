@@ -1,4 +1,3 @@
-
 /**
  * Utility for persisting dashboard data in localStorage
  */
@@ -17,7 +16,8 @@ const STORAGE_KEYS = {
   CUSTOM_FIELDS: "customFields",
   CLIENT_CUSTOM_FIELDS: "clientCustomFields",
   TASKS: "tasksList",
-  HEALTH_SCORES: "clientHealthScores"
+  HEALTH_SCORES: "clientHealthScores",
+  IMPORTED_DATA: "importedData"
 };
 
 /**
@@ -69,6 +69,14 @@ export const saveData = <T>(key: string, data: T): void => {
     
     const serializedData = JSON.stringify(data);
     localStorage.setItem(key, serializedData);
+    
+    // Dispatch a storage event so other components can react to the change
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: key,
+      newValue: serializedData,
+      storageArea: localStorage
+    }));
+    
     console.log(`Saved data for key: ${key}`);
   } catch (error) {
     console.error(`Error saving data for key: ${key}`, error);
@@ -145,6 +153,21 @@ export const loadUserPreferences = () => {
  */
 export const saveAnalyticsData = (data: any): void => {
   saveData(STORAGE_KEYS.CLIENTS, data);
+  
+  // Log the data change to imported data history
+  const importHistory = loadData<{timestamp: string, count: number}[]>(STORAGE_KEYS.IMPORTED_DATA, []);
+  
+  importHistory.push({
+    timestamp: new Date().toISOString(),
+    count: Object.keys(data).length
+  });
+  
+  // Keep only the last 10 import records
+  if (importHistory.length > 10) {
+    importHistory.splice(0, importHistory.length - 10);
+  }
+  
+  saveData(STORAGE_KEYS.IMPORTED_DATA, importHistory);
 };
 
 /**
@@ -152,6 +175,13 @@ export const saveAnalyticsData = (data: any): void => {
  */
 export const getAnalyticsData = () => {
   return loadData(STORAGE_KEYS.CLIENTS, {});
+};
+
+/**
+ * Get import history
+ */
+export const getImportHistory = () => {
+  return loadData<{timestamp: string, count: number}[]>(STORAGE_KEYS.IMPORTED_DATA, []);
 };
 
 /**

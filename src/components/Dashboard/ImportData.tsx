@@ -7,9 +7,23 @@ import { Input } from "@/components/ui/input";
 import { LoadingState } from "@/components/LoadingState";
 import { ValidationError } from "@/components/ValidationError";
 import { useToast } from "@/hooks/use-toast";
-import { FileUp, AlertCircle } from "lucide-react";
+import { FileUp, AlertCircle, FileCheck, Check } from "lucide-react";
+import { saveAnalyticsData, STORAGE_KEYS, saveData } from "@/utils/persistence";
+import { Client } from "@/lib/data";
 
 type ImportFormat = "csv" | "json" | "xlsx";
+
+interface ImportedClient {
+  name: string;
+  status: string;
+  progress: string | number;
+  endDate: string;
+  csm?: string;
+  callsBooked?: string | number;
+  dealsClosed?: string | number;
+  mrr?: string | number;
+  npsScore?: string | number;
+}
 
 export function ImportData() {
   const [isLoading, setIsLoading] = useState(false);
@@ -17,6 +31,8 @@ export function ImportData() {
   const [format, setFormat] = useState<ImportFormat>("csv");
   const [fileSelected, setFileSelected] = useState(false);
   const [fileName, setFileName] = useState("");
+  const [importedCount, setImportedCount] = useState(0);
+  const [success, setSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -26,6 +42,7 @@ export function ImportData() {
       setFileSelected(true);
       setFileName(file.name);
       setError(null);
+      setSuccess(false);
       
       // Validate file extension
       const extension = file.name.split('.').pop()?.toLowerCase();
@@ -42,11 +59,149 @@ export function ImportData() {
     } else {
       setFileSelected(false);
       setFileName("");
+      setSuccess(false);
+    }
+  };
+
+  const parseCSV = (text: string): ImportedClient[] => {
+    const lines = text.split('\n');
+    // Extract headers from the first line
+    const headers = lines[0].split(',').map(header => header.trim());
+    
+    const requiredFields = ['name', 'status', 'progress', 'endDate'];
+    const missingFields = requiredFields.filter(field => !headers.includes(field));
+    
+    if (missingFields.length > 0) {
+      throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+    }
+    
+    // Process data rows
+    const results: ImportedClient[] = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+      if (!lines[i].trim()) continue; // Skip empty lines
+      
+      const values = lines[i].split(',').map(val => val.trim());
+      if (values.length !== headers.length) {
+        console.warn(`Line ${i+1} has ${values.length} values, expected ${headers.length}. Skipping.`);
+        continue;
+      }
+      
+      const client: Record<string, any> = {};
+      headers.forEach((header, index) => {
+        client[header] = values[index];
+      });
+      
+      results.push(client as ImportedClient);
+    }
+    
+    return results;
+  };
+  
+  const parseJSON = (text: string): ImportedClient[] => {
+    const data = JSON.parse(text);
+    
+    if (!Array.isArray(data)) {
+      throw new Error("JSON data must be an array of client objects");
+    }
+    
+    // Validate each client has required fields
+    const requiredFields = ['name', 'status', 'progress', 'endDate'];
+    data.forEach((client, index) => {
+      const missingFields = requiredFields.filter(field => !(field in client));
+      if (missingFields.length > 0) {
+        throw new Error(`Client at index ${index} is missing required fields: ${missingFields.join(', ')}`);
+      }
+    });
+    
+    return data;
+  };
+  
+  const validateClient = (client: ImportedClient): Client => {
+    // Convert string values to appropriate types
+    const progress = typeof client.progress === 'string' 
+      ? parseInt(client.progress, 10) 
+      : client.progress;
+    
+    const callsBooked = client.callsBooked 
+      ? (typeof client.callsBooked === 'string' 
+        ? parseInt(client.callsBooked, 10) 
+        : client.callsBooked) 
+      : 0;
+      
+    const dealsClosed = client.dealsClosed 
+      ? (typeof client.dealsClosed === 'string' 
+        ? parseInt(client.dealsClosed, 10) 
+        : client.dealsClosed) 
+      : 0;
+      
+    const mrr = client.mrr 
+      ? (typeof client.mrr === 'string' 
+        ? parseInt(client.mrr, 10) 
+        : client.mrr) 
+      : 0;
+      
+    const npsScore = client.npsScore 
+      ? (typeof client.npsScore === 'string' 
+        ? parseInt(client.npsScore, 10) 
+        : client.npsScore) 
+      : null;
+    
+    // Validate status
+    const validStatuses = ['active', 'at-risk', 'churned', 'new', 'backend', 'olympia', 'paused', 'graduated'];
+    const status = validStatuses.includes(client.status) 
+      ? client.status 
+      : 'active';
+    
+    return {
+      id: `imported-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      name: client.name,
+      status: status as any,
+      progress: isNaN(progress) ? 0 : Math.min(100, Math.max(0, progress)),
+      endDate: client.endDate,
+      csm: client.csm || 'Unassigned',
+      callsBooked: isNaN(callsBooked) ? 0 : callsBooked,
+      dealsClosed: isNaN(dealsClosed) ? 0 : dealsClosed,
+      mrr: isNaN(mrr) ? 0 : mrr,
+      npsScore: npsScore === null || isNaN(npsScore as number) ? null : Math.min(10, Math.max(0, npsScore as number))
+    };
+  };
+  
+  const updateDashboardData = (clients: Client[]) => {
+    try {
+      // Get existing clients data
+      const existingClientsStr = localStorage.getItem(STORAGE_KEYS.CLIENTS);
+      let existingClients: Record<string, Client> = {};
+      
+      if (existingClientsStr) {
+        try {
+          existingClients = JSON.parse(existingClientsStr);
+        } catch (e) {
+          console.error("Failed to parse existing clients data:", e);
+        }
+      }
+      
+      // Add new clients
+      const updatedClients = { ...existingClients };
+      
+      clients.forEach(client => {
+        updatedClients[client.id] = client;
+      });
+      
+      // Save updated clients
+      saveData(STORAGE_KEYS.CLIENTS, updatedClients);
+      
+      // Update analytics data
+      saveAnalyticsData(updatedClients);
+      
+      return clients.length;
+    } catch (error) {
+      console.error("Error updating dashboard data:", error);
+      throw new Error("Failed to update dashboard data");
     }
   };
 
   const handleImport = async () => {
-    // For now, we'll simulate the import process
     const file = fileInputRef.current?.files?.[0];
     if (!file) {
       setError("Please select a file to import.");
@@ -55,30 +210,47 @@ export function ImportData() {
 
     setIsLoading(true);
     setError(null);
-
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    setSuccess(false);
 
     try {
-      // In a real implementation, we would parse the file and process the data
-      // For this demo, we'll simulate a successful import
-
-      const importedCount = Math.floor(Math.random() * 10) + 5; // Random number between 5-15
+      const text = await file.text();
+      let importedClients: ImportedClient[] = [];
+      
+      // Parse file based on format
+      if (format === 'csv') {
+        importedClients = parseCSV(text);
+      } else if (format === 'json') {
+        importedClients = parseJSON(text);
+      } else {
+        throw new Error("Excel format is not supported yet. Please use CSV or JSON.");
+      }
+      
+      if (importedClients.length === 0) {
+        throw new Error("No valid client data found in the file.");
+      }
+      
+      // Convert and validate each client
+      const validatedClients = importedClients.map(validateClient);
+      
+      // Update dashboard data
+      const count = updateDashboardData(validatedClients);
+      setImportedCount(count);
+      setSuccess(true);
       
       toast({
         title: "Import Successful",
-        description: `Successfully imported ${importedCount} clients from ${fileName}.`,
+        description: `Successfully imported ${count} clients from ${fileName}.`,
       });
       
-      // Reset the form
-      setFileSelected(false);
-      setFileName("");
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    } catch (err) {
-      setError("Failed to import data. Please check your file format and try again.");
+    } catch (err: any) {
       console.error("Import error:", err);
+      setError(err.message || "Failed to import data. Please check your file format and try again.");
+      
+      toast({
+        title: "Import Failed",
+        description: err.message || "Failed to import data. Please check file format.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -120,6 +292,8 @@ export function ImportData() {
               onClick={() => setFormat("xlsx")}
               className={format === "xlsx" ? "bg-red-600 hover:bg-red-700" : ""}
               size="sm"
+              disabled={true}
+              title="Excel import coming soon"
             >
               Excel
             </Button>
@@ -149,6 +323,15 @@ export function ImportData() {
           {error && (
             <ValidationError message={error} type="error" />
           )}
+          {success && (
+            <div className="bg-green-50 text-green-800 p-2 rounded-md flex items-start">
+              <FileCheck className="h-4 w-4 mr-2 mt-0.5" />
+              <div>
+                <p className="font-medium text-sm">Import Successful!</p>
+                <p className="text-xs">{importedCount} clients imported and metrics updated.</p>
+              </div>
+            </div>
+          )}
         </div>
         <div className="bg-muted p-3 rounded-md">
           <div className="flex items-start">
@@ -159,7 +342,7 @@ export function ImportData() {
                 <li>Include headers: name, status, progress, endDate</li>
                 <li>Optional fields: csm, callsBooked, dealsClosed, mrr, npsScore</li>
                 <li>Dates should be in YYYY-MM-DD format</li>
-                <li>Status values: active, at-risk, churned, new</li>
+                <li>Valid status values: active, at-risk, churned, new, backend, olympia, paused, graduated</li>
               </ul>
             </div>
           </div>

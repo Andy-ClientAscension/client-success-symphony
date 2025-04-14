@@ -102,6 +102,55 @@ export const getDefaultColumnOrder = (): StatusGroup[] => {
 };
 
 /**
+ * Normalize client status from imported data
+ */
+export const normalizeClientStatus = (status: string): StatusGroup => {
+  // Convert to lowercase and trim
+  const normalizedStatus = status.toLowerCase().trim();
+  
+  // Check if it's already a valid status
+  if (isValidStatus(normalizedStatus)) {
+    return normalizedStatus as StatusGroup;
+  }
+  
+  // Try to match common variations
+  if (['new', 'brand new', 'just started', 'onboarding'].some(s => normalizedStatus.includes(s))) {
+    return 'new';
+  }
+  
+  if (['active', 'current', 'ongoing'].some(s => normalizedStatus.includes(s))) {
+    return 'active';
+  }
+  
+  if (['risk', 'at risk', 'at-risk', 'at_risk', 'warning'].some(s => normalizedStatus.includes(s))) {
+    return 'at-risk';
+  }
+  
+  if (['churn', 'churned', 'lost', 'cancelled', 'canceled'].some(s => normalizedStatus.includes(s))) {
+    return 'churned';
+  }
+  
+  if (['backend', 'back end', 'back-end'].some(s => normalizedStatus.includes(s))) {
+    return 'backend';
+  }
+  
+  if (['olympia'].some(s => normalizedStatus.includes(s))) {
+    return 'olympia';
+  }
+  
+  if (['pause', 'paused', 'on hold', 'hold'].some(s => normalizedStatus.includes(s))) {
+    return 'paused';
+  }
+  
+  if (['graduate', 'graduated', 'complete', 'completed', 'finished', 'done'].some(s => normalizedStatus.includes(s))) {
+    return 'graduated';
+  }
+  
+  // Default to active if we can't determine the status
+  return 'active';
+};
+
+/**
  * Validate and fix client status if needed
  */
 export const validateClientStatus = (client: Client): Client => {

@@ -8,12 +8,14 @@ import {
   TrendingDown,
   DollarSign,
   ArrowDown,
-  ArrowUp
+  ArrowUp,
+  RefreshCw
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { getClientsCountByStatus, getAverageNPS, getClientMetricsByTeam } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 // Define a proper type for NPS data to match what's returned from getAverageNPS()
 interface NPSData {
@@ -39,9 +41,11 @@ export function MetricsCards() {
     averageNPS: { current: 0, previous: 0, change: 0, trend: 'neutral' } as NPSData
   });
   
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   
-  useEffect(() => {
+  const loadMetricsData = () => {
+    setIsLoading(true);
     try {
       const clientCounts = getClientsCountByStatus();
       const companyMetrics = getClientMetricsByTeam();
@@ -59,7 +63,23 @@ export function MetricsCards() {
         description: "Could not load dashboard metrics. Please refresh the page.",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
+  };
+  
+  useEffect(() => {
+    loadMetricsData();
+    
+    // Listen for storage events to detect when data is updated by imports
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key && e.key.includes('client')) {
+        loadMetricsData();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, [toast]);
   
   // Extract values with null handling
@@ -127,7 +147,19 @@ export function MetricsCards() {
   
   return (
     <div className="mb-2">
-      <h2 className="text-lg font-semibold mb-2">Company Overview</h2>
+      <div className="flex justify-between items-center mb-2">
+        <h2 className="text-lg font-semibold">Company Overview</h2>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={loadMetricsData} 
+          disabled={isLoading}
+          className="flex items-center gap-1"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+          <span>{isLoading ? 'Refreshing...' : 'Refresh'}</span>
+        </Button>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2">
         {metrics.map((metric, index) => (
           <Card key={index} className="shadow-sm">
