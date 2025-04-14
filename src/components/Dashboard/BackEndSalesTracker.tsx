@@ -164,14 +164,14 @@ export function BackEndSalesTracker() {
           </Card>
         </div>
         
-        <Tabs onValueChange={setActiveTab} value={activeTab}>
+        <Tabs defaultValue="all" onValueChange={setActiveTab} value={activeTab}>
           <TabsList className="mb-4">
             <TabsTrigger value="all">All Clients</TabsTrigger>
             <TabsTrigger value="renewed">Renewed</TabsTrigger>
             <TabsTrigger value="churned">Churned</TabsTrigger>
           </TabsList>
           
-          <TabsContent value={activeTab} className="space-y-4">
+          <TabsContent value="all" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-2">
                 <Table>
@@ -215,6 +215,141 @@ export function BackEndSalesTracker() {
                       <TableRow>
                         <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
                           No clients found for the selected filter.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+              
+              <div>
+                {selectedClient && (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base font-medium flex items-center">
+                        <User className="h-4 w-4 mr-2" />
+                        Churn Notes
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Form {...form}>
+                        <form onSubmit={form.handleSubmit(handleNotesSubmit)} className="space-y-4">
+                          <FormField
+                            control={form.control}
+                            name="notes"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Why did the client churn?</FormLabel>
+                                <FormControl>
+                                  <Textarea placeholder="Enter detailed notes about why the client churned..." {...field} />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="painPoints"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Pain Points (comma separated)</FormLabel>
+                                <FormControl>
+                                  <Textarea placeholder="Price too high, Not seeing value, etc..." {...field} />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <div className="flex justify-end gap-2">
+                            <Button variant="outline" type="button" onClick={() => setSelectedClient(null)}>
+                              Cancel
+                            </Button>
+                            <Button type="submit">Save Notes</Button>
+                          </div>
+                        </form>
+                      </Form>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="renewed" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-2">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Client Name</TableHead>
+                      <TableHead>Renewal Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredSales.length > 0 ? (
+                      filteredSales.map((sale) => (
+                        <TableRow key={sale.id}>
+                          <TableCell className="font-medium">{sale.clientName}</TableCell>
+                          <TableCell>{format(sale.renewalDate, "MMM d, yyyy")}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">Renewed</Badge>
+                          </TableCell>
+                          <TableCell>-</TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+                          No renewed clients found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="churned" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-2">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Client Name</TableHead>
+                      <TableHead>Renewal Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredSales.length > 0 ? (
+                      filteredSales.map((sale) => (
+                        <TableRow key={sale.id}>
+                          <TableCell className="font-medium">{sale.clientName}</TableCell>
+                          <TableCell>{format(sale.renewalDate, "MMM d, yyyy")}</TableCell>
+                          <TableCell>
+                            <Badge variant="destructive">Churned</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleSelectClient(sale.clientId)}
+                              disabled={selectedClient === sale.clientId}
+                            >
+                              <FileText className="h-4 w-4 mr-1" />
+                              {sale.notes ? "Edit Notes" : "Add Notes"}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+                          No churned clients found.
                         </TableCell>
                       </TableRow>
                     )}
