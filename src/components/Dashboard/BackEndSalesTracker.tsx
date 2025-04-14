@@ -164,7 +164,7 @@ export function BackEndSalesTracker() {
           </Card>
         </div>
         
-        <Tabs defaultValue="all" onValueChange={setActiveTab} value={activeTab}>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4">
             <TabsTrigger value="all">All Clients</TabsTrigger>
             <TabsTrigger value="renewed">Renewed</TabsTrigger>
