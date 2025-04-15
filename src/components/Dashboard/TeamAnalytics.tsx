@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getClientMetricsByTeam, getAllClients, getCSMList } from "@/lib/data";
-import { CheckCircle2, AlertTriangle, ArrowDownRight, Users, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { CheckCircle2, AlertTriangle, ArrowDownRight, Users, TrendingUp, TrendingDown, Minus, PlusCircle, Trash2 } from "lucide-react";
 import { TeamMetricCard } from "./TeamMetricCard";
 import { TeamStatusMetric } from "./TeamStatusMetric";
 import { SSCPerformanceTable } from "./SSCPerformanceTable";
@@ -10,6 +10,8 @@ import { HealthScoreSheet } from "./HealthScoreSheet";
 import { HealthScoreHistory } from "./HealthScoreHistory";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { TeamManagementDialog } from "./TeamManagementDialog";
+import { useToast } from "@/hooks/use-toast";
 
 const ADDITIONAL_TEAMS = [
   { id: "Enterprise", name: "Enterprise" },
@@ -20,6 +22,10 @@ const ADDITIONAL_TEAMS = [
 export function TeamAnalytics() {
   const [selectedTeam, setSelectedTeam] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<string>("overview");
+  const [teams, setTeams] = useState<string[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogAction, setDialogAction] = useState<'add' | 'delete'>('add');
+  const { toast } = useToast();
   
   const clients = useMemo(() => getAllClients(), []);
   const teamSet = useMemo(() => {
@@ -33,7 +39,10 @@ export function TeamAnalytics() {
     return set;
   }, [clients]);
   
-  const teams = useMemo(() => Array.from(teamSet), [teamSet]);
+  React.useEffect(() => {
+    setTeams(Array.from(teamSet));
+  }, [teamSet]);
+  
   const csmList = useMemo(() => getCSMList(), []);
   
   const teamClients = useMemo(() => {
@@ -95,30 +104,99 @@ export function TeamAnalytics() {
     return <Minus className="h-3 w-3 ml-1" />;
   };
 
+  const handleAddTeam = () => {
+    setDialogAction('add');
+    setDialogOpen(true);
+  };
+
+  const handleDeleteTeam = () => {
+    if (selectedTeam === 'all') {
+      toast({
+        title: "Select a Team",
+        description: "Please select a specific team to delete.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setDialogAction('delete');
+    setDialogOpen(true);
+  };
+
+  const handleTeamAction = (teamName: string) => {
+    if (dialogAction === 'add') {
+      if (teams.some(team => team.toLowerCase() === teamName.toLowerCase())) {
+        toast({
+          title: "Team Already Exists",
+          description: `"${teamName}" is already in the team list.`,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setTeams(prev => [...prev, teamName]);
+      
+      toast({
+        title: "Team Added",
+        description: `"${teamName}" has been added to the team list.`,
+      });
+    } else if (dialogAction === 'delete') {
+      setTeams(prev => prev.filter(team => team !== selectedTeam));
+      
+      if (selectedTeam === teamName) {
+        setSelectedTeam('all');
+      }
+      
+      toast({
+        title: "Team Deleted",
+        description: `"${teamName}" has been removed from the team list.`,
+      });
+    }
+    
+    setDialogOpen(false);
+  };
+
   return (
     <Card className="shadow-sm">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold">Team Analytics</CardTitle>
-          <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-            <SelectTrigger className="w-[180px] h-8 text-xs">
-              <SelectValue placeholder="Select Team" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Teams</SelectItem>
-              {teams.map((team) => (
-                <SelectItem key={team} value={team}>
-                  {team === "Team-Andy" ? "Team Andy" : 
-                   team === "Team-Chris" ? "Team Chris" : 
-                   team === "Team-Alex" ? "Team Alex" : 
-                   team === "Team-Cillin" ? "Team Cillin" :
-                   team === "Enterprise" ? "Enterprise" :
-                   team === "SMB" ? "SMB" :
-                   team === "Mid-Market" ? "Mid Market" : team}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <Select value={selectedTeam} onValueChange={setSelectedTeam}>
+              <SelectTrigger className="w-[180px] h-8 text-xs">
+                <SelectValue placeholder="Select Team" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Teams</SelectItem>
+                {teams.map((team) => (
+                  <SelectItem key={team} value={team}>
+                    {team === "Team-Andy" ? "Team Andy" : 
+                     team === "Team-Chris" ? "Team Chris" : 
+                     team === "Team-Alex" ? "Team Alex" : 
+                     team === "Team-Cillin" ? "Team Cillin" :
+                     team === "Enterprise" ? "Enterprise" :
+                     team === "SMB" ? "SMB" :
+                     team === "Mid-Market" ? "Mid Market" : team}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button 
+              size="sm"
+              variant="outline"
+              onClick={handleAddTeam}
+              className="h-8"
+            >
+              <PlusCircle className="h-4 w-4 mr-1" /> Add Team
+            </Button>
+            <Button 
+              size="sm"
+              variant="outline"
+              onClick={handleDeleteTeam}
+              className="h-8" 
+            >
+              <Trash2 className="h-4 w-4 mr-1" /> Delete Team
+            </Button>
+          </div>
         </div>
       </CardHeader>
       
@@ -217,6 +295,14 @@ export function TeamAnalytics() {
           </TabsContent>
         </Tabs>
       </CardContent>
+
+      <TeamManagementDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        actionType={dialogAction}
+        selectedTeam={selectedTeam !== 'all' ? selectedTeam : undefined}
+        onConfirm={handleTeamAction}
+      />
     </Card>
   );
 }
