@@ -17,7 +17,10 @@ const STORAGE_KEYS = {
   CLIENT_CUSTOM_FIELDS: "clientCustomFields",
   TASKS: "tasksList",
   HEALTH_SCORES: "clientHealthScores",
-  IMPORTED_DATA: "importedData"
+  IMPORTED_DATA: "importedData",
+  DASHBOARD_SETTINGS: "dashboardSettings",
+  EXPORT_HISTORY: "exportHistory",
+  BACKUP_DATA: "backupData"
 };
 
 /**
@@ -122,6 +125,71 @@ export const clearAllData = (): void => {
 };
 
 /**
+ * Create a backup of all data
+ */
+export const createBackup = (): string => {
+  try {
+    const backup: Record<string, any> = {};
+    
+    Object.values(STORAGE_KEYS).forEach(key => {
+      const value = localStorage.getItem(key);
+      if (value !== null) {
+        backup[key] = value;
+      }
+    });
+    
+    const backupString = JSON.stringify(backup);
+    const timestamp = new Date().toISOString();
+    
+    // Save backup history
+    const backupHistory = loadData<{timestamp: string, size: number}[]>(STORAGE_KEYS.BACKUP_DATA, []);
+    backupHistory.push({
+      timestamp,
+      size: new Blob([backupString]).size
+    });
+    
+    // Keep only the last 10 backups in history
+    if (backupHistory.length > 10) {
+      backupHistory.splice(0, backupHistory.length - 10);
+    }
+    
+    saveData(STORAGE_KEYS.BACKUP_DATA, backupHistory);
+    
+    return backupString;
+  } catch (error) {
+    console.error("Error creating backup:", error);
+    return "{}";
+  }
+};
+
+/**
+ * Restore data from a backup
+ */
+export const restoreFromBackup = (backupString: string): boolean => {
+  try {
+    const backup = JSON.parse(backupString);
+    
+    // Clear current data
+    clearAllData();
+    
+    // Restore data from backup
+    Object.entries(backup).forEach(([key, value]) => {
+      if (typeof value === 'string') {
+        localStorage.setItem(key, value);
+      }
+    });
+    
+    // Dispatch a storage event to notify components data has changed
+    window.dispatchEvent(new CustomEvent('storageRestored'));
+    
+    return true;
+  } catch (error) {
+    console.error("Error restoring from backup:", error);
+    return false;
+  }
+};
+
+/**
  * Save user preferences
  */
 export const saveUserPreferences = (preferences: {
@@ -146,6 +214,39 @@ export const loadUserPreferences = () => {
     dateFormat: 'MM/dd/yyyy',
     currency: 'USD'
   });
+};
+
+/**
+ * Track data export history
+ */
+export const trackExport = (type: string, count: number): void => {
+  const exportHistory = loadData<{timestamp: string, type: string, count: number}[]>(
+    STORAGE_KEYS.EXPORT_HISTORY, 
+    []
+  );
+  
+  exportHistory.push({
+    timestamp: new Date().toISOString(),
+    type,
+    count
+  });
+  
+  // Keep only the last 20 export records
+  if (exportHistory.length > 20) {
+    exportHistory.splice(0, exportHistory.length - 20);
+  }
+  
+  saveData(STORAGE_KEYS.EXPORT_HISTORY, exportHistory);
+};
+
+/**
+ * Get export history
+ */
+export const getExportHistory = () => {
+  return loadData<{timestamp: string, type: string, count: number}[]>(
+    STORAGE_KEYS.EXPORT_HISTORY, 
+    []
+  );
 };
 
 /**
@@ -229,6 +330,13 @@ export const getHealthScores = (clientId?: string) => {
   }
   
   return scores;
+};
+
+/**
+ * Get backup history
+ */
+export const getBackupHistory = () => {
+  return loadData<{timestamp: string, size: number}[]>(STORAGE_KEYS.BACKUP_DATA, []);
 };
 
 // Export storage keys for use in components

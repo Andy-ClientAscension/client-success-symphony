@@ -3,9 +3,10 @@ import React, { useState } from 'react';
 import { Layout } from "@/components/Layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Info, Bell, HelpCircle, Settings, Youtube } from "lucide-react";
+import { Info, Bell, HelpCircle, Settings, Youtube, FileQuestion, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 export default function Help() {
   const [activeTab, setActiveTab] = useState('notifications');
@@ -70,6 +71,91 @@ export default function Help() {
             </ol>
           </CardContent>
         </Card>
+      )
+    },
+    {
+      id: 'faq',
+      title: 'FAQ',
+      icon: FileQuestion,
+      description: 'Frequently asked questions',
+      content: (
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Frequently Asked Questions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="item-1">
+                  <AccordionTrigger>How do I add a new student?</AccordionTrigger>
+                  <AccordionContent>
+                    You can add a new student by clicking the "Add Student" button in the Student Tracking section. Fill in the required information and click "Save" to create a new student record.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="item-2">
+                  <AccordionTrigger>How do I track student progress?</AccordionTrigger>
+                  <AccordionContent>
+                    Student progress is tracked automatically and displayed as a progress bar on each student card. You can manually update a student's progress by clicking on their card and editing their details.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="item-3">
+                  <AccordionTrigger>What does the "At Risk" column mean?</AccordionTrigger>
+                  <AccordionContent>
+                    The "At Risk" column contains students who may need additional attention or support. Students are flagged as "At Risk" based on their progress, engagement metrics, and payment status.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="item-4">
+                  <AccordionTrigger>How do I export student data?</AccordionTrigger>
+                  <AccordionContent>
+                    To export student data, navigate to the Reports section and click on "Export Data". You can choose to export all data or filter by specific criteria before downloading.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="item-5">
+                  <AccordionTrigger>Can I customize the board layout?</AccordionTrigger>
+                  <AccordionContent>
+                    Yes, you can customize the board layout in Settings {'>'}{'>'} Dashboard Preferences. You can choose which columns to display, change the order of columns, and adjust other visual settings.
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </CardContent>
+          </Card>
+        </div>
+      )
+    },
+    {
+      id: 'guides',
+      title: 'Guides',
+      icon: BookOpen,
+      description: 'Detailed user guides',
+      content: (
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Getting Started Guide</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="border-l-4 border-primary pl-4 py-2">
+                  <h3 className="text-lg font-medium">Step 1: Set Up Your Account</h3>
+                  <p className="text-muted-foreground">Complete your profile and customize your preferences.</p>
+                </div>
+                <div className="border-l-4 border-primary pl-4 py-2">
+                  <h3 className="text-lg font-medium">Step 2: Import Your Data</h3>
+                  <p className="text-muted-foreground">Use the import wizard to bring in existing student records.</p>
+                </div>
+                <div className="border-l-4 border-primary pl-4 py-2">
+                  <h3 className="text-lg font-medium">Step 3: Configure Your Dashboard</h3>
+                  <p className="text-muted-foreground">Customize your view to focus on the metrics that matter most to you.</p>
+                </div>
+                <div className="border-l-4 border-primary pl-4 py-2">
+                  <h3 className="text-lg font-medium">Step 4: Set Up Notifications</h3>
+                  <p className="text-muted-foreground">Configure alerts for important events and milestones.</p>
+                </div>
+              </div>
+              <Button className="mt-6">View Full Guide</Button>
+            </CardContent>
+          </Card>
+        </div>
       )
     }
   ];
