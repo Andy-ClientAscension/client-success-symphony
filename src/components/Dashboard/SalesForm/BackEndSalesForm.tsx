@@ -60,7 +60,15 @@ export function BackEndSalesForm({
   const isEditMode = !!editData;
 
   // Set up form with initial values based on edit mode
-  const defaultValues = isEditMode 
+  const defaultValues: {
+    studentId: string;
+    studentName: string;
+    status: "renewed" | "churned";
+    renewalDate: Date;
+    team: string;
+    notes: string;
+    painPoints: string;
+  } = isEditMode 
     ? {
         studentId: editData.clientId,
         studentName: editData.clientName,
@@ -140,7 +148,7 @@ export function BackEndSalesForm({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
+          <form onSubmit={form.handleFormSubmit(handleFormSubmit)} className="space-y-4">
             <FormFields 
               form={form}
               date={date}
