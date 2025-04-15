@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { User, FileText, ThumbsUp, ThumbsDown, PieChart, BarChart3, Users, Award, TrendingUp, TrendingDown, Plus } from "lucide-react";
+import { User, FileText, ThumbsUp, ThumbsDown, PieChart, BarChart3, Users, Award, TrendingUp, TrendingDown, Plus, Edit, Trash } from "lucide-react";
 import { format, isValid, parseISO } from "date-fns";
 import { getAllClients } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
@@ -14,7 +14,7 @@ import { useForm } from "react-hook-form";
 import { saveData, loadData, STORAGE_KEYS } from "@/utils/persistence";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { BackEndSalesForm } from "./BackEndSalesForm";
+import { BackEndSalesForm } from "./SalesForm/BackEndSalesForm";
 
 interface BackEndSale {
   id: string;
@@ -68,6 +68,7 @@ export function BackEndSalesTracker() {
   const [activeSection, setActiveSection] = useState("sales");
   const [selectedTeam, setSelectedTeam] = useState("all");
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingEntry, setEditingEntry] = useState<BackEndSale | null>(null);
   const { toast } = useToast();
   
   const form = useForm<ChurnNotesFormData>({
@@ -294,25 +295,45 @@ export function BackEndSalesTracker() {
       .map(point => [point, Math.floor(Math.random() * 5) + 1]);
   };
 
-  const handleAddNewSale = (data: any) => {
-    const newSale: BackEndSale = {
-      id: `bsale-${Date.now()}`,
-      clientId: data.clientId,
-      clientName: data.clientName,
-      status: data.status,
-      renewalDate: data.renewalDate,
-      notes: data.notes,
-      painPoints: data.status === "churned" ? [] : [],
-      team: data.team
-    };
+  const handleAddOrUpdateSale = (data: BackEndSale) => {
+    let updatedSales: BackEndSale[];
     
-    const updatedSales = [...backEndSales, newSale];
+    if (editingEntry) {
+      updatedSales = backEndSales.map(sale => 
+        sale.id === data.id ? data : sale
+      );
+      
+      toast({
+        title: "Entry Updated",
+        description: `${data.clientName}'s information has been updated.`,
+      });
+    } else {
+      updatedSales = [...backEndSales, data];
+      
+      toast({
+        title: "Client Added",
+        description: `${data.clientName} has been added to the Back End Sales Tracker.`,
+      });
+    }
+    
+    setBackEndSales(updatedSales);
+    saveData(STORAGE_KEYS.CHURN, updatedSales);
+    setEditingEntry(null);
+  };
+
+  const handleEditSale = (sale: BackEndSale) => {
+    setEditingEntry(sale);
+    setShowAddForm(true);
+  };
+
+  const handleDeleteSale = (saleId: string) => {
+    const updatedSales = backEndSales.filter(sale => sale.id !== saleId);
     setBackEndSales(updatedSales);
     saveData(STORAGE_KEYS.CHURN, updatedSales);
     
     toast({
-      title: "Client Added",
-      description: `${data.clientName} has been added to the Back End Sales Tracker.`,
+      title: "Entry Deleted",
+      description: "The entry has been removed from the tracker.",
     });
   };
 
@@ -330,7 +351,10 @@ export function BackEndSalesTracker() {
             </CardDescription>
           </div>
           <Button 
-            onClick={() => setShowAddForm(true)}
+            onClick={() => {
+              setEditingEntry(null);
+              setShowAddForm(true);
+            }}
             className="bg-red-600 hover:bg-red-700 text-white"
           >
             <Plus className="h-4 w-4 mr-2" /> Add Client
@@ -420,7 +444,7 @@ export function BackEndSalesTracker() {
                     <TableHead>Team</TableHead>
                     <TableHead>Renewal Date</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Action</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -438,17 +462,34 @@ export function BackEndSalesTracker() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {sale.status === "churned" && (
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => handleSelectClient(sale.clientId)}
-                              disabled={selectedClient === sale.clientId}
+                          <div className="flex items-center space-x-2">
+                            {sale.status === "churned" && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleSelectClient(sale.clientId)}
+                                disabled={selectedClient === sale.clientId}
+                              >
+                                <FileText className="h-4 w-4 mr-1" />
+                                {sale.notes ? "Edit Notes" : "Add Notes"}
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditSale(sale)}
                             >
-                              <FileText className="h-4 w-4 mr-1" />
-                              {sale.notes ? "Edit Notes" : "Add Notes"}
+                              <Edit className="h-4 w-4" />
                             </Button>
-                          )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteSale(sale.id)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
@@ -710,12 +751,16 @@ export function BackEndSalesTracker() {
         </TabsContent>
       </CardContent>
 
-      {showAddForm && (
+      {(showAddForm || editingEntry) && (
         <BackEndSalesForm
           isOpen={showAddForm}
-          onClose={() => setShowAddForm(false)}
-          onSubmit={handleAddNewSale}
+          onClose={() => {
+            setShowAddForm(false);
+            setEditingEntry(null);
+          }}
+          onSubmit={handleAddOrUpdateSale}
           teams={teams.filter(team => team !== "all")}
+          editData={editingEntry}
         />
       )}
     </Card>
