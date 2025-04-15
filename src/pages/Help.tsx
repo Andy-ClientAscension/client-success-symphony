@@ -3,15 +3,41 @@ import React, { useState } from 'react';
 import { Layout } from "@/components/Layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Info, Bell, HelpCircle, Settings, Youtube, FileQuestion, BookOpen } from "lucide-react";
+import { Info, Bell, HelpCircle, Settings, Youtube, FileQuestion, BookOpen, ShieldCheck, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { PreLaunchChecklist } from "@/components/Dashboard/PreLaunchChecklist";
+import { PrivacyPolicy } from "@/components/Dashboard/PrivacyPolicy";
+import { PublishingChecklist } from "@/components/Dashboard/PublishingChecklist";
 
 export default function Help() {
-  const [activeTab, setActiveTab] = useState('notifications');
+  const [activeTab, setActiveTab] = useState('launch');
 
   const helpSections = [
+    {
+      id: 'launch',
+      title: 'Launch Prep',
+      icon: ShieldCheck,
+      description: 'Prepare your dashboard for launch',
+      content: (
+        <div className="space-y-6">
+          <PreLaunchChecklist />
+          <PublishingChecklist />
+        </div>
+      )
+    },
+    {
+      id: 'legal',
+      title: 'Legal',
+      icon: Lock,
+      description: 'Privacy policy and legal documents',
+      content: (
+        <div className="space-y-4">
+          <PrivacyPolicy />
+        </div>
+      )
+    },
     {
       id: 'notifications',
       title: 'Notifications',
