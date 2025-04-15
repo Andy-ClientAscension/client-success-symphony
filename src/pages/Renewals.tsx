@@ -67,7 +67,7 @@ export default function Renewals() {
   const [selectedTeam, setSelectedTeam] = useState("all"); // Team filter
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
-  const [activeSection, setActiveSection] = useState("backend-sales"); // Changed default to "backend-sales"
+  const [activeSection, setActiveSection] = useState("backend-sales"); // Default to backend-sales
   
   // Apply filters
   const filteredRenewals = renewals

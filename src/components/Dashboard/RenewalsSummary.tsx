@@ -62,6 +62,15 @@ export function RenewalsSummary() {
       .sort(([, countA], [, countB]) => countB - countA)
       .slice(0, 3);
   }, [filteredSales]);
+
+  // Format team name for display
+  const formatTeamName = (team: string): string => {
+    if (team === "all") return "All Teams";
+    if (team.startsWith("Team-")) {
+      return "Team " + team.substring(5);
+    }
+    return team;
+  };
   
   return (
     <div className="space-y-6">
@@ -77,11 +86,7 @@ export function RenewalsSummary() {
             <SelectContent>
               {teams.map((team) => (
                 <SelectItem key={team} value={team}>
-                  {team === "all" ? "All Teams" : 
-                   team === "Team-Andy" ? "Team Andy" : 
-                   team === "Team-Chris" ? "Team Chris" : 
-                   team === "Team-Alex" ? "Team Alex" : 
-                   team === "Team-Cillin" ? "Team Cillin" : team}
+                  {formatTeamName(team)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -140,7 +145,7 @@ export function RenewalsSummary() {
                 filteredSales.map((sale) => (
                   <TableRow key={sale.id}>
                     <TableCell className="font-medium">{sale.clientName}</TableCell>
-                    <TableCell>{sale.team || "Unassigned"}</TableCell>
+                    <TableCell>{sale.team ? formatTeamName(sale.team) : "Unassigned"}</TableCell>
                     <TableCell>
                       <Badge
                         variant={sale.status === "renewed" ? "outline" : "destructive"}

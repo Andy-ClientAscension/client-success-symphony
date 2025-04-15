@@ -19,18 +19,18 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { useKanbanStore, Student } from "@/utils/kanbanStore";
+import { useKanbanStore } from "@/utils/kanbanStore";
 
 interface BackEndSalesFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: BackEndSaleFormValues) => void;
+  onSubmit: (data: any) => void;
   teams: string[];
 }
 
 interface BackEndSaleFormValues {
-  studentName: string;
   studentId: string;
+  studentName: string;
   status: "renewed" | "churned";
   renewalDate: Date;
   team: string;
@@ -72,10 +72,16 @@ export function BackEndSalesForm({ isOpen, onClose, onSubmit, teams }: BackEndSa
       return;
     }
 
-    // Update renewalDate with the selected date
+    // Map student data to client data format expected by the backend sales tracker
     const formData = {
-      ...data,
-      renewalDate: date || new Date()
+      clientId: data.studentId,
+      clientName: data.studentName,
+      status: data.status,
+      renewalDate: date || new Date(),
+      team: data.team,
+      notes: data.notes,
+      // Add empty painPoints array for churned clients
+      painPoints: data.status === "churned" ? [] : []
     };
 
     onSubmit(formData);
