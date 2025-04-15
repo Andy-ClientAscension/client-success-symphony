@@ -15,12 +15,31 @@ import { TeamAnalytics } from "@/components/Dashboard/TeamAnalytics";
 import { EnhancedKanbanBoard } from "@/components/Dashboard/EnhancedKanbanBoard";
 import { useToast } from "@/hooks/use-toast";
 import { useKanbanStore } from "@/utils/kanbanStore";
+import { STORAGE_KEYS } from "@/utils/persistence";
 
 export default function Clients() {
   const [activeTab, setActiveTab] = useState("all");
+  const [forceReload, setForceReload] = useState(0);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { loadPersistedData } = useKanbanStore();
+
+  // Force reload data when localStorage changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setForceReload(prev => prev + 1);
+      console.log("Forcing Clients.tsx to reload data");
+    };
+    
+    // Listen for both the storage event and our custom event
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('storageUpdated', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('storageUpdated', handleStorageChange);
+    };
+  }, []);
 
   useEffect(() => {
     // Initialize the kanban store when the component mounts
@@ -39,7 +58,7 @@ export default function Clients() {
         variant: "destructive",
       });
     }
-  }, [loadPersistedData, toast]);
+  }, [loadPersistedData, toast, forceReload]);
 
   const handleAddNewClient = () => {
     navigate("/add-client");
@@ -109,31 +128,31 @@ export default function Clients() {
           </div>
           
           <TabsContent value="all" className="m-0">
-            <ClientList />
+            <ClientList key={`all-${forceReload}`} />
           </TabsContent>
           
           <TabsContent value="active" className="m-0">
-            <ClientList statusFilter="active" />
+            <ClientList key={`active-${forceReload}`} statusFilter="active" />
           </TabsContent>
           
           <TabsContent value="at-risk" className="m-0">
-            <ClientList statusFilter="at-risk" />
+            <ClientList key={`at-risk-${forceReload}`} statusFilter="at-risk" />
           </TabsContent>
           
           <TabsContent value="new" className="m-0">
-            <ClientList statusFilter="new" />
+            <ClientList key={`new-${forceReload}`} statusFilter="new" />
           </TabsContent>
           
           <TabsContent value="churned" className="m-0">
-            <ClientList statusFilter="churned" />
+            <ClientList key={`churned-${forceReload}`} statusFilter="churned" />
           </TabsContent>
           
           <TabsContent value="team-health" className="m-0">
-            <TeamAnalytics />
+            <TeamAnalytics key={`team-health-${forceReload}`} />
           </TabsContent>
           
           <TabsContent value="student-tracking" className="m-0 p-0">
-            <EnhancedKanbanBoard fullScreen={false} />
+            <EnhancedKanbanBoard key={`kanban-${forceReload}`} fullScreen={false} />
           </TabsContent>
         </Tabs>
       </div>

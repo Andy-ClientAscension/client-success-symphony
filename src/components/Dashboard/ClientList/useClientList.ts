@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Client, getAllClients } from '@/lib/data';
-import { STORAGE_KEYS, saveData, loadData } from '@/utils/persistence';
+import { STORAGE_KEYS, saveData, loadData, deleteClientsGlobally } from '@/utils/persistence';
 import { useToast } from "@/hooks/use-toast";
 import { useKanbanStore } from "@/utils/kanbanStore";
 
@@ -41,7 +41,6 @@ export function useClientList({ statusFilter }: UseClientListProps) {
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
 
-  // Validate clients before using them
   const validateClients = (clientList: Client[]): Client[] => {
     if (!Array.isArray(clientList)) return [];
     
@@ -50,13 +49,10 @@ export function useClientList({ statusFilter }: UseClientListProps) {
       if (!client.id || typeof client.id !== 'string') return false;
       if (!client.name || typeof client.name !== 'string') return false;
       
-      // Ensure client status is valid
       if (!client.status || !['active', 'at-risk', 'churned', 'new'].includes(client.status)) {
-        // Fix invalid status
         client.status = 'active';
       }
       
-      // Fix numeric fields if they're invalid
       if (client.mrr === undefined || client.mrr === null || isNaN(client.mrr)) {
         client.mrr = 0;
       }
@@ -72,13 +68,11 @@ export function useClientList({ statusFilter }: UseClientListProps) {
   useEffect(() => {
     const persistEnabled = localStorage.getItem("persistDashboard") === "true";
     
-    // Save data if persistence is enabled and there are changes
     if (persistEnabled && clients !== defaultClients) {
       const validatedClients = validateClients(clients);
       saveData(STORAGE_KEYS.CLIENTS, validatedClients);
     }
     
-    // Apply filters
     let filtered = validateClients(clients);
     
     if (statusFilter) {
@@ -102,17 +96,14 @@ export function useClientList({ statusFilter }: UseClientListProps) {
 
     setFilteredClients(filtered);
     
-    // Reset to page 1 when filters change
     setCurrentPage(1);
   }, [clients, selectedTeam, statusFilter, searchQuery, defaultClients]);
 
-  // Calculate pagination values
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredClients.slice(indexOfFirstItem, Math.min(indexOfLastItem, filteredClients.length));
   const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
 
-  // Update clients when default clients change
   useEffect(() => {
     setClients(validateClients(defaultClients));
   }, [defaultClients]);
@@ -156,24 +147,14 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     setViewMode(mode);
   };
 
-  // New function to delete clients globally
   const deleteClients = (clientIdsToDelete: string[]) => {
-    // 1. Update local client state
-    const updatedClients = clients.filter(client => !clientIdsToDelete.includes(client.id));
-    setClients(updatedClients);
+    deleteClientsGlobally(clientIdsToDelete);
     
-    // 2. Persist changes to localStorage
-    const persistEnabled = localStorage.getItem("persistDashboard") === "true";
-    if (persistEnabled) {
-      saveData(STORAGE_KEYS.CLIENTS, updatedClients);
-    }
+    setClients(prev => prev.filter(client => !clientIdsToDelete.includes(client.id)));
     
-    // 3. Update kanban store to remove these clients from all boards
-    // If they're represented as students in the kanban board
-    if (kanbanStore && kanbanStore.data && kanbanStore.data.students) {
+    if (kanbanStore && kanbanStore.updateData) {
       const updatedKanbanData = { ...kanbanStore.data };
       
-      // Remove students from columns
       if (updatedKanbanData.columns) {
         Object.keys(updatedKanbanData.columns).forEach(columnId => {
           if (updatedKanbanData.columns[columnId] && updatedKanbanData.columns[columnId].studentIds) {
@@ -184,7 +165,6 @@ export function useClientList({ statusFilter }: UseClientListProps) {
         });
       }
       
-      // Remove students from the students object
       if (updatedKanbanData.students) {
         clientIdsToDelete.forEach(id => {
           if (updatedKanbanData.students[id]) {
@@ -193,19 +173,37 @@ export function useClientList({ statusFilter }: UseClientListProps) {
         });
       }
       
-      // Update the kanban store
       kanbanStore.updateData(updatedKanbanData);
     }
     
-    // Reset selection
     setSelectedClientIds([]);
     
-    // Show confirmation toast
     toast({
       title: "Clients Deleted",
       description: `${clientIdsToDelete.length} client(s) have been removed from all dashboards.`,
     });
   };
+
+  useEffect(() => {
+    const handleStorageEvent = (event: any) => {
+      const isRelevant = event.key === STORAGE_KEYS.CLIENTS || 
+                          (event.detail && event.detail.key === STORAGE_KEYS.CLIENTS);
+      
+      if (isRelevant) {
+        const updatedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
+        setClients(validateClients(updatedClients));
+        console.log("Clients updated in useClientList due to external change");
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageEvent);
+    window.addEventListener('storageUpdated', handleStorageEvent);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageEvent);
+      window.removeEventListener('storageUpdated', handleStorageEvent);
+    };
+  }, []);
 
   return {
     clients,

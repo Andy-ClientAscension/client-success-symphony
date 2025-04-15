@@ -80,6 +80,14 @@ export const saveData = <T>(key: string, data: T): void => {
       storageArea: localStorage
     }));
     
+    // Also dispatch a custom event that works within the same window
+    window.dispatchEvent(new CustomEvent('storageUpdated', {
+      detail: {
+        key: key,
+        newValue: data
+      }
+    }));
+    
     console.log(`Saved data for key: ${key}`);
   } catch (error) {
     console.error(`Error saving data for key: ${key}`, error);
@@ -337,6 +345,76 @@ export const getHealthScores = (clientId?: string) => {
  */
 export const getBackupHistory = () => {
   return loadData<{timestamp: string, size: number}[]>(STORAGE_KEYS.BACKUP_DATA, []);
+};
+
+/**
+ * Centralized function to delete clients from all parts of the system
+ * @param clientIdsToDelete Array of client IDs to delete
+ */
+export const deleteClientsGlobally = (clientIdsToDelete: string[]): void => {
+  try {
+    // 1. Update client list
+    const allClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
+    const updatedClients = allClients.filter(client => !clientIdsToDelete.includes(client.id));
+    saveData(STORAGE_KEYS.CLIENTS, updatedClients);
+    
+    // 2. Update client status data
+    const clientStatus = loadData<Client[]>(STORAGE_KEYS.CLIENT_STATUS, []);
+    const updatedStatus = clientStatus.filter(client => !clientIdsToDelete.includes(client.id));
+    saveData(STORAGE_KEYS.CLIENT_STATUS, updatedStatus);
+    
+    // 3. Update kanban data
+    const kanbanData = loadData(STORAGE_KEYS.KANBAN, { columns: {}, students: {}, columnOrder: [] });
+    
+    // Remove students from columns
+    if (kanbanData.columns) {
+      Object.keys(kanbanData.columns).forEach(columnId => {
+        if (kanbanData.columns[columnId] && kanbanData.columns[columnId].studentIds) {
+          kanbanData.columns[columnId].studentIds = kanbanData.columns[columnId].studentIds.filter(
+            id => !clientIdsToDelete.includes(id)
+          );
+        }
+      });
+    }
+    
+    // Remove students from the students object
+    if (kanbanData.students) {
+      clientIdsToDelete.forEach(id => {
+        if (kanbanData.students[id]) {
+          delete kanbanData.students[id];
+        }
+      });
+    }
+    
+    saveData(STORAGE_KEYS.KANBAN, kanbanData);
+    
+    // 4. Update client notes
+    const clientNotes = loadData(STORAGE_KEYS.CLIENT_NOTES, {});
+    clientIdsToDelete.forEach(id => {
+      if (clientNotes[id]) {
+        delete clientNotes[id];
+      }
+    });
+    saveData(STORAGE_KEYS.CLIENT_NOTES, clientNotes);
+    
+    // 5. Update health scores
+    const healthScores = loadData<any[]>(STORAGE_KEYS.HEALTH_SCORES, []);
+    const updatedHealthScores = healthScores.filter(score => !clientIdsToDelete.includes(score.clientId));
+    saveData(STORAGE_KEYS.HEALTH_SCORES, updatedHealthScores);
+    
+    // 6. Update custom fields
+    const customFields = loadData(STORAGE_KEYS.CLIENT_CUSTOM_FIELDS, {});
+    clientIdsToDelete.forEach(id => {
+      if (customFields[id]) {
+        delete customFields[id];
+      }
+    });
+    saveData(STORAGE_KEYS.CLIENT_CUSTOM_FIELDS, customFields);
+    
+    console.log(`Successfully deleted clients: ${clientIdsToDelete.join(', ')} from all dashboard sections`);
+  } catch (error) {
+    console.error("Error in deleteClientsGlobally:", error);
+  }
 };
 
 // Export storage keys for use in components
