@@ -1,6 +1,7 @@
 /**
  * Utility for persisting dashboard data in localStorage
  */
+import { Client } from "@/lib/data";
 
 // Keys for different types of data
 const STORAGE_KEYS = {
