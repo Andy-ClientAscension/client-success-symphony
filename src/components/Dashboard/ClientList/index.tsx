@@ -91,7 +91,7 @@ export function ClientList({ statusFilter }: ClientListProps) {
     });
   };
   
-  const openBulkActionDialog = (actionType: 'status' | 'team') => {
+  const openBulkActionDialog = (actionType: 'status' | 'team' | 'delete') => {
     if (selectedClientIds.length === 0) {
       toast({
         title: "No Clients Selected",
@@ -106,7 +106,25 @@ export function ClientList({ statusFilter }: ClientListProps) {
   };
   
   const handleBulkActionConfirm = () => {
-    if (!bulkActionType || !bulkActionValue) {
+    if (!bulkActionType) {
+      return;
+    }
+    
+    if (bulkActionType === 'delete') {
+      // Handle client deletion
+      const updatedClients = clients.filter(client => !selectedClientIds.includes(client.id));
+      setClients(updatedClients);
+      setSelectedClientIds([]);
+      setBulkActionDialogOpen(false);
+      
+      toast({
+        title: "Clients Deleted",
+        description: `${selectedClientIds.length} clients have been removed.`,
+      });
+      return;
+    }
+    
+    if (!bulkActionValue) {
       return;
     }
     
@@ -153,6 +171,7 @@ export function ClientList({ statusFilter }: ClientListProps) {
           onSearchChange={handleSearchChange}
           selectedClientCount={selectedClientIds.length}
           onOpenBulkActions={() => openBulkActionDialog('status')}
+          onDelete={() => openBulkActionDialog('delete')}
         />
 
         <ClientListContent 

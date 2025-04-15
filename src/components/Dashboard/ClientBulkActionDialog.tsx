@@ -28,7 +28,7 @@ const TEAMS = [
 interface ClientBulkActionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  actionType: 'status' | 'team' | 'column' | null;
+  actionType: 'status' | 'team' | 'column' | 'delete' | null;
   selectedCount: number;
   onValueChange: (value: string) => void;
   onConfirm: () => void;
@@ -47,6 +47,7 @@ export function ClientBulkActionDialog({
       case 'status': return 'Update Status';
       case 'team': return 'Assign Team';
       case 'column': return 'Move to Column';
+      case 'delete': return 'Delete Clients';
       default: return 'Bulk Action';
     }
   };
@@ -59,7 +60,10 @@ export function ClientBulkActionDialog({
             {getTitle()}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            This action will update {selectedCount} selected {selectedCount === 1 ? 'item' : 'items'}. This action cannot be undone.
+            {actionType === 'delete' 
+              ? `Are you sure you want to delete ${selectedCount} selected ${selectedCount === 1 ? 'client' : 'clients'}? This action cannot be undone.`
+              : `This action will update ${selectedCount} selected ${selectedCount === 1 ? 'item' : 'items'}. This action cannot be undone.`
+            }
           </AlertDialogDescription>
         </AlertDialogHeader>
         
@@ -110,7 +114,12 @@ export function ClientBulkActionDialog({
         
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} className="bg-red-600 hover:bg-red-700">Confirm</AlertDialogAction>
+          <AlertDialogAction 
+            onClick={onConfirm} 
+            className={actionType === 'delete' ? "bg-red-600 hover:bg-red-700" : "bg-red-600 hover:bg-red-700"}
+          >
+            {actionType === 'delete' ? 'Delete' : 'Confirm'}
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
