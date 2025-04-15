@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PieChart, BarChart, Calendar, TrendingUp } from "lucide-react";
 import { format, subMonths, subDays } from 'date-fns';
+import { useDashboardSettings } from '@/hooks/use-dashboard-settings';
 
 import { StatisticsCards } from './StatisticsCards';
 
@@ -52,7 +53,9 @@ export function StatisticsWrapper() {
     renewalRate: 0
   });
   const [isLoading, setIsLoading] = useState(true);
+  const { settings } = useDashboardSettings();
   
+  // Initial data loading
   useEffect(() => {
     setIsLoading(true);
     
@@ -63,6 +66,24 @@ export function StatisticsWrapper() {
       setIsLoading(false);
     }, 500);
   }, [period]);
+  
+  // Set up auto-refresh if enabled in settings
+  useEffect(() => {
+    if (!settings.autoRefresh) return;
+    
+    const intervalId = setInterval(() => {
+      setIsLoading(true);
+      
+      // Simulate API call
+      setTimeout(() => {
+        const data = fetchRenewalStatsByPeriod(period);
+        setStats(data);
+        setIsLoading(false);
+      }, 500);
+    }, settings.refreshInterval * 60 * 1000); // Convert minutes to milliseconds
+    
+    return () => clearInterval(intervalId);
+  }, [period, settings.autoRefresh, settings.refreshInterval]);
   
   const getPeriodLabel = () => {
     const now = new Date();

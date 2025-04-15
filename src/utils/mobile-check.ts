@@ -2,6 +2,7 @@
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useDashboardSettings } from '@/hooks/use-dashboard-settings';
 
 interface MobileCheckOptions {
   showToast?: boolean;
@@ -12,12 +13,13 @@ interface MobileCheckOptions {
 export function useMobileCheck(options: MobileCheckOptions = {}) {
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const { settings } = useDashboardSettings();
   const { showToast = true, onMobile, onDesktop } = options;
 
   useEffect(() => {
     if (isMobile !== undefined) {
       if (isMobile) {
-        if (showToast) {
+        if (showToast && settings.showWelcomeMessage) {
           toast({
             title: "Mobile View Detected",
             description: "You're viewing the dashboard on a mobile device. Some features may be optimized for this screen size.",
@@ -29,7 +31,7 @@ export function useMobileCheck(options: MobileCheckOptions = {}) {
         onDesktop?.();
       }
     }
-  }, [isMobile, showToast, toast, onMobile, onDesktop]);
+  }, [isMobile, showToast, toast, onMobile, onDesktop, settings.showWelcomeMessage]);
 
   return { isMobile };
 }

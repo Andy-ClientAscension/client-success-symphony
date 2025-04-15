@@ -1,6 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import { STORAGE_KEYS, loadData, saveData } from '@/utils/persistence';
+import { useToast } from '@/hooks/use-toast';
+import { useDashboardPersistence } from '@/hooks/use-dashboard-persistence';
 
 export interface DashboardSettings {
   layout: 'compact' | 'comfortable' | 'spacious';
@@ -25,25 +27,34 @@ const DEFAULT_SETTINGS: DashboardSettings = {
 };
 
 export function useDashboardSettings() {
+  const { toast } = useToast();
+  const { persistDashboard } = useDashboardPersistence();
   const [settings, setSettings] = useState<DashboardSettings>(() => {
-    return loadData<DashboardSettings>(STORAGE_KEYS.DASHBOARD, DEFAULT_SETTINGS);
+    return loadData<DashboardSettings>(STORAGE_KEYS.DASHBOARD_SETTINGS, DEFAULT_SETTINGS);
   });
 
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     // On mount, load settings from localStorage
-    const savedSettings = loadData<DashboardSettings>(STORAGE_KEYS.DASHBOARD, DEFAULT_SETTINGS);
+    const savedSettings = loadData<DashboardSettings>(STORAGE_KEYS.DASHBOARD_SETTINGS, DEFAULT_SETTINGS);
     setSettings(savedSettings);
     setIsLoaded(true);
   }, []);
 
   useEffect(() => {
     // Save settings to localStorage whenever they change
-    if (isLoaded) {
-      saveData(STORAGE_KEYS.DASHBOARD, settings);
+    if (isLoaded && persistDashboard) {
+      saveData(STORAGE_KEYS.DASHBOARD_SETTINGS, settings);
+      
+      // Show toast notification when settings are saved
+      toast({
+        title: "Settings Saved",
+        description: "Your dashboard settings have been saved and will persist between sessions.",
+        duration: 3000,
+      });
     }
-  }, [settings, isLoaded]);
+  }, [settings, isLoaded, persistDashboard, toast]);
 
   const updateSettings = (newSettings: Partial<DashboardSettings>) => {
     setSettings(prevSettings => ({
@@ -54,12 +65,18 @@ export function useDashboardSettings() {
 
   const resetSettings = () => {
     setSettings(DEFAULT_SETTINGS);
+    toast({
+      title: "Settings Reset",
+      description: "Your dashboard settings have been reset to defaults.",
+      duration: 3000,
+    });
   };
 
   return {
     settings,
     updateSettings,
     resetSettings,
-    isLoaded
+    isLoaded,
+    isPersistent: persistDashboard
   };
 }
