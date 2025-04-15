@@ -39,7 +39,7 @@ const excludedSSCs = [
 ];
 
 export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerformanceTableProps) {
-  const isMobile = useIsMobile();
+  const { isMobile } = useIsMobile();
   const { toast } = useToast();
   const [filteredCsmList, setFilteredCsmList] = useState<string[]>(
     csmList.filter(csm => !excludedSSCs.includes(csm))

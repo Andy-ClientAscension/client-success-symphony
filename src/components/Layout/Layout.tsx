@@ -14,7 +14,7 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const { theme } = useTheme();
-  const isMobile = useIsMobile();
+  const { isMobile } = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   

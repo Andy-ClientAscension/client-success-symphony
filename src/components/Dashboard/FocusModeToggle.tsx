@@ -12,7 +12,7 @@ interface FocusModeToggleProps {
 
 export function FocusModeToggle({ focusMode, onChange }: FocusModeToggleProps) {
   const { toast } = useToast();
-  const isMobile = useIsMobile();
+  const { isMobile } = useIsMobile();
 
   const handleToggle = () => {
     const newState = !focusMode;
