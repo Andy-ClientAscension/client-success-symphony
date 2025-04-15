@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { TableCell, TableBody, TableHead, TableHeader, TableRow, Table } from "@/components/ui/table";
 import { SSCPerformanceRow } from "./SSCPerformanceRow";
 import { Client } from "@/lib/data";
-import { HelpCircle } from "lucide-react";
+import { HelpCircle, PlusCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +17,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface SSCPerformanceTableProps {
   csmList: string[];
@@ -46,6 +48,8 @@ export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerfo
   );
   const [csmToDelete, setCsmToDelete] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [newSSCName, setNewSSCName] = useState("");
   
   const handleDeleteCSM = (csm: string) => {
     setCsmToDelete(csm);
@@ -73,28 +77,80 @@ export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerfo
     setCsmToDelete(null);
     setShowDeleteDialog(false);
   };
+
+  const handleAddSSC = () => {
+    setShowAddDialog(true);
+  };
+
+  const confirmAddSSC = () => {
+    if (newSSCName.trim()) {
+      // Check if the name already exists
+      if (filteredCsmList.includes(newSSCName.trim())) {
+        toast({
+          title: "Duplicate Name",
+          description: "This SSC name already exists in the list.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Add the new SSC to the list
+      setFilteredCsmList(prev => [...prev, newSSCName.trim()]);
+      
+      // Show success toast
+      toast({
+        title: "SSC Added",
+        description: `${newSSCName.trim()} has been added to the list.`,
+      });
+      
+      // Reset the state
+      setNewSSCName("");
+      setShowAddDialog(false);
+    } else {
+      toast({
+        title: "Invalid Name",
+        description: "Please enter a valid name for the SSC.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const cancelAddSSC = () => {
+    setNewSSCName("");
+    setShowAddDialog(false);
+  };
   
   return (
     <div className="mt-6">
-      <div className="flex items-center mb-3">
-        <h3 className="text-base font-medium">Student Success Coach Performance</h3>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <HelpCircle className="h-4 w-4 ml-2 text-muted-foreground cursor-help" />
-            </TooltipTrigger>
-            <TooltipContent className="max-w-sm p-3">
-              <p className="text-xs">Team Health Grade is calculated based on multiple factors:</p>
-              <ul className="text-xs mt-1 list-disc pl-4">
-                <li>NPS Score (30%)</li>
-                <li>Client Retention (30%)</li>
-                <li>Growth Metrics (20%)</li>
-                <li>MRR Trends (20%)</li>
-              </ul>
-              <p className="text-xs mt-1">Grades range from F (poor) to A+ (excellent)</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center">
+          <h3 className="text-base font-medium">Student Success Coach Performance</h3>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="h-4 w-4 ml-2 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-sm p-3">
+                <p className="text-xs">Team Health Grade is calculated based on multiple factors:</p>
+                <ul className="text-xs mt-1 list-disc pl-4">
+                  <li>NPS Score (30%)</li>
+                  <li>Client Retention (30%)</li>
+                  <li>Growth Metrics (20%)</li>
+                  <li>MRR Trends (20%)</li>
+                </ul>
+                <p className="text-xs mt-1">Grades range from F (poor) to A+ (excellent)</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        <Button 
+          size="sm" 
+          onClick={handleAddSSC}
+          className="bg-red-600 hover:bg-red-700"
+        >
+          <PlusCircle className="h-4 w-4 mr-2" />
+          Add SSC
+        </Button>
       </div>
       <div className="border rounded-lg overflow-hidden bg-card text-card-foreground dark:border-gray-700">
         <Table>
@@ -125,10 +181,21 @@ export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerfo
                 onDelete={handleDeleteCSM}
               />
             ))}
+            {filteredCsmList.filter(csm => {
+              if (selectedTeam === "all") return true;
+              return clients.some(client => client.csm === csm && client.team === selectedTeam);
+            }).length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center">
+                  No SSCs found for the selected team.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
       
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -144,6 +211,37 @@ export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerfo
               className="bg-red-600 hover:bg-red-700 text-white"
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Add SSC Dialog */}
+      <AlertDialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Add New SSC</AlertDialogTitle>
+            <AlertDialogDescription>
+              Enter the name of the new Student Success Coach you want to add.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          <div className="py-4">
+            <Input
+              placeholder="Enter SSC name"
+              value={newSSCName}
+              onChange={(e) => setNewSSCName(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelAddSSC}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmAddSSC}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Add SSC
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
