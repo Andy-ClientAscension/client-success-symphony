@@ -1,4 +1,4 @@
-import { Bell, Search, HelpCircle, Upload, UserSearch, FileSearch, KeySquare, XCircle, X, Link } from "lucide-react";
+import { Bell, Search, HelpCircle, XCircle, KeySquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -38,6 +38,8 @@ export function Header({ toggleSidebar, sidebarVisible, sidebarCollapsed }: Head
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [apiDialogOpen, setApiDialogOpen] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
+  const [helpModalOpen, setHelpModalOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -150,6 +152,15 @@ export function Header({ toggleSidebar, sidebarVisible, sidebarCollapsed }: Head
     };
   }, []);
 
+  const openHelpModal = () => {
+    setHelpModalOpen(true);
+    navigate("/help");
+  };
+
+  const toggleNotifications = () => {
+    setNotificationsOpen(!notificationsOpen);
+  };
+
   return (
     <header className="border-b bg-white dark:bg-gray-900 h-16 flex items-center justify-between px-6">
       <div className="flex items-center gap-4 w-full">
@@ -239,12 +250,26 @@ export function Header({ toggleSidebar, sidebarVisible, sidebarCollapsed }: Head
       
       <div className="flex items-center gap-2">
         <ThemeToggle />
-        <Button variant="outline" size="icon" className="hidden sm:inline-flex">
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className="hidden sm:inline-flex"
+          onClick={openHelpModal}
+          title="Help"
+        >
           <HelpCircle className="h-5 w-5" />
         </Button>
-        <Button variant="outline" size="icon" className="relative">
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className="relative"
+          onClick={toggleNotifications}
+          title="Notifications"
+        >
           <Bell className="h-5 w-5" />
-          <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-600 rounded-full" />
+          {notificationsOpen && (
+            <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-600 rounded-full" />
+          )}
         </Button>
         
         <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
@@ -313,6 +338,22 @@ export function Header({ toggleSidebar, sidebarVisible, sidebarCollapsed }: Head
           </CommandGroup>
         </CommandList>
       </CommandDialog>
+
+      {notificationsOpen && (
+        <div className="fixed top-16 right-4 z-50 bg-white dark:bg-gray-800 border rounded-lg shadow-lg p-4 w-72">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Notifications</h3>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setNotificationsOpen(false)}
+            >
+              <XCircle className="h-4 w-4" />
+            </Button>
+          </div>
+          <p className="text-muted-foreground">No new notifications</p>
+        </div>
+      )}
     </header>
   );
 }
