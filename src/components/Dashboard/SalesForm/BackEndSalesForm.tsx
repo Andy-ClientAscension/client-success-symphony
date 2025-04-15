@@ -148,7 +148,7 @@ export function BackEndSalesForm({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleFormSubmit(handleFormSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
             <FormFields 
               form={form}
               date={date}
