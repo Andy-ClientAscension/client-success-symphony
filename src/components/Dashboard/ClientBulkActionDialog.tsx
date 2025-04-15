@@ -116,7 +116,7 @@ export function ClientBulkActionDialog({
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction 
             onClick={onConfirm} 
-            className={actionType === 'delete' ? "bg-red-600 hover:bg-red-700" : "bg-red-600 hover:bg-red-700"}
+            className={actionType === 'delete' ? "bg-red-600 hover:bg-red-700" : ""}
           >
             {actionType === 'delete' ? 'Delete' : 'Confirm'}
           </AlertDialogAction>

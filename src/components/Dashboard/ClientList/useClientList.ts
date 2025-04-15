@@ -33,7 +33,7 @@ export function useClientList({ statusFilter }: UseClientListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
   const [bulkActionDialogOpen, setBulkActionDialogOpen] = useState(false);
-  const [bulkActionType, setBulkActionType] = useState<'status' | 'team' | null>(null);
+  const [bulkActionType, setBulkActionType] = useState<'status' | 'team' | 'column' | 'delete' | null>(null);
   const [bulkActionValue, setBulkActionValue] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);

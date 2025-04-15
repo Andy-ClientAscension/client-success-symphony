@@ -91,7 +91,7 @@ export function ClientList({ statusFilter }: ClientListProps) {
     });
   };
   
-  const openBulkActionDialog = (actionType: 'status' | 'team' | 'delete') => {
+  const openBulkActionDialog = (actionType: 'status' | 'team' | 'column' | 'delete') => {
     if (selectedClientIds.length === 0) {
       toast({
         title: "No Clients Selected",
