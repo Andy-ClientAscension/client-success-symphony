@@ -1,8 +1,8 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { Client, getAllClients } from '@/lib/data';
 import { STORAGE_KEYS, saveData, loadData } from '@/utils/persistence';
 import { useToast } from "@/hooks/use-toast";
+import { useKanbanStore } from "@/utils/kanbanStore";
 
 interface UseClientListProps {
   statusFilter?: Client['status'];
@@ -10,6 +10,8 @@ interface UseClientListProps {
 
 export function useClientList({ statusFilter }: UseClientListProps) {
   const { toast } = useToast();
+  const kanbanStore = useKanbanStore();
+  
   const defaultClients = useMemo(() => {
     try {
       return getAllClients();
@@ -154,6 +156,57 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     setViewMode(mode);
   };
 
+  // New function to delete clients globally
+  const deleteClients = (clientIdsToDelete: string[]) => {
+    // 1. Update local client state
+    const updatedClients = clients.filter(client => !clientIdsToDelete.includes(client.id));
+    setClients(updatedClients);
+    
+    // 2. Persist changes to localStorage
+    const persistEnabled = localStorage.getItem("persistDashboard") === "true";
+    if (persistEnabled) {
+      saveData(STORAGE_KEYS.CLIENTS, updatedClients);
+    }
+    
+    // 3. Update kanban store to remove these clients from all boards
+    // If they're represented as students in the kanban board
+    if (kanbanStore && kanbanStore.data && kanbanStore.data.students) {
+      const updatedKanbanData = { ...kanbanStore.data };
+      
+      // Remove students from columns
+      if (updatedKanbanData.columns) {
+        Object.keys(updatedKanbanData.columns).forEach(columnId => {
+          if (updatedKanbanData.columns[columnId] && updatedKanbanData.columns[columnId].studentIds) {
+            updatedKanbanData.columns[columnId].studentIds = updatedKanbanData.columns[columnId].studentIds.filter(
+              id => !clientIdsToDelete.includes(id)
+            );
+          }
+        });
+      }
+      
+      // Remove students from the students object
+      if (updatedKanbanData.students) {
+        clientIdsToDelete.forEach(id => {
+          if (updatedKanbanData.students[id]) {
+            delete updatedKanbanData.students[id];
+          }
+        });
+      }
+      
+      // Update the kanban store
+      kanbanStore.updateData(updatedKanbanData);
+    }
+    
+    // Reset selection
+    setSelectedClientIds([]);
+    
+    // Show confirmation toast
+    toast({
+      title: "Clients Deleted",
+      description: `${clientIdsToDelete.length} client(s) have been removed from all dashboards.`,
+    });
+  };
+
   return {
     clients,
     setClients,
@@ -187,6 +240,7 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     handleSelectAll,
     handleTeamChange,
     handleSearchChange,
-    handleViewModeChange
+    handleViewModeChange,
+    deleteClients
   };
 }

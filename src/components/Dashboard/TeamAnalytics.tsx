@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+
+import React, { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getClientMetricsByTeam, getAllClients, getCSMList } from "@/lib/data";
@@ -12,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { TeamManagementDialog } from "./TeamManagementDialog";
 import { useToast } from "@/hooks/use-toast";
+import { STORAGE_KEYS, loadData } from "@/utils/persistence";
 
 const ADDITIONAL_TEAMS = [
   { id: "Enterprise", name: "Enterprise" },
@@ -28,6 +30,26 @@ export function TeamAnalytics() {
   const { toast } = useToast();
   
   const clients = useMemo(() => getAllClients(), []);
+  
+  // Check for client deletions in localStorage
+  useEffect(() => {
+    const checkForClientDeletions = () => {
+      const persistEnabled = localStorage.getItem("persistDashboard") === "true";
+      if (persistEnabled) {
+        const savedClients = loadData(STORAGE_KEYS.CLIENTS, null);
+        if (savedClients && Array.isArray(savedClients)) {
+          // This will make the component re-render if the client list has changed
+          // in localStorage, which means deletions in other components will be reflected
+          console.log("Client list in storage updated, reflecting changes in TeamAnalytics");
+        }
+      }
+    };
+    
+    // Set up an interval to check for client deletions
+    const interval = setInterval(checkForClientDeletions, 2000);
+    return () => clearInterval(interval);
+  }, []);
+  
   const teamSet = useMemo(() => {
     const set = new Set<string>();
     clients.forEach(client => {

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -50,7 +49,8 @@ export function ClientList({ statusFilter }: ClientListProps) {
     handleSelectAll,
     handleTeamChange,
     handleSearchChange,
-    handleViewModeChange
+    handleViewModeChange,
+    deleteClients
   } = useClientList({ statusFilter });
   
   const navigate = useNavigate();
@@ -111,16 +111,8 @@ export function ClientList({ statusFilter }: ClientListProps) {
     }
     
     if (bulkActionType === 'delete') {
-      // Handle client deletion
-      const updatedClients = clients.filter(client => !selectedClientIds.includes(client.id));
-      setClients(updatedClients);
-      setSelectedClientIds([]);
+      deleteClients(selectedClientIds);
       setBulkActionDialogOpen(false);
-      
-      toast({
-        title: "Clients Deleted",
-        description: `${selectedClientIds.length} clients have been removed.`,
-      });
       return;
     }
     

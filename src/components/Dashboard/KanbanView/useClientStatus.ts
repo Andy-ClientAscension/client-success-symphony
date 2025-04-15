@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Client } from "@/lib/data";
 import { StatusGroup, getDefaultColumnOrder } from "./ClientStatusHelper";
-import { saveData, STORAGE_KEYS } from "@/utils/persistence";
+import { saveData, STORAGE_KEYS, loadData } from "@/utils/persistence";
 import { useToast } from "@/hooks/use-toast";
 
 export function useClientStatus(initialClients: Client[]) {
@@ -12,6 +12,29 @@ export function useClientStatus(initialClients: Client[]) {
   // Update local state when clients prop changes
   useEffect(() => {
     setLocalClients(initialClients);
+  }, [initialClients]);
+  
+  // Load any persisted client status changes
+  useEffect(() => {
+    try {
+      const persistEnabled = localStorage.getItem("persistDashboard") === "true";
+      if (persistEnabled) {
+        const savedClientStatus = loadData(STORAGE_KEYS.CLIENT_STATUS, null);
+        if (savedClientStatus && Array.isArray(savedClientStatus)) {
+          // Filter out any clients that might have been deleted globally
+          const currentClientIds = new Set(initialClients.map(client => client.id));
+          const validSavedClients = savedClientStatus.filter(client => 
+            currentClientIds.has(client.id)
+          );
+          
+          if (validSavedClients.length > 0) {
+            setLocalClients(validSavedClients);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error loading saved client status:", error);
+    }
   }, [initialClients]);
   
   // Save client status changes to persistence
