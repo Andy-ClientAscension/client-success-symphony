@@ -42,7 +42,7 @@ export default function Help() {
               <CardTitle>Configuring Notifications</CardTitle>
             </CardHeader>
             <CardContent>
-              <p>Customize your notification preferences in Settings > Notifications</p>
+              <p>Customize your notification preferences in Settings {'>'}{'>'} Notifications</p>
               <Button variant="outline" className="mt-4">
                 Go to Notification Settings
               </Button>
@@ -118,4 +118,3 @@ export default function Help() {
     </Layout>
   );
 }
-
