@@ -71,6 +71,7 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     if (persistEnabled && clients !== defaultClients) {
       const validatedClients = validateClients(clients);
       saveData(STORAGE_KEYS.CLIENTS, validatedClients);
+      saveData(STORAGE_KEYS.CLIENT_STATUS, validatedClients);
     }
     
     let filtered = validateClients(clients);
@@ -184,10 +185,50 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     });
   };
 
+  const updateClientStatus = (clientIds: string[], newStatus: Client['status']) => {
+    const updatedClients = clients.map(client => {
+      if (clientIds.includes(client.id)) {
+        return { ...client, status: newStatus };
+      }
+      return client;
+    });
+    
+    setClients(updatedClients);
+    
+    saveData(STORAGE_KEYS.CLIENTS, updatedClients);
+    saveData(STORAGE_KEYS.CLIENT_STATUS, updatedClients);
+    
+    if (kanbanStore && kanbanStore.moveStudent) {
+      clientIds.forEach(clientId => {
+        let currentColumn = '';
+        if (kanbanStore.data && kanbanStore.data.columns) {
+          Object.keys(kanbanStore.data.columns).forEach(columnId => {
+            if (kanbanStore.data.columns[columnId]?.studentIds?.includes(clientId)) {
+              currentColumn = columnId;
+            }
+          });
+        }
+        
+        if (currentColumn && currentColumn !== newStatus) {
+          kanbanStore.moveStudent(clientId, currentColumn, newStatus, 0, 0);
+        }
+      });
+    }
+    
+    toast({
+      title: "Status Updated",
+      description: `${clientIds.length} client(s) status updated to ${newStatus}.`,
+    });
+  };
+
   useEffect(() => {
     const handleStorageEvent = (event: any) => {
       const isRelevant = event.key === STORAGE_KEYS.CLIENTS || 
-                          (event.detail && event.detail.key === STORAGE_KEYS.CLIENTS);
+                          event.key === STORAGE_KEYS.CLIENT_STATUS || 
+                          (event.detail && (
+                            event.detail.key === STORAGE_KEYS.CLIENTS || 
+                            event.detail.key === STORAGE_KEYS.CLIENT_STATUS
+                          ));
       
       if (isRelevant) {
         const updatedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
@@ -198,10 +239,15 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     
     window.addEventListener('storage', handleStorageEvent);
     window.addEventListener('storageUpdated', handleStorageEvent);
+    window.addEventListener('storageRestored', () => {
+      const updatedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
+      setClients(validateClients(updatedClients));
+    });
     
     return () => {
       window.removeEventListener('storage', handleStorageEvent);
       window.removeEventListener('storageUpdated', handleStorageEvent);
+      window.removeEventListener('storageRestored', handleStorageEvent as EventListener);
     };
   }, []);
 
@@ -239,6 +285,7 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     handleTeamChange,
     handleSearchChange,
     handleViewModeChange,
-    deleteClients
+    deleteClients,
+    updateClientStatus
   };
 }

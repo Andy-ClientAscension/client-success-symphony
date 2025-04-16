@@ -77,6 +77,10 @@ export function ClientBulkActionDialog({
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="at-risk">At Risk</SelectItem>
               <SelectItem value="churned">Churned</SelectItem>
+              <SelectItem value="backend">Backend</SelectItem>
+              <SelectItem value="olympia">Olympia</SelectItem>
+              <SelectItem value="paused">Paused</SelectItem>
+              <SelectItem value="graduated">Graduated</SelectItem>
             </SelectContent>
           </Select>
         )}
@@ -108,6 +112,8 @@ export function ClientBulkActionDialog({
               <SelectItem value="paused">Paused Students</SelectItem>
               <SelectItem value="graduated">Graduated Students</SelectItem>
               <SelectItem value="churned">Churned Students</SelectItem>
+              <SelectItem value="at-risk">At Risk Students</SelectItem>
+              <SelectItem value="new">New Students</SelectItem>
             </SelectContent>
           </Select>
         )}

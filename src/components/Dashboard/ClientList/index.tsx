@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -50,7 +51,8 @@ export function ClientList({ statusFilter }: ClientListProps) {
     handleTeamChange,
     handleSearchChange,
     handleViewModeChange,
-    deleteClients
+    deleteClients,
+    updateClientStatus
   } = useClientList({ statusFilter });
   
   const navigate = useNavigate();
@@ -117,21 +119,30 @@ export function ClientList({ statusFilter }: ClientListProps) {
     }
     
     if (!bulkActionValue) {
+      toast({
+        title: "No Value Selected",
+        description: "Please select a value to continue.",
+        variant: "destructive",
+      });
       return;
     }
     
-    const updatedClients = clients.map(client => {
-      if (selectedClientIds.includes(client.id)) {
-        if (bulkActionType === 'status') {
-          return { ...client, status: bulkActionValue as Client['status'] };
-        } else if (bulkActionType === 'team') {
+    if (bulkActionType === 'status') {
+      updateClientStatus(selectedClientIds, bulkActionValue as Client['status']);
+    } else if (bulkActionType === 'team') {
+      const updatedClients = clients.map(client => {
+        if (selectedClientIds.includes(client.id)) {
           return { ...client, team: bulkActionValue };
         }
-      }
-      return client;
-    });
+        return client;
+      });
+      
+      setClients(updatedClients);
+    } else if (bulkActionType === 'column') {
+      // This maps to status in our application
+      updateClientStatus(selectedClientIds, bulkActionValue as Client['status']);
+    }
     
-    setClients(updatedClients);
     setSelectedClientIds([]);
     setBulkActionDialogOpen(false);
     

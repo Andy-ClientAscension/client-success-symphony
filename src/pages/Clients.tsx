@@ -15,7 +15,7 @@ import { TeamAnalytics } from "@/components/Dashboard/TeamAnalytics";
 import { EnhancedKanbanBoard } from "@/components/Dashboard/EnhancedKanbanBoard";
 import { useToast } from "@/hooks/use-toast";
 import { useKanbanStore } from "@/utils/kanbanStore";
-import { STORAGE_KEYS } from "@/utils/persistence";
+import { STORAGE_KEYS, loadData } from "@/utils/persistence";
 
 export default function Clients() {
   const [activeTab, setActiveTab] = useState("all");
@@ -26,18 +26,20 @@ export default function Clients() {
 
   // Force reload data when localStorage changes
   useEffect(() => {
-    const handleStorageChange = () => {
+    const handleStorageChange = (event: StorageEvent | CustomEvent) => {
+      console.log("Storage change detected in Clients.tsx");
       setForceReload(prev => prev + 1);
-      console.log("Forcing Clients.tsx to reload data");
     };
     
     // Listen for both the storage event and our custom event
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('storageUpdated', handleStorageChange);
+    window.addEventListener('storageRestored', handleStorageChange);
     
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('storageUpdated', handleStorageChange);
+      window.removeEventListener('storageRestored', handleStorageChange);
     };
   }, []);
 
