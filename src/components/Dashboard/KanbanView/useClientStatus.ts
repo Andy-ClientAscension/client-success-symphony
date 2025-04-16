@@ -7,16 +7,25 @@ import { useToast } from "@/hooks/use-toast";
 
 export function useClientStatus(initialClients: Client[]) {
   const [localClients, setLocalClients] = useState<Client[]>(initialClients);
+  const [isInitialized, setIsInitialized] = useState(false);
   const { toast } = useToast();
   
   // Update local state when clients prop changes
   useEffect(() => {
-    setLocalClients(initialClients);
+    if (initialClients && initialClients.length > 0) {
+      setLocalClients(initialClients);
+      setIsInitialized(true);
+    }
   }, [initialClients]);
   
   // Refresh data function that can be called externally
   const refreshData = useCallback((updatedClients: Client[]) => {
-    setLocalClients(updatedClients);
+    if (Array.isArray(updatedClients) && updatedClients.length > 0) {
+      setLocalClients(updatedClients);
+      setIsInitialized(true);
+    } else {
+      console.warn("Attempted to refresh with invalid clients data:", updatedClients);
+    }
   }, []);
   
   // Listen for storage events to detect client status changes from other components
@@ -33,6 +42,7 @@ export function useClientStatus(initialClients: Client[]) {
             if (Array.isArray(savedClients) && savedClients.length > 0) {
               // Update our local state with the latest client list
               setLocalClients(savedClients);
+              setIsInitialized(true);
               console.log("Client list updated in useClientStatus due to external change", savedClients.length);
             }
           }
@@ -70,6 +80,7 @@ export function useClientStatus(initialClients: Client[]) {
           if (validSavedClients.length > 0) {
             console.log(`Setting ${validSavedClients.length} clients from saved status`);
             setLocalClients(validSavedClients);
+            setIsInitialized(true);
           }
         }
       }
@@ -80,6 +91,11 @@ export function useClientStatus(initialClients: Client[]) {
   
   // Save client status changes to persistence
   const saveClientChanges = (updatedClients: Client[]) => {
+    if (!Array.isArray(updatedClients) || updatedClients.length === 0) {
+      console.warn("Attempted to save invalid clients data:", updatedClients);
+      return;
+    }
+    
     setLocalClients(updatedClients);
     // Persist the changes to be remembered across page refreshes
     try {
@@ -111,15 +127,17 @@ export function useClientStatus(initialClients: Client[]) {
     });
     
     // Populate groups with clients
-    localClients.forEach(client => {
-      const status = client.status as StatusGroup;
-      if (groups[status]) {
-        groups[status].push(client);
-      } else {
-        // If status doesn't match any of our columns, add to active (default)
-        groups['active'].push(client);
-      }
-    });
+    if (Array.isArray(localClients)) {
+      localClients.forEach(client => {
+        const status = client.status as StatusGroup;
+        if (groups[status]) {
+          groups[status].push(client);
+        } else {
+          // If status doesn't match any of our columns, add to active (default)
+          groups['active'].push(client);
+        }
+      });
+    }
     
     return groups;
   }, [localClients]);
@@ -163,6 +181,7 @@ export function useClientStatus(initialClients: Client[]) {
     localClients,
     clientsByStatus, 
     handleDragEnd,
-    refreshData
+    refreshData,
+    isInitialized
   };
 }

@@ -6,8 +6,9 @@ import { KanbanColumn } from "./KanbanColumn";
 import { useClientStatus } from "./useClientStatus";
 import { getStatusLabel, getStatusColor, getDefaultColumnOrder } from "./ClientStatusHelper";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { STORAGE_KEYS, loadData } from "@/utils/persistence";
+import { LoadingState } from "@/components/LoadingState";
 
 interface ClientKanbanViewProps {
   clients: Client[];
@@ -17,6 +18,7 @@ interface ClientKanbanViewProps {
 
 export function ClientKanbanView({ clients, onEditMetrics, onUpdateNPS }: ClientKanbanViewProps) {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
   const { clientsByStatus, handleDragEnd, refreshData } = useClientStatus(clients);
   
   const handleViewDetails = (client: Client) => {
@@ -28,27 +30,42 @@ export function ClientKanbanView({ clients, onEditMetrics, onUpdateNPS }: Client
   
   // Listen for external changes to sync Kanban data
   useEffect(() => {
-    const handleStorageChange = (event: StorageEvent | CustomEvent) => {
-      const key = event instanceof StorageEvent ? event.key : (event as CustomEvent).detail?.key;
-      
-      if (key === STORAGE_KEYS.CLIENTS || key === STORAGE_KEYS.CLIENT_STATUS) {
-        // Force refresh from localStorage when external changes happen
-        const updatedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
-        if (updatedClients && updatedClients.length > 0) {
-          refreshData(updatedClients);
-          console.log("Kanban view updated due to external data change");
+    setIsLoading(true);
+    
+    try {
+      const handleStorageChange = (event: StorageEvent | CustomEvent) => {
+        const key = event instanceof StorageEvent ? event.key : (event as CustomEvent).detail?.key;
+        
+        if (key === STORAGE_KEYS.CLIENTS || key === STORAGE_KEYS.CLIENT_STATUS) {
+          // Force refresh from localStorage when external changes happen
+          const updatedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
+          if (updatedClients && updatedClients.length > 0) {
+            refreshData(updatedClients);
+            console.log("Kanban view updated due to external data change");
+          }
         }
-      }
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('storageUpdated', handleStorageChange as EventListener);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('storageUpdated', handleStorageChange as EventListener);
-    };
-  }, [refreshData]);
+      };
+      
+      window.addEventListener('storage', handleStorageChange);
+      window.addEventListener('storageUpdated', handleStorageChange as EventListener);
+      
+      // Initial load
+      refreshData(clients);
+      
+      return () => {
+        window.removeEventListener('storage', handleStorageChange);
+        window.removeEventListener('storageUpdated', handleStorageChange as EventListener);
+      };
+    } catch (error) {
+      console.error("Error in ClientKanbanView:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [refreshData, clients]);
+
+  if (isLoading) {
+    return <LoadingState message="Loading kanban board..." />;
+  }
   
   return (
     <DragDropContext onDragEnd={handleDragEnd}>

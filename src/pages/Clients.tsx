@@ -16,10 +16,12 @@ import { EnhancedKanbanBoard } from "@/components/Dashboard/EnhancedKanbanBoard"
 import { useToast } from "@/hooks/use-toast";
 import { useKanbanStore } from "@/utils/kanbanStore";
 import { STORAGE_KEYS, loadData, saveData } from "@/utils/persistence";
+import { LoadingState } from "@/components/LoadingState";
 
 export default function Clients() {
   const [activeTab, setActiveTab] = useState("all");
   const [forceReload, setForceReload] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { loadPersistedData } = useKanbanStore();
@@ -52,6 +54,8 @@ export default function Clients() {
   useEffect(() => {
     // Initialize the kanban store when the component mounts
     try {
+      setIsLoading(true);
+      
       // Enable data persistence
       localStorage.setItem("persistDashboard", "true");
       
@@ -76,6 +80,8 @@ export default function Clients() {
         description: "There was an issue loading the student data. Please refresh the page.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   }, [loadPersistedData, toast]);
 
@@ -91,6 +97,14 @@ export default function Clients() {
       setForceReload(prev => prev + 1);
     }, 50);
   };
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <LoadingState message="Loading dashboard data..." size="lg" />
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
