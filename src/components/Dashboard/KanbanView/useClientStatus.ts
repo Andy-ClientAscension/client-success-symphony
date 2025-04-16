@@ -6,139 +6,69 @@ import { saveData, STORAGE_KEYS, loadData } from "@/utils/persistence";
 import { useToast } from "@/hooks/use-toast";
 
 export function useClientStatus(initialClients: Client[]) {
-  const [localClients, setLocalClients] = useState<Client[]>(initialClients);
+  const [localClients, setLocalClients] = useState<Client[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
   const { toast } = useToast();
+  
+  // Initialize local state with clients
+  const initializeClients = useCallback((clientsToUse: Client[]) => {
+    if (Array.isArray(clientsToUse) && clientsToUse.length > 0) {
+      console.log(`Initializing useClientStatus with ${clientsToUse.length} clients`);
+      setLocalClients(clientsToUse);
+      setIsInitialized(true);
+    } else {
+      console.warn("Attempted to initialize with invalid clients:", clientsToUse);
+    }
+  }, []);
   
   // Update local state when clients prop changes
   useEffect(() => {
     if (initialClients && initialClients.length > 0) {
-      setLocalClients(initialClients);
-      setIsInitialized(true);
+      console.log(`useClientStatus: Received ${initialClients.length} initial clients`);
+      initializeClients(initialClients);
     } else {
-      // If no initial clients provided, try to load from storage or use defaults
-      const storedClients = loadData<Client[]>(STORAGE_KEYS.CLIENT_STATUS, []);
+      console.log("useClientStatus: No initial clients provided, trying storage");
+      // If no initial clients provided, try to load from storage
+      const storedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
       if (storedClients && storedClients.length > 0) {
-        setLocalClients(storedClients);
-        setIsInitialized(true);
+        console.log(`useClientStatus: Using ${storedClients.length} clients from storage`);
+        initializeClients(storedClients);
       } else {
         // Last resort: use default clients
         const defaultClients = getAllClients();
         if (defaultClients.length > 0) {
-          setLocalClients(defaultClients);
-          setIsInitialized(true);
+          console.log(`useClientStatus: Using ${defaultClients.length} default clients`);
+          initializeClients(defaultClients);
+          
+          // Save to storage for other components
+          saveData(STORAGE_KEYS.CLIENTS, defaultClients);
+          saveData(STORAGE_KEYS.CLIENT_STATUS, defaultClients);
         }
       }
     }
-  }, [initialClients]);
+  }, [initialClients, initializeClients]);
   
   // Refresh data function that can be called externally
   const refreshData = useCallback((updatedClients: Client[]) => {
     if (Array.isArray(updatedClients) && updatedClients.length > 0) {
+      console.log(`refreshData called with ${updatedClients.length} clients`);
       setLocalClients(updatedClients);
       setIsInitialized(true);
+      
+      // Ensure proper synchronization by saving to storage
+      saveData(STORAGE_KEYS.CLIENT_STATUS, updatedClients);
     } else {
-      // Try to load from storage if provided clients are invalid
-      const storedClients = loadData<Client[]>(STORAGE_KEYS.CLIENT_STATUS, []);
+      console.warn("Attempted to refresh with invalid clients data:", updatedClients);
+      
+      // Try to load from storage as fallback
+      const storedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
       if (storedClients && storedClients.length > 0) {
+        console.log(`refreshData: Using ${storedClients.length} clients from storage as fallback`);
         setLocalClients(storedClients);
         setIsInitialized(true);
-      } else {
-        console.warn("Attempted to refresh with invalid clients data and no stored clients available:", updatedClients);
       }
     }
   }, []);
-  
-  // Listen for storage events to detect client status changes from other components
-  useEffect(() => {
-    const handleStorageChange = (event: StorageEvent | CustomEvent) => {
-      const key = event instanceof StorageEvent ? event.key : (event as CustomEvent).detail?.key;
-      
-      if (key === STORAGE_KEYS.CLIENTS || key === STORAGE_KEYS.CLIENT_STATUS) {
-        try {
-          // Reload clients from storage
-          const persistEnabled = localStorage.getItem("persistDashboard") === "true";
-          if (persistEnabled) {
-            const savedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
-            if (Array.isArray(savedClients) && savedClients.length > 0) {
-              // Update our local state with the latest client list
-              setLocalClients(savedClients);
-              setIsInitialized(true);
-              console.log("Client list updated in useClientStatus due to external change", savedClients.length);
-            }
-          }
-        } catch (error) {
-          console.error("Error handling storage change in useClientStatus:", error);
-        }
-      }
-    };
-
-    // Add event listener for storage events
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Also listen for our custom event that's dispatched when data changes
-    window.addEventListener('storageUpdated', handleStorageChange as EventListener);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('storageUpdated', handleStorageChange as EventListener);
-    };
-  }, []);
-  
-  // Load any persisted client status changes
-  useEffect(() => {
-    try {
-      const persistEnabled = localStorage.getItem("persistDashboard") === "true";
-      if (persistEnabled) {
-        const savedClientStatus = loadData<Client[]>(STORAGE_KEYS.CLIENT_STATUS, []);
-        if (Array.isArray(savedClientStatus) && savedClientStatus.length > 0) {
-          // Filter out any clients that might have been deleted globally
-          const currentClientIds = new Set(initialClients.length > 0 ? 
-            initialClients.map(client => client.id) : 
-            getAllClients().map(client => client.id));
-          
-          const validSavedClients = savedClientStatus.filter(client => 
-            currentClientIds.has(client.id)
-          );
-          
-          if (validSavedClients.length > 0) {
-            console.log(`Setting ${validSavedClients.length} clients from saved status`);
-            setLocalClients(validSavedClients);
-            setIsInitialized(true);
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Error loading saved client status:", error);
-    }
-  }, [initialClients]);
-  
-  // Save client status changes to persistence
-  const saveClientChanges = (updatedClients: Client[]) => {
-    if (!Array.isArray(updatedClients) || updatedClients.length === 0) {
-      console.warn("Attempted to save invalid clients data:", updatedClients);
-      return;
-    }
-    
-    setLocalClients(updatedClients);
-    // Persist the changes to be remembered across page refreshes
-    try {
-      // Save to both locations to ensure all components are notified
-      saveData(STORAGE_KEYS.CLIENT_STATUS, updatedClients);
-      // Also update the main clients list to keep everything in sync
-      saveData(STORAGE_KEYS.CLIENTS, updatedClients);
-      
-      // Dispatch a custom event to notify other components about the update
-      const event = new CustomEvent('storageUpdated', { 
-        detail: { key: STORAGE_KEYS.CLIENTS }
-      });
-      window.dispatchEvent(event);
-      
-      console.log(`Client status updated for ${updatedClients.length} clients and saved to both storage locations`);
-    } catch (error) {
-      console.error("Error saving client status changes:", error);
-    }
-  };
   
   // Group clients by status - ensure we create all columns even if empty
   const clientsByStatus = useMemo(() => {
@@ -162,6 +92,9 @@ export function useClientStatus(initialClients: Client[]) {
         }
       });
     }
+    
+    const totalClients = Object.values(groups).reduce((sum, group) => sum + group.length, 0);
+    console.log(`clientsByStatus: Grouped ${totalClients} clients across ${columnOrder.length} columns`);
     
     return groups;
   }, [localClients]);
@@ -192,7 +125,17 @@ export function useClientStatus(initialClients: Client[]) {
     });
     
     // Update local state and persist changes
-    saveClientChanges(updatedClients);
+    setLocalClients(updatedClients);
+    
+    // Persist the changes to be remembered across page refreshes
+    saveData(STORAGE_KEYS.CLIENT_STATUS, updatedClients);
+    saveData(STORAGE_KEYS.CLIENTS, updatedClients);
+    
+    // Dispatch a custom event to notify other components about the update
+    const event = new CustomEvent('storageUpdated', { 
+      detail: { key: STORAGE_KEYS.CLIENTS }
+    });
+    window.dispatchEvent(event);
     
     // Show toast notification
     toast({

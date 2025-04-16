@@ -17,15 +17,64 @@ import { useToast } from "@/hooks/use-toast";
 import { useKanbanStore } from "@/utils/kanbanStore";
 import { STORAGE_KEYS, loadData, saveData } from "@/utils/persistence";
 import { LoadingState } from "@/components/LoadingState";
-import { getAllClients } from "@/lib/data";
+import { getAllClients, Client } from "@/lib/data";
 
 export default function Clients() {
   const [activeTab, setActiveTab] = useState("all");
   const [forceReload, setForceReload] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [clients, setClients] = useState<Client[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { loadPersistedData } = useKanbanStore();
+
+  // Initialize client data
+  useEffect(() => {
+    console.log("Initializing client data in Clients.tsx");
+    setIsLoading(true);
+    
+    try {
+      // Enable data persistence
+      localStorage.setItem("persistDashboard", "true");
+      
+      // Initialize client data if not already present
+      const storedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
+      
+      if (!storedClients || !Array.isArray(storedClients) || storedClients.length === 0) {
+        // Load default clients from data.ts if no clients in storage
+        const defaultClients = getAllClients();
+        
+        if (defaultClients && defaultClients.length > 0) {
+          console.log(`Loading ${defaultClients.length} default clients in Clients.tsx`);
+          saveData(STORAGE_KEYS.CLIENTS, defaultClients);
+          saveData(STORAGE_KEYS.CLIENT_STATUS, defaultClients);
+          setClients(defaultClients);
+        } else {
+          console.warn("No default clients available");
+        }
+      } else {
+        console.log(`Loaded ${storedClients.length} clients from storage in Clients.tsx`);
+        setClients(storedClients);
+        
+        // Ensure client data is saved to client status as well for new users
+        if (localStorage.getItem(STORAGE_KEYS.CLIENT_STATUS) === null) {
+          saveData(STORAGE_KEYS.CLIENT_STATUS, storedClients);
+        }
+      }
+      
+      // Load the kanban data
+      loadPersistedData();
+    } catch (error) {
+      console.error("Error initializing client data:", error);
+      toast({
+        title: "Error Loading Students",
+        description: "There was an issue loading the student data. Please refresh the page.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [loadPersistedData, toast]);
 
   // Force reload data when localStorage changes
   useEffect(() => {
@@ -36,6 +85,14 @@ export default function Clients() {
       if (key === STORAGE_KEYS.CLIENTS || key === STORAGE_KEYS.CLIENT_STATUS || 
           key === STORAGE_KEYS.KANBAN || key === null) {
         console.log("Storage change detected in Clients.tsx:", key);
+        
+        // Reload clients from storage
+        const updatedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
+        if (updatedClients && updatedClients.length > 0) {
+          setClients(updatedClients);
+        }
+        
+        // Increment force reload counter to refresh child components
         setForceReload(prev => prev + 1);
       }
     };
@@ -51,48 +108,6 @@ export default function Clients() {
       window.removeEventListener('storageRestored', handleStorageChange as EventListener);
     };
   }, []);
-
-  useEffect(() => {
-    // Initialize the kanban store when the component mounts
-    try {
-      setIsLoading(true);
-      
-      // Enable data persistence
-      localStorage.setItem("persistDashboard", "true");
-      
-      // Initialize client data if not already present
-      const clients = loadData(STORAGE_KEYS.CLIENTS, []);
-      if (!clients || !Array.isArray(clients) || clients.length === 0) {
-        // Load default clients from data.ts if no clients in storage
-        const defaultClients = getAllClients();
-        if (defaultClients && defaultClients.length > 0) {
-          saveData(STORAGE_KEYS.CLIENTS, defaultClients);
-          saveData(STORAGE_KEYS.CLIENT_STATUS, defaultClients);
-          console.log(`${defaultClients.length} default clients loaded and saved in Clients.tsx`);
-        }
-      } else {
-        console.log(`${clients.length} clients loaded from storage in Clients.tsx`);
-        
-        // Ensure client data is saved to client status as well for new users
-        if (localStorage.getItem(STORAGE_KEYS.CLIENT_STATUS) === null) {
-          saveData(STORAGE_KEYS.CLIENT_STATUS, clients);
-        }
-      }
-      
-      // Load the kanban data
-      loadPersistedData();
-      console.log("Kanban store initialized in Clients.tsx");
-    } catch (error) {
-      console.error("Error initializing client data:", error);
-      toast({
-        title: "Error Loading Students",
-        description: "There was an issue loading the student data. Please refresh the page.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [loadPersistedData, toast]);
 
   const handleAddNewClient = () => {
     navigate("/add-client");
@@ -119,7 +134,7 @@ export default function Clients() {
     <Layout>
       <div className="space-y-4 pb-12 w-full">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="text-lg font-bold">Clients Management</div>
+          <div className="text-lg font-bold">Clients Management ({clients.length})</div>
           <Button 
             onClick={handleAddNewClient}
             className="bg-red-600 hover:bg-red-700 px-6 py-2.5 text-base"
@@ -203,7 +218,7 @@ export default function Clients() {
           </TabsContent>
           
           <TabsContent value="student-tracking" className="m-0 p-0">
-            <EnhancedKanbanBoard key={`kanban-${forceReload}`} fullScreen={false} />
+            <EnhancedKanbanBoard key={`kanban-${forceReload}`} fullScreen={false} clients={clients} />
           </TabsContent>
         </Tabs>
       </div>
