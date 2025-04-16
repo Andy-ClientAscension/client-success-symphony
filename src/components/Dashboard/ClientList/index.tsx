@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -11,6 +10,7 @@ import { ClientBulkActionDialog } from "../ClientBulkActionDialog";
 import { ClientListHeader } from "./ClientListHeader";
 import { ClientListContent } from "./ClientListContent";
 import { useClientList } from "./useClientList";
+import { AIInsightsWidget } from '../AIInsightsWidget';
 
 interface ClientListProps {
   statusFilter?: Client['status'];
@@ -52,7 +52,8 @@ export function ClientList({ statusFilter }: ClientListProps) {
     handleSearchChange,
     handleViewModeChange,
     deleteClients,
-    updateClientStatus
+    updateClientStatus,
+    aiInsights
   } = useClientList({ statusFilter });
   
   const navigate = useNavigate();
@@ -154,6 +155,7 @@ export function ClientList({ statusFilter }: ClientListProps) {
 
   return (
     <Card>
+      <AIInsightsWidget insights={aiInsights} />
       <CardHeader className="flex flex-row items-center justify-between">
         <ClientListHeader
           filteredClientCount={filteredClients.length}

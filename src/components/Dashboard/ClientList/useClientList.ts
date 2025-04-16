@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
+import { analyzeClientData, AIInsight } from '@/utils/aiDataAnalyzer';
 import { Client, getAllClients } from '@/lib/data';
 import { STORAGE_KEYS, saveData, loadData, deleteClientsGlobally } from '@/utils/persistence';
 import { useToast } from "@/hooks/use-toast";
@@ -40,6 +41,7 @@ export function useClientList({ statusFilter }: UseClientListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
+  const [aiInsights, setAIInsights] = useState<AIInsight[]>([]);
 
   const validateClients = (clientList: Client[]): Client[] => {
     if (!Array.isArray(clientList)) return [];
@@ -222,6 +224,16 @@ export function useClientList({ statusFilter }: UseClientListProps) {
   };
 
   useEffect(() => {
+    const performAIAnalysis = async () => {
+      const insights = await analyzeClientData(clients);
+      setAIInsights(insights);
+    };
+
+    // Run AI analysis when clients change
+    performAIAnalysis();
+  }, [clients]);
+
+  useEffect(() => {
     const handleStorageEvent = (event: any) => {
       const isRelevant = event.key === STORAGE_KEYS.CLIENTS || 
                           event.key === STORAGE_KEYS.CLIENT_STATUS || 
@@ -286,6 +298,7 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     handleSearchChange,
     handleViewModeChange,
     deleteClients,
-    updateClientStatus
+    updateClientStatus,
+    aiInsights
   };
 }
