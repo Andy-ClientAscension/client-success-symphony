@@ -35,17 +35,28 @@ export function EnhancedKanbanBoard({ fullScreen = false, clients = [] }: Enhanc
       
       {selectedClient && isMetricsModalOpen && (
         <ClientMetricsForm
-          client={selectedClient}
-          open={isMetricsModalOpen}
-          onOpenChange={setIsMetricsModalOpen}
+          isOpen={isMetricsModalOpen}
+          onClose={() => setIsMetricsModalOpen(false)}
+          onSubmit={(data) => {
+            console.log("Metrics updated:", data);
+            setIsMetricsModalOpen(false);
+          }}
+          clientName={selectedClient.name}
+          initialData={{
+            callsBooked: selectedClient.metrics?.callsBooked || 0,
+            dealsClosed: selectedClient.metrics?.dealsClosed || 0,
+            mrr: selectedClient.metrics?.mrr || 0
+          }}
         />
       )}
       
       {selectedClient && isNPSModalOpen && (
         <NPSUpdateForm
-          client={selectedClient}
-          open={isNPSModalOpen}
-          onOpenChange={setIsNPSModalOpen}
+          isOpen={isNPSModalOpen}
+          onClose={() => setIsNPSModalOpen(false)}
+          clientId={selectedClient.id}
+          clientName={selectedClient.name}
+          currentScore={selectedClient.npsScore || 0}
         />
       )}
     </div>
