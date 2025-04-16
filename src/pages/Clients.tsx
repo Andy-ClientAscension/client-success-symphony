@@ -27,19 +27,25 @@ export default function Clients() {
   // Force reload data when localStorage changes
   useEffect(() => {
     const handleStorageChange = (event: StorageEvent | CustomEvent) => {
-      console.log("Storage change detected in Clients.tsx");
-      setForceReload(prev => prev + 1);
+      const key = event instanceof StorageEvent ? event.key : (event as CustomEvent).detail?.key;
+      
+      // Only reload on relevant storage changes
+      if (key === STORAGE_KEYS.CLIENTS || key === STORAGE_KEYS.CLIENT_STATUS || 
+          key === STORAGE_KEYS.KANBAN || key === null) {
+        console.log("Storage change detected in Clients.tsx:", key);
+        setForceReload(prev => prev + 1);
+      }
     };
     
-    // Listen for both the storage event and our custom event
+    // Listen for both the storage event and our custom events
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('storageUpdated', handleStorageChange);
-    window.addEventListener('storageRestored', handleStorageChange);
+    window.addEventListener('storageUpdated', handleStorageChange as EventListener);
+    window.addEventListener('storageRestored', handleStorageChange as EventListener);
     
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('storageUpdated', handleStorageChange);
-      window.removeEventListener('storageRestored', handleStorageChange);
+      window.removeEventListener('storageUpdated', handleStorageChange as EventListener);
+      window.removeEventListener('storageRestored', handleStorageChange as EventListener);
     };
   }, []);
 
@@ -71,10 +77,19 @@ export default function Clients() {
         variant: "destructive",
       });
     }
-  }, [loadPersistedData, toast, forceReload]);
+  }, [loadPersistedData, toast]);
 
   const handleAddNewClient = () => {
     navigate("/add-client");
+  };
+
+  // Force all components to re-render with new data when tab changes
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    // Small delay to ensure data is loaded before tab content renders
+    setTimeout(() => {
+      setForceReload(prev => prev + 1);
+    }, 50);
   };
 
   return (
@@ -91,7 +106,7 @@ export default function Clients() {
           </Button>
         </div>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <div className="overflow-x-auto border-b mb-4">
             <TabsList className="w-full md:w-auto justify-start bg-transparent p-0 flex-nowrap mb-0">
               <TabsTrigger 

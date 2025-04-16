@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Client } from "@/lib/data";
 import { StatusGroup, getDefaultColumnOrder } from "./ClientStatusHelper";
 import { saveData, STORAGE_KEYS, loadData } from "@/utils/persistence";
@@ -13,6 +13,11 @@ export function useClientStatus(initialClients: Client[]) {
   useEffect(() => {
     setLocalClients(initialClients);
   }, [initialClients]);
+  
+  // Refresh data function that can be called externally
+  const refreshData = useCallback((updatedClients: Client[]) => {
+    setLocalClients(updatedClients);
+  }, []);
   
   // Listen for storage events to detect client status changes from other components
   useEffect(() => {
@@ -116,11 +121,6 @@ export function useClientStatus(initialClients: Client[]) {
       }
     });
     
-    // Log the distribution to help debug
-    console.log("Client distribution by status:", Object.entries(groups).map(([key, clients]) => 
-      `${key}: ${clients.length}`
-    ));
-    
     return groups;
   }, [localClients]);
   
@@ -162,6 +162,7 @@ export function useClientStatus(initialClients: Client[]) {
   return { 
     localClients,
     clientsByStatus, 
-    handleDragEnd
+    handleDragEnd,
+    refreshData
   };
 }

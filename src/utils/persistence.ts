@@ -1,3 +1,4 @@
+
 /**
  * Utility for persisting dashboard data in localStorage
  */
@@ -411,6 +412,12 @@ export const deleteClientsGlobally = (clientIdsToDelete: string[]): void => {
       }
     });
     saveData(STORAGE_KEYS.CLIENT_CUSTOM_FIELDS, customFields);
+    
+    // 7. Dispatch event for other components to update
+    const event = new CustomEvent('storageUpdated', {
+      detail: { key: STORAGE_KEYS.CLIENTS }
+    });
+    window.dispatchEvent(event);
     
     console.log(`Successfully deleted clients: ${clientIdsToDelete.join(', ')} from all dashboard sections`);
   } catch (error) {

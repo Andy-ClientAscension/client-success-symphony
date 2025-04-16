@@ -6,6 +6,8 @@ import { KanbanColumn } from "./KanbanColumn";
 import { useClientStatus } from "./useClientStatus";
 import { getStatusLabel, getStatusColor, getDefaultColumnOrder } from "./ClientStatusHelper";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useEffect } from "react";
+import { STORAGE_KEYS, loadData } from "@/utils/persistence";
 
 interface ClientKanbanViewProps {
   clients: Client[];
@@ -15,7 +17,7 @@ interface ClientKanbanViewProps {
 
 export function ClientKanbanView({ clients, onEditMetrics, onUpdateNPS }: ClientKanbanViewProps) {
   const navigate = useNavigate();
-  const { clientsByStatus, handleDragEnd } = useClientStatus(clients);
+  const { clientsByStatus, handleDragEnd, refreshData } = useClientStatus(clients);
   
   const handleViewDetails = (client: Client) => {
     navigate(`/clients/${client.id}`);
@@ -24,13 +26,34 @@ export function ClientKanbanView({ clients, onEditMetrics, onUpdateNPS }: Client
   // Use the predefined column order
   const columnOrder = getDefaultColumnOrder();
   
-  console.log("ClientKanbanView received clients:", clients.length);
-  console.log("ClientKanbanView using columns:", columnOrder);
+  // Listen for external changes to sync Kanban data
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent | CustomEvent) => {
+      const key = event instanceof StorageEvent ? event.key : (event as CustomEvent).detail?.key;
+      
+      if (key === STORAGE_KEYS.CLIENTS || key === STORAGE_KEYS.CLIENT_STATUS) {
+        // Force refresh from localStorage when external changes happen
+        const updatedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
+        if (updatedClients && updatedClients.length > 0) {
+          refreshData(updatedClients);
+          console.log("Kanban view updated due to external data change");
+        }
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('storageUpdated', handleStorageChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('storageUpdated', handleStorageChange as EventListener);
+    };
+  }, [refreshData]);
   
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <ScrollArea className="w-full h-[calc(100vh-240px)]">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-2 pb-4 min-w-full">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-2 pb-4 min-w-full">
           {columnOrder.map((status) => (
             <KanbanColumn
               key={status}
