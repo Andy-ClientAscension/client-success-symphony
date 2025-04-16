@@ -8,6 +8,7 @@ import { BrowserCompatibilityCheck } from "@/components/BrowserCompatibilityChec
 import { OfflineDetector } from "@/components/OfflineDetector";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Pages
 import Index from "@/pages/Index";
@@ -25,6 +26,17 @@ import Help from "@/pages/Help";
 import Login from "@/pages/Login";
 import SignUp from "@/pages/SignUp";
 import NotFound from "@/pages/NotFound";
+
+// Create a new query client instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 function App() {
   // We'll keep this state for future use if needed, but won't pass it to OfflineDetector
@@ -46,29 +58,31 @@ function App() {
   return (
     <Router>
       <ThemeProvider defaultTheme="system" storageKey="vite-react-theme">
-        <AuthProvider>
-          <BrowserCompatibilityCheck />
-          <OfflineDetector />
-          <Toaster />
-          <Routes>
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
-            <Route path="/clients/:id" element={<ProtectedRoute><ClientDetails /></ProtectedRoute>} />
-            <Route path="/add-client" element={<ProtectedRoute><AddClient /></ProtectedRoute>} />
-            <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-            <Route path="/renewals" element={<ProtectedRoute><Renewals /></ProtectedRoute>} />
-            <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
-            <Route path="/automations" element={<ProtectedRoute><Automations /></ProtectedRoute>} />
-            <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path="/health-score" element={<ProtectedRoute><HealthScoreDashboard /></ProtectedRoute>} />
-            <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/sign-up" element={<SignUp />} />
-            <Route path="/ai-dashboard" element={<Navigate to="/clients" replace />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <BrowserCompatibilityCheck />
+            <OfflineDetector />
+            <Toaster />
+            <Routes>
+              <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+              <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
+              <Route path="/clients/:id" element={<ProtectedRoute><ClientDetails /></ProtectedRoute>} />
+              <Route path="/add-client" element={<ProtectedRoute><AddClient /></ProtectedRoute>} />
+              <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+              <Route path="/renewals" element={<ProtectedRoute><Renewals /></ProtectedRoute>} />
+              <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
+              <Route path="/automations" element={<ProtectedRoute><Automations /></ProtectedRoute>} />
+              <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/health-score" element={<ProtectedRoute><HealthScoreDashboard /></ProtectedRoute>} />
+              <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/sign-up" element={<SignUp />} />
+              <Route path="/ai-dashboard" element={<Navigate to="/clients" replace />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </QueryClientProvider>
       </ThemeProvider>
     </Router>
   );
