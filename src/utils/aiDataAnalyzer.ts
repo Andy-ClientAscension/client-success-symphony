@@ -39,7 +39,7 @@ export async function analyzeClientData(clients: Client[]): Promise<AIInsight[]>
     
     const insights: AIInsight[] = JSON.parse(response);
     
-    // Save insights to local storage
+    // Save insights to local storage using the correct key
     saveData(STORAGE_KEYS.AI_INSIGHTS, insights);
     
     return insights;
