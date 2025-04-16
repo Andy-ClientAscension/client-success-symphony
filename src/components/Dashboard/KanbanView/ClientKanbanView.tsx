@@ -1,7 +1,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { DragDropContext } from "@hello-pangea/dnd";
-import { Client } from "@/lib/data";
+import { Client, getAllClients } from "@/lib/data";
 import { KanbanColumn } from "./KanbanColumn";
 import { useClientStatus } from "./useClientStatus";
 import { getStatusLabel, getStatusColor, getDefaultColumnOrder } from "./ClientStatusHelper";
@@ -19,7 +19,7 @@ interface ClientKanbanViewProps {
 export function ClientKanbanView({ clients, onEditMetrics, onUpdateNPS }: ClientKanbanViewProps) {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
-  const { clientsByStatus, handleDragEnd, refreshData } = useClientStatus(clients);
+  const { clientsByStatus, handleDragEnd, refreshData, isInitialized } = useClientStatus(clients);
   
   const handleViewDetails = (client: Client) => {
     navigate(`/clients/${client.id}`);
@@ -49,8 +49,22 @@ export function ClientKanbanView({ clients, onEditMetrics, onUpdateNPS }: Client
       window.addEventListener('storage', handleStorageChange);
       window.addEventListener('storageUpdated', handleStorageChange as EventListener);
       
-      // Initial load
-      refreshData(clients);
+      // Initial load - ensure we have data
+      if (clients && clients.length > 0) {
+        refreshData(clients);
+      } else {
+        // Try loading from storage if no clients provided
+        const storedClients = loadData<Client[]>(STORAGE_KEYS.CLIENT_STATUS, []);
+        if (storedClients && storedClients.length > 0) {
+          refreshData(storedClients);
+        } else {
+          // Last resort: use default clients
+          const defaultClients = getAllClients();
+          if (defaultClients.length > 0) {
+            refreshData(defaultClients);
+          }
+        }
+      }
       
       return () => {
         window.removeEventListener('storage', handleStorageChange);
@@ -63,8 +77,22 @@ export function ClientKanbanView({ clients, onEditMetrics, onUpdateNPS }: Client
     }
   }, [refreshData, clients]);
 
-  if (isLoading) {
+  // Determine if we're ready to show content
+  const isReady = isInitialized && !isLoading;
+
+  if (!isReady) {
     return <LoadingState message="Loading kanban board..." />;
+  }
+  
+  // Check if we have any clients to show
+  const hasClients = Object.values(clientsByStatus).some(group => group.length > 0);
+  
+  if (!hasClients) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+        <p>No students found. Add students to see them in the kanban view.</p>
+      </div>
+    );
   }
   
   return (

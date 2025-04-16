@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Client } from "@/lib/data";
+import { Client, getAllClients } from "@/lib/data";
 import { StatusGroup, getDefaultColumnOrder } from "./ClientStatusHelper";
 import { saveData, STORAGE_KEYS, loadData } from "@/utils/persistence";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +15,20 @@ export function useClientStatus(initialClients: Client[]) {
     if (initialClients && initialClients.length > 0) {
       setLocalClients(initialClients);
       setIsInitialized(true);
+    } else {
+      // If no initial clients provided, try to load from storage or use defaults
+      const storedClients = loadData<Client[]>(STORAGE_KEYS.CLIENT_STATUS, []);
+      if (storedClients && storedClients.length > 0) {
+        setLocalClients(storedClients);
+        setIsInitialized(true);
+      } else {
+        // Last resort: use default clients
+        const defaultClients = getAllClients();
+        if (defaultClients.length > 0) {
+          setLocalClients(defaultClients);
+          setIsInitialized(true);
+        }
+      }
     }
   }, [initialClients]);
   
@@ -24,7 +38,14 @@ export function useClientStatus(initialClients: Client[]) {
       setLocalClients(updatedClients);
       setIsInitialized(true);
     } else {
-      console.warn("Attempted to refresh with invalid clients data:", updatedClients);
+      // Try to load from storage if provided clients are invalid
+      const storedClients = loadData<Client[]>(STORAGE_KEYS.CLIENT_STATUS, []);
+      if (storedClients && storedClients.length > 0) {
+        setLocalClients(storedClients);
+        setIsInitialized(true);
+      } else {
+        console.warn("Attempted to refresh with invalid clients data and no stored clients available:", updatedClients);
+      }
     }
   }, []);
   
@@ -72,7 +93,10 @@ export function useClientStatus(initialClients: Client[]) {
         const savedClientStatus = loadData<Client[]>(STORAGE_KEYS.CLIENT_STATUS, []);
         if (Array.isArray(savedClientStatus) && savedClientStatus.length > 0) {
           // Filter out any clients that might have been deleted globally
-          const currentClientIds = new Set(initialClients.map(client => client.id));
+          const currentClientIds = new Set(initialClients.length > 0 ? 
+            initialClients.map(client => client.id) : 
+            getAllClients().map(client => client.id));
+          
           const validSavedClients = savedClientStatus.filter(client => 
             currentClientIds.has(client.id)
           );

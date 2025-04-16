@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useKanbanStore } from "@/utils/kanbanStore";
 import { STORAGE_KEYS, loadData, saveData } from "@/utils/persistence";
 import { LoadingState } from "@/components/LoadingState";
+import { getAllClients } from "@/lib/data";
 
 export default function Clients() {
   const [activeTab, setActiveTab] = useState("all");
@@ -59,10 +60,18 @@ export default function Clients() {
       // Enable data persistence
       localStorage.setItem("persistDashboard", "true");
       
-      // Ensure client data is loaded in localStorage
+      // Initialize client data if not already present
       const clients = loadData(STORAGE_KEYS.CLIENTS, []);
-      if (clients && Array.isArray(clients) && clients.length > 0) {
-        console.log(`${clients.length} clients loaded in Clients.tsx`);
+      if (!clients || !Array.isArray(clients) || clients.length === 0) {
+        // Load default clients from data.ts if no clients in storage
+        const defaultClients = getAllClients();
+        if (defaultClients && defaultClients.length > 0) {
+          saveData(STORAGE_KEYS.CLIENTS, defaultClients);
+          saveData(STORAGE_KEYS.CLIENT_STATUS, defaultClients);
+          console.log(`${defaultClients.length} default clients loaded and saved in Clients.tsx`);
+        }
+      } else {
+        console.log(`${clients.length} clients loaded from storage in Clients.tsx`);
         
         // Ensure client data is saved to client status as well for new users
         if (localStorage.getItem(STORAGE_KEYS.CLIENT_STATUS) === null) {
@@ -74,7 +83,7 @@ export default function Clients() {
       loadPersistedData();
       console.log("Kanban store initialized in Clients.tsx");
     } catch (error) {
-      console.error("Error initializing kanban store:", error);
+      console.error("Error initializing client data:", error);
       toast({
         title: "Error Loading Students",
         description: "There was an issue loading the student data. Please refresh the page.",
