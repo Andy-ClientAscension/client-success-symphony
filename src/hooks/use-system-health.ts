@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { getAllClients } from '@/lib/data';
 
-interface SystemHealthCheck {
+export interface SystemHealthCheck {
   type: 'warning' | 'error' | 'info';
   message: string;
   severity: 'low' | 'medium' | 'high';
@@ -39,6 +39,33 @@ export function useSystemHealth(intervalMs = 300000) { // 5 minutes
       });
     }
 
+    // Churn Risk Analysis
+    const potentialChurnClients = clients.filter(client => 
+      client.npsScore !== undefined && client.npsScore < 6
+    );
+    
+    if (potentialChurnClients.length > 0) {
+      checks.push({
+        type: 'warning',
+        message: `${potentialChurnClients.length} clients have low NPS scores and may be at risk of churning`,
+        severity: 'high'
+      });
+    }
+
+    // Performance Trend Check
+    const lowPerformingClients = clients.filter(client => 
+      client.dealsClosed !== undefined && client.callsBooked !== undefined && 
+      client.dealsClosed === 0 && client.callsBooked > 3
+    );
+    
+    if (lowPerformingClients.length > 0) {
+      checks.push({
+        type: 'warning',
+        message: `${lowPerformingClients.length} clients have calls booked but no deals closed`,
+        severity: 'medium'
+      });
+    }
+
     setHealthChecks(checks);
 
     // Trigger toasts for high-severity issues
@@ -61,7 +88,7 @@ export function useSystemHealth(intervalMs = 300000) { // 5 minutes
     const interval = setInterval(runSystemHealthCheck, intervalMs);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [intervalMs]);
 
-  return { healthChecks };
+  return { healthChecks, runSystemHealthCheck };
 }

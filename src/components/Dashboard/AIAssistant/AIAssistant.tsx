@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Bot, Sparkles, Send, X, Loader2, Settings, Key } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { generateAIResponse, saveOpenAIKey, getOpenAIKey, hasOpenAIKey, OpenAIMessage } from "@/lib/openai";
-import { useSystemHealth } from '@/hooks/use-system-health';
+import { useSystemHealth, SystemHealthCheck } from '@/hooks/use-system-health';
 
 interface Message {
   role: "user" | "assistant";
@@ -19,7 +20,7 @@ interface Message {
 }
 
 export function AIAssistant() {
-  const { healthChecks } = useSystemHealth();
+  const { healthChecks, runSystemHealthCheck } = useSystemHealth();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -34,6 +35,7 @@ export function AIAssistant() {
   const [apiKey, setApiKey] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const [lastProcessedHealthChecks, setLastProcessedHealthChecks] = useState<SystemHealthCheck[]>([]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -137,27 +139,46 @@ export function AIAssistant() {
     }
   };
 
-  const processSystemHealthChecks = () => {
-    if (healthChecks.length > 0) {
-      const automationSuggestions = healthChecks.map(check => 
-        `System Alert: ${check.message} (Severity: ${check.severity})`
-      );
-
-      setMessages(prev => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: `I've detected ${healthChecks.length} system health issues that require attention:\n` + 
-                   automationSuggestions.join('\n'),
-          timestamp: new Date()
-        }
-      ]);
-    }
-  };
-
+  // Process system health checks and add them to the chat if needed
   useEffect(() => {
-    processSystemHealthChecks();
-  }, [healthChecks]);
+    if (
+      healthChecks.length > 0 && 
+      (
+        lastProcessedHealthChecks.length !== healthChecks.length || 
+        JSON.stringify(lastProcessedHealthChecks) !== JSON.stringify(healthChecks)
+      )
+    ) {
+      const highSeverityChecks = healthChecks.filter(check => check.severity === 'high');
+      
+      if (highSeverityChecks.length > 0) {
+        const healthMessage = highSeverityChecks.map(check => 
+          `System Alert: ${check.message} (Type: ${check.type})`
+        ).join('\n');
+        
+        setMessages(prev => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: `I've detected ${highSeverityChecks.length} high-priority system health issues:\n\n` + 
+                     healthMessage + 
+                     '\n\nWould you like me to help address these issues?',
+            timestamp: new Date()
+          }
+        ]);
+        
+        // If the chat is not open, show a toast notification
+        if (!isOpen) {
+          toast({
+            title: "System Health Alerts",
+            description: `${highSeverityChecks.length} high-priority issues detected`,
+            variant: "destructive",
+          });
+        }
+      }
+      
+      setLastProcessedHealthChecks(healthChecks);
+    }
+  }, [healthChecks, lastProcessedHealthChecks, isOpen, toast]);
 
   return (
     <>
@@ -168,6 +189,11 @@ export function AIAssistant() {
           aria-label="Open AI Assistant"
         >
           <Bot className="h-6 w-6" />
+          {healthChecks.some(check => check.severity === 'high') && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs">
+              {healthChecks.filter(check => check.severity === 'high').length}
+            </span>
+          )}
         </Button>
       )}
 
