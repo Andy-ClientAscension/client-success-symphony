@@ -1,79 +1,75 @@
-
-import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { ThemeProvider } from './components/ThemeProvider';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
-import { ErrorBoundary } from 'react-error-boundary';
-import { AuthProvider } from './contexts/AuthContext';
-import Index from './pages/Index';
-import Login from './pages/Login';
-import SignUp from './pages/SignUp';
-import Clients from './pages/Clients';
-import ClientDetails from './pages/ClientDetails';
-import AddClient from './pages/AddClient';
-import Analytics from './pages/Analytics';
-import Communications from './pages/Communications';
-import HealthScoreDashboard from './pages/HealthScoreDashboard';
-import Payments from './pages/Payments';
-import Renewals from './pages/Renewals';
-import Settings from './pages/Settings';
-import Help from './pages/Help';
-import NotFound from './pages/NotFound';
-import { OfflineDetector } from './components/OfflineDetector';
-import Automations from './pages/Automations';
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { BrowserCompatibilityCheck } from "@/components/BrowserCompatibilityCheck";
+import { OfflineDetector } from "@/components/OfflineDetector";
 
-const queryClient = new QueryClient();
-
-// Simple fallback component for the ErrorBoundary
-const ErrorFallback = ({ error }: { error: Error }) => (
-  <div className="flex min-h-screen items-center justify-center bg-red-50 p-4">
-    <div className="max-w-md rounded-lg bg-white p-8 shadow-lg">
-      <h1 className="mb-4 text-2xl font-bold text-red-600">Something went wrong</h1>
-      <p className="mb-4 text-gray-700">{error.message}</p>
-      <button 
-        onClick={() => window.location.reload()}
-        className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-      >
-        Refresh the page
-      </button>
-    </div>
-  </div>
-);
+// Pages
+import Index from "@/pages/Index";
+import Clients from "@/pages/Clients";
+import ClientDetails from "@/pages/ClientDetails";
+import AddClient from "@/pages/AddClient";
+import Analytics from "@/pages/Analytics";
+import AIDashboard from "@/pages/AIDashboard";
+import Renewals from "@/pages/Renewals";
+import Communications from "@/pages/Communications";
+import Automations from "@/pages/Automations";
+import Payments from "@/pages/Payments";
+import Settings from "@/pages/Settings";
+import HealthScoreDashboard from "@/pages/HealthScoreDashboard";
+import Help from "@/pages/Help";
+import Login from "@/pages/Login";
+import SignUp from "@/pages/SignUp";
+import NotFound from "@/pages/NotFound";
 
 function App() {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   return (
-    <BrowserRouter>
-      <ThemeProvider>
-        <QueryClientProvider client={queryClient}>
-          <ErrorBoundary fallbackRender={({ error }) => <ErrorFallback error={error} />}>
-            <AuthProvider>
-              <div className="app">
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<SignUp />} />
-                  <Route path="/clients" element={<Clients />} />
-                  <Route path="/clients/:id" element={<ClientDetails />} />
-                  <Route path="/add-client" element={<AddClient />} />
-                  <Route path="/analytics" element={<Analytics />} />
-                  <Route path="/communications" element={<Communications />} />
-                  <Route path="/health-score" element={<HealthScoreDashboard />} />
-                  <Route path="/payments" element={<Payments />} />
-                  <Route path="/renewals" element={<Renewals />} />
-                  <Route path="/automations" element={<Automations />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/help" element={<Help />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </div>
-              <OfflineDetector />
-              <Toaster />
-            </AuthProvider>
-          </ErrorBoundary>
-        </QueryClientProvider>
-      </ThemeProvider>
-    </BrowserRouter>
+    <ThemeProvider defaultTheme="system" storageKey="vite-react-theme">
+      <AuthProvider>
+        <Router>
+          <BrowserCompatibilityCheck />
+          <OfflineDetector isOnline={isOnline} />
+          <Toaster />
+          <Routes>
+            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
+            <Route path="/clients/:id" element={<ProtectedRoute><ClientDetails /></ProtectedRoute>} />
+            <Route path="/add-client" element={<ProtectedRoute><AddClient /></ProtectedRoute>} />
+            <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+            <Route path="/ai-dashboard" element={<ProtectedRoute><AIDashboard /></ProtectedRoute>} />
+            <Route path="/renewals" element={<ProtectedRoute><Renewals /></ProtectedRoute>} />
+            <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
+            <Route path="/automations" element={<ProtectedRoute><Automations /></ProtectedRoute>} />
+            <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/health-score" element={<ProtectedRoute><HealthScoreDashboard /></ProtectedRoute>} />
+            <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/sign-up" element={<SignUp />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

@@ -1,0 +1,179 @@
+
+import { useState } from "react";
+import { Bot, Sparkles, Send, X, Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { AIAutomationSuggestions } from "./AIAutomationSuggestions";
+import { Badge } from "@/components/ui/badge";
+
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+  timestamp: Date;
+}
+
+export function AIAssistant() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: "assistant",
+      content: "Hello! I'm your AI assistant. I can help analyze client data, generate reports, and automate routine tasks. How can I assist you today?",
+      timestamp: new Date(),
+    },
+  ]);
+  const { toast } = useToast();
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+  };
+
+  const handleSendMessage = async () => {
+    if (!input.trim()) return;
+
+    // Add user message
+    const userMessage: Message = {
+      role: "user",
+      content: input,
+      timestamp: new Date(),
+    };
+    
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setIsLoading(true);
+
+    // Simulate AI response - in a real app, this would call an actual AI API
+    setTimeout(() => {
+      let responseContent = "";
+      
+      // Simple keyword-based responses
+      if (input.toLowerCase().includes("analyze client")) {
+        responseContent = "I've analyzed your client data. It appears you have several clients at risk with decreasing engagement scores. Would you like me to prepare a detailed report?";
+      } else if (input.toLowerCase().includes("generate report")) {
+        responseContent = "I've generated a comprehensive report on client health metrics. Your top performing clients are Tech Innovations and Global Corp with consistent growth over the last quarter.";
+      } else if (input.toLowerCase().includes("automation") || input.toLowerCase().includes("automate")) {
+        responseContent = "I can help automate several tasks including client follow-ups, renewal notifications, and health score calculations. Which area would you like to focus on?";
+      } else if (input.toLowerCase().includes("health score")) {
+        responseContent = "Based on recent interactions, I've recalculated health scores for all clients. Three clients have improved significantly: Acme Inc, DataFlow, and Tech Partners.";
+      } else {
+        responseContent = "I understand you're asking about \"" + input + "\". How can I help you with this specific question? I can analyze client data, suggest automation workflows, or help with reporting.";
+      }
+      
+      const assistantMessage: Message = {
+        role: "assistant",
+        content: responseContent,
+        timestamp: new Date(),
+      };
+      
+      setMessages((prev) => [...prev, assistantMessage]);
+      setIsLoading(false);
+      
+      toast({
+        title: "AI Assistant Response",
+        description: "New insights are available from your AI assistant",
+      });
+    }, 1500);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  return (
+    <>
+      {!isOpen && (
+        <Button 
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-6 right-6 bg-red-600 hover:bg-red-700 rounded-full h-14 w-14 p-0 shadow-lg"
+          aria-label="Open AI Assistant"
+        >
+          <Bot className="h-6 w-6" />
+        </Button>
+      )}
+
+      {isOpen && (
+        <Card className="fixed bottom-6 right-6 w-80 sm:w-96 shadow-xl border-red-100 z-50 max-h-[70vh] flex flex-col">
+          <CardHeader className="p-3 border-b flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm font-medium flex items-center">
+              <Bot className="h-4 w-4 mr-2 text-red-600" />
+              AI Assistant
+              <Badge variant="outline" className="ml-2 text-xs bg-red-50 text-red-600 border-red-200">
+                Beta
+              </Badge>
+            </CardTitle>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8" 
+              onClick={() => setIsOpen(false)}
+              aria-label="Close AI Assistant"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </CardHeader>
+          <CardContent className="p-0 flex-grow overflow-hidden flex flex-col">
+            <div className="flex-grow overflow-y-auto p-3 space-y-3">
+              {messages.map((message, index) => (
+                <div 
+                  key={index} 
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div 
+                    className={`max-w-[80%] rounded-lg p-2 text-sm ${
+                      message.role === 'user' 
+                        ? 'bg-red-600 text-white' 
+                        : 'bg-gray-100 text-gray-800'
+                    }`}
+                  >
+                    {message.content}
+                    <div className={`text-xs mt-1 ${
+                      message.role === 'user' ? 'text-red-100' : 'text-gray-500'
+                    }`}>
+                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-gray-100 rounded-lg p-2 flex items-center space-x-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-red-600" />
+                    <span className="text-sm text-gray-600">Thinking...</span>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="p-3 border-t">
+              <AIAutomationSuggestions onSelectSuggestion={(suggestion) => setInput(suggestion)} />
+              
+              <div className="flex mt-2">
+                <Textarea
+                  value={input}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Ask a question..."
+                  className="resize-none min-h-[60px]"
+                />
+                <Button 
+                  className="ml-2 bg-red-600 hover:bg-red-700 self-end"
+                  disabled={isLoading || !input.trim()}
+                  onClick={handleSendMessage}
+                  aria-label="Send message"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </>
+  );
+}

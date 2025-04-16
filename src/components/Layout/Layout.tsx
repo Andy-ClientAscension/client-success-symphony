@@ -7,6 +7,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useTheme } from "@/components/ThemeProvider";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { AIAssistant } from "@/components/Dashboard/AIAssistant";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -85,6 +86,7 @@ export function Layout({ children }: LayoutProps) {
         </main>
       </div>
       <Toaster />
+      <AIAssistant />
     </div>
   );
 }
