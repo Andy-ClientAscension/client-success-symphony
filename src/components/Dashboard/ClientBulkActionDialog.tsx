@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Client } from "@/lib/data";
+import { getDefaultColumnOrder, getStatusLabel } from "./KanbanView/ClientStatusHelper";
 
 const TEAMS = [
   { id: "Team-Andy", name: "Team Andy" },
@@ -52,6 +53,9 @@ export function ClientBulkActionDialog({
     }
   };
   
+  // Get all available status options from the default column order
+  const statusOptions = getDefaultColumnOrder();
+  
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
@@ -73,14 +77,11 @@ export function ClientBulkActionDialog({
               <SelectValue placeholder="Select new status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="new">New</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="at-risk">At Risk</SelectItem>
-              <SelectItem value="churned">Churned</SelectItem>
-              <SelectItem value="backend">Backend</SelectItem>
-              <SelectItem value="olympia">Olympia</SelectItem>
-              <SelectItem value="paused">Paused</SelectItem>
-              <SelectItem value="graduated">Graduated</SelectItem>
+              {statusOptions.map(status => (
+                <SelectItem key={status} value={status}>
+                  {getStatusLabel(status)}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         )}
@@ -106,14 +107,11 @@ export function ClientBulkActionDialog({
               <SelectValue placeholder="Select column" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="active">Active Students</SelectItem>
-              <SelectItem value="backend">Backend Students</SelectItem>
-              <SelectItem value="olympia">Olympia Students</SelectItem>
-              <SelectItem value="paused">Paused Students</SelectItem>
-              <SelectItem value="graduated">Graduated Students</SelectItem>
-              <SelectItem value="churned">Churned Students</SelectItem>
-              <SelectItem value="at-risk">At Risk Students</SelectItem>
-              <SelectItem value="new">New Students</SelectItem>
+              {statusOptions.map(status => (
+                <SelectItem key={status} value={status}>
+                  {getStatusLabel(status)}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         )}

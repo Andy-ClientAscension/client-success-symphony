@@ -15,7 +15,7 @@ import { TeamAnalytics } from "@/components/Dashboard/TeamAnalytics";
 import { EnhancedKanbanBoard } from "@/components/Dashboard/EnhancedKanbanBoard";
 import { useToast } from "@/hooks/use-toast";
 import { useKanbanStore } from "@/utils/kanbanStore";
-import { STORAGE_KEYS, loadData } from "@/utils/persistence";
+import { STORAGE_KEYS, loadData, saveData } from "@/utils/persistence";
 
 export default function Clients() {
   const [activeTab, setActiveTab] = useState("all");
@@ -48,6 +48,17 @@ export default function Clients() {
     try {
       // Enable data persistence
       localStorage.setItem("persistDashboard", "true");
+      
+      // Ensure client data is loaded in localStorage
+      const clients = loadData(STORAGE_KEYS.CLIENTS, []);
+      if (clients && Array.isArray(clients) && clients.length > 0) {
+        console.log(`${clients.length} clients loaded in Clients.tsx`);
+        
+        // Ensure client data is saved to client status as well for new users
+        if (localStorage.getItem(STORAGE_KEYS.CLIENT_STATUS) === null) {
+          saveData(STORAGE_KEYS.CLIENT_STATUS, clients);
+        }
+      }
       
       // Load the kanban data
       loadPersistedData();

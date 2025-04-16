@@ -25,15 +25,15 @@ export function KanbanColumn({
   onViewDetails
 }: KanbanColumnProps) {
   return (
-    <div className="bg-card rounded-lg p-3 border">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold">{getStatusLabel(status)}</h3>
-        <Badge className={getStatusColor(status)}>{clients.length}</Badge>
+    <div className="bg-card rounded-lg p-2 border shadow-sm">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="font-semibold text-sm">{getStatusLabel(status)}</h3>
+        <Badge className={`${getStatusColor(status)} text-xs`}>{clients.length}</Badge>
       </div>
       <Droppable droppableId={status}>
         {(provided) => (
           <div 
-            className="space-y-3 max-h-[calc(100vh-200px)] overflow-y-auto pr-1"
+            className="space-y-2 max-h-[calc(100vh-220px)] overflow-y-auto overflow-x-hidden pr-1"
             ref={provided.innerRef}
             {...provided.droppableProps}
           >
@@ -50,6 +50,11 @@ export function KanbanColumn({
               />
             ))}
             {provided.placeholder}
+            {clients.length === 0 && (
+              <div className="text-center py-4 text-muted-foreground text-xs italic">
+                No clients in this column
+              </div>
+            )}
           </div>
         )}
       </Droppable>

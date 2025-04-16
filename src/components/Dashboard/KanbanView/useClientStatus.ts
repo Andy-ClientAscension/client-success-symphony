@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from "react";
 import { Client } from "@/lib/data";
 import { StatusGroup, getDefaultColumnOrder } from "./ClientStatusHelper";
@@ -24,10 +25,10 @@ export function useClientStatus(initialClients: Client[]) {
           const persistEnabled = localStorage.getItem("persistDashboard") === "true";
           if (persistEnabled) {
             const savedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
-            if (Array.isArray(savedClients)) {
+            if (Array.isArray(savedClients) && savedClients.length > 0) {
               // Update our local state with the latest client list
               setLocalClients(savedClients);
-              console.log("Client list updated in useClientStatus due to external change");
+              console.log("Client list updated in useClientStatus due to external change", savedClients.length);
             }
           }
         } catch (error) {
@@ -54,7 +55,7 @@ export function useClientStatus(initialClients: Client[]) {
       const persistEnabled = localStorage.getItem("persistDashboard") === "true";
       if (persistEnabled) {
         const savedClientStatus = loadData<Client[]>(STORAGE_KEYS.CLIENT_STATUS, []);
-        if (Array.isArray(savedClientStatus)) {
+        if (Array.isArray(savedClientStatus) && savedClientStatus.length > 0) {
           // Filter out any clients that might have been deleted globally
           const currentClientIds = new Set(initialClients.map(client => client.id));
           const validSavedClients = savedClientStatus.filter(client => 
@@ -62,6 +63,7 @@ export function useClientStatus(initialClients: Client[]) {
           );
           
           if (validSavedClients.length > 0) {
+            console.log(`Setting ${validSavedClients.length} clients from saved status`);
             setLocalClients(validSavedClients);
           }
         }
@@ -80,7 +82,14 @@ export function useClientStatus(initialClients: Client[]) {
       saveData(STORAGE_KEYS.CLIENT_STATUS, updatedClients);
       // Also update the main clients list to keep everything in sync
       saveData(STORAGE_KEYS.CLIENTS, updatedClients);
-      console.log("Client status updated and saved to both storage locations");
+      
+      // Dispatch a custom event to notify other components about the update
+      const event = new CustomEvent('storageUpdated', { 
+        detail: { key: STORAGE_KEYS.CLIENTS }
+      });
+      window.dispatchEvent(event);
+      
+      console.log(`Client status updated for ${updatedClients.length} clients and saved to both storage locations`);
     } catch (error) {
       console.error("Error saving client status changes:", error);
     }
@@ -106,6 +115,11 @@ export function useClientStatus(initialClients: Client[]) {
         groups['active'].push(client);
       }
     });
+    
+    // Log the distribution to help debug
+    console.log("Client distribution by status:", Object.entries(groups).map(([key, clients]) => 
+      `${key}: ${clients.length}`
+    ));
     
     return groups;
   }, [localClients]);

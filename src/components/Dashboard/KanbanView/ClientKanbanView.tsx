@@ -5,6 +5,7 @@ import { Client } from "@/lib/data";
 import { KanbanColumn } from "./KanbanColumn";
 import { useClientStatus } from "./useClientStatus";
 import { getStatusLabel, getStatusColor, getDefaultColumnOrder } from "./ClientStatusHelper";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ClientKanbanViewProps {
   clients: Client[];
@@ -23,22 +24,27 @@ export function ClientKanbanView({ clients, onEditMetrics, onUpdateNPS }: Client
   // Use the predefined column order
   const columnOrder = getDefaultColumnOrder();
   
+  console.log("ClientKanbanView received clients:", clients.length);
+  console.log("ClientKanbanView using columns:", columnOrder);
+  
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4 overflow-x-auto">
-        {columnOrder.map((status) => (
-          <KanbanColumn
-            key={status}
-            status={status}
-            clients={clientsByStatus[status] || []}
-            getStatusColor={getStatusColor}
-            getStatusLabel={getStatusLabel}
-            onUpdateNPS={onUpdateNPS}
-            onEditMetrics={onEditMetrics}
-            onViewDetails={handleViewDetails}
-          />
-        ))}
-      </div>
+      <ScrollArea className="w-full h-[calc(100vh-240px)]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-2 pb-4 min-w-full">
+          {columnOrder.map((status) => (
+            <KanbanColumn
+              key={status}
+              status={status}
+              clients={clientsByStatus[status] || []}
+              getStatusColor={getStatusColor}
+              getStatusLabel={getStatusLabel}
+              onUpdateNPS={onUpdateNPS}
+              onEditMetrics={onEditMetrics}
+              onViewDetails={handleViewDetails}
+            />
+          ))}
+        </div>
+      </ScrollArea>
     </DragDropContext>
   );
 }
