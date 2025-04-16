@@ -1,12 +1,13 @@
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { BrowserCompatibilityCheck } from "@/components/BrowserCompatibilityCheck";
 import { OfflineDetector } from "@/components/OfflineDetector";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Pages
 import Index from "@/pages/Index";
@@ -43,9 +44,9 @@ function App() {
   }, []);
 
   return (
-    <ThemeProvider defaultTheme="system" storageKey="vite-react-theme">
-      <AuthProvider>
-        <Router>
+    <Router>
+      <ThemeProvider defaultTheme="system" storageKey="vite-react-theme">
+        <AuthProvider>
           <BrowserCompatibilityCheck />
           <OfflineDetector isOnline={isOnline} />
           <Toaster />
@@ -67,9 +68,9 @@ function App() {
             <Route path="/sign-up" element={<SignUp />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </Router>
-      </AuthProvider>
-    </ThemeProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </Router>
   );
 }
 
