@@ -1,7 +1,7 @@
 
 // OpenAI API service
 
-interface OpenAIMessage {
+export interface OpenAIMessage {
   role: "system" | "user" | "assistant";
   content: string;
 }
