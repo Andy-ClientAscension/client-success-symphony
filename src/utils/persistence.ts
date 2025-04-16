@@ -1,4 +1,3 @@
-
 /**
  * Utility for persisting dashboard data in localStorage
  */
@@ -22,7 +21,8 @@ const STORAGE_KEYS = {
   IMPORTED_DATA: "importedData",
   DASHBOARD_SETTINGS: "dashboardSettings",
   EXPORT_HISTORY: "exportHistory",
-  BACKUP_DATA: "backupData"
+  BACKUP_DATA: "backupData",
+  AI_INSIGHTS: "aiInsights"
 };
 
 /**
