@@ -1,4 +1,3 @@
-
 import {
   LayoutDashboard,
   Users,
@@ -48,12 +47,6 @@ export function Sidebar({ isMobile, closeSidebar, collapsed = false, toggleColla
       href: "/analytics",
       icon: <BarChart className="h-5 w-5" />,
       color: "border-purple-400" // Backend color
-    },
-    {
-      name: "AI Dashboard",
-      href: "/ai-dashboard",
-      icon: <Bot className="h-5 w-5" />,
-      color: "border-red-400" // Using red color
     },
     {
       name: "Renewals",

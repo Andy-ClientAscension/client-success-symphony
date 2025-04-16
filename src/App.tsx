@@ -14,7 +14,6 @@ import Clients from "@/pages/Clients";
 import ClientDetails from "@/pages/ClientDetails";
 import AddClient from "@/pages/AddClient";
 import Analytics from "@/pages/Analytics";
-import AIDashboard from "@/pages/AIDashboard";
 import Renewals from "@/pages/Renewals";
 import Communications from "@/pages/Communications";
 import Automations from "@/pages/Automations";
@@ -56,7 +55,6 @@ function App() {
             <Route path="/clients/:id" element={<ProtectedRoute><ClientDetails /></ProtectedRoute>} />
             <Route path="/add-client" element={<ProtectedRoute><AddClient /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-            <Route path="/ai-dashboard" element={<ProtectedRoute><AIDashboard /></ProtectedRoute>} />
             <Route path="/renewals" element={<ProtectedRoute><Renewals /></ProtectedRoute>} />
             <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
             <Route path="/automations" element={<ProtectedRoute><Automations /></ProtectedRoute>} />

@@ -22,19 +22,23 @@ export function AIInsightsWidget({ insights }: AIInsightsWidgetProps) {
   if (insights.length === 0) return null;
 
   return (
-    <Card className="mb-4">
+    <Card className="mb-4 bg-background/80 shadow-sm">
       <CardHeader>
-        <CardTitle className="flex items-center">
-          <Bot className="h-5 w-5 mr-2 text-red-600" />
+        <CardTitle className="flex items-center text-sm">
+          <Bot className="h-4 w-4 mr-2 text-primary" />
           AI Insights
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        {insights.map((insight, index) => (
-          <Alert key={index} variant={insight.severity === 'high' ? 'destructive' : 'default'}>
+      <CardContent className="space-y-2">
+        {insights.slice(0, 3).map((insight, index) => (
+          <Alert 
+            key={index} 
+            variant={insight.severity === 'high' ? 'destructive' : 'default'}
+            className="p-2"
+          >
             {getIcon(insight.type)}
-            <AlertTitle>{insight.type.charAt(0).toUpperCase() + insight.type.slice(1)}</AlertTitle>
-            <AlertDescription>{insight.message}</AlertDescription>
+            <AlertTitle className="text-xs">{insight.type.charAt(0).toUpperCase() + insight.type.slice(1)}</AlertTitle>
+            <AlertDescription className="text-xs">{insight.message}</AlertDescription>
           </Alert>
         ))}
       </CardContent>
