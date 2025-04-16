@@ -1,12 +1,16 @@
 
-import { useState } from "react";
-import { Bot, Sparkles, Send, X, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Bot, Sparkles, Send, X, Loader2, Settings, Key } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { AIAutomationSuggestions } from "./AIAutomationSuggestions";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { generateAIResponse, saveOpenAIKey, getOpenAIKey, hasOpenAIKey } from "@/lib/openai";
 
 interface Message {
   role: "user" | "assistant";
@@ -21,14 +25,46 @@ export function AIAssistant() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hello! I'm your AI assistant. I can help analyze client data, generate reports, and automate routine tasks. How can I assist you today?",
+      content: "Hello! I'm your AI assistant powered by GPT-4o-mini. I can help analyze client data, generate reports, and automate routine tasks. How can I assist you today?",
       timestamp: new Date(),
     },
   ]);
+  const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
+  const [apiKey, setApiKey] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Scroll to bottom when messages change
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  useEffect(() => {
+    // Check for API key on component mount
+    if (isOpen && !hasOpenAIKey()) {
+      setShowApiKeyDialog(true);
+    }
+    
+    // Load saved API key if it exists
+    const savedKey = getOpenAIKey();
+    if (savedKey) {
+      setApiKey(savedKey);
+    }
+  }, [isOpen]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
+  };
+
+  const handleSaveApiKey = () => {
+    if (apiKey.trim()) {
+      saveOpenAIKey(apiKey.trim());
+      setShowApiKeyDialog(false);
+      toast({
+        title: "API Key Saved",
+        description: "Your OpenAI API key has been saved.",
+      });
+    }
   };
 
   const handleSendMessage = async () => {
@@ -45,37 +81,61 @@ export function AIAssistant() {
     setInput("");
     setIsLoading(true);
 
-    // Simulate AI response - in a real app, this would call an actual AI API
-    setTimeout(() => {
-      let responseContent = "";
-      
-      // Simple keyword-based responses
-      if (input.toLowerCase().includes("analyze client")) {
-        responseContent = "I've analyzed your client data. It appears you have several clients at risk with decreasing engagement scores. Would you like me to prepare a detailed report?";
-      } else if (input.toLowerCase().includes("generate report")) {
-        responseContent = "I've generated a comprehensive report on client health metrics. Your top performing clients are Tech Innovations and Global Corp with consistent growth over the last quarter.";
-      } else if (input.toLowerCase().includes("automation") || input.toLowerCase().includes("automate")) {
-        responseContent = "I can help automate several tasks including client follow-ups, renewal notifications, and health score calculations. Which area would you like to focus on?";
-      } else if (input.toLowerCase().includes("health score")) {
-        responseContent = "Based on recent interactions, I've recalculated health scores for all clients. Three clients have improved significantly: Acme Inc, DataFlow, and Tech Partners.";
-      } else {
-        responseContent = "I understand you're asking about \"" + input + "\". How can I help you with this specific question? I can analyze client data, suggest automation workflows, or help with reporting.";
+    try {
+      // Check if API key exists
+      if (!hasOpenAIKey()) {
+        setShowApiKeyDialog(true);
+        setIsLoading(false);
+        return;
       }
+
+      // Format message history for API
+      const messageHistory = messages.concat(userMessage).map(msg => ({
+        role: msg.role === "user" ? "user" : "assistant",
+        content: msg.content
+      }));
       
+      // Add system message at the beginning
+      messageHistory.unshift({
+        role: "system",
+        content: "You are an AI assistant for a client management system. Help users analyze client data, generate reports, and suggest automations. Be concise and helpful."
+      });
+
+      // Call OpenAI API
+      const response = await generateAIResponse(messageHistory, getOpenAIKey());
+      
+      // Add AI response
       const assistantMessage: Message = {
         role: "assistant",
-        content: responseContent,
+        content: response,
         timestamp: new Date(),
       };
       
       setMessages((prev) => [...prev, assistantMessage]);
-      setIsLoading(false);
       
       toast({
         title: "AI Assistant Response",
         description: "New insights are available from your AI assistant",
       });
-    }, 1500);
+    } catch (error) {
+      console.error("Error processing AI response:", error);
+      
+      const errorMessage: Message = {
+        role: "assistant",
+        content: "I'm sorry, I encountered an error processing your request. Please try again later.",
+        timestamp: new Date(),
+      };
+      
+      setMessages((prev) => [...prev, errorMessage]);
+      
+      toast({
+        title: "Error",
+        description: "Failed to get AI response. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -104,18 +164,29 @@ export function AIAssistant() {
               <Bot className="h-4 w-4 mr-2 text-red-600" />
               AI Assistant
               <Badge variant="outline" className="ml-2 text-xs bg-red-50 text-red-600 border-red-200">
-                Beta
+                GPT-4o-mini
               </Badge>
             </CardTitle>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8" 
-              onClick={() => setIsOpen(false)}
-              aria-label="Close AI Assistant"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex gap-1">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8" 
+                onClick={() => setShowApiKeyDialog(true)}
+                aria-label="API Settings"
+              >
+                <Key className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8" 
+                onClick={() => setIsOpen(false)}
+                aria-label="Close AI Assistant"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="p-0 flex-grow overflow-hidden flex flex-col">
             <div className="flex-grow overflow-y-auto p-3 space-y-3">
@@ -148,6 +219,7 @@ export function AIAssistant() {
                   </div>
                 </div>
               )}
+              <div ref={messagesEndRef} />
             </div>
             
             <div className="p-3 border-t">
@@ -160,6 +232,7 @@ export function AIAssistant() {
                   onKeyDown={handleKeyDown}
                   placeholder="Ask a question..."
                   className="resize-none min-h-[60px]"
+                  disabled={isLoading}
                 />
                 <Button 
                   className="ml-2 bg-red-600 hover:bg-red-700 self-end"
@@ -174,6 +247,40 @@ export function AIAssistant() {
           </CardContent>
         </Card>
       )}
+
+      <Dialog open={showApiKeyDialog} onOpenChange={setShowApiKeyDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Enter OpenAI API Key</DialogTitle>
+            <DialogDescription>
+              Enter your OpenAI API key to power the AI assistant. Your key is stored locally in your browser and never sent to our servers.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="apiKey" className="text-right col-span-1">
+                API Key
+              </Label>
+              <Input
+                id="apiKey"
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="sk-..."
+                className="col-span-3"
+              />
+            </div>
+            <div className="text-sm text-gray-500 col-span-4">
+              Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" className="underline text-blue-600">OpenAI's dashboard</a>. This application uses gpt-4o-mini which is cost-effective.
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="submit" onClick={handleSaveApiKey} disabled={!apiKey.trim()}>
+              Save Key
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

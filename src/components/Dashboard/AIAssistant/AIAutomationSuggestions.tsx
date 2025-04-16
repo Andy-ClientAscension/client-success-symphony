@@ -11,7 +11,11 @@ export function AIAutomationSuggestions({ onSelectSuggestion }: AIAutomationSugg
     "Analyze client health scores",
     "Generate monthly report",
     "Automate renewal reminders",
-    "Identify at-risk clients"
+    "Identify at-risk clients",
+    "Summarize today's tasks",
+    "What services can I automate?",
+    "How can I improve client retention?",
+    "Show me insights from my data"
   ];
 
   return (
