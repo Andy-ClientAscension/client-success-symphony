@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Bot, Sparkles, Send, X, Loader2, Settings, Key } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { generateAIResponse, saveOpenAIKey, getOpenAIKey, hasOpenAIKey, OpenAIMessage } from "@/lib/openai";
+import { useSystemHealth } from '@/hooks/use-system-health';
 
 interface Message {
   role: "user" | "assistant";
@@ -19,6 +19,7 @@ interface Message {
 }
 
 export function AIAssistant() {
+  const { healthChecks } = useSystemHealth();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -35,17 +36,14 @@ export function AIAssistant() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Scroll to bottom when messages change
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   useEffect(() => {
-    // Check for API key on component mount
     if (isOpen && !hasOpenAIKey()) {
       setShowApiKeyDialog(true);
     }
     
-    // Load saved API key if it exists
     const savedKey = getOpenAIKey();
     if (savedKey) {
       setApiKey(savedKey);
@@ -70,7 +68,6 @@ export function AIAssistant() {
   const handleSendMessage = async () => {
     if (!input.trim()) return;
 
-    // Add user message
     const userMessage: Message = {
       role: "user",
       content: input,
@@ -82,29 +79,24 @@ export function AIAssistant() {
     setIsLoading(true);
 
     try {
-      // Check if API key exists
       if (!hasOpenAIKey()) {
         setShowApiKeyDialog(true);
         setIsLoading(false);
         return;
       }
 
-      // Format message history for API - ensuring correct types
       const messageHistory: OpenAIMessage[] = messages.concat(userMessage).map(msg => ({
         role: msg.role,
         content: msg.content
       }));
       
-      // Add system message at the beginning
       messageHistory.unshift({
         role: "system",
         content: "You are an AI assistant for a client management system. Help users analyze client data, generate reports, and suggest automations. Be concise and helpful."
       });
 
-      // Call OpenAI API
       const response = await generateAIResponse(messageHistory, getOpenAIKey());
       
-      // Add AI response
       const assistantMessage: Message = {
         role: "assistant",
         content: response,
@@ -144,6 +136,28 @@ export function AIAssistant() {
       handleSendMessage();
     }
   };
+
+  const processSystemHealthChecks = () => {
+    if (healthChecks.length > 0) {
+      const automationSuggestions = healthChecks.map(check => 
+        `System Alert: ${check.message} (Severity: ${check.severity})`
+      );
+
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: `I've detected ${healthChecks.length} system health issues that require attention:\n` + 
+                   automationSuggestions.join('\n'),
+          timestamp: new Date()
+        }
+      ]);
+    }
+  };
+
+  useEffect(() => {
+    processSystemHealthChecks();
+  }, [healthChecks]);
 
   return (
     <>
