@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
@@ -28,6 +27,7 @@ import SignUp from "@/pages/SignUp";
 import NotFound from "@/pages/NotFound";
 
 function App() {
+  // We'll keep this state for future use if needed, but won't pass it to OfflineDetector
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
@@ -48,7 +48,7 @@ function App() {
       <ThemeProvider defaultTheme="system" storageKey="vite-react-theme">
         <AuthProvider>
           <BrowserCompatibilityCheck />
-          <OfflineDetector isOnline={isOnline} />
+          <OfflineDetector />
           <Toaster />
           <Routes>
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
