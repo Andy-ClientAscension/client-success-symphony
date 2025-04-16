@@ -43,9 +43,9 @@ export function EnhancedKanbanBoard({ fullScreen = false, clients = [] }: Enhanc
           }}
           clientName={selectedClient.name}
           initialData={{
-            callsBooked: selectedClient.metrics?.callsBooked || 0,
-            dealsClosed: selectedClient.metrics?.dealsClosed || 0,
-            mrr: selectedClient.metrics?.mrr || 0
+            callsBooked: selectedClient.callsBooked || 0,
+            dealsClosed: selectedClient.dealsClosed || 0,
+            mrr: selectedClient.mrr || 0
           }}
         />
       )}
