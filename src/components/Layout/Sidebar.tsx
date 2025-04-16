@@ -1,3 +1,4 @@
+
 import {
   LayoutDashboard,
   Users,
@@ -41,6 +42,12 @@ export function Sidebar({ isMobile, closeSidebar, collapsed = false, toggleColla
       href: "/clients",
       icon: <Users className="h-5 w-5" />,
       color: "border-blue-400" // Graduated color
+    },
+    {
+      name: "AI Dashboard",
+      href: "/ai-dashboard",
+      icon: <Bot className="h-5 w-5" />,
+      color: "border-indigo-400" // New AI dashboard color
     },
     {
       name: "Analytics",

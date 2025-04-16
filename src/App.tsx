@@ -26,6 +26,7 @@ import Help from "@/pages/Help";
 import Login from "@/pages/Login";
 import SignUp from "@/pages/SignUp";
 import NotFound from "@/pages/NotFound";
+import AIDashboard from "@/pages/AIDashboard";
 
 // Create a new query client instance
 const queryClient = new QueryClient({
@@ -78,7 +79,7 @@ function App() {
               <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
               <Route path="/login" element={<Login />} />
               <Route path="/sign-up" element={<SignUp />} />
-              <Route path="/ai-dashboard" element={<Navigate to="/clients" replace />} />
+              <Route path="/ai-dashboard" element={<ProtectedRoute><AIDashboard /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>

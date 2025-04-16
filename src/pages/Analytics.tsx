@@ -10,7 +10,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ValidationError } from "@/components/ValidationError";
 import { useQueryClient } from "@tanstack/react-query";
 
-// Import our new analytics components
+// Import our analytics components
 import { CompanyMetrics } from "@/components/Dashboard/CompanyMetrics";
 import { TeamAnalytics } from "@/components/Dashboard/TeamAnalytics";
 import { ClientAnalytics } from "@/components/Dashboard/ClientAnalytics";
