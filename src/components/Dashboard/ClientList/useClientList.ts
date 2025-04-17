@@ -1,5 +1,5 @@
+
 import { useState, useEffect, useMemo } from 'react';
-import { analyzeClientData, AIInsight } from '@/utils/aiDataAnalyzer';
 import { Client, getAllClients } from '@/lib/data';
 import { STORAGE_KEYS, saveData, loadData, deleteClientsGlobally } from '@/utils/persistence';
 import { useToast } from "@/hooks/use-toast";
@@ -41,7 +41,6 @@ export function useClientList({ statusFilter }: UseClientListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
-  const [aiInsights, setAIInsights] = useState<AIInsight[]>([]);
 
   const validateClients = (clientList: Client[]): Client[] => {
     if (!Array.isArray(clientList)) return [];
@@ -224,40 +223,6 @@ export function useClientList({ statusFilter }: UseClientListProps) {
   };
 
   useEffect(() => {
-    const performAIAnalysis = async () => {
-      try {
-        if (clients && clients.length > 0) {
-          console.log("Performing AI analysis on", clients.length, "clients");
-          try {
-            const insights = await analyzeClientData(clients);
-            setAIInsights(insights || []);
-          } catch (error) {
-            console.error("Error in AI analysis:", error);
-            setAIInsights([{
-              type: 'warning',
-              message: 'An error occurred during client data analysis.',
-              severity: 'medium'
-            }]);
-          }
-        } else {
-          console.log("No clients available for AI analysis");
-          setAIInsights([]);
-        }
-      } catch (error) {
-        console.error("Error in AI analysis:", error);
-        setAIInsights([{
-          type: 'warning',
-          message: 'An error occurred during client data analysis.',
-          severity: 'medium'
-        }]);
-      }
-    };
-
-    // Run AI analysis when clients change
-    performAIAnalysis();
-  }, [clients]);
-
-  useEffect(() => {
     const handleStorageEvent = (event: any) => {
       const isRelevant = event.key === STORAGE_KEYS.CLIENTS || 
                           event.key === STORAGE_KEYS.CLIENT_STATUS || 
@@ -322,7 +287,6 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     handleSearchChange,
     handleViewModeChange,
     deleteClients,
-    updateClientStatus,
-    aiInsights
+    updateClientStatus
   };
 }
