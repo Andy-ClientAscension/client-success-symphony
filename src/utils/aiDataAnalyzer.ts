@@ -1,3 +1,4 @@
+
 import { Client } from '@/lib/data';
 import { generateAIResponse, OpenAIMessage } from '@/lib/openai';
 import { saveData, STORAGE_KEYS } from '@/utils/persistence';
@@ -29,6 +30,20 @@ export interface ClientComparison {
 
 export async function analyzeClientData(clients: Client[]): Promise<AIInsight[]> {
   try {
+    // Define default insights in case of failure
+    const defaultInsights: AIInsight[] = [{
+      type: 'improvement',
+      message: 'No critical issues detected in your client data at this time.',
+      severity: 'low'
+    }];
+    
+    // If no clients, return default insights
+    if (!clients || clients.length === 0) {
+      console.log('No clients provided for analysis');
+      saveData(STORAGE_KEYS.AI_INSIGHTS, defaultInsights);
+      return defaultInsights;
+    }
+
     const systemPrompt: OpenAIMessage = {
       role: 'system',
       content: `Analyze client data for potential issues, risks, and improvements. 
@@ -42,7 +57,7 @@ export async function analyzeClientData(clients: Client[]): Promise<AIInsight[]>
       Types can be: 'warning', 'recommendation', or 'improvement'.
       Severity can be: 'low', 'medium', or 'high'.
       
-      Important: Your response must be valid JSON and nothing else.`
+      Important: Your response must be valid JSON array and nothing else. Example: [{"type": "warning", "message": "Example message", "severity": "medium"}]`
     };
 
     const userPrompt: OpenAIMessage = {
@@ -59,37 +74,40 @@ export async function analyzeClientData(clients: Client[]): Promise<AIInsight[]>
       })))
     };
 
+    // Attempt to get AI response
     const response = await generateAIResponse([systemPrompt, userPrompt], '');
     
     // Parse the response
     let insights: AIInsight[] = [];
     try {
-      // First try to parse the response as JSON
-      insights = JSON.parse(response);
+      // First check if the response starts with a bracket (valid JSON array)
+      const trimmedResponse = response.trim();
+      const processedResponse = trimmedResponse.startsWith('[') ? trimmedResponse : `[${trimmedResponse}]`;
       
-      // Validate the insights format
-      insights = insights.filter(insight => 
-        insight.type && 
-        insight.message && 
-        insight.severity
-      );
+      // Try to parse the processed response
+      insights = JSON.parse(processedResponse);
+      
+      // Validate the insights format and filter out invalid entries
+      insights = insights.filter(insight => {
+        if (!insight || typeof insight !== 'object') return false;
+        
+        // Ensure required fields exist and are valid
+        const hasValidType = insight.type && ['warning', 'recommendation', 'improvement'].includes(insight.type);
+        const hasValidMessage = insight.message && typeof insight.message === 'string';
+        const hasValidSeverity = insight.severity && ['low', 'medium', 'high'].includes(insight.severity);
+        
+        return hasValidType && hasValidMessage && hasValidSeverity;
+      });
+      
+      console.log('Successfully parsed and validated AI insights:', insights.length);
     } catch (error) {
       console.error('Error parsing AI response:', error);
-      // Provide default insights if parsing fails
-      insights = [{
-        type: 'warning',
-        message: 'Unable to generate insights from available data. Please try again later.',
-        severity: 'medium'
-      }];
+      insights = defaultInsights;
     }
     
     // Ensure we always have at least one insight
-    if (insights.length === 0) {
-      insights = [{
-        type: 'improvement',
-        message: 'No critical issues detected in your client data at this time.',
-        severity: 'low'
-      }];
+    if (!insights || insights.length === 0) {
+      insights = defaultInsights;
     }
     
     // Save insights to local storage
@@ -98,11 +116,14 @@ export async function analyzeClientData(clients: Client[]): Promise<AIInsight[]>
     return insights;
   } catch (error) {
     console.error('AI Data Analysis Error:', error);
-    return [{
-      type: 'warning',
+    const fallbackInsight = {
+      type: 'warning' as const,
       message: 'An error occurred while analyzing client data. Please try again later.',
-      severity: 'medium'
-    }];
+      severity: 'medium' as const
+    };
+    
+    saveData(STORAGE_KEYS.AI_INSIGHTS, [fallbackInsight]);
+    return [fallbackInsight];
   }
 }
 
@@ -114,7 +135,14 @@ export function getStoredAIInsights(): AIInsight[] {
     const parsedInsights = JSON.parse(storedInsights);
     if (!Array.isArray(parsedInsights)) return [];
     
-    return parsedInsights;
+    // Validate each insight
+    return parsedInsights.filter(insight => 
+      insight && 
+      typeof insight === 'object' &&
+      insight.type && 
+      insight.message && 
+      insight.severity
+    );
   } catch (error) {
     console.error('Error retrieving stored AI insights:', error);
     return [];

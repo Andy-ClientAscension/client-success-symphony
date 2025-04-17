@@ -226,8 +226,23 @@ export function useClientList({ statusFilter }: UseClientListProps) {
 
   useEffect(() => {
     const performAIAnalysis = async () => {
-      const insights = await analyzeClientData(clients);
-      setAIInsights(insights);
+      try {
+        if (clients && clients.length > 0) {
+          console.log("Performing AI analysis on", clients.length, "clients");
+          const insights = await analyzeClientData(clients);
+          setAIInsights(insights || []);
+        } else {
+          console.log("No clients available for AI analysis");
+          setAIInsights([]);
+        }
+      } catch (error) {
+        console.error("Error in AI analysis:", error);
+        setAIInsights([{
+          type: 'warning',
+          message: 'An error occurred during client data analysis.',
+          severity: 'medium'
+        }]);
+      }
     };
 
     // Run AI analysis when clients change

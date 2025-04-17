@@ -10,6 +10,22 @@ interface AIInsightsWidgetProps {
 }
 
 export function AIInsightsWidget({ insights }: AIInsightsWidgetProps) {
+  // Validate inputs and provide defaults
+  const validInsights = React.useMemo(() => {
+    if (!insights || !Array.isArray(insights)) return [];
+    
+    return insights.filter(insight => 
+      insight && 
+      typeof insight === 'object' && 
+      insight.type && 
+      insight.message && 
+      insight.severity
+    );
+  }, [insights]);
+  
+  // If no valid insights, don't render component
+  if (validInsights.length === 0) return null;
+
   const getIcon = (type: AIInsight['type']) => {
     switch (type) {
       case 'warning': return <AlertCircle className="h-4 w-4 text-yellow-500" />;
@@ -18,10 +34,6 @@ export function AIInsightsWidget({ insights }: AIInsightsWidgetProps) {
       default: return <Bot className="h-4 w-4" />;
     }
   };
-
-  // Handle empty insights or undefined props
-  const validInsights = Array.isArray(insights) ? insights : [];
-  if (validInsights.length === 0) return null;
 
   return (
     <Card className="mb-4 bg-background/80 shadow-sm">
