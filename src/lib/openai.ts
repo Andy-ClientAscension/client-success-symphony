@@ -1,4 +1,3 @@
-
 // OpenAI API service
 
 export interface OpenAIMessage {
@@ -20,6 +19,54 @@ interface OpenAIResponse {
     total_tokens: number;
   };
 }
+
+// Simple encryption function for API keys 
+const encryptKey = (key: string): string => {
+  if (!key) return '';
+  
+  try {
+    // Simple XOR-based encryption with a fixed "salt"
+    const salt = "lovable-ai-assistant-salt-2025";
+    let encrypted = '';
+    
+    for (let i = 0; i < key.length; i++) {
+      // XOR each character with the corresponding salt character
+      const keyChar = key.charCodeAt(i);
+      const saltChar = salt.charCodeAt(i % salt.length);
+      encrypted += String.fromCharCode(keyChar ^ saltChar);
+    }
+    
+    // Convert to base64 for safe storage
+    return btoa(encrypted);
+  } catch (error) {
+    console.error("Error encrypting API key:", error);
+    return '';
+  }
+};
+
+// Decryption function to retrieve the original key
+const decryptKey = (encryptedKey: string): string => {
+  if (!encryptedKey) return '';
+  
+  try {
+    // Decode from base64
+    const decoded = atob(encryptedKey);
+    const salt = "lovable-ai-assistant-salt-2025";
+    let decrypted = '';
+    
+    for (let i = 0; i < decoded.length; i++) {
+      // Reverse the XOR operation
+      const encryptedChar = decoded.charCodeAt(i);
+      const saltChar = salt.charCodeAt(i % salt.length);
+      decrypted += String.fromCharCode(encryptedChar ^ saltChar);
+    }
+    
+    return decrypted;
+  } catch (error) {
+    console.error("Error decrypting API key:", error);
+    return '';
+  }
+};
 
 export const generateAIResponse = async (
   messages: OpenAIMessage[],
@@ -62,17 +109,23 @@ export const generateAIResponse = async (
   }
 };
 
-// Function to save API key in localStorage
+// Updated functions to use encryption
+
 export const saveOpenAIKey = (apiKey: string): void => {
-  localStorage.setItem("openai_api_key", apiKey);
+  const encryptedKey = encryptKey(apiKey);
+  localStorage.setItem('openai-api-key', encryptedKey);
 };
 
-// Function to get API key from localStorage
 export const getOpenAIKey = (): string => {
-  return localStorage.getItem("openai_api_key") || "";
+  const encryptedKey = localStorage.getItem('openai-api-key') || '';
+  return decryptKey(encryptedKey);
 };
 
-// Function to check if the API key exists
 export const hasOpenAIKey = (): boolean => {
-  return !!localStorage.getItem("openai_api_key");
+  const encryptedKey = localStorage.getItem('openai-api-key');
+  return !!encryptedKey && decryptKey(encryptedKey).length > 0;
+};
+
+export const clearOpenAIKey = (): void => {
+  localStorage.removeItem('openai-api-key');
 };
