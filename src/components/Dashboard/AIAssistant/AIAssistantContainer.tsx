@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Bot, X, Key } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +11,7 @@ import { AIMessageList } from "./AIMessageList";
 import { APIKeyDialog } from "./APIKeyDialog";
 import { SystemHealthAlert } from "./SystemHealthAlert";
 import { AIMessageInput } from "./AIMessageInput";
+import { AIAssistantContent } from "./AIAssistantContent";
 
 export function AIAssistantContainer() {
   const { healthChecks } = useSystemHealth();

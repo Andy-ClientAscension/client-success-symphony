@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { generateAIResponse, getOpenAIKey, hasOpenAIKey, OpenAIMessage } from "@/lib/openai";
@@ -58,7 +57,7 @@ export function AIAssistantContent({ isOpen, dismissedAlerts }: AIAssistantConte
         role: "system",
         content: "You are an AI assistant for a client management system. Help users analyze client data, generate reports, and suggest automations. Be concise and helpful."
       });
-
+      
       const response = await generateAIResponse(messageHistory, getOpenAIKey());
       
       const assistantMessage: Message = {
@@ -101,7 +100,6 @@ export function AIAssistantContent({ isOpen, dismissedAlerts }: AIAssistantConte
     }
   };
 
-  // Process system health checks and add them to the chat if needed
   useEffect(() => {
     if (
       healthChecks.length > 0 && 
@@ -110,7 +108,6 @@ export function AIAssistantContent({ isOpen, dismissedAlerts }: AIAssistantConte
         JSON.stringify(lastProcessedHealthChecks) !== JSON.stringify(healthChecks)
       )
     ) {
-      // Filter out dismissed alerts
       const highSeverityChecks = healthChecks.filter(check => 
         check.severity === 'high' && 
         !dismissedAlerts[check.id || check.message]
@@ -121,7 +118,6 @@ export function AIAssistantContent({ isOpen, dismissedAlerts }: AIAssistantConte
           `System Alert: ${check.message} (Type: ${check.type})`
         ).join('\n');
         
-        // Only add message to chat if the AI Assistant is open
         setMessages(prev => [
           ...prev,
           {
@@ -134,7 +130,6 @@ export function AIAssistantContent({ isOpen, dismissedAlerts }: AIAssistantConte
         ]);
       }
       
-      // If the chat is not open, show a toast notification (but avoid spamming)
       if (!isOpen && highSeverityChecks.length > 0) {
         toast({
           title: "System Health Alerts",
