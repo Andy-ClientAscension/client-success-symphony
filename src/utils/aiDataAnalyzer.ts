@@ -1,4 +1,3 @@
-
 import { Client } from '@/lib/data';
 import { generateAIResponse, OpenAIMessage } from '@/lib/openai';
 import { saveData, STORAGE_KEYS } from '@/utils/persistence';
@@ -41,7 +40,9 @@ export async function analyzeClientData(clients: Client[]): Promise<AIInsight[]>
       
       Return insights in JSON format with 'type', 'message', 'affectedClients', and 'severity' fields.
       Types can be: 'warning', 'recommendation', or 'improvement'.
-      Severity can be: 'low', 'medium', or 'high'.`
+      Severity can be: 'low', 'medium', or 'high'.
+      
+      Important: Your response must be valid JSON and nothing else.`
     };
 
     const userPrompt: OpenAIMessage = {
@@ -63,6 +64,7 @@ export async function analyzeClientData(clients: Client[]): Promise<AIInsight[]>
     // Parse the response
     let insights: AIInsight[] = [];
     try {
+      // First try to parse the response as JSON
       insights = JSON.parse(response);
       
       // Validate the insights format
@@ -73,10 +75,20 @@ export async function analyzeClientData(clients: Client[]): Promise<AIInsight[]>
       );
     } catch (error) {
       console.error('Error parsing AI response:', error);
+      // Provide default insights if parsing fails
       insights = [{
         type: 'warning',
         message: 'Unable to generate insights from available data. Please try again later.',
         severity: 'medium'
+      }];
+    }
+    
+    // Ensure we always have at least one insight
+    if (insights.length === 0) {
+      insights = [{
+        type: 'improvement',
+        message: 'No critical issues detected in your client data at this time.',
+        severity: 'low'
       }];
     }
     
@@ -95,9 +107,18 @@ export async function analyzeClientData(clients: Client[]): Promise<AIInsight[]>
 }
 
 export function getStoredAIInsights(): AIInsight[] {
-  return localStorage.getItem(STORAGE_KEYS.AI_INSIGHTS) 
-    ? JSON.parse(localStorage.getItem(STORAGE_KEYS.AI_INSIGHTS) || '[]') 
-    : [];
+  try {
+    const storedInsights = localStorage.getItem(STORAGE_KEYS.AI_INSIGHTS);
+    if (!storedInsights) return [];
+    
+    const parsedInsights = JSON.parse(storedInsights);
+    if (!Array.isArray(parsedInsights)) return [];
+    
+    return parsedInsights;
+  } catch (error) {
+    console.error('Error retrieving stored AI insights:', error);
+    return [];
+  }
 }
 
 export function calculatePerformanceTrends(clients: Client[]): PerformanceTrend[] {

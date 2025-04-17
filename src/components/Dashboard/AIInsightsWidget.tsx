@@ -19,7 +19,9 @@ export function AIInsightsWidget({ insights }: AIInsightsWidgetProps) {
     }
   };
 
-  if (insights.length === 0) return null;
+  // Handle empty insights or undefined props
+  const validInsights = Array.isArray(insights) ? insights : [];
+  if (validInsights.length === 0) return null;
 
   return (
     <Card className="mb-4 bg-background/80 shadow-sm">
@@ -30,7 +32,7 @@ export function AIInsightsWidget({ insights }: AIInsightsWidgetProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        {insights.slice(0, 3).map((insight, index) => (
+        {validInsights.slice(0, 3).map((insight, index) => (
           <Alert 
             key={index} 
             variant={insight.severity === 'high' ? 'destructive' : 'default'}
