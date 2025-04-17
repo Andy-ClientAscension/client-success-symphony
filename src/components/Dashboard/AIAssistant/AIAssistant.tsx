@@ -1,6 +1,6 @@
 
 import { useState, useRef, useEffect } from "react";
-import { Bot, Sparkles, Send, X, Loader2, Settings, Key } from "lucide-react";
+import { Bot, Sparkles, Send, X, Loader2, Settings, Key, CheckCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,6 +24,8 @@ export function AIAssistant() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+  const [apiKeyValid, setApiKeyValid] = useState<boolean | null>(null);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -64,6 +66,52 @@ export function AIAssistant() {
         title: "API Key Saved",
         description: "Your OpenAI API key has been saved.",
       });
+      setApiKeyValid(null); // Reset validation state when new key is saved
+    }
+  };
+
+  const testApiKey = async () => {
+    if (!apiKey.trim()) return;
+    
+    setIsTesting(true);
+    
+    try {
+      const testMessage: OpenAIMessage[] = [
+        {
+          role: "system",
+          content: "This is a test message to validate the API key."
+        },
+        {
+          role: "user",
+          content: "Hello, is this API key working?"
+        }
+      ];
+      
+      const response = await generateAIResponse(testMessage, apiKey);
+      
+      if (response.includes("Error:")) {
+        setApiKeyValid(false);
+        toast({
+          title: "API Key Invalid",
+          description: response,
+          variant: "destructive",
+        });
+      } else {
+        setApiKeyValid(true);
+        toast({
+          title: "API Key Valid",
+          description: "Your OpenAI API key is working correctly!",
+        });
+      }
+    } catch (error) {
+      setApiKeyValid(false);
+      toast({
+        title: "API Key Test Failed",
+        description: "Failed to test API key. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTesting(false);
     }
   };
 
@@ -310,6 +358,32 @@ export function AIAssistant() {
                 className="col-span-3"
               />
             </div>
+            <div className="flex gap-2 justify-end">
+              <Button 
+                variant="outline"
+                onClick={testApiKey}
+                disabled={isTesting || !apiKey.trim()}
+                className="flex items-center gap-2"
+              >
+                {isTesting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  apiKeyValid === true ? <CheckCircle className="h-4 w-4 text-green-500" /> : null
+                )}
+                Test Key
+              </Button>
+            </div>
+            {apiKeyValid === true && (
+              <div className="text-sm text-green-600 flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" />
+                API key is valid and working correctly.
+              </div>
+            )}
+            {apiKeyValid === false && (
+              <div className="text-sm text-red-600">
+                API key validation failed. Please check your key and try again.
+              </div>
+            )}
             <div className="text-sm text-gray-500 col-span-4">
               Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" className="underline text-blue-600">OpenAI's dashboard</a>. This application uses gpt-4o-mini which is cost-effective.
             </div>
