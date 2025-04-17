@@ -1,9 +1,9 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { Client, getAllClients } from '@/lib/data';
 import { STORAGE_KEYS, saveData, loadData, deleteClientsGlobally } from '@/utils/persistence';
 import { useToast } from "@/hooks/use-toast";
 import { useKanbanStore } from "@/utils/kanbanStore";
+import { validateClients } from '@/utils/clientValidation';
 
 interface UseClientListProps {
   statusFilter?: Client['status'];
@@ -15,7 +15,8 @@ export function useClientList({ statusFilter }: UseClientListProps) {
   
   const defaultClients = useMemo(() => {
     try {
-      return getAllClients();
+      const allClients = getAllClients();
+      return validateClients(allClients);
     } catch (error) {
       console.error("Error loading default clients:", error);
       toast({
@@ -41,30 +42,6 @@ export function useClientList({ statusFilter }: UseClientListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
-
-  const validateClients = (clientList: Client[]): Client[] => {
-    if (!Array.isArray(clientList)) return [];
-    
-    return clientList.filter(client => {
-      if (!client || typeof client !== 'object') return false;
-      if (!client.id || typeof client.id !== 'string') return false;
-      if (!client.name || typeof client.name !== 'string') return false;
-      
-      if (!client.status || !['active', 'at-risk', 'churned', 'new'].includes(client.status)) {
-        client.status = 'active';
-      }
-      
-      if (client.mrr === undefined || client.mrr === null || isNaN(client.mrr)) {
-        client.mrr = 0;
-      }
-      
-      if (client.progress === undefined || client.progress === null || isNaN(client.progress)) {
-        client.progress = 0;
-      }
-      
-      return true;
-    });
-  };
 
   useEffect(() => {
     const persistEnabled = localStorage.getItem("persistDashboard") === "true";
@@ -152,7 +129,7 @@ export function useClientList({ statusFilter }: UseClientListProps) {
   const deleteClients = (clientIdsToDelete: string[]) => {
     deleteClientsGlobally(clientIdsToDelete);
     
-    setClients(prev => prev.filter(client => !clientIdsToDelete.includes(client.id)));
+    setClients(prev => validateClients(prev.filter(client => !clientIdsToDelete.includes(client.id))));
     
     if (kanbanStore && kanbanStore.updateData) {
       const updatedKanbanData = { ...kanbanStore.data };
@@ -194,7 +171,7 @@ export function useClientList({ statusFilter }: UseClientListProps) {
       return client;
     });
     
-    setClients(updatedClients);
+    setClients(validateClients(updatedClients));
     
     saveData(STORAGE_KEYS.CLIENTS, updatedClients);
     saveData(STORAGE_KEYS.CLIENT_STATUS, updatedClients);

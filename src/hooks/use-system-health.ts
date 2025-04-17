@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { getAllClients } from '@/lib/data';
+import { validateClients } from '@/utils/clientValidation';
 
 export interface SystemHealthCheck {
   type: 'warning' | 'error' | 'info';
@@ -17,7 +18,9 @@ export function useSystemHealth(intervalMs = 300000) { // 5 minutes
   const lastNotificationTime = useRef<Record<string, number>>({});
 
   const runSystemHealthCheck = () => {
-    const clients = getAllClients();
+    // Get clients and validate them
+    const allClients = getAllClients();
+    const clients = validateClients(allClients);
     const checks: SystemHealthCheck[] = [];
 
     // Data Integrity Checks
@@ -46,7 +49,7 @@ export function useSystemHealth(intervalMs = 300000) { // 5 minutes
 
     // Churn Risk Analysis
     const potentialChurnClients = clients.filter(client => 
-      client.npsScore !== undefined && client.npsScore < 6
+      client.npsScore !== undefined && client.npsScore !== null && client.npsScore < 6
     );
     
     if (potentialChurnClients.length > 0) {
@@ -70,6 +73,17 @@ export function useSystemHealth(intervalMs = 300000) { // 5 minutes
         message: `${lowPerformingClients.length} clients have calls booked but no deals closed`,
         severity: 'medium',
         id: 'low-performance'
+      });
+    }
+
+    // Data Validation Checks
+    const dataIssues = allClients.length - clients.length;
+    if (dataIssues > 0) {
+      checks.push({
+        type: 'error',
+        message: `${dataIssues} clients have data integrity issues and may need repair`,
+        severity: 'high',
+        id: 'data-integrity'
       });
     }
 

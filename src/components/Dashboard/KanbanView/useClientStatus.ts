@@ -1,9 +1,9 @@
-
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Client, getAllClients } from "@/lib/data";
 import { StatusGroup, getDefaultColumnOrder } from "./ClientStatusHelper";
 import { saveData, STORAGE_KEYS, loadData } from "@/utils/persistence";
 import { useToast } from "@/hooks/use-toast";
+import { validateClients } from "@/utils/clientValidation";
 
 export function useClientStatus(initialClients: Client[]) {
   const [localClients, setLocalClients] = useState<Client[]>([]);
@@ -13,13 +13,15 @@ export function useClientStatus(initialClients: Client[]) {
   // Initialize local state with clients - optimized with memoization
   const initializeClients = useCallback((clientsToUse: Client[]) => {
     if (Array.isArray(clientsToUse) && clientsToUse.length > 0) {
-      // Avoid unnecessary state updates if data is the same
+      // Validate clients and avoid unnecessary state updates if data is the same
+      const validatedClients = validateClients(clientsToUse);
+      
       setLocalClients(prevClients => {
-        if (prevClients.length === clientsToUse.length && 
-            JSON.stringify(prevClients) === JSON.stringify(clientsToUse)) {
+        if (prevClients.length === validatedClients.length && 
+            JSON.stringify(prevClients) === JSON.stringify(validatedClients)) {
           return prevClients;
         }
-        return clientsToUse;
+        return validatedClients;
       });
       setIsInitialized(true);
     } else {
@@ -38,13 +40,16 @@ export function useClientStatus(initialClients: Client[]) {
   // Refresh data function that can be called externally - optimized with change detection
   const refreshData = useCallback((updatedClients: Client[]) => {
     if (Array.isArray(updatedClients) && updatedClients.length > 0) {
+      // Validate clients
+      const validatedClients = validateClients(updatedClients);
+      
       // Check if data has actually changed to avoid unnecessary updates
       const needsUpdate = !localClients.length || 
-        JSON.stringify(localClients) !== JSON.stringify(updatedClients);
+        JSON.stringify(localClients) !== JSON.stringify(validatedClients);
       
       if (needsUpdate) {
-        console.log(`refreshData processing ${updatedClients.length} clients`);
-        setLocalClients(updatedClients);
+        console.log(`refreshData processing ${validatedClients.length} clients`);
+        setLocalClients(validatedClients);
         setIsInitialized(true);
       } else {
         console.log("No change detected in client data, skipping update");
@@ -112,12 +117,13 @@ export function useClientStatus(initialClients: Client[]) {
       return client;
     });
     
-    // Update local state and persist changes
-    setLocalClients(updatedClients);
+    // Validate and update local state and persist changes
+    const validatedClients = validateClients(updatedClients);
+    setLocalClients(validatedClients);
     
     // Persist the changes to be remembered across page refreshes
-    saveData(STORAGE_KEYS.CLIENT_STATUS, updatedClients);
-    saveData(STORAGE_KEYS.CLIENTS, updatedClients);
+    saveData(STORAGE_KEYS.CLIENT_STATUS, validatedClients);
+    saveData(STORAGE_KEYS.CLIENTS, validatedClients);
     
     // Dispatch a custom event to notify other components about the update
     const event = new CustomEvent('storageUpdated', { 
