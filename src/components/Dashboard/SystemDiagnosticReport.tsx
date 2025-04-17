@@ -77,6 +77,27 @@ export function SystemDiagnosticReport() {
     }
   };
 
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'Data Integrity':
+        return <div className="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>;
+      case 'Configuration':
+        return <div className="w-2 h-2 rounded-full bg-purple-500 mr-2"></div>;
+      case 'API Integration':
+        return <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>;
+      case 'Performance':
+        return <div className="w-2 h-2 rounded-full bg-amber-500 mr-2"></div>;
+      case 'Client Health':
+        return <div className="w-2 h-2 rounded-full bg-red-500 mr-2"></div>;
+      case 'Browser Compatibility':
+        return <div className="w-2 h-2 rounded-full bg-indigo-500 mr-2"></div>;
+      case 'Storage':
+        return <div className="w-2 h-2 rounded-full bg-cyan-500 mr-2"></div>;
+      default:
+        return <div className="w-2 h-2 rounded-full bg-gray-500 mr-2"></div>;
+    }
+  };
+
   return (
     <Card className="w-full shadow-sm">
       <CardHeader>
@@ -132,7 +153,10 @@ export function SystemDiagnosticReport() {
                     <AccordionTrigger className="flex items-center">
                       <div className="flex items-center">
                         {getStatusIcon(result.status)}
-                        <span className="ml-2">{result.category}: {result.message}</span>
+                        <div className="flex items-center ml-2">
+                          {getCategoryIcon(result.category)}
+                          <span>{result.category}: {result.message}</span>
+                        </div>
                       </div>
                       <div className="ml-auto mr-4">
                         {getStatusBadge(result.status)}
@@ -146,8 +170,8 @@ export function SystemDiagnosticReport() {
                           </div>
                         )}
                         {result.remediation && (
-                          <div>
-                            <span className="font-medium">Recommended Action:</span> {result.remediation}
+                          <div className="p-2 bg-blue-50 border border-blue-100 rounded-md mt-2">
+                            <span className="font-medium text-blue-700">Recommended Action:</span> {result.remediation}
                           </div>
                         )}
                       </div>
