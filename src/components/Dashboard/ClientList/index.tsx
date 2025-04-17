@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -154,10 +153,11 @@ export function ClientList({ statusFilter }: ClientListProps) {
     });
   };
 
+  const isShowingAllClients = statusFilter === undefined;
+
   return (
     <Card>
-      {/* Only render AIInsightsWidget if we're not in a filtered view */}
-      {!statusFilter && (
+      {isShowingAllClients && (
         <AIInsightsWidget insights={aiInsights} />
       )}
       <CardHeader className="flex flex-row items-center justify-between">
