@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { getAllClients } from '@/lib/data';
 
@@ -7,11 +7,14 @@ export interface SystemHealthCheck {
   type: 'warning' | 'error' | 'info';
   message: string;
   severity: 'low' | 'medium' | 'high';
+  id?: string; // Add unique ID for tracking
 }
 
 export function useSystemHealth(intervalMs = 300000) { // 5 minutes
   const [healthChecks, setHealthChecks] = useState<SystemHealthCheck[]>([]);
   const { toast } = useToast();
+  const initialCheckDone = useRef(false);
+  const lastNotificationTime = useRef<Record<string, number>>({});
 
   const runSystemHealthCheck = () => {
     const clients = getAllClients();
@@ -22,7 +25,8 @@ export function useSystemHealth(intervalMs = 300000) { // 5 minutes
       checks.push({
         type: 'warning',
         message: 'No clients found in the system',
-        severity: 'medium'
+        severity: 'medium',
+        id: 'no-clients'
       });
     }
 
@@ -35,7 +39,8 @@ export function useSystemHealth(intervalMs = 300000) { // 5 minutes
       checks.push({
         type: 'warning',
         message: `${incompleteClients.length} clients have incomplete profiles`,
-        severity: 'high'
+        severity: 'high',
+        id: 'incomplete-profiles'
       });
     }
 
@@ -48,7 +53,8 @@ export function useSystemHealth(intervalMs = 300000) { // 5 minutes
       checks.push({
         type: 'warning',
         message: `${potentialChurnClients.length} clients have low NPS scores and may be at risk of churning`,
-        severity: 'high'
+        severity: 'high',
+        id: 'churn-risk'
       });
     }
 
@@ -62,32 +68,55 @@ export function useSystemHealth(intervalMs = 300000) { // 5 minutes
       checks.push({
         type: 'warning',
         message: `${lowPerformingClients.length} clients have calls booked but no deals closed`,
-        severity: 'medium'
+        severity: 'medium',
+        id: 'low-performance'
       });
     }
 
     setHealthChecks(checks);
 
-    // Trigger toasts for high-severity issues
+    // Only show toast notifications on first load if it's been more than 24 hours since last notification
+    // or if this isn't the initial check
+    const now = Date.now();
+    
     checks.forEach(check => {
       if (check.severity === 'high') {
-        toast({
-          title: 'System Health Alert',
-          description: check.message,
-          variant: 'destructive'
-        });
+        const lastNotified = lastNotificationTime.current[check.id || check.message] || 0;
+        const hoursSinceLastNotification = (now - lastNotified) / (1000 * 60 * 60);
+        
+        // Show notification if:
+        // 1. This is not the initial check, OR
+        // 2. It's been more than 24 hours since we last notified about this issue
+        if (!initialCheckDone.current || hoursSinceLastNotification > 24) {
+          toast({
+            title: 'System Health Alert',
+            description: check.message,
+            variant: 'destructive'
+          });
+          
+          // Update last notification time
+          lastNotificationTime.current[check.id || check.message] = now;
+        }
       }
     });
+    
+    // Mark initial check as done
+    initialCheckDone.current = true;
   };
 
   useEffect(() => {
-    // Initial check
-    runSystemHealthCheck();
+    // Initial check with a small delay to prevent immediate alerts on dashboard load
+    const initialTimer = setTimeout(() => {
+      runSystemHealthCheck();
+    }, 5000); // 5 second delay for initial check
 
     // Periodic checks
     const interval = setInterval(runSystemHealthCheck, intervalMs);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(interval);
+    };
   }, [intervalMs]);
 
   return { healthChecks, runSystemHealthCheck };

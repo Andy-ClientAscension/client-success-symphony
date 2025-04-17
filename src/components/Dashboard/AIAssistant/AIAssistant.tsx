@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Bot, Send, X, Key } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { useSystemHealth } from '@/hooks/use-system-health';
 import { Message, SystemHealthCheck } from "./types";
 import { AIMessageList } from "./AIMessageList";
 import { APIKeyDialog } from "./APIKeyDialog";
+import { SystemHealthAlert } from "./SystemHealthAlert";
 
 export function AIAssistant() {
   const { healthChecks, runSystemHealthCheck } = useSystemHealth();
@@ -29,6 +30,7 @@ export function AIAssistant() {
   const [apiKey, setApiKey] = useState("");
   const { toast } = useToast();
   const [lastProcessedHealthChecks, setLastProcessedHealthChecks] = useState<SystemHealthCheck[]>([]);
+  const [dismissedAlerts, setDismissedAlerts] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (isOpen && !hasOpenAIKey()) {
@@ -117,6 +119,32 @@ export function AIAssistant() {
     }
   };
 
+  const dismissAlert = (id: string) => {
+    setDismissedAlerts(prev => ({
+      ...prev,
+      [id]: true
+    }));
+    
+    // Store dismissed alerts in localStorage to persist across sessions
+    try {
+      const storedDismissed = JSON.parse(localStorage.getItem('dismissedHealthAlerts') || '{}');
+      storedDismissed[id] = true;
+      localStorage.setItem('dismissedHealthAlerts', JSON.stringify(storedDismissed));
+    } catch (e) {
+      console.error("Error storing dismissed alerts:", e);
+    }
+  };
+
+  // Load dismissed alerts from localStorage
+  useEffect(() => {
+    try {
+      const storedDismissed = JSON.parse(localStorage.getItem('dismissedHealthAlerts') || '{}');
+      setDismissedAlerts(storedDismissed);
+    } catch (e) {
+      console.error("Error loading dismissed alerts:", e);
+    }
+  }, []);
+
   // Process system health checks and add them to the chat if needed
   useEffect(() => {
     if (
@@ -126,13 +154,18 @@ export function AIAssistant() {
         JSON.stringify(lastProcessedHealthChecks) !== JSON.stringify(healthChecks)
       )
     ) {
-      const highSeverityChecks = healthChecks.filter(check => check.severity === 'high');
+      // Filter out dismissed alerts
+      const highSeverityChecks = healthChecks.filter(check => 
+        check.severity === 'high' && 
+        !dismissedAlerts[check.id || check.message]
+      );
       
-      if (highSeverityChecks.length > 0) {
+      if (highSeverityChecks.length > 0 && isOpen) {
         const healthMessage = highSeverityChecks.map(check => 
           `System Alert: ${check.message} (Type: ${check.type})`
         ).join('\n');
         
+        // Only add message to chat if the AI Assistant is open
         setMessages(prev => [
           ...prev,
           {
@@ -143,20 +176,25 @@ export function AIAssistant() {
             timestamp: new Date()
           }
         ]);
-        
-        // If the chat is not open, show a toast notification
-        if (!isOpen) {
-          toast({
-            title: "System Health Alerts",
-            description: `${highSeverityChecks.length} high-priority issues detected`,
-            variant: "destructive",
-          });
-        }
+      }
+      
+      // If the chat is not open, show a toast notification (but avoid spamming)
+      if (!isOpen && highSeverityChecks.length > 0) {
+        toast({
+          title: "System Health Alerts",
+          description: `${highSeverityChecks.length} high-priority issues detected`,
+          variant: "destructive",
+        });
       }
       
       setLastProcessedHealthChecks(healthChecks);
     }
-  }, [healthChecks, lastProcessedHealthChecks, isOpen, toast]);
+  }, [healthChecks, lastProcessedHealthChecks, isOpen, toast, dismissedAlerts]);
+
+  // Get count of non-dismissed high priority alerts
+  const activeHighPriorityAlerts = healthChecks.filter(
+    check => check.severity === 'high' && !dismissedAlerts[check.id || check.message]
+  ).length;
 
   return (
     <>
@@ -167,9 +205,9 @@ export function AIAssistant() {
           aria-label="Open AI Assistant"
         >
           <Bot className="h-6 w-6" />
-          {healthChecks.some(check => check.severity === 'high') && (
+          {activeHighPriorityAlerts > 0 && (
             <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs">
-              {healthChecks.filter(check => check.severity === 'high').length}
+              {activeHighPriorityAlerts}
             </span>
           )}
         </Button>
@@ -207,6 +245,24 @@ export function AIAssistant() {
             </div>
           </CardHeader>
           <CardContent className="p-0 flex-grow overflow-hidden flex flex-col">
+            {/* Show active health alerts at the top if there are any */}
+            {healthChecks.filter(check => 
+              check.severity === 'high' && !dismissedAlerts[check.id || check.message]
+            ).length > 0 && (
+              <div className="p-3 border-b bg-amber-50/30">
+                {healthChecks
+                  .filter(check => check.severity === 'high' && !dismissedAlerts[check.id || check.message])
+                  .map((check, idx) => (
+                    <SystemHealthAlert 
+                      key={check.id || `${check.message}-${idx}`}
+                      healthCheck={check}
+                      onDismiss={() => dismissAlert(check.id || check.message)}
+                    />
+                  ))
+                }
+              </div>
+            )}
+            
             <AIMessageList messages={messages} isLoading={isLoading} />
             
             <div className="p-3 border-t">
