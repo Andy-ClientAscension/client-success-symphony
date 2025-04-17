@@ -44,7 +44,7 @@ export async function runComprehensiveDiagnostic(): Promise<DiagnosticReport> {
 
   // Check for incomplete client records
   const incompleteClients = clients.filter(client => 
-    !client.email || !client.status || client.progress < 10
+    !client.name || !client.status || (client.progress !== undefined && client.progress < 10)
   );
   
   if (incompleteClients.length > 0) {
