@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   Sheet,
@@ -41,7 +42,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isMobile, closeSidebar, collapsed, toggleCollapse }: SidebarProps) {
-  const { user, signOut } = useAuth();
+  const { user, logout: signOut } = useAuth();
   const { toast } = useToast();
   const { theme } = useTheme();
   const location = useLocation();
@@ -52,7 +53,7 @@ export function Sidebar({ isMobile, closeSidebar, collapsed, toggleCollapse }: S
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+      signOut();
       toast({
         title: "Signed out",
         description: "You have been successfully signed out.",
@@ -82,7 +83,7 @@ export function Sidebar({ isMobile, closeSidebar, collapsed, toggleCollapse }: S
 
   const activeLinkStyle = "bg-secondary text-secondary-foreground";
 
-  const renderNavLink = (link: { to: string; label: string; icon: React.ComponentType }) => {
+  const renderNavLink = (link: { to: string; label: string; icon: React.ComponentType<React.SVGProps<SVGSVGElement>> }) => {
     const Icon = link.icon;
     const isActive = location.pathname === link.to;
 
