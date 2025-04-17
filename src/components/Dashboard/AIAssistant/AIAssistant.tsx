@@ -1,31 +1,23 @@
 
-import { useState, useRef, useEffect } from "react";
-import { Bot, Sparkles, Send, X, Loader2, Settings, Key, CheckCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Bot, Send, X, Key } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { AIAutomationSuggestions } from "./AIAutomationSuggestions";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { generateAIResponse, saveOpenAIKey, getOpenAIKey, hasOpenAIKey, OpenAIMessage } from "@/lib/openai";
-import { useSystemHealth, SystemHealthCheck } from '@/hooks/use-system-health';
-
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-  timestamp: Date;
-}
+import { generateAIResponse, getOpenAIKey, hasOpenAIKey, OpenAIMessage } from "@/lib/openai";
+import { useSystemHealth } from '@/hooks/use-system-health';
+import { Message, SystemHealthCheck } from "./types";
+import { AIMessageList } from "./AIMessageList";
+import { APIKeyDialog } from "./APIKeyDialog";
 
 export function AIAssistant() {
   const { healthChecks, runSystemHealthCheck } = useSystemHealth();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isTesting, setIsTesting] = useState(false);
-  const [apiKeyValid, setApiKeyValid] = useState<boolean | null>(null);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -35,13 +27,8 @@ export function AIAssistant() {
   ]);
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
   const [apiKey, setApiKey] = useState("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const [lastProcessedHealthChecks, setLastProcessedHealthChecks] = useState<SystemHealthCheck[]>([]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   useEffect(() => {
     if (isOpen && !hasOpenAIKey()) {
@@ -56,63 +43,6 @@ export function AIAssistant() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
-  };
-
-  const handleSaveApiKey = () => {
-    if (apiKey.trim()) {
-      saveOpenAIKey(apiKey.trim());
-      setShowApiKeyDialog(false);
-      toast({
-        title: "API Key Saved",
-        description: "Your OpenAI API key has been saved.",
-      });
-      setApiKeyValid(null); // Reset validation state when new key is saved
-    }
-  };
-
-  const testApiKey = async () => {
-    if (!apiKey.trim()) return;
-    
-    setIsTesting(true);
-    
-    try {
-      const testMessage: OpenAIMessage[] = [
-        {
-          role: "system",
-          content: "This is a test message to validate the API key."
-        },
-        {
-          role: "user",
-          content: "Hello, is this API key working?"
-        }
-      ];
-      
-      const response = await generateAIResponse(testMessage, apiKey);
-      
-      if (response.includes("Error:")) {
-        setApiKeyValid(false);
-        toast({
-          title: "API Key Invalid",
-          description: response,
-          variant: "destructive",
-        });
-      } else {
-        setApiKeyValid(true);
-        toast({
-          title: "API Key Valid",
-          description: "Your OpenAI API key is working correctly!",
-        });
-      }
-    } catch (error) {
-      setApiKeyValid(false);
-      toast({
-        title: "API Key Test Failed",
-        description: "Failed to test API key. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsTesting(false);
-    }
   };
 
   const handleSendMessage = async () => {
@@ -277,38 +207,7 @@ export function AIAssistant() {
             </div>
           </CardHeader>
           <CardContent className="p-0 flex-grow overflow-hidden flex flex-col">
-            <div className="flex-grow overflow-y-auto p-3 space-y-3">
-              {messages.map((message, index) => (
-                <div 
-                  key={index} 
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div 
-                    className={`max-w-[80%] rounded-lg p-2 text-sm ${
-                      message.role === 'user' 
-                        ? 'bg-red-600 text-white' 
-                        : 'bg-gray-100 text-gray-800'
-                    }`}
-                  >
-                    {message.content}
-                    <div className={`text-xs mt-1 ${
-                      message.role === 'user' ? 'text-red-100' : 'text-gray-500'
-                    }`}>
-                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-gray-100 rounded-lg p-2 flex items-center space-x-2">
-                    <Loader2 className="h-4 w-4 animate-spin text-red-600" />
-                    <span className="text-sm text-gray-600">Thinking...</span>
-                  </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
+            <AIMessageList messages={messages} isLoading={isLoading} />
             
             <div className="p-3 border-t">
               <AIAutomationSuggestions onSelectSuggestion={(suggestion) => setInput(suggestion)} />
@@ -336,65 +235,12 @@ export function AIAssistant() {
         </Card>
       )}
 
-      <Dialog open={showApiKeyDialog} onOpenChange={setShowApiKeyDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Enter OpenAI API Key</DialogTitle>
-            <DialogDescription>
-              Enter your OpenAI API key to power the AI assistant. Your key is stored locally in your browser and never sent to our servers.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="apiKey" className="text-right col-span-1">
-                API Key
-              </Label>
-              <Input
-                id="apiKey"
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="sk-..."
-                className="col-span-3"
-              />
-            </div>
-            <div className="flex gap-2 justify-end">
-              <Button 
-                variant="outline"
-                onClick={testApiKey}
-                disabled={isTesting || !apiKey.trim()}
-                className="flex items-center gap-2"
-              >
-                {isTesting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  apiKeyValid === true ? <CheckCircle className="h-4 w-4 text-green-500" /> : null
-                )}
-                Test Key
-              </Button>
-            </div>
-            {apiKeyValid === true && (
-              <div className="text-sm text-green-600 flex items-center gap-2">
-                <CheckCircle className="h-4 w-4" />
-                API key is valid and working correctly.
-              </div>
-            )}
-            {apiKeyValid === false && (
-              <div className="text-sm text-red-600">
-                API key validation failed. Please check your key and try again.
-              </div>
-            )}
-            <div className="text-sm text-gray-500 col-span-4">
-              Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" className="underline text-blue-600">OpenAI's dashboard</a>. This application uses gpt-4o-mini which is cost-effective.
-            </div>
-          </div>
-          <DialogFooter>
-            <Button type="submit" onClick={handleSaveApiKey} disabled={!apiKey.trim()}>
-              Save Key
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <APIKeyDialog 
+        open={showApiKeyDialog} 
+        onOpenChange={setShowApiKeyDialog} 
+        apiKey={apiKey}
+        setApiKey={setApiKey}
+      />
     </>
   );
 }

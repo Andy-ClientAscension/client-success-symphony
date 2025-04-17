@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   Sheet,
@@ -87,7 +88,7 @@ export function Sidebar({ isMobile, closeSidebar, collapsed, toggleCollapse }: S
     const isActive = location.pathname === link.to;
 
     return (
-      <Link to={link.to} onClick={closeSidebar} className="w-full">
+      <Link to={link.to} onClick={closeSidebar} className="w-full" key={link.to}>
         <Button
           variant="ghost"
           className={cn(
@@ -133,11 +134,7 @@ export function Sidebar({ isMobile, closeSidebar, collapsed, toggleCollapse }: S
         <Separator />
       </div>
       <div className="flex-1 space-y-1">
-        {navLinks.map((link) => (
-          <React.Fragment key={link.to}>
-            {renderNavLink(link)}
-          </React.Fragment>
-        ))}
+        {navLinks.map((link) => renderNavLink(link))}
       </div>
       <Separator />
       <div className="p-4">
