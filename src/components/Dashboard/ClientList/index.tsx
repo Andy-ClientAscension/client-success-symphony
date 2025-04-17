@@ -156,8 +156,8 @@ export function ClientList({ statusFilter }: ClientListProps) {
 
   return (
     <Card>
-      {/* Only render AIInsightsWidget if we're not in a filtered view or if explicitly showing all */}
-      {(!statusFilter || statusFilter === undefined) && (
+      {/* Only render AIInsightsWidget if we're not in a filtered view */}
+      {!statusFilter && (
         <AIInsightsWidget insights={aiInsights} />
       )}
       <CardHeader className="flex flex-row items-center justify-between">
