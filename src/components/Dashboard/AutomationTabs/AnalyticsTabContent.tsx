@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnalyticsIntegration } from "@/components/Dashboard/AnalyticsIntegration";
-import { InfoIcon, BarChart2, TrendingUp } from "lucide-react";
+import { InfoIcon, BarChart2, TrendingUp, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
@@ -14,18 +14,18 @@ export function AnalyticsTabContent() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-medium flex items-center">
-              <BarChart2 className="h-4 w-4 mr-2 text-blue-500" />
-              Analytics Dashboard
+              <LayoutDashboard className="h-4 w-4 mr-2 text-blue-500" />
+              Unified Dashboard
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-2">
             <p className="text-sm text-muted-foreground mb-4">
-              View comprehensive client data analytics and performance metrics to make data-driven decisions.
+              View comprehensive client data analytics, AI-powered insights, and performance metrics to make data-driven decisions.
             </p>
             <Button asChild className="w-full">
-              <Link to="/analytics" className="flex items-center justify-center gap-1">
+              <Link to="/dashboard" className="flex items-center justify-center gap-1">
                 <TrendingUp className="h-4 w-4" />
-                Open Analytics Dashboard
+                Open Unified Dashboard
               </Link>
             </Button>
           </CardContent>

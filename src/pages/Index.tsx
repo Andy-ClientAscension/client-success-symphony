@@ -29,6 +29,29 @@ import { getAllClients } from "@/lib/data";
 import { AutomationManager } from "@/components/Dashboard/AutomationManager";
 import { Link } from "react-router-dom";
 
+// Define a DashboardCard component
+const DashboardCard = ({ title, description, icon, to }) => (
+  <Card className="shadow-sm">
+    <CardHeader className="pb-2">
+      <CardTitle className="text-sm font-medium">{title}</CardTitle>
+    </CardHeader>
+    <CardContent className="p-0">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center">
+          {icon}
+          <span className="ml-2">{description}</span>
+        </div>
+        <Button variant="outline" size="sm" asChild>
+          <Link to={to} className="flex items-center gap-1">
+            View
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </Link>
+        </Button>
+      </div>
+    </CardContent>
+  </Card>
+);
+
 export default function Index() {
   const isMobile = useIsMobile();
   const { toast } = useToast();
