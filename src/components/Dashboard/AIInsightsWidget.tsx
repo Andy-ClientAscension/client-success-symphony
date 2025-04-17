@@ -12,7 +12,10 @@ interface AIInsightsWidgetProps {
 export function AIInsightsWidget({ insights }: AIInsightsWidgetProps) {
   // Validate inputs and provide defaults
   const validInsights = React.useMemo(() => {
-    if (!insights || !Array.isArray(insights)) return [];
+    if (!insights || !Array.isArray(insights)) {
+      console.log("No valid insights array provided to AIInsightsWidget");
+      return [];
+    }
     
     return insights.filter(insight => 
       insight && 
@@ -23,8 +26,24 @@ export function AIInsightsWidget({ insights }: AIInsightsWidgetProps) {
     );
   }, [insights]);
   
-  // If no valid insights, don't render component
-  if (validInsights.length === 0) return null;
+  // If no valid insights, return a minimal component instead of null
+  if (validInsights.length === 0) {
+    return (
+      <Card className="mb-4 bg-background/80 shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center text-sm">
+            <Bot className="h-4 w-4 mr-2 text-primary" />
+            AI Insights
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-sm text-muted-foreground">
+            No insights available at this time.
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const getIcon = (type: AIInsight['type']) => {
     switch (type) {

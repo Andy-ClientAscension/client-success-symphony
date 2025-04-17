@@ -1,4 +1,3 @@
-
 import { Client } from '@/lib/data';
 import { generateAIResponse, OpenAIMessage } from '@/lib/openai';
 import { saveData, STORAGE_KEYS } from '@/utils/persistence';
@@ -57,7 +56,13 @@ export async function analyzeClientData(clients: Client[]): Promise<AIInsight[]>
       Types can be: 'warning', 'recommendation', or 'improvement'.
       Severity can be: 'low', 'medium', or 'high'.
       
-      Important: Your response must be valid JSON array and nothing else. Example: [{"type": "warning", "message": "Example message", "severity": "medium"}]`
+      YOUR RESPONSE MUST CONTAIN ONLY VALID JSON LIKE THIS: 
+      [
+        {"type": "warning", "message": "Example message", "severity": "medium"},
+        {"type": "recommendation", "message": "Another message", "severity": "low"}
+      ]
+
+      Do not include any explanation or text outside the JSON array.`
     };
 
     const userPrompt: OpenAIMessage = {
@@ -74,46 +79,64 @@ export async function analyzeClientData(clients: Client[]): Promise<AIInsight[]>
       })))
     };
 
-    // Attempt to get AI response
-    const response = await generateAIResponse([systemPrompt, userPrompt], '');
-    
-    // Parse the response
-    let insights: AIInsight[] = [];
     try {
-      // First check if the response starts with a bracket (valid JSON array)
-      const trimmedResponse = response.trim();
-      const processedResponse = trimmedResponse.startsWith('[') ? trimmedResponse : `[${trimmedResponse}]`;
+      // Try to get AI response with a timeout
+      const response = await Promise.race([
+        generateAIResponse([systemPrompt, userPrompt], ''),
+        new Promise<string>((_, reject) => 
+          setTimeout(() => reject(new Error('AI request timed out')), 10000)
+        )
+      ]) as string;
       
-      // Try to parse the processed response
-      insights = JSON.parse(processedResponse);
-      
-      // Validate the insights format and filter out invalid entries
-      insights = insights.filter(insight => {
-        if (!insight || typeof insight !== 'object') return false;
+      // Parse the response with better error handling
+      let insights: AIInsight[] = [];
+      try {
+        // Clean up response to handle cases where AI might add commentary
+        const responseText = response.trim();
+        const jsonStartIndex = responseText.indexOf('[');
+        const jsonEndIndex = responseText.lastIndexOf(']') + 1;
         
-        // Ensure required fields exist and are valid
-        const hasValidType = insight.type && ['warning', 'recommendation', 'improvement'].includes(insight.type);
-        const hasValidMessage = insight.message && typeof insight.message === 'string';
-        const hasValidSeverity = insight.severity && ['low', 'medium', 'high'].includes(insight.severity);
+        if (jsonStartIndex >= 0 && jsonEndIndex > jsonStartIndex) {
+          const jsonStr = responseText.substring(jsonStartIndex, jsonEndIndex);
+          insights = JSON.parse(jsonStr);
+        } else {
+          // Fallback to trying to parse the entire response
+          insights = JSON.parse(responseText);
+        }
         
-        return hasValidType && hasValidMessage && hasValidSeverity;
-      });
+        // Validate the insights format and filter out invalid entries
+        insights = insights.filter(insight => {
+          if (!insight || typeof insight !== 'object') return false;
+          
+          // Ensure required fields exist and are valid
+          const hasValidType = insight.type && ['warning', 'recommendation', 'improvement'].includes(insight.type);
+          const hasValidMessage = insight.message && typeof insight.message === 'string';
+          const hasValidSeverity = insight.severity && ['low', 'medium', 'high'].includes(insight.severity);
+          
+          return hasValidType && hasValidMessage && hasValidSeverity;
+        });
+        
+        console.log('Successfully parsed and validated AI insights:', insights.length);
+      } catch (error) {
+        console.error('Error parsing AI response:', error);
+        console.log('Raw response:', response);
+        insights = defaultInsights;
+      }
       
-      console.log('Successfully parsed and validated AI insights:', insights.length);
+      // Ensure we always have at least one insight
+      if (!insights || insights.length === 0) {
+        insights = defaultInsights;
+      }
+      
+      // Save insights to local storage
+      saveData(STORAGE_KEYS.AI_INSIGHTS, insights);
+      
+      return insights;
     } catch (error) {
-      console.error('Error parsing AI response:', error);
-      insights = defaultInsights;
+      console.error('AI response error:', error);
+      saveData(STORAGE_KEYS.AI_INSIGHTS, defaultInsights);
+      return defaultInsights;
     }
-    
-    // Ensure we always have at least one insight
-    if (!insights || insights.length === 0) {
-      insights = defaultInsights;
-    }
-    
-    // Save insights to local storage
-    saveData(STORAGE_KEYS.AI_INSIGHTS, insights);
-    
-    return insights;
   } catch (error) {
     console.error('AI Data Analysis Error:', error);
     const fallbackInsight = {

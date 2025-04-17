@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { analyzeClientData, AIInsight } from '@/utils/aiDataAnalyzer';
 import { Client, getAllClients } from '@/lib/data';
@@ -229,8 +228,17 @@ export function useClientList({ statusFilter }: UseClientListProps) {
       try {
         if (clients && clients.length > 0) {
           console.log("Performing AI analysis on", clients.length, "clients");
-          const insights = await analyzeClientData(clients);
-          setAIInsights(insights || []);
+          try {
+            const insights = await analyzeClientData(clients);
+            setAIInsights(insights || []);
+          } catch (error) {
+            console.error("Error in AI analysis:", error);
+            setAIInsights([{
+              type: 'warning',
+              message: 'An error occurred during client data analysis.',
+              severity: 'medium'
+            }]);
+          }
         } else {
           console.log("No clients available for AI analysis");
           setAIInsights([]);
