@@ -1,6 +1,6 @@
 
 import { Layout } from "@/components/Layout/Layout";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { ClientList } from "@/components/Dashboard/ClientList";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -28,8 +28,8 @@ export default function Clients() {
   const { toast } = useToast();
   const { loadPersistedData } = useKanbanStore();
 
-  // Initialize client data
-  useEffect(() => {
+  // Optimize client data initialization
+  const initializeClientData = useCallback(async () => {
     console.log("Initializing client data in Clients.tsx");
     setIsLoading(true);
     
@@ -62,8 +62,12 @@ export default function Clients() {
         }
       }
       
-      // Load the kanban data
-      loadPersistedData();
+      // Load the kanban data - wrapped in a try/catch to prevent errors
+      try {
+        await loadPersistedData();
+      } catch (error) {
+        console.error("Error loading kanban data:", error);
+      }
     } catch (error) {
       console.error("Error initializing client data:", error);
       toast({
@@ -76,24 +80,49 @@ export default function Clients() {
     }
   }, [loadPersistedData, toast]);
 
-  // Force reload data when localStorage changes
+  // Initialize data only once on component mount
   useEffect(() => {
+    // Check if data was already loaded in this session
+    const dataLoaded = sessionStorage.getItem('clientsPageDataLoaded');
+    
+    if (!dataLoaded) {
+      initializeClientData();
+      sessionStorage.setItem('clientsPageDataLoaded', 'true');
+    } else {
+      // Still load from storage but don't show loading screen
+      const storedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
+      if (storedClients && storedClients.length > 0) {
+        setClients(storedClients);
+      }
+      setIsLoading(false);
+    }
+  }, [initializeClientData]);
+
+  // Optimize storage event handling with debouncing
+  useEffect(() => {
+    let debounceTimer: ReturnType<typeof setTimeout>;
+    
     const handleStorageChange = (event: StorageEvent | CustomEvent) => {
       const key = event instanceof StorageEvent ? event.key : (event as CustomEvent).detail?.key;
       
       // Only reload on relevant storage changes
       if (key === STORAGE_KEYS.CLIENTS || key === STORAGE_KEYS.CLIENT_STATUS || 
           key === STORAGE_KEYS.KANBAN || key === null) {
-        console.log("Storage change detected in Clients.tsx:", key);
         
-        // Reload clients from storage
-        const updatedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
-        if (updatedClients && updatedClients.length > 0) {
-          setClients(updatedClients);
-        }
-        
-        // Increment force reload counter to refresh child components
-        setForceReload(prev => prev + 1);
+        // Debounce to prevent multiple rapid updates
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          console.log("Storage change detected in Clients.tsx:", key);
+          
+          // Reload clients from storage
+          const updatedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
+          if (updatedClients && updatedClients.length > 0) {
+            setClients(updatedClients);
+          }
+          
+          // Increment force reload counter to refresh child components
+          setForceReload(prev => prev + 1);
+        }, 300);
       }
     };
     
@@ -106,21 +135,25 @@ export default function Clients() {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('storageUpdated', handleStorageChange as EventListener);
       window.removeEventListener('storageRestored', handleStorageChange as EventListener);
+      clearTimeout(debounceTimer);
     };
   }, []);
 
-  const handleAddNewClient = () => {
+  const handleAddNewClient = useCallback(() => {
     navigate("/add-client");
-  };
+  }, [navigate]);
 
-  // Force all components to re-render with new data when tab changes
-  const handleTabChange = (value: string) => {
+  // Optimize tab change handling
+  const handleTabChange = useCallback((value: string) => {
     setActiveTab(value);
-    // Small delay to ensure data is loaded before tab content renders
-    setTimeout(() => {
+    // Use requestAnimationFrame instead of setTimeout for smoother transitions
+    requestAnimationFrame(() => {
       setForceReload(prev => prev + 1);
-    }, 50);
-  };
+    });
+  }, []);
+
+  // Memoize the client count
+  const clientCount = useMemo(() => clients.length, [clients]);
 
   if (isLoading) {
     return (
@@ -134,7 +167,7 @@ export default function Clients() {
     <Layout>
       <div className="space-y-4 pb-12 w-full">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="text-lg font-bold">Clients Management ({clients.length})</div>
+          <div className="text-lg font-bold">Clients Management ({clientCount})</div>
           <Button 
             onClick={handleAddNewClient}
             className="bg-red-600 hover:bg-red-700 px-6 py-2.5 text-base"
@@ -193,6 +226,7 @@ export default function Clients() {
             </TabsList>
           </div>
           
+          {/* Use key prop to force remount components only when needed */}
           <TabsContent value="all" className="m-0">
             <ClientList key={`all-${forceReload}`} />
           </TabsContent>

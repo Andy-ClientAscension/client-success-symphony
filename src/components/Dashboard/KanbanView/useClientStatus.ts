@@ -10,68 +10,59 @@ export function useClientStatus(initialClients: Client[]) {
   const [isInitialized, setIsInitialized] = useState(false);
   const { toast } = useToast();
   
-  // Initialize local state with clients
+  // Initialize local state with clients - optimized with memoization
   const initializeClients = useCallback((clientsToUse: Client[]) => {
     if (Array.isArray(clientsToUse) && clientsToUse.length > 0) {
-      console.log(`Initializing useClientStatus with ${clientsToUse.length} clients`);
-      setLocalClients(clientsToUse);
+      // Avoid unnecessary state updates if data is the same
+      setLocalClients(prevClients => {
+        if (prevClients.length === clientsToUse.length && 
+            JSON.stringify(prevClients) === JSON.stringify(clientsToUse)) {
+          return prevClients;
+        }
+        return clientsToUse;
+      });
       setIsInitialized(true);
     } else {
       console.warn("Attempted to initialize with invalid clients:", clientsToUse);
     }
   }, []);
   
-  // Update local state when clients prop changes
+  // Update local state when clients prop changes - with checks to avoid unnecessary updates
   useEffect(() => {
-    if (initialClients && initialClients.length > 0) {
+    if (!isInitialized && initialClients && initialClients.length > 0) {
       console.log(`useClientStatus: Received ${initialClients.length} initial clients`);
       initializeClients(initialClients);
-    } else {
-      console.log("useClientStatus: No initial clients provided, trying storage");
-      // If no initial clients provided, try to load from storage
-      const storedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
-      if (storedClients && storedClients.length > 0) {
-        console.log(`useClientStatus: Using ${storedClients.length} clients from storage`);
-        initializeClients(storedClients);
-      } else {
-        // Last resort: use default clients
-        const defaultClients = getAllClients();
-        if (defaultClients.length > 0) {
-          console.log(`useClientStatus: Using ${defaultClients.length} default clients`);
-          initializeClients(defaultClients);
-          
-          // Save to storage for other components
-          saveData(STORAGE_KEYS.CLIENTS, defaultClients);
-          saveData(STORAGE_KEYS.CLIENT_STATUS, defaultClients);
-        }
-      }
     }
-  }, [initialClients, initializeClients]);
+  }, [initialClients, initializeClients, isInitialized]);
   
-  // Refresh data function that can be called externally
+  // Refresh data function that can be called externally - optimized with change detection
   const refreshData = useCallback((updatedClients: Client[]) => {
     if (Array.isArray(updatedClients) && updatedClients.length > 0) {
-      console.log(`refreshData called with ${updatedClients.length} clients`);
-      setLocalClients(updatedClients);
-      setIsInitialized(true);
+      // Check if data has actually changed to avoid unnecessary updates
+      const needsUpdate = !localClients.length || 
+        JSON.stringify(localClients) !== JSON.stringify(updatedClients);
       
-      // Ensure proper synchronization by saving to storage
-      saveData(STORAGE_KEYS.CLIENT_STATUS, updatedClients);
-    } else {
-      console.warn("Attempted to refresh with invalid clients data:", updatedClients);
-      
-      // Try to load from storage as fallback
-      const storedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
-      if (storedClients && storedClients.length > 0) {
-        console.log(`refreshData: Using ${storedClients.length} clients from storage as fallback`);
-        setLocalClients(storedClients);
+      if (needsUpdate) {
+        console.log(`refreshData processing ${updatedClients.length} clients`);
+        setLocalClients(updatedClients);
         setIsInitialized(true);
+      } else {
+        console.log("No change detected in client data, skipping update");
       }
     }
-  }, []);
+  }, [localClients]);
   
-  // Group clients by status - ensure we create all columns even if empty
+  // Group clients by status - with memoization to prevent recalculation on every render
   const clientsByStatus = useMemo(() => {
+    if (!isInitialized) {
+      // Return empty structure until initialized
+      const emptyGroups: Record<string, Client[]> = {};
+      getDefaultColumnOrder().forEach(status => {
+        emptyGroups[status] = [];
+      });
+      return emptyGroups;
+    }
+    
     const columnOrder = getDefaultColumnOrder();
     
     // Initialize groups with all column types
@@ -93,14 +84,11 @@ export function useClientStatus(initialClients: Client[]) {
       });
     }
     
-    const totalClients = Object.values(groups).reduce((sum, group) => sum + group.length, 0);
-    console.log(`clientsByStatus: Grouped ${totalClients} clients across ${columnOrder.length} columns`);
-    
     return groups;
-  }, [localClients]);
+  }, [localClients, isInitialized]);
   
-  // Handle drag end event
-  const handleDragEnd = (result: any) => {
+  // Handle drag end event - optimized
+  const handleDragEnd = useCallback((result: any) => {
     const { destination, source, draggableId } = result;
     
     // If there's no destination or user dropped back in same position
@@ -142,7 +130,7 @@ export function useClientStatus(initialClients: Client[]) {
       title: "Client Status Updated",
       description: `Client moved to ${destColumn}`,
     });
-  };
+  }, [localClients, toast]);
   
   return { 
     localClients,

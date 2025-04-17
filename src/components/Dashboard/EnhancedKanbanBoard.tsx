@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { ClientKanbanView } from "./KanbanView/ClientKanbanView";
 import { Client } from "@/lib/data";
 import { ClientMetricsForm } from "./ClientMetricsForm";
@@ -15,15 +15,22 @@ export function EnhancedKanbanBoard({ fullScreen = false, clients = [] }: Enhanc
   const [isMetricsModalOpen, setIsMetricsModalOpen] = useState(false);
   const [isNPSModalOpen, setIsNPSModalOpen] = useState(false);
   
-  const handleEditMetrics = (client: Client) => {
+  // Memoize these handlers to prevent unnecessary re-renders
+  const handleEditMetrics = useMemo(() => (client: Client) => {
     setSelectedClient(client);
     setIsMetricsModalOpen(true);
-  };
+  }, []);
   
-  const handleUpdateNPS = (client: Client) => {
+  const handleUpdateNPS = useMemo(() => (client: Client) => {
     setSelectedClient(client);
     setIsNPSModalOpen(true);
-  };
+  }, []);
+  
+  // Memoize the metrics submission handler
+  const handleMetricsSubmit = useMemo(() => (data: any) => {
+    console.log("Metrics updated:", data);
+    setIsMetricsModalOpen(false);
+  }, []);
   
   return (
     <div className={`bg-white rounded-lg shadow ${fullScreen ? 'p-6' : 'p-2'}`}>
@@ -37,10 +44,7 @@ export function EnhancedKanbanBoard({ fullScreen = false, clients = [] }: Enhanc
         <ClientMetricsForm
           isOpen={isMetricsModalOpen}
           onClose={() => setIsMetricsModalOpen(false)}
-          onSubmit={(data) => {
-            console.log("Metrics updated:", data);
-            setIsMetricsModalOpen(false);
-          }}
+          onSubmit={handleMetricsSubmit}
           clientName={selectedClient.name}
           initialData={{
             callsBooked: selectedClient.callsBooked || 0,

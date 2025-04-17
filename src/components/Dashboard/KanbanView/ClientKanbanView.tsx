@@ -6,7 +6,7 @@ import { KanbanColumn } from "./KanbanColumn";
 import { useClientStatus } from "./useClientStatus";
 import { getStatusLabel, getStatusColor, getDefaultColumnOrder } from "./ClientStatusHelper";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, memo } from "react";
 import { STORAGE_KEYS, loadData, saveData } from "@/utils/persistence";
 import { LoadingState } from "@/components/LoadingState";
 
@@ -16,79 +16,107 @@ interface ClientKanbanViewProps {
   onUpdateNPS: (client: Client) => void;
 }
 
-export function ClientKanbanView({ clients, onEditMetrics, onUpdateNPS }: ClientKanbanViewProps) {
+// Use memo to prevent unnecessary re-renders
+export const ClientKanbanView = memo(function ClientKanbanView({ 
+  clients, 
+  onEditMetrics, 
+  onUpdateNPS 
+}: ClientKanbanViewProps) {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const { clientsByStatus, handleDragEnd, refreshData, isInitialized } = useClientStatus(clients);
   
-  const handleViewDetails = (client: Client) => {
+  const handleViewDetails = useCallback((client: Client) => {
     navigate(`/clients/${client.id}`);
-  };
+  }, [navigate]);
   
   // Use the predefined column order
   const columnOrder = getDefaultColumnOrder();
   
-  // Load all available clients if none were provided
-  useEffect(() => {
+  // Optimized data loading function with debounce logic to avoid repeated calls
+  const loadClientsData = useCallback(() => {
     console.log("ClientKanbanView received clients:", clients?.length || 0);
-    setIsLoading(true);
     
-    const loadAllAvailableClients = () => {
-      // If clients were provided directly, use them
-      if (clients && clients.length > 0) {
-        console.log("Using provided clients:", clients.length);
-        refreshData(clients);
-        return;
-      }
-      
-      // Try loading from storage
-      const storedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
-      if (storedClients && storedClients.length > 0) {
-        console.log("Using stored clients from CLIENTS key:", storedClients.length);
-        refreshData(storedClients);
-        return;
-      }
-      
-      // Try loading from client status storage
-      const statusClients = loadData<Client[]>(STORAGE_KEYS.CLIENT_STATUS, []);
-      if (statusClients && statusClients.length > 0) {
-        console.log("Using stored clients from CLIENT_STATUS key:", statusClients.length);
-        refreshData(statusClients);
-        return;
-      }
-      
-      // Last resort: use default clients
-      const defaultClients = getAllClients();
-      if (defaultClients && defaultClients.length > 0) {
-        console.log("Using default clients:", defaultClients.length);
-        
-        // Save these to storage for future use
-        saveData(STORAGE_KEYS.CLIENTS, defaultClients);
-        saveData(STORAGE_KEYS.CLIENT_STATUS, defaultClients);
-        
-        refreshData(defaultClients);
-        return;
-      }
-      
-      console.warn("No clients found from any source");
-    };
+    // If clients were provided directly, use them
+    if (clients && clients.length > 0) {
+      console.log("Using provided clients:", clients.length);
+      refreshData(clients);
+      setIsLoading(false);
+      return;
+    }
     
-    loadAllAvailableClients();
+    // Try loading from storage
+    const storedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
+    if (storedClients && storedClients.length > 0) {
+      console.log("Using stored clients from CLIENTS key:", storedClients.length);
+      refreshData(storedClients);
+      setIsLoading(false);
+      return;
+    }
+    
+    // Try loading from client status storage
+    const statusClients = loadData<Client[]>(STORAGE_KEYS.CLIENT_STATUS, []);
+    if (statusClients && statusClients.length > 0) {
+      console.log("Using stored clients from CLIENT_STATUS key:", statusClients.length);
+      refreshData(statusClients);
+      setIsLoading(false);
+      return;
+    }
+    
+    // Last resort: use default clients
+    const defaultClients = getAllClients();
+    if (defaultClients && defaultClients.length > 0) {
+      console.log("Using default clients:", defaultClients.length);
+      
+      // Save these to storage for future use
+      saveData(STORAGE_KEYS.CLIENTS, defaultClients);
+      saveData(STORAGE_KEYS.CLIENT_STATUS, defaultClients);
+      
+      refreshData(defaultClients);
+      setIsLoading(false);
+      return;
+    }
+    
+    console.warn("No clients found from any source");
     setIsLoading(false);
   }, [clients, refreshData]);
 
-  // Listen for external changes to sync Kanban data
+  // Load initial data only once
   useEffect(() => {
+    // Set a flag in sessionStorage to track if data was already loaded
+    const dataLoaded = sessionStorage.getItem('kanbanDataLoaded');
+    
+    if (!dataLoaded) {
+      setIsLoading(true);
+      // Add small delay to prevent multiple simultaneous loads
+      const timer = setTimeout(() => {
+        loadClientsData();
+        sessionStorage.setItem('kanbanDataLoaded', 'true');
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    } else {
+      setIsLoading(false);
+    }
+  }, [loadClientsData]);
+
+  // Listen for external changes to sync Kanban data, with debouncing
+  useEffect(() => {
+    let debounceTimer: ReturnType<typeof setTimeout>;
+    
     const handleStorageChange = (event: StorageEvent | CustomEvent) => {
       const key = event instanceof StorageEvent ? event.key : (event as CustomEvent).detail?.key;
       
       if (key === STORAGE_KEYS.CLIENTS || key === STORAGE_KEYS.CLIENT_STATUS) {
-        // Force refresh from localStorage when external changes happen
-        const updatedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
-        if (updatedClients && updatedClients.length > 0) {
-          console.log("Kanban view updating due to storage event with", updatedClients.length, "clients");
-          refreshData(updatedClients);
-        }
+        // Debounce the refresh to avoid multiple rapid updates
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          const updatedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
+          if (updatedClients && updatedClients.length > 0) {
+            console.log("Kanban view updating due to storage event with", updatedClients.length, "clients");
+            refreshData(updatedClients);
+          }
+        }, 300);
       }
     };
     
@@ -98,6 +126,7 @@ export function ClientKanbanView({ clients, onEditMetrics, onUpdateNPS }: Client
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('storageUpdated', handleStorageChange as EventListener);
+      clearTimeout(debounceTimer);
     };
   }, [refreshData]);
 
@@ -121,9 +150,6 @@ export function ClientKanbanView({ clients, onEditMetrics, onUpdateNPS }: Client
     );
   }
   
-  console.log(`Kanban view rendering with ${totalClients} total clients`);
-  console.log("Column order:", columnOrder);
-  
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <ScrollArea className="w-full h-[calc(100vh-240px)]">
@@ -144,4 +170,4 @@ export function ClientKanbanView({ clients, onEditMetrics, onUpdateNPS }: Client
       </ScrollArea>
     </DragDropContext>
   );
-}
+});
