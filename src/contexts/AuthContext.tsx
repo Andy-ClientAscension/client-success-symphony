@@ -1,9 +1,11 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 interface User {
   email: string;
+  firstName?: string;
+  lastName?: string;
+  image?: string;
 }
 
 interface AuthContextType {
@@ -19,7 +21,8 @@ interface AuthContextType {
 // Valid invitation codes (in a real app, these would be stored in a database)
 const VALID_INVITE_CODES = ["SSC2024", "AGENT007", "WELCOME1"];
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Export the context so it can be imported by the hook
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -171,10 +174,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-}
+// We'll keep the useAuth hook in the hooks directory, so we'll remove this export
