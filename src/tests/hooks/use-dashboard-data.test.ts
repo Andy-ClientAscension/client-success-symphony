@@ -49,9 +49,21 @@ describe('useDashboardData', () => {
       new: 3
     };
 
+    const mockNPSData = [
+      { month: 'Jan', score: 8 },
+      { month: 'Feb', score: 9 }
+    ];
+
+    const mockChurnData = [
+      { month: 'Jan', rate: 2.1 },
+      { month: 'Feb', rate: 1.8 }
+    ];
+
     // Fix type casting for mocked functions
     (getAllClients as unknown as vi.Mock).mockResolvedValue(mockClients);
     (getClientsCountByStatus as unknown as vi.Mock).mockResolvedValue(mockCounts);
+    (getNPSMonthlyTrend as unknown as vi.Mock).mockResolvedValue(mockNPSData);
+    (getChurnData as unknown as vi.Mock).mockResolvedValue(mockChurnData);
 
     const { result } = renderHook(() => useDashboardData(), { wrapper });
 
@@ -61,6 +73,8 @@ describe('useDashboardData', () => {
 
     expect(result.current.clients).toEqual(mockClients);
     expect(result.current.clientCounts).toEqual(mockCounts);
+    expect(result.current.npsData).toEqual(mockNPSData);
+    expect(result.current.churnData).toEqual(mockChurnData);
     expect(result.current.error).toBe(null);
   });
 
