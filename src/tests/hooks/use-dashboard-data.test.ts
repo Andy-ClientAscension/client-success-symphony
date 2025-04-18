@@ -24,7 +24,7 @@ describe('useDashboardData', () => {
     },
   });
 
-  // Fix the wrapper component type definition
+  // Wrapper component with proper type definition
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>
       {children}
