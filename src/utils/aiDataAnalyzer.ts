@@ -1,3 +1,4 @@
+
 import { Client } from '@/lib/data';
 import { generateAIResponse, OpenAIMessage } from '@/lib/openai';
 import { saveData, STORAGE_KEYS } from '@/utils/persistence';
