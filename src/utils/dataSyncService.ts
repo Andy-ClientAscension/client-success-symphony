@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { STORAGE_KEYS, loadData, saveData } from './persistence';
 
@@ -55,6 +56,7 @@ export function initializeDataSync() {
 export function startAutoSync() {
   if (syncInterval) {
     clearInterval(syncInterval);
+    syncInterval = null;
   }
   
   isSyncActive = true;
@@ -99,12 +101,21 @@ export function stopAutoSync() {
 
 // Adjust sync interval
 export function setInterval(ms: number) {
+  // Store the new interval value
   syncIntervalMs = ms;
+  
+  // If sync is active, restart with new interval
   if (isSyncActive) {
-    // Restart with new interval
-    stopAutoSync();
+    // First stop the current sync
+    if (syncInterval) {
+      clearInterval(syncInterval);
+      syncInterval = null;
+    }
+    
+    // Then start a new one with the updated interval
     startAutoSync();
   }
+  
   console.info(`Sync interval set to ${ms}ms`);
 }
 
