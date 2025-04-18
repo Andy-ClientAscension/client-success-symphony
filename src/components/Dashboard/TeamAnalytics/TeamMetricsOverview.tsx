@@ -1,5 +1,5 @@
 
-import React, { useMemo } from "react";
+import React from "react";
 import { StatusDistribution, PerformanceMetrics } from "../Shared";
 import { StyledCard } from "../Shared/CardStyle";
 
@@ -31,12 +31,12 @@ export function TeamMetricsOverview({
   statusCounts,
   rates
 }: TeamMetricsOverviewProps) {
-  const performanceData = useMemo(() => ({
+  const performanceData = {
     totalClients: statusCounts.total,
     totalMRR: metrics.totalMRR,
     totalCallsBooked: metrics.totalCallsBooked,
     totalDealsClosed: metrics.totalDealsClosed,
-  }), [metrics, statusCounts.total]);
+  };
 
   return (
     <div className="space-y-6">

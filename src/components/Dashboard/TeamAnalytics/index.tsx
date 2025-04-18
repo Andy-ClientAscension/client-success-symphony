@@ -1,9 +1,9 @@
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { getClientMetricsByTeam, getAllClients, getCSMList } from "@/lib/data";
+import { getAllClients, getCSMList } from "@/lib/data";
 import { TeamAnalyticsHeader } from "./TeamAnalyticsHeader";
 import { TeamMetricsOverview } from "./TeamMetricsOverview";
 import { SSCPerformanceTable } from "../SSCPerformanceTable";
@@ -11,8 +11,7 @@ import { HealthScoreSheet } from "../HealthScoreSheet";
 import { HealthScoreHistory } from "../HealthScoreHistory";
 import { TeamManagementDialog } from "../TeamManagementDialog";
 import { STORAGE_KEYS, loadData } from "@/utils/persistence";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { CheckCircle2, AlertTriangle, ArrowDownRight, Users, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { getTeamPerformanceData } from "@/utils/analyticsUtils";
 
 const ADDITIONAL_TEAMS = [
   { id: "Enterprise", name: "Enterprise" },
@@ -26,18 +25,18 @@ export function TeamAnalytics() {
   const [teams, setTeams] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogAction, setDialogAction] = useState<'add' | 'delete'>('add');
+  const [clients, setClients] = useState(() => getAllClients());
   const { toast } = useToast();
-  const { isMobile } = useIsMobile();
+  const csmList = getCSMList();
   
-  const clients = useMemo(() => getAllClients(), []);
-  
+  // Monitor for client deletions in localStorage
   useEffect(() => {
     const checkForClientDeletions = () => {
       const persistEnabled = localStorage.getItem("persistDashboard") === "true";
       if (persistEnabled) {
         const savedClients = loadData(STORAGE_KEYS.CLIENTS, null);
         if (savedClients && Array.isArray(savedClients)) {
-          console.log("Client list in storage updated, reflecting changes in TeamAnalytics");
+          setClients(getAllClients());
         }
       }
     };
@@ -46,29 +45,22 @@ export function TeamAnalytics() {
     return () => clearInterval(interval);
   }, []);
   
-  const teamSet = useMemo(() => {
-    const set = new Set<string>();
+  // Extract unique teams from client data
+  useEffect(() => {
+    const teamSet = new Set<string>();
     clients.forEach(client => {
       if (client.team) {
-        set.add(client.team);
+        teamSet.add(client.team);
       }
     });
-    ADDITIONAL_TEAMS.forEach(team => set.add(team.id));
-    return set;
+    
+    ADDITIONAL_TEAMS.forEach(team => teamSet.add(team.id));
+    setTeams(Array.from(teamSet));
   }, [clients]);
   
-  React.useEffect(() => {
-    setTeams(Array.from(teamSet));
-  }, [teamSet]);
+  // Get performance data using our utility function
+  const performanceData = getTeamPerformanceData(selectedTeam, clients);
   
-  const csmList = useMemo(() => getCSMList(), []);
-  
-  const teamClients = useMemo(() => {
-    return selectedTeam === "all" 
-      ? clients 
-      : clients.filter(client => client.team === selectedTeam);
-  }, [clients, selectedTeam]);
-
   const handleTeamAction = (teamName: string) => {
     if (dialogAction === 'add') {
       if (teams.some(team => team.toLowerCase() === teamName.toLowerCase())) {
@@ -101,43 +93,6 @@ export function TeamAnalytics() {
     
     setDialogOpen(false);
   };
-
-  const metrics = useMemo(() => getClientMetricsByTeam(), []);
-  const teamMetrics = useMemo(() => {
-    return selectedTeam === "all" ? metrics : getClientMetricsByTeam(selectedTeam);
-  }, [metrics, selectedTeam]);
-
-  const statusCounts = useMemo(() => ({
-    active: teamClients.filter(client => client.status === 'active').length,
-    atRisk: teamClients.filter(client => client.status === 'at-risk').length,
-    churned: teamClients.filter(client => client.status === 'churned').length,
-    total: teamClients.length
-  }), [teamClients]);
-
-  const rates = useMemo(() => {
-    const retentionRate = statusCounts.total > 0 
-      ? Math.round((statusCounts.active / statusCounts.total) * 100) 
-      : 0;
-    const atRiskRate = statusCounts.total > 0 
-      ? Math.round((statusCounts.atRisk / statusCounts.total) * 100) 
-      : 0;
-    const churnRate = statusCounts.total > 0 
-      ? Math.round((statusCounts.churned / statusCounts.total) * 100) 
-      : 0;
-
-    const prevPeriodRetention = Math.max(0, Math.round(retentionRate - (Math.random() * 10 - 5)));
-    const prevPeriodAtRisk = Math.max(0, Math.round(atRiskRate - (Math.random() * 10 - 3)));
-    const prevPeriodChurn = Math.max(0, Math.round(churnRate - (Math.random() * 10 - 2)));
-
-    return {
-      retentionRate,
-      atRiskRate,
-      churnRate,
-      retentionTrend: retentionRate - prevPeriodRetention,
-      atRiskTrend: atRiskRate - prevPeriodAtRisk,
-      churnTrend: churnRate - prevPeriodChurn
-    };
-  }, [statusCounts]);
 
   return (
     <Card className="shadow-sm">
@@ -183,9 +138,12 @@ export function TeamAnalytics() {
           
           <TabsContent value="overview">
             <TeamMetricsOverview
-              metrics={teamMetrics}
-              statusCounts={statusCounts}
-              rates={rates}
+              metrics={performanceData.metrics}
+              statusCounts={performanceData.statusCounts}
+              rates={{
+                ...performanceData.rates,
+                ...performanceData.trends
+              }}
             />
           </TabsContent>
           
@@ -201,7 +159,7 @@ export function TeamAnalytics() {
           
           <TabsContent value="health-scores">
             <div className="overflow-x-auto">
-              <HealthScoreSheet clients={teamClients} />
+              <HealthScoreSheet clients={performanceData.teamClients} />
             </div>
           </TabsContent>
           
