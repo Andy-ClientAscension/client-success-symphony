@@ -1,10 +1,9 @@
 
 import React from "react";
 import { Client } from "@/lib/data";
-import { ClientsTable } from "../ClientsTable";
-import { Pagination } from "../Pagination";
+import { ResponsiveTable } from "../Shared/ResponsiveTable";
+import { ResponsiveGrid } from "../Shared/ResponsiveGrid";
 import { ClientKanbanView } from "../ClientKanbanView";
-import { VirtualizedTable } from "../Shared/VirtualizedTable";
 import { Badge } from "@/components/ui/badge";
 
 interface ClientListContentProps {
@@ -44,10 +43,10 @@ export function ClientListContent({
 }: ClientListContentProps) {
   const getStatusBadge = (status: Client['status']) => {
     const colorMap = {
-      'active': "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50",
-      'at-risk': "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/50",
-      'churned': "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50",
-      'new': "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50"
+      'active': "badge-success",
+      'at-risk': "badge-warning",
+      'churned': "badge-danger",
+      'new': "badge-info"
     };
 
     return (
@@ -132,7 +131,11 @@ export function ClientListContent({
       key: 'actions',
       header: 'Actions',
       cell: (client: Client) => (
-        <div className="flex items-center gap-2">
+        <div 
+          className="flex items-center gap-2"
+          role="group"
+          aria-label={`Actions for ${client.name}`}
+        >
           <button
             className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:outline-none"
             onClick={() => onViewDetails(client)}
@@ -161,16 +164,20 @@ export function ClientListContent({
   ];
 
   return (
-    <div role="region" aria-label="Client List">
+    <div 
+      role="region" 
+      aria-label="Client List"
+    >
       {viewMode === 'table' ? (
-        <VirtualizedTable
+        <ResponsiveTable
           data={currentItems}
           columns={getColumns()}
           keyExtractor={(client: Client) => client.id}
           emptyMessage="No clients found matching your filters."
           className="border rounded-lg mb-4"
           stripedRows={true}
-          itemHeight={56}
+          hoverable={true}
+          roundedBorders={true}
           pagination={{
             currentPage,
             totalPages,
@@ -182,11 +189,17 @@ export function ClientListContent({
           }}
         />
       ) : (
-        <ClientKanbanView 
-          clients={currentItems} 
-          onEditMetrics={onEditMetrics} 
-          onUpdateNPS={onUpdateNPS} 
-        />
+        <ResponsiveGrid
+          cols={{ xs: 1, sm: 2, md: 2, lg: 3 }}
+          gap="lg"
+          className="w-full"
+        >
+          <ClientKanbanView 
+            clients={currentItems} 
+            onEditMetrics={onEditMetrics} 
+            onUpdateNPS={onUpdateNPS} 
+          />
+        </ResponsiveGrid>
       )}
     </div>
   );

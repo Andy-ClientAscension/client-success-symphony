@@ -60,7 +60,11 @@ export function ResponsiveTable<T>({
   }, [columns, isMobile]);
 
   return (
-    <div className={cn("w-full", className)}>
+    <div 
+      className={cn("w-full", className)}
+      role="region"
+      aria-label="Data Table"
+    >
       <div className={cn(
         "overflow-x-auto",
         roundedBorders ? "rounded-md border" : ""
@@ -72,6 +76,7 @@ export function ResponsiveTable<T>({
                 <TableHead 
                   key={column.key} 
                   className={column.className}
+                  scope="col"
                 >
                   {column.header}
                 </TableHead>
@@ -113,15 +118,17 @@ export function ResponsiveTable<T>({
       </div>
       
       {pagination && (
-        <Pagination 
-          currentPage={pagination.currentPage}
-          totalPages={pagination.totalPages}
-          onPageChange={pagination.onPageChange}
-          totalItems={pagination.totalItems}
-          itemsPerPage={pagination.itemsPerPage}
-          startIndex={pagination.startIndex}
-          endIndex={pagination.endIndex}
-        />
+        <div className="mt-4" role="navigation" aria-label="Pagination">
+          <Pagination 
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            onPageChange={pagination.onPageChange}
+            totalItems={pagination.totalItems}
+            itemsPerPage={pagination.itemsPerPage}
+            startIndex={pagination.startIndex}
+            endIndex={pagination.endIndex}
+          />
+        </div>
       )}
     </div>
   );
