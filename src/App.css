@@ -1,4 +1,3 @@
-
 #root {
   max-width: none;
   margin: 0;
@@ -127,7 +126,7 @@ a:not(.button) {
   @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
 }
 
-/* Improved text spacing for readability */
+/* Improve text spacing for readability */
 .readable-text {
   @apply leading-relaxed tracking-wide;
 }
@@ -182,4 +181,46 @@ a:not(.button) {
   height: 1px;
   position: absolute;
   overflow: hidden;
+}
+
+/* Improve mobile typography and touch targets */
+@media screen and (max-width: 768px) {
+  html {
+    font-size: 16px; /* Ensure minimum readable font size */
+  }
+
+  button, 
+  .button,
+  [role="button"],
+  select,
+  input {
+    min-height: 44px; /* Minimum touch target size */
+    min-width: 44px;
+    padding: 0.5rem 1rem;
+  }
+
+  /* Improve form field spacing on mobile */
+  .form-field-stack > * + * {
+    @apply mt-3;
+  }
+}
+
+/* Responsive spacing utilities */
+.mobile-p-4 {
+  @apply p-2 sm:p-4;
+}
+
+.mobile-p-6 {
+  @apply p-3 sm:p-6;
+}
+
+/* Tablet optimizations */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+  html {
+    font-size: 15px;
+  }
+
+  .tablet-container {
+    @apply px-4;
+  }
 }

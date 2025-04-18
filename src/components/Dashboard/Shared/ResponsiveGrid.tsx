@@ -1,4 +1,3 @@
-
 import React from "react";
 import { cn } from "@/lib/utils";
 
@@ -53,31 +52,31 @@ export function ResponsiveGrid({
   if (cols.lg) gridClasses.push(`lg:${getColsClass(cols.lg)}`);
   if (cols.xl) gridClasses.push(`xl:${getColsClass(cols.xl)}`);
 
-  // Set gap classes
+  // Update gap classes for better mobile spacing
   const gapClass = rowGap || columnGap ? '' : {
     'none': 'gap-0',
-    'xs': 'gap-1',
-    'sm': 'gap-2',
-    'md': 'gap-4',
-    'lg': 'gap-6'
+    'xs': 'gap-2 sm:gap-1',
+    'sm': 'gap-3 sm:gap-2',
+    'md': 'gap-4 sm:gap-4',
+    'lg': 'gap-6 sm:gap-6'
   }[gap];
 
-  // Set row gap classes if specified
+  // Update row gap classes for mobile
   const rowGapClass = rowGap ? {
     'none': 'gap-y-0',
-    'xs': 'gap-y-1',
-    'sm': 'gap-y-2',
-    'md': 'gap-y-4',
-    'lg': 'gap-y-6'
+    'xs': 'gap-y-2 sm:gap-y-1',
+    'sm': 'gap-y-3 sm:gap-y-2',
+    'md': 'gap-y-4 sm:gap-y-4',
+    'lg': 'gap-y-6 sm:gap-y-6'
   }[rowGap] : '';
 
-  // Set column gap classes if specified
+  // Update column gap classes for mobile
   const columnGapClass = columnGap ? {
     'none': 'gap-x-0',
-    'xs': 'gap-x-1',
-    'sm': 'gap-x-2',
-    'md': 'gap-x-4',
-    'lg': 'gap-x-6'
+    'xs': 'gap-x-2 sm:gap-x-1',
+    'sm': 'gap-x-3 sm:gap-x-2',
+    'md': 'gap-x-4 sm:gap-x-4',
+    'lg': 'gap-x-6 sm:gap-x-6'
   }[columnGap] : '';
 
   // Set alignment classes

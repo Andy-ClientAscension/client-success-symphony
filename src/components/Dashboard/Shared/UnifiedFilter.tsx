@@ -46,22 +46,17 @@ export function UnifiedFilter({
   className = "",
 }: UnifiedFilterProps) {
   return (
-    <Card className={`p-4 bg-secondary/30 shadow-sm backdrop-blur-sm border border-border/50 ${className}`}>
-      <div className="flex items-center gap-2 mb-4">
-        <ListFilter className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium">Filter Options</span>
-      </div>
-      
+    <Card className={`p-3 sm:p-4 bg-secondary/30 shadow-sm backdrop-blur-sm border border-border/50 ${className}`}>
       <ResponsiveGrid 
         cols={{ xs: 1, sm: 2, md: 3, lg: 4 }} 
-        gap="md" 
+        gap="sm" 
         className="items-center"
       >
         {showTeamFilter && (
-          <div className="flex items-center gap-2 bg-background/50 p-2 rounded-md">
+          <div className="flex items-center gap-2 bg-background/50 p-2 rounded-md min-h-[44px]">
             <Users className="h-4 w-4 text-muted-foreground shrink-0" />
             <Select value={selectedTeam} onValueChange={onTeamChange}>
-              <SelectTrigger className="w-[180px] border-0 bg-transparent focus:ring-0">
+              <SelectTrigger className="w-full sm:w-[180px] h-9 sm:h-10 border-0 bg-transparent focus:ring-0 text-sm sm:text-base">
                 <SelectValue placeholder="Filter by team" />
               </SelectTrigger>
               <SelectContent>
@@ -76,10 +71,10 @@ export function UnifiedFilter({
         )}
 
         {showDateFilter && onDateRangeChange && (
-          <div className="flex items-center gap-2 bg-background/50 p-2 rounded-md">
+          <div className="flex items-center gap-2 bg-background/50 p-2 rounded-md min-h-[44px]">
             <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
             <Select value={selectedDateRange} onValueChange={onDateRangeChange}>
-              <SelectTrigger className="w-[180px] border-0 bg-transparent focus:ring-0">
+              <SelectTrigger className="w-full sm:w-[180px] h-9 sm:h-10 border-0 bg-transparent focus:ring-0 text-sm sm:text-base">
                 <SelectValue placeholder="Date range" />
               </SelectTrigger>
               <SelectContent>
@@ -95,21 +90,21 @@ export function UnifiedFilter({
 
         {showSearch && onSearchChange && (
           <div className="relative flex-1 min-w-[200px]">
-            <div className="flex items-center gap-2 bg-background/50 p-2 rounded-md">
+            <div className="flex items-center gap-2 bg-background/50 p-2 rounded-md min-h-[44px]">
               <Search className="h-4 w-4 text-muted-foreground shrink-0" />
               <Input
                 type="search"
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={onSearchChange}
-                className="border-0 bg-transparent focus-visible:ring-0 px-0 h-8"
+                className="border-0 bg-transparent focus-visible:ring-0 px-0 h-9 sm:h-10 text-sm sm:text-base"
               />
             </div>
           </div>
         )}
 
         {showSort && onSortOrderChange && (
-          <div className="flex items-center gap-2 bg-background/50 p-2 rounded-md">
+          <div className="flex items-center gap-2 bg-background/50 p-2 rounded-md min-h-[44px]">
             {selectedSortOrder === "desc" ? (
               <SortDesc className="h-4 w-4 text-muted-foreground shrink-0" />
             ) : (
@@ -119,7 +114,7 @@ export function UnifiedFilter({
               value={selectedSortOrder} 
               onValueChange={(value: "asc" | "desc") => onSortOrderChange(value)}
             >
-              <SelectTrigger className="w-[160px] border-0 bg-transparent focus:ring-0">
+              <SelectTrigger className="w-full sm:w-[160px] h-9 sm:h-10 border-0 bg-transparent focus:ring-0 text-sm sm:text-base">
                 <SelectValue placeholder="Sort order" />
               </SelectTrigger>
               <SelectContent>
