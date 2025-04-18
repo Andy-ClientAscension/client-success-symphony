@@ -5,6 +5,7 @@ import { ClientsTable } from "../ClientsTable";
 import { Pagination } from "../Pagination";
 import { ClientKanbanView } from "../ClientKanbanView";
 import { VirtualizedTable } from "../Shared/VirtualizedTable";
+import { Badge } from "@/components/ui/badge";
 
 interface ClientListContentProps {
   viewMode: 'table' | 'kanban';
@@ -41,29 +42,24 @@ export function ClientListContent({
   indexOfFirstItem,
   indexOfLastItem
 }: ClientListContentProps) {
-  // Get the columns from ClientsTable
-  const getColumns = () => {
-    const getStatusBadge = (status: Client['status']) => {
-      // Create a temporary instance of ClientsTable without using 'new'
-      const table = {
-        getStatusBadge: (status: Client['status']) => {
-          const clientsTable = new ClientsTable({
-            clients: [],
-            selectedClientIds: [],
-            onSelectClient: () => {},
-            onSelectAll: () => {},
-            onViewDetails: () => {},
-            onEditMetrics: () => {},
-            onUpdateNPS: () => {}
-          });
-          // @ts-ignore - This is a hack to get access to the method
-          return clientsTable.getStatusBadge(status);
-        }
-      };
-      
-      return table.getStatusBadge(status);
-    };
+  // Directly implement the status badge rendering without relying on ClientsTable
+  const getStatusBadge = (status: Client['status']) => {
+    switch (status) {
+      case 'active':
+        return <Badge className="bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400 hover:bg-success-200 dark:hover:bg-success-900/50">Active</Badge>;
+      case 'at-risk':
+        return <Badge className="bg-warning-100 text-warning-800 dark:bg-warning-900/30 dark:text-warning-400 hover:bg-warning-200 dark:hover:bg-warning-900/50">At Risk</Badge>;
+      case 'churned':
+        return <Badge className="bg-danger-100 text-danger-800 dark:bg-danger-900/30 dark:text-danger-400 hover:bg-danger-200 dark:hover:bg-danger-900/50">Churned</Badge>;
+      case 'new':
+        return <Badge className="bg-brand-100 text-brand-800 dark:bg-brand-900/30 dark:text-brand-400 hover:bg-brand-200 dark:hover:bg-brand-900/50">New</Badge>;
+      default:
+        return null;
+    }
+  };
 
+  // Get the columns for the table
+  const getColumns = () => {
     return [
       {
         key: 'select',
