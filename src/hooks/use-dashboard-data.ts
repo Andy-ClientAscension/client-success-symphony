@@ -85,13 +85,17 @@ export function useDashboardData() {
   const metrics = metricsData ? {
     ...metricsData,
     // Add performanceTrends if it doesn't exist
-    performanceTrends: metricsData.performanceTrends || (clients ? calculatePerformanceTrends(clients) : []),
+    performanceTrends: 'performanceTrends' in metricsData ? 
+      metricsData.performanceTrends : 
+      (clients ? calculatePerformanceTrends(clients) : []),
     // Add trends if it doesn't exist
-    trends: metricsData.trends || { 
-      retentionTrend: 0, 
-      atRiskTrend: 0, 
-      churnTrend: 0 
-    }
+    trends: 'trends' in metricsData ?
+      metricsData.trends : 
+      { 
+        retentionTrend: 0, 
+        atRiskTrend: 0, 
+        churnTrend: 0 
+      }
   } : undefined;
 
   return {
