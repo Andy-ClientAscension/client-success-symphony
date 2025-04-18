@@ -158,7 +158,7 @@ export function MetricsCardsContent() {
 export function MetricsCards() {
   return (
     <ErrorBoundary
-      fallback={MetricsError}
+      fallback={<MetricsError error={new Error("Failed to load metrics")} resetErrorBoundary={() => window.location.reload()} />}
     >
       <MetricsCardsContent />
     </ErrorBoundary>
