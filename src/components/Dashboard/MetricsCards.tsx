@@ -117,10 +117,11 @@ export function MetricsCardsContent() {
 
 // Wrap the component with ErrorBoundary
 export function MetricsCards() {
+  // The key fix: use the FallbackComponent prop instead of fallback
   return (
-    <ErrorBoundary fallback={({error, resetErrorBoundary}) => (
-      <MetricsError error={error} resetErrorBoundary={resetErrorBoundary} />
-    )}>
+    <ErrorBoundary
+      fallback={MetricsError}
+    >
       <MetricsCardsContent />
     </ErrorBoundary>
   );
