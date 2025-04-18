@@ -23,7 +23,8 @@ describe('DashboardTabs', () => {
     comparisons: [],
     handleRefreshData: vi.fn(),
     trendData: [],
-    lastAnalyzed: null
+    lastAnalyzed: null,
+    cancelAnalysis: vi.fn()
   };
 
   it('renders all tab triggers', () => {
