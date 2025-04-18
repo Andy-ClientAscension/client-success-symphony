@@ -159,7 +159,7 @@ export function MetricsCardsContent() {
         </CollapsibleTrigger>
       </div>
       
-      <CollapsibleContent forceMount open={isExpanded}>
+      <CollapsibleContent forceMount>
         {/* Primary metrics - larger, more prominent */}
         <ResponsiveGrid 
           cols={{ xs: 1, sm: 2 }} 
