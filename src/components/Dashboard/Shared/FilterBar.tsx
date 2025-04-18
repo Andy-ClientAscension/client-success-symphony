@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Filter } from "lucide-react";
 import { UnifiedFilter, FilterConfig } from "./UnifiedFilter";
@@ -40,12 +39,7 @@ export function FilterBar({
   className = ""
 }: FilterBarProps) {
   return (
-    <div className={`space-y-4 ${className}`}>
-      <div className="flex items-center gap-2 bg-secondary/30 p-1.5 rounded-md w-fit">
-        <Filter className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium">Filters:</span>
-      </div>
-      
+    <div className={`sticky top-0 z-10 -mx-6 px-6 py-4 bg-background/95 backdrop-blur-sm border-b ${className}`}>
       <UnifiedFilter
         selectedTeam={selectedTeam}
         teams={teams}
