@@ -30,11 +30,13 @@ export function DashboardOverview() {
 
   const rates = calculateRates(statusCounts);
 
-  // Get NPS score from npsData if available, otherwise use a default of undefined
-  const npsScore = npsData?.currentScore;
+  // Get NPS score from the most recent NPS data if available
+  const npsScore = npsData && npsData.length > 0 ? npsData[npsData.length - 1].score : undefined;
   
-  // Calculate or extract growth rate (example: from metrics.trends if available)
-  const growthRate = metrics?.performanceTrends?.[0]?.growth;
+  // Get growth rate from performance trends if available
+  const growthRate = metrics?.performanceTrends && metrics.performanceTrends.length > 0 
+    ? metrics.performanceTrends[0].growth || 0 
+    : undefined;
 
   const consolidatedMetrics = {
     total: statusCounts.total,
