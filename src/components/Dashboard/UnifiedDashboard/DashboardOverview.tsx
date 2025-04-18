@@ -23,11 +23,15 @@ export function DashboardOverview() {
     active: clientCounts?.active || 0,
     atRisk: clientCounts?.["at-risk"] || 0,
     churned: clientCounts?.churned || 0,
-    new: clientCounts?.new || 0, // Added the missing 'new' property
+    new: clientCounts?.new || 0,
     total: clientCounts ? Object.values(clientCounts).reduce((a, b) => a + b, 0) : 0
   };
 
   const rates = calculateRates(statusCounts);
+
+  // Extract NPS and growth rate from metrics if available
+  const npsScore = metrics?.npsScore;
+  const growthRate = metrics?.growthRate;
 
   const consolidatedMetrics = {
     total: statusCounts.total,
@@ -37,8 +41,8 @@ export function DashboardOverview() {
     churn: rates.churnRate,
     success: rates.retentionRate,
     mrr: metrics?.totalMRR || 0,
-    nps: metrics?.npsScore !== undefined ? metrics.npsScore : undefined,
-    growthRate: metrics?.growthRate !== undefined ? metrics.growthRate : undefined
+    nps: npsScore,
+    growthRate: growthRate
   };
 
   const performanceData = {
