@@ -9,15 +9,14 @@ import {
   Calendar,
   AlertTriangle,
   TrendingUp,
-  BarChart,
-  Plus 
+  BarChart 
 } from "lucide-react";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { EmptyState } from "@/components/EmptyState";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import { EmptyState } from "@/components/EmptyState";
 
 function MetricsError({ error, resetErrorBoundary }: { error: Error, resetErrorBoundary: () => void }) {
   return (
@@ -142,7 +141,7 @@ export function MetricsCardsContent() {
       {data.map((item, index) => (
         <Card 
           key={index} 
-          className="bg-white dark:bg-gray-800/50 shadow-sm hover:shadow transition-shadow duration-200"
+          className="bg-white dark:bg-gray-800/50 shadow-sm hover:shadow-md transition-all duration-200 border-border/50"
         >
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-4">
@@ -154,7 +153,7 @@ export function MetricsCardsContent() {
                   {item.title}
                 </p>
                 <h3 
-                  className="text-2xl font-semibold"
+                  className="text-2xl font-semibold text-foreground"
                   aria-labelledby={`metric-${index}-label`}
                   tabIndex={0}
                 >
@@ -163,12 +162,12 @@ export function MetricsCardsContent() {
               </div>
               {item.icon}
             </div>
-            <Separator className="my-3" />
+            <Separator className="my-3 bg-border/50" />
             <div 
               className={`text-xs flex items-center ${
                 item.trend.direction === "up" 
-                  ? "text-green-600 dark:text-green-400" 
-                  : "text-amber-600 dark:text-amber-400"
+                  ? "text-emerald-600 dark:text-emerald-400" 
+                  : "text-brand-500 dark:text-brand-400"
               }`}
               aria-label={`${item.trend.value} ${item.trend.direction === "up" ? "increase" : "decrease"} from last month`}
             >

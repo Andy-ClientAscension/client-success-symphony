@@ -34,7 +34,7 @@ export function StyledCard({
   isLoading = false
 }: StyledCardProps) {
   const variantStyles = {
-    default: "",
+    default: "bg-white dark:bg-gray-800/50 border-border/50",
     outline: "border-2 border-border dark:border-gray-800",
     primary: "border-brand-100 dark:border-brand-900/50 bg-brand-50/30 dark:bg-brand-950/30",
     success: "border-success-100 dark:border-success-900/50 bg-success-50/30 dark:bg-success-950/30",
@@ -45,12 +45,19 @@ export function StyledCard({
 
   const sizeStyles = {
     sm: "p-2",
-    md: "",
+    md: "p-4",
     lg: "p-6"
   };
 
   return (
-    <Card className={cn(variantStyles[variant], sizeStyles[size], className)}>
+    <Card 
+      className={cn(
+        "shadow-sm hover:shadow-md transition-all duration-200",
+        variantStyles[variant], 
+        sizeStyles[size], 
+        className
+      )}
+    >
       {(title || description) && (
         <CardHeader className={cn(
           size === "sm" ? "pb-1 px-3 pt-3" : "pb-2",
@@ -59,13 +66,15 @@ export function StyledCard({
           {title && (
             <CardTitle className={cn(
               size === "sm" ? "text-base" : "text-lg",
-              "font-semibold"
+              "font-semibold text-foreground"
             )}>
               {title}
             </CardTitle>
           )}
           {description && (
-            <CardDescription>{description}</CardDescription>
+            <CardDescription className="text-muted-foreground">
+              {description}
+            </CardDescription>
           )}
         </CardHeader>
       )}
@@ -84,6 +93,7 @@ export function StyledCard({
       {footer && (
         <CardFooter className={cn(
           size === "sm" ? "pt-0 px-3 pb-3" : "",
+          "border-t border-border/50",
           footerClassName
         )}>
           {footer}
