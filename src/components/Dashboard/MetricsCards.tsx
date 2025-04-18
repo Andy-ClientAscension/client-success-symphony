@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -10,12 +9,15 @@ import {
   Calendar,
   AlertTriangle,
   TrendingUp,
-  BarChart 
+  BarChart,
+  Plus 
 } from "lucide-react";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { EmptyState } from "@/components/EmptyState";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 
 function MetricsError({ error, resetErrorBoundary }: { error: Error, resetErrorBoundary: () => void }) {
   return (
@@ -45,6 +47,7 @@ function MetricsError({ error, resetErrorBoundary }: { error: Error, resetErrorB
 
 export function MetricsCardsContent() {
   const { metrics, clientCounts, error } = useDashboardData();
+  const [isExpanded, setIsExpanded] = React.useState(false);
 
   if (error) {
     throw error;
@@ -101,6 +104,34 @@ export function MetricsCardsContent() {
       ariaLabel: "Client retention rate"
     }
   ];
+
+  if (!metrics && !clientCounts) {
+    return (
+      <Collapsible
+        open={isExpanded}
+        onOpenChange={setIsExpanded}
+        className="w-full"
+      >
+        <CollapsibleTrigger asChild>
+          <Button variant="outline" className="w-full justify-between">
+            <span>Metrics Overview</span>
+            <Plus className="h-4 w-4 shrink-0 transition-transform duration-200" />
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-4">
+          <EmptyState
+            title="No Metrics Available"
+            message="Start tracking your performance by adding client data and metrics."
+            icon={<BarChart className="h-8 w-8 text-muted-foreground" />}
+            action={{
+              label: "Add Data",
+              onClick: () => window.location.href = "/clients/add"
+            }}
+          />
+        </CollapsibleContent>
+      </Collapsible>
+    );
+  }
 
   return (
     <div 
