@@ -9,7 +9,7 @@ import { OfflineDetector } from "@/components/OfflineDetector";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import dataSyncService from "@/utils/dataSyncService";
+import { dataSyncService } from "@/utils/dataSyncService";
 import { RefreshCw } from "lucide-react";
 
 // Pages

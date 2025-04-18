@@ -8,18 +8,62 @@ const SYNC_INTERVAL = 5000;
 let updatedKeys: Set<string> = new Set();
 let subscribers: Map<string, Function[]> = new Map();
 let syncInterval: ReturnType<typeof setInterval> | null = null;
+let syncIntervalMs = SYNC_INTERVAL;
+let isSyncActive = false;
+
+// Synchronization event log
+export interface SyncEvent {
+  type: string;
+  timestamp: string;
+  details?: Record<string, any>;
+}
+
+// Sync statistics
+interface SyncStats {
+  lastSync: string | null;
+  totalEvents: number;
+  failureCount: number;
+}
+
+const syncLog: SyncEvent[] = [];
+const syncStats: SyncStats = {
+  lastSync: null,
+  totalEvents: 0,
+  failureCount: 0
+};
 
 // Initialize the data sync service
 export function initializeDataSync() {
   if (syncInterval) return; // Already initialized
   
   console.info('Starting data sync service');
+  startAutoSync();
+  
+  // Create an initial backup
+  createBackup();
+  
+  // Listen for storage events from other tabs
+  window.addEventListener('storage', (e) => {
+    if (e.key && subscribers.has(e.key)) {
+      const data = loadData(e.key, null);
+      notifySubscribers(e.key, data);
+    }
+  });
+}
+
+// Start automatic synchronization
+export function startAutoSync() {
+  if (syncInterval) {
+    clearInterval(syncInterval);
+  }
+  
+  isSyncActive = true;
   
   // Set up interval to check for data changes
   syncInterval = setInterval(() => {
     if (updatedKeys.size > 0) {
       console.info('Starting auto sync');
-      broadcastSyncEvent('sync:started', { mode: 'auto' });
+      logSyncEvent('sync:started', { mode: 'auto' });
       
       // Only sync keys that have been marked as updated
       updatedKeys.forEach(key => {
@@ -32,27 +76,62 @@ export function initializeDataSync() {
       
       // Mark sync as complete
       setTimeout(() => {
-        broadcastSyncEvent('sync:completed', { mode: 'auto' });
+        logSyncEvent('sync:completed', { mode: 'auto' });
         console.info('auto sync completed');
       }, 100);
     }
-  }, SYNC_INTERVAL);
-  
-  // Create a backup of all data periodically
-  setInterval(() => {
+    
+    // Create a backup periodically
     createBackup();
-  }, SYNC_INTERVAL * 3);
+  }, syncIntervalMs);
+}
+
+// Stop automatic synchronization
+export function stopAutoSync() {
+  if (syncInterval) {
+    clearInterval(syncInterval);
+    syncInterval = null;
+  }
   
-  // Listen for storage events from other tabs
-  window.addEventListener('storage', (e) => {
-    if (e.key && subscribers.has(e.key)) {
-      const data = loadData(e.key, null);
-      notifySubscribers(e.key, data);
+  isSyncActive = false;
+  console.info('Auto sync stopped');
+}
+
+// Adjust sync interval
+export function setInterval(ms: number) {
+  syncIntervalMs = ms;
+  if (isSyncActive) {
+    // Restart with new interval
+    stopAutoSync();
+    startAutoSync();
+  }
+  console.info(`Sync interval set to ${ms}ms`);
+}
+
+// Perform manual synchronization
+export async function manualSync(): Promise<boolean> {
+  try {
+    logSyncEvent('sync:started', { mode: 'manual' });
+    console.info('Starting manual sync');
+    
+    // Sync all storage keys
+    const allKeys = Object.values(STORAGE_KEYS);
+    for (const key of allKeys) {
+      const data = loadData(key, null);
+      broadcastDataChange(key, data);
     }
-  });
-  
-  // Create an initial backup
-  createBackup();
+    
+    // Create a new backup
+    createBackup();
+    
+    logSyncEvent('sync:completed', { mode: 'manual' });
+    console.info('Manual sync completed');
+    return true;
+  } catch (error) {
+    console.error('Manual sync failed:', error);
+    logSyncEvent('sync:failed', { error: String(error) });
+    return false;
+  }
 }
 
 // Create a backup of all data
@@ -66,11 +145,43 @@ function createBackup() {
     });
     
     saveData('backupData', backup);
-    broadcastSyncEvent('data:changed', { key: 'backupData' });
+    broadcastDataChange('backupData', backup);
     console.info('Sync backup created');
   } catch (error) {
     console.error('Failed to create backup:', error);
+    logSyncEvent('sync:failed', { error: String(error) });
   }
+}
+
+// Log a sync event
+function logSyncEvent(type: string, details?: Record<string, any>) {
+  const event: SyncEvent = {
+    type,
+    timestamp: new Date().toISOString(),
+    details
+  };
+  
+  syncLog.push(event);
+  syncStats.totalEvents++;
+  
+  if (type === 'sync:completed') {
+    syncStats.lastSync = event.timestamp;
+  } else if (type === 'sync:failed') {
+    syncStats.failureCount++;
+  }
+  
+  // Keep log size manageable (max 100 events)
+  if (syncLog.length > 100) {
+    syncLog.shift();
+  }
+  
+  broadcastSyncEvent(type, details);
+}
+
+// Clear the sync log
+export function clearSyncLog() {
+  syncLog.length = 0;
+  console.info('Sync log cleared');
 }
 
 // Notify all subscribers when data changes
@@ -89,6 +200,7 @@ function notifySubscribers(key: string, data: any) {
 // Broadcast data changes to subscribers
 function broadcastDataChange(key: string, data: any) {
   notifySubscribers(key, data);
+  logSyncEvent('data:changed', { key });
   const event = new CustomEvent('storageUpdated', { detail: { key, data } });
   window.dispatchEvent(event);
 }
@@ -168,3 +280,49 @@ export function useRealtimeData<T>(
   // Return array with or without setter based on withSetter flag
   return withSetter ? [data, isLoading, setDataAndSync] : [data, isLoading];
 }
+
+/**
+ * Hook to interact with the sync service
+ * @returns Sync service methods and state
+ */
+export function useSyncService() {
+  const [isSyncing, setIsSyncing] = useState(false);
+  
+  // Handle manual sync with UI state
+  const handleManualSync = useCallback(async () => {
+    setIsSyncing(true);
+    try {
+      const result = await manualSync();
+      setIsSyncing(false);
+      return result;
+    } catch (error) {
+      setIsSyncing(false);
+      return false;
+    }
+  }, []);
+  
+  return {
+    startAutoSync,
+    stopAutoSync,
+    manualSync: handleManualSync,
+    setInterval,
+    clearSyncLog,
+    syncStats,
+    syncLog,
+    isSyncing
+  };
+}
+
+// Export a convenience object with all sync methods
+const dataSyncService = {
+  initializeDataSync,
+  startAutoSync,
+  stopAutoSync,
+  manualSync,
+  setInterval,
+  clearSyncLog,
+  markKeyAsUpdated,
+  saveDataAndSync
+};
+
+export { dataSyncService };

@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { RefreshCw, AlertCircle, CheckCircle2 } from "lucide-react";
-import dataSyncService, { useSyncService, SyncEvent } from "@/utils/dataSyncService";
+import { dataSyncService, useSyncService, SyncEvent } from "@/utils/dataSyncService";
 
 export function DataSyncMonitor() {
   const { toast } = useToast();
