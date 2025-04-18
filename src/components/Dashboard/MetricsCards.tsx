@@ -156,16 +156,16 @@ export function MetricsCardsContent() {
   );
 }
 
-// Wrap the component with ErrorBoundary - Fixed to use React.ReactElement
+// Use JSX directly as the fallback instead of a function
 export function MetricsCards() {
   return (
     <ErrorBoundary
-      fallback={(props) => (
+      fallback={
         <MetricsError 
-          error={props.error} 
-          resetErrorBoundary={props.resetErrorBoundary} 
+          error={new Error("Failed to load metrics")} 
+          resetErrorBoundary={() => window.location.reload()} 
         />
-      )}
+      }
     >
       <MetricsCardsContent />
     </ErrorBoundary>
