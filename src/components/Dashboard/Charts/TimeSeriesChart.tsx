@@ -22,6 +22,7 @@ interface TimeSeriesChartProps {
   referenceValue?: number;
   valueFormatter?: (value: number) => string;
   yAxisLabel?: string;
+  height?: number; // Added height property
 }
 
 export function TimeSeriesChart({
@@ -33,7 +34,8 @@ export function TimeSeriesChart({
   yAxisDomain,
   referenceValue,
   valueFormatter = (value) => `${value}`,
-  yAxisLabel
+  yAxisLabel,
+  height = 220
 }: TimeSeriesChartProps) {
   return (
     <Card className="w-full shadow-sm">
@@ -41,7 +43,7 @@ export function TimeSeriesChart({
         <CardTitle className="text-base font-semibold">{title}</CardTitle>
       </CardHeader>
       <CardContent className="p-4 pt-0">
-        <div className="h-[220px]">
+        <div className={`h-[${height}px]`}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />

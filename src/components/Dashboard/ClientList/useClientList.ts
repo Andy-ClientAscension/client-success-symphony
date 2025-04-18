@@ -31,8 +31,12 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     }
   }, [toast]);
   
-  // Use the realtime data hook for clients
-  const [clients, isClientsLoading, setRealtimeClients] = useRealtimeData<Client[]>(STORAGE_KEYS.CLIENTS, defaultClients);
+  // Use the realtime data hook for clients with updater function
+  const [clients, isClientsLoading, setClients] = useRealtimeData<Client[]>(
+    STORAGE_KEYS.CLIENTS, 
+    defaultClients,
+    true // Enable the setter
+  );
   
   const [filteredClients, setFilteredClients] = useState<Client[]>(clients);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -150,7 +154,9 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     });
     
     // Update both local state and persisted data
-    setRealtimeClients(updatedClients);
+    if (setClients) {
+      setClients(updatedClients);
+    }
     
     if (kanbanStore && kanbanStore.moveStudent) {
       clientIds.forEach(clientId => {
@@ -177,7 +183,7 @@ export function useClientList({ statusFilter }: UseClientListProps) {
 
   return {
     clients,
-    setClients: setRealtimeClients,
+    setClients,
     filteredClients,
     selectedClient,
     setSelectedClient,

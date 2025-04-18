@@ -54,8 +54,24 @@ export function TeamAnalytics() {
     setTeams(Array.from(teamSet));
   }, [clients]);
   
-  // Get performance data using our utility function
-  const performanceData = getTeamPerformanceData(selectedTeam, clients);
+  // Get team performance data and extract teamClients
+  const rawPerformanceData = getTeamPerformanceData(selectedTeam, clients);
+  
+  // Create the properly structured performance data object that matches the expected type
+  const performanceData = {
+    teamClients: selectedTeam === "all" 
+      ? clients 
+      : clients.filter(client => client.team === selectedTeam),
+    statusCounts: rawPerformanceData.statusCounts,
+    rates: rawPerformanceData.rates,
+    trends: rawPerformanceData.trends,
+    metrics: {
+      totalMRR: rawPerformanceData.totalMRR,
+      totalCallsBooked: rawPerformanceData.totalCallsBooked,
+      totalDealsClosed: rawPerformanceData.totalDealsClosed,
+      clientCount: rawPerformanceData.clientCount
+    }
+  };
   
   const handleTeamAction = (teamName: string) => {
     if (dialogAction === 'add') {

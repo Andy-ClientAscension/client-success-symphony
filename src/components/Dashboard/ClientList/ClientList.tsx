@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -77,7 +78,7 @@ export function ClientList({ statusFilter }: ClientListProps) {
   };
 
   const handleMetricsUpdate = (data: { callsBooked: number; dealsClosed: number; mrr: number }) => {
-    if (!selectedClient) return;
+    if (!selectedClient || !setClients) return;
 
     const updatedClients = clients.map(client => 
       client.id === selectedClient.id
@@ -108,7 +109,7 @@ export function ClientList({ statusFilter }: ClientListProps) {
   };
   
   const handleBulkActionConfirm = () => {
-    if (!bulkActionType) {
+    if (!bulkActionType || !setClients) {
       return;
     }
     
