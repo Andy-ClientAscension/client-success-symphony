@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,9 +11,8 @@ import { HealthScoreSheet } from "../HealthScoreSheet";
 import { HealthScoreHistory } from "../HealthScoreHistory";
 import { TeamManagementDialog } from "../TeamManagementDialog";
 import { STORAGE_KEYS, loadData } from "@/utils/persistence";
-import { CheckCircle2, AlertTriangle, ArrowDownRight, Users, TrendingUp, TrendingDown, Minus, PlusCircle, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { CheckCircle2, AlertTriangle, ArrowDownRight, Users, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 const ADDITIONAL_TEAMS = [
   { id: "Enterprise", name: "Enterprise" },
@@ -27,6 +27,7 @@ export function TeamAnalytics() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogAction, setDialogAction] = useState<'add' | 'delete'>('add');
   const { toast } = useToast();
+  const { isMobile } = useIsMobile();
   
   const clients = useMemo(() => getAllClients(), []);
   
@@ -141,40 +142,44 @@ export function TeamAnalytics() {
   return (
     <Card className="shadow-sm">
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <CardTitle className="text-lg font-semibold">Team Analytics</CardTitle>
-          <TeamAnalyticsHeader
-            selectedTeam={selectedTeam}
-            teams={teams}
-            onTeamChange={setSelectedTeam}
-            onAddTeam={() => {
-              setDialogAction('add');
-              setDialogOpen(true);
-            }}
-            onDeleteTeam={() => {
-              if (selectedTeam === 'all') {
-                toast({
-                  title: "Select a Team",
-                  description: "Please select a specific team to delete.",
-                  variant: "destructive",
-                });
-                return;
-              }
-              setDialogAction('delete');
-              setDialogOpen(true);
-            }}
-          />
+          <div className="w-full md:w-auto">
+            <TeamAnalyticsHeader
+              selectedTeam={selectedTeam}
+              teams={teams}
+              onTeamChange={setSelectedTeam}
+              onAddTeam={() => {
+                setDialogAction('add');
+                setDialogOpen(true);
+              }}
+              onDeleteTeam={() => {
+                if (selectedTeam === 'all') {
+                  toast({
+                    title: "Select a Team",
+                    description: "Please select a specific team to delete.",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                setDialogAction('delete');
+                setDialogOpen(true);
+              }}
+            />
+          </div>
         </div>
       </CardHeader>
       
       <CardContent className="pb-4">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="performance">Team Performance</TabsTrigger>
-            <TabsTrigger value="health-scores">Health Score Sheet</TabsTrigger>
-            <TabsTrigger value="health-trends">Health Trends</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto">
+            <TabsList className="mb-4">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="performance">Team Performance</TabsTrigger>
+              <TabsTrigger value="health-scores">Health Score Sheet</TabsTrigger>
+              <TabsTrigger value="health-trends">Health Trends</TabsTrigger>
+            </TabsList>
+          </div>
           
           <TabsContent value="overview">
             <TeamMetricsOverview
@@ -185,15 +190,19 @@ export function TeamAnalytics() {
           </TabsContent>
           
           <TabsContent value="performance">
-            <SSCPerformanceTable 
-              csmList={csmList}
-              clients={clients}
-              selectedTeam={selectedTeam}
-            />
+            <div className="overflow-x-auto">
+              <SSCPerformanceTable 
+                csmList={csmList}
+                clients={clients}
+                selectedTeam={selectedTeam}
+              />
+            </div>
           </TabsContent>
           
           <TabsContent value="health-scores">
-            <HealthScoreSheet clients={teamClients} />
+            <div className="overflow-x-auto">
+              <HealthScoreSheet clients={teamClients} />
+            </div>
           </TabsContent>
           
           <TabsContent value="health-trends">

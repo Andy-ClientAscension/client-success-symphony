@@ -28,7 +28,7 @@ export function MetricsGrid({
   churnRate
 }: MetricsGridProps) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mb-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
       <MetricCard 
         title="Total Clients" 
         value={totalClients}
