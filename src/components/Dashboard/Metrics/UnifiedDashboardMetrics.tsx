@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UnifiedMetricsGrid } from "./UnifiedMetricsGrid";
@@ -8,15 +9,36 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface UnifiedDashboardMetricsProps {
-  total: number;
-  active: number;
-  atRisk: number;
-  newClients: number;
-  churn: number;
-  success: number;
-  mrr: number;
-  nps?: number;
-  growthRate?: number;
+  metrics: {
+    total: number;
+    active: number;
+    atRisk: number;
+    newClients: number;
+    churn: number;
+    success: number;
+    mrr: number;
+    nps?: number;
+    growthRate?: number;
+  };
+  statusCounts: {
+    active: number;
+    atRisk: number;
+    churned: number;
+    new?: number;
+    total: number;
+  };
+  rates: {
+    retentionRate: number;
+    atRiskRate: number;
+    churnRate: number;
+  };
+  performanceData: {
+    totalMRR: number;
+    totalCallsBooked: number;
+    totalDealsClosed: number;
+    totalClients: number;
+  };
+  variant?: "compact" | "detailed";
 }
 
 export function UnifiedDashboardMetrics({
