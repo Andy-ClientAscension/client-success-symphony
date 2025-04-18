@@ -1,10 +1,10 @@
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { BackgroundProcessingIndicator } from '@/components/Dashboard/BackgroundProcessingIndicator';
+import { BackgroundProcessingIndicator, BackgroundTaskStatus } from '@/components/Dashboard/BackgroundProcessingIndicator';
 
 describe('BackgroundProcessingIndicator', () => {
-  const mockTasks = [
+  const mockTasks: BackgroundTaskStatus[] = [
     { id: '1', name: 'Task 1', status: 'running' },
     { id: '2', name: 'Task 2', status: 'error', message: 'Failed' },
     { id: '3', name: 'Task 3', status: 'success' }
@@ -30,7 +30,7 @@ describe('BackgroundProcessingIndicator', () => {
   });
 
   it('should show correct status for multiple running tasks', () => {
-    const multipleRunning = [
+    const multipleRunning: BackgroundTaskStatus[] = [
       { id: '1', name: 'Task 1', status: 'running' },
       { id: '2', name: 'Task 2', status: 'running' }
     ];

@@ -1,6 +1,6 @@
 
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
+import { vi, afterEach, expect } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
 // Mock ResizeObserver
