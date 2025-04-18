@@ -1,7 +1,9 @@
 
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { ArrowLeft, RefreshCw, Home } from "lucide-react";
+import { RefreshCw } from "lucide-react";
+import { FilterBar } from "../Shared/FilterBar";
+import { getAllTeams } from "@/lib/data";
 
 interface DashboardHeaderProps {
   isRefreshing: boolean;
@@ -9,35 +11,35 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ isRefreshing, handleRefreshData }: DashboardHeaderProps) {
+  const [selectedTeam, setSelectedTeam] = useState("all");
+  const [selectedDateRange, setSelectedDateRange] = useState("Last 30 days");
+  const teams = ["all", ...getAllTeams()];
+
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-      <div className="flex items-center gap-2">
-        <Link to="/">
-          <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <h2 className="text-xl font-bold">Unified Dashboard</h2>
-      </div>
-      
-      <div className="flex gap-2">
-        <Button 
-          variant="outline" 
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h1 className="text-2xl font-bold">Unified Dashboard</h1>
+        <Button
           onClick={handleRefreshData}
           disabled={isRefreshing}
-          className="h-8 gap-1"
+          variant="outline"
+          size="sm"
+          className="h-9"
         >
-          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Refresh Data
-        </Button>
-        
-        <Button asChild variant="destructive" className="text-white bg-red-600 hover:bg-red-700 h-8 gap-1">
-          <Link to="/">
-            <Home className="h-4 w-4" />
-            Return to Home
-          </Link>
+          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
+          {isRefreshing ? "Refreshing..." : "Refresh Data"}
         </Button>
       </div>
+      
+      <FilterBar
+        selectedTeam={selectedTeam}
+        teams={teams}
+        onTeamChange={setSelectedTeam}
+        selectedDateRange={selectedDateRange}
+        onDateRangeChange={setSelectedDateRange}
+        selectedSortOrder="desc"
+        onSortOrderChange={(order) => console.log(`Sort order changed to ${order}`)}
+      />
     </div>
   );
 }

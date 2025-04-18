@@ -1551,3 +1551,17 @@ export function updateClientStatusById(clientId: string, updates: Partial<Client
 }
 
 export const MOCK_CLIENTS = CLIENTS;
+
+// Helper function to get all teams
+export function getAllTeams(): string[] {
+  const clients = getAllClients();
+  const teamSet = new Set<string>();
+  
+  clients.forEach(client => {
+    if (client.team) {
+      teamSet.add(client.team);
+    }
+  });
+  
+  return Array.from(teamSet);
+}

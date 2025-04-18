@@ -3,6 +3,7 @@ import React from "react";
 import { StatusDistribution } from "../Shared";
 import { calculateStatusCounts, calculateRates } from "@/utils/analyticsUtils";
 import { Client } from "@/lib/data";
+import { StyledCard } from "../Shared/CardStyle";
 
 interface StatusSummaryProps {
   clients: Client[];
@@ -14,13 +15,17 @@ export function StatusSummary({ clients, variant = "compact" }: StatusSummaryPro
   const rates = calculateRates(statusCounts);
   
   return (
-    <div className="mb-4">
+    <StyledCard 
+      variant="info" 
+      className="mb-4 border"
+      contentClassName="p-3"
+    >
       <StatusDistribution 
         statusCounts={statusCounts}
         rates={rates}
         variant={variant}
         showTrends={false}
       />
-    </div>
+    </StyledCard>
   );
 }

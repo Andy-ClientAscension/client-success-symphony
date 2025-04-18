@@ -1,6 +1,7 @@
 
 import React, { useMemo } from "react";
 import { StatusDistribution, PerformanceMetrics } from "../Shared";
+import { StyledCard } from "../Shared/CardStyle";
 
 interface TeamMetricsOverviewProps {
   metrics: {
@@ -39,21 +40,27 @@ export function TeamMetricsOverview({
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <h3 className="text-sm font-medium">Status Distribution</h3>
+      <StyledCard 
+        variant="primary"
+        title="Status Distribution"
+        contentClassName="pt-4"
+      >
         <StatusDistribution
           statusCounts={statusCounts}
           rates={rates}
           showTrends={true}
         />
-      </div>
+      </StyledCard>
       
-      <div className="space-y-2">
+      <StyledCard 
+        variant="success"
+        title="Performance Metrics"
+        contentClassName="pt-4"
+      >
         <PerformanceMetrics
           data={performanceData}
-          title="Performance Metrics"
         />
-      </div>
+      </StyledCard>
     </div>
   );
 }

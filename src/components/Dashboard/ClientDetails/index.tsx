@@ -1,6 +1,5 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Client } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
@@ -11,6 +10,7 @@ import { ClientMetricsSection } from "./ClientMetricsSection";
 import { ClientDatesSection } from "./ClientDatesSection";
 import { ClientAdditionalInfo } from "./ClientAdditionalInfo";
 import { ClientActionButtons } from "./ClientActionButtons";
+import { StyledCard } from "../Shared/CardStyle";
 
 interface ClientDetailsProps {
   client: Client;
@@ -57,30 +57,31 @@ export function ClientDetails({ client }: ClientDetailsProps) {
   
   return (
     <div className="space-y-6">
-      <Card className="border-red-100">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Client Details</CardTitle>
+      <StyledCard 
+        title="Client Details"
+        variant="primary"
+        headerClassName="flex flex-row items-center justify-between"
+      >
+        <div className="absolute top-6 right-6">
           <Badge className={getStatusColor(client.status)}>
             {client.status.charAt(0).toUpperCase() + client.status.slice(1)}
           </Badge>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            <ClientInfoSection client={client} />
-            <ClientProgressSection client={client} />
-            <ClientMetricsSection client={client} />
-            <ClientDatesSection client={client} />
-            <ClientAdditionalInfo client={client} />
-            <ClientActionButtons 
-              clientId={client.id}
-              clientName={client.name}
-              onContactClient={handleContactClient}
-              onViewHistory={handleViewHistory}
-              onAddNote={handleAddNote}
-            />
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+        <div className="space-y-6">
+          <ClientInfoSection client={client} />
+          <ClientProgressSection client={client} />
+          <ClientMetricsSection client={client} />
+          <ClientDatesSection client={client} />
+          <ClientAdditionalInfo client={client} />
+          <ClientActionButtons 
+            clientId={client.id}
+            clientName={client.name}
+            onContactClient={handleContactClient}
+            onViewHistory={handleViewHistory}
+            onAddNote={handleAddNote}
+          />
+        </div>
+      </StyledCard>
       
       <HealthScoreHistory clientId={client.id} clientName={client.name} />
     </div>
