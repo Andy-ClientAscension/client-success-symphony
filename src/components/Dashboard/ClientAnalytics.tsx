@@ -1,15 +1,15 @@
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getAllClients } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, XCircle, TrendingUp, Calendar, Phone, DollarSign, ChevronLeft, ChevronRight } from "lucide-react";
+import { CheckCircle, XCircle, TrendingUp, Calendar, Phone, DollarSign } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getAllClients, Client } from "@/lib/data";
+import { VirtualizedTable, Column } from "./Shared/VirtualizedTable";
 
 export function ClientAnalytics() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -34,11 +34,16 @@ export function ClientAnalytics() {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredClients.slice(indexOfFirstItem, indexOfLastItem);
 
-  const paginate = (pageNumber: number) => {
+  const paginate = useCallback((pageNumber: number) => {
     setCurrentPage(Math.min(Math.max(1, pageNumber), totalPages));
-  };
+  }, [totalPages]);
 
-  const getStatusColor = (status: string) => {
+  const handleItemsPerPageChange = useCallback((value: string) => {
+    setItemsPerPage(Number(value));
+    setCurrentPage(1);
+  }, []);
+
+  const getStatusColor = useCallback((status: string) => {
     switch (status) {
       case 'active': return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
       case 'at-risk': return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400";
@@ -46,7 +51,91 @@ export function ClientAnalytics() {
       case 'new': return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400";
       default: return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400";
     }
-  };
+  }, []);
+
+  // Define columns for virtualized table
+  const columns: Column<Client>[] = useMemo(() => [
+    {
+      key: 'name',
+      header: 'Client',
+      cell: (client) => <span className="font-medium">{client.name}</span>
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      cell: (client) => (
+        <Badge variant="outline" className={`${getStatusColor(client.status)}`}>
+          {client.status}
+        </Badge>
+      )
+    },
+    {
+      key: 'progress',
+      header: 'Progress',
+      cell: (client) => (
+        <div className="flex items-center">
+          <Progress value={client.progress} className="h-2 w-16 mr-2" />
+          <span className="text-xs">{client.progress}%</span>
+        </div>
+      )
+    },
+    {
+      key: 'csm',
+      header: 'CSM',
+      cell: (client) => client.csm || "Unassigned"
+    },
+    {
+      key: 'mrr',
+      header: 'MRR',
+      cell: (client) => (
+        <div className="flex items-center">
+          <DollarSign className="h-3 w-3 mr-1 text-green-600 dark:text-green-400" />
+          {client.mrr}
+        </div>
+      )
+    },
+    {
+      key: 'calls',
+      header: 'Calls',
+      cell: (client) => (
+        <div className="flex items-center">
+          <Phone className="h-3 w-3 mr-1 text-blue-600 dark:text-blue-400" />
+          {client.callsBooked}
+        </div>
+      )
+    },
+    {
+      key: 'reviews',
+      header: 'Reviews',
+      cell: (client) => (
+        <div className="flex items-center gap-2">
+          <div className="flex items-center" title="TrustPilot Review">
+            {client.trustPilotReview?.rating ? 
+              <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" /> :
+              <XCircle className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+            }
+          </div>
+          <div className="flex items-center" title="Case Study">
+            {client.caseStudyInterview?.completed ? 
+              <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" /> :
+              <XCircle className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+            }
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'details',
+      header: 'Details',
+      cell: (client) => (
+        <Button asChild variant="outline" size="sm" className="h-7 text-xs">
+          <Link to={`/clients/${client.id}`}>
+            View Details
+          </Link>
+        </Button>
+      )
+    }
+  ], [getStatusColor]);
 
   return (
     <Card className="shadow-sm">
@@ -62,10 +151,7 @@ export function ClientAnalytics() {
                 className="h-8 text-xs"
               />
             </div>
-            <Select value={String(itemsPerPage)} onValueChange={(value) => {
-              setItemsPerPage(Number(value));
-              setCurrentPage(1);
-            }}>
+            <Select value={String(itemsPerPage)} onValueChange={handleItemsPerPageChange}>
               <SelectTrigger className="w-[80px] h-8 text-xs">
                 <SelectValue placeholder="Show" />
               </SelectTrigger>
@@ -74,6 +160,7 @@ export function ClientAnalytics() {
                 <SelectItem value="25">25</SelectItem>
                 <SelectItem value="50">50</SelectItem>
                 <SelectItem value="100">100</SelectItem>
+                <SelectItem value="250">250</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -81,138 +168,25 @@ export function ClientAnalytics() {
       </CardHeader>
       
       <CardContent>
-        <div className="border rounded-lg overflow-hidden bg-card text-card-foreground dark:border-gray-700">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50 dark:bg-gray-800/50">
-                <TableHead>Client</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Progress</TableHead>
-                <TableHead>CSM</TableHead>
-                <TableHead>MRR</TableHead>
-                <TableHead>Calls</TableHead>
-                <TableHead>Reviews</TableHead>
-                <TableHead>Details</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {currentItems.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-4">
-                    No clients found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                currentItems.map((client) => (
-                  <TableRow key={client.id}>
-                    <TableCell className="font-medium">{client.name}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={`${getStatusColor(client.status)}`}>
-                        {client.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Progress value={client.progress} className="h-2 w-16 mr-2" />
-                        <span className="text-xs">{client.progress}%</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{client.csm || "Unassigned"}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <DollarSign className="h-3 w-3 mr-1 text-green-600 dark:text-green-400" />
-                        {client.mrr}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Phone className="h-3 w-3 mr-1 text-blue-600 dark:text-blue-400" />
-                        {client.callsBooked}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center" title="TrustPilot Review">
-                          {client.trustPilotReview?.rating ? 
-                            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" /> :
-                            <XCircle className="h-4 w-4 text-gray-400 dark:text-gray-500" />
-                          }
-                        </div>
-                        <div className="flex items-center" title="Case Study">
-                          {client.caseStudyInterview?.completed ? 
-                            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" /> :
-                            <XCircle className="h-4 w-4 text-gray-400 dark:text-gray-500" />
-                          }
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Button asChild variant="outline" size="sm" className="h-7 text-xs">
-                        <Link to={`/clients/${client.id}`}>
-                          View Details
-                        </Link>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        
-        {/* Pagination controls */}
-        {filteredClients.length > 0 && (
-          <div className="flex items-center justify-between mt-4">
-            <div className="text-xs text-muted-foreground">
-              Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredClients.length)} of {filteredClients.length} clients
-            </div>
-            <div className="flex items-center gap-1">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="h-8 w-8 p-0"
-                onClick={() => paginate(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                // Show pages around current page
-                let pageToShow;
-                if (totalPages <= 5) {
-                  pageToShow = i + 1;
-                } else if (currentPage <= 3) {
-                  pageToShow = i + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  pageToShow = totalPages - 4 + i;
-                } else {
-                  pageToShow = currentPage - 2 + i;
-                }
-                
-                return (
-                  <Button
-                    key={i}
-                    variant={pageToShow === currentPage ? "default" : "outline"}
-                    size="sm"
-                    className={`h-8 w-8 p-0 ${pageToShow === currentPage ? 'bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700' : ''}`}
-                    onClick={() => paginate(pageToShow)}
-                  >
-                    {pageToShow}
-                  </Button>
-                );
-              })}
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="h-8 w-8 p-0"
-                onClick={() => paginate(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        )}
+        <VirtualizedTable
+          data={currentItems}
+          columns={columns}
+          keyExtractor={(client) => client.id}
+          emptyMessage="No clients found matching your filters."
+          className="border rounded-lg"
+          stripedRows={true}
+          hoverable={true}
+          itemHeight={48}
+          pagination={{
+            currentPage,
+            totalPages,
+            onPageChange: paginate,
+            totalItems: filteredClients.length,
+            itemsPerPage,
+            startIndex: indexOfFirstItem,
+            endIndex: Math.min(indexOfLastItem, filteredClients.length)
+          }}
+        />
       </CardContent>
     </Card>
   );

@@ -1,6 +1,8 @@
 
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useMemo } from "react";
 
 interface PaginationProps {
   currentPage: number;
@@ -25,7 +27,8 @@ export function Pagination({
     return null;
   }
 
-  const renderPageButtons = () => {
+  // Memoize page buttons to avoid unnecessary re-renders
+  const pageButtons = useMemo(() => {
     const buttons = [];
     const maxButtons = Math.min(5, totalPages);
     
@@ -58,7 +61,34 @@ export function Pagination({
     }
     
     return buttons;
-  };
+  }, [currentPage, totalPages, onPageChange]);
+  
+  // Calculate page jump options for very large datasets
+  const pageJumpOptions = useMemo(() => {
+    if (totalPages <= 10) return null;
+    
+    const options = [];
+    const increment = Math.max(10, Math.floor(totalPages / 10));
+    
+    for (let i = 1; i <= totalPages; i += increment) {
+      options.push(
+        <SelectItem key={i} value={i.toString()}>
+          Page {i}
+        </SelectItem>
+      );
+    }
+    
+    // Always include the last page
+    if ((totalPages % increment) !== 0) {
+      options.push(
+        <SelectItem key={totalPages} value={totalPages.toString()}>
+          Page {totalPages}
+        </SelectItem>
+      );
+    }
+    
+    return options;
+  }, [totalPages]);
   
   return (
     <div className="flex items-center justify-between mt-4">
@@ -76,7 +106,21 @@ export function Pagination({
           <ChevronLeft className="h-4 w-4" />
         </Button>
         
-        {renderPageButtons()}
+        {pageButtons}
+        
+        {pageJumpOptions && (
+          <Select 
+            value={currentPage.toString()} 
+            onValueChange={(value) => onPageChange(parseInt(value))}
+          >
+            <SelectTrigger className="h-8 w-[70px] ml-1">
+              <SelectValue placeholder="Jump" />
+            </SelectTrigger>
+            <SelectContent>
+              {pageJumpOptions}
+            </SelectContent>
+          </Select>
+        )}
         
         <Button 
           variant="outline" 

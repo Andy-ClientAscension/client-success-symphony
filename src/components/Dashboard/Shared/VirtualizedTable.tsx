@@ -1,4 +1,3 @@
-
 import React, { useRef, useCallback, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -67,6 +66,9 @@ export function VirtualizedTable<T>({
   const { isMobile } = useIsMobile();
   const tableBodyRef = useRef<HTMLTableSectionElement>(null);
   const [tableHeight, setTableHeight] = useState(400);
+  const [scrollPositionRestored, setScrollPositionRestored] = useState(false);
+  
+  const scrollPositionRef = useRef(0);
 
   const visibleColumns = React.useMemo(() => {
     return isMobile 
@@ -79,17 +81,58 @@ export function VirtualizedTable<T>({
     
     const resizeObserver = new ResizeObserver(entries => {
       for (const entry of entries) {
-        const maxHeight = Math.min(entry.contentRect.height, 600);
+        const viewportHeight = window.innerHeight;
+        const maxHeight = Math.min(
+          Math.max(entry.contentRect.height, 300),
+          viewportHeight * 0.7
+        );
         setTableHeight(maxHeight > 0 ? maxHeight : 400);
       }
     });
     
-    resizeObserver.observe(tableBodyRef.current.parentElement as HTMLElement);
+    const container = tableBodyRef.current.parentElement;
+    if (container) {
+      resizeObserver.observe(container);
+    }
     
     return () => {
       resizeObserver.disconnect();
     };
   }, []);
+
+  useEffect(() => {
+    if (!tableBodyRef.current) return;
+    
+    const handleScroll = () => {
+      if (tableBodyRef.current) {
+        scrollPositionRef.current = tableBodyRef.current.scrollTop;
+      }
+    };
+    
+    const tableBody = tableBodyRef.current;
+    tableBody.addEventListener('scroll', handleScroll);
+    
+    return () => {
+      tableBody.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+  
+  useEffect(() => {
+    if (!tableBodyRef.current || scrollPositionRestored) return;
+    
+    requestAnimationFrame(() => {
+      if (tableBodyRef.current) {
+        tableBodyRef.current.scrollTop = scrollPositionRef.current;
+        setScrollPositionRestored(true);
+      }
+    });
+  }, [data, pagination, scrollPositionRestored]);
+  
+  useEffect(() => {
+    if (pagination) {
+      setScrollPositionRestored(false);
+    }
+  }, [pagination?.currentPage]);
 
   const rowVirtualizer = useVirtualizer({
     count: data.length,
@@ -189,6 +232,7 @@ export function VirtualizedTable<T>({
                       height: `${virtualRow.size}px`,
                       transform: `translateY(${virtualRow.start}px)`,
                     }}
+                    data-index={virtualRow.index}
                   >
                     {visibleColumns.map((column) => (
                       <TableCell 
