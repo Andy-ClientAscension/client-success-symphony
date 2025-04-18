@@ -1,17 +1,13 @@
 
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { getAllClients, getCSMList } from "@/lib/data";
 import { TeamAnalyticsHeader } from "./TeamAnalyticsHeader";
-import { TeamMetricsOverview } from "./TeamMetricsOverview";
-import { SSCPerformanceTable } from "../SSCPerformanceTable";
-import { HealthScoreSheet } from "../HealthScoreSheet";
-import { HealthScoreHistory } from "../HealthScoreHistory";
 import { TeamManagementDialog } from "../TeamManagementDialog";
 import { STORAGE_KEYS, loadData } from "@/utils/persistence";
 import { getTeamPerformanceData } from "@/utils/analyticsUtils";
+import { TeamAnalyticsTabs } from "./TeamAnalyticsTabs";
 
 const ADDITIONAL_TEAMS = [
   { id: "Enterprise", name: "Enterprise" },
