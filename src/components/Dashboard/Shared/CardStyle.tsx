@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 
 export type CardSize = "sm" | "md" | "lg";
-export type CardVariant = "default" | "primary" | "success" | "warning" | "danger" | "info" | "outline";
+export type CardVariant = "default" | "primary" | "success" | "warning" | "danger" | "info" | "outline" | "highlight";
 
 interface StyledCardProps {
   title?: string;
@@ -40,7 +40,8 @@ export function StyledCard({
     success: "border-success-100 dark:border-success-900/50 bg-success-50/30 dark:bg-success-950/30",
     warning: "border-warning-100 dark:border-warning-900/50 bg-warning-50/30 dark:bg-warning-950/30",
     danger: "border-danger-100 dark:border-danger-900/50 bg-danger-50/30 dark:bg-danger-950/30",
-    info: "border-blue-100 dark:border-blue-900/50 bg-blue-50/30 dark:bg-blue-950/30"
+    info: "border-blue-100 dark:border-blue-900/50 bg-blue-50/30 dark:bg-blue-950/30",
+    highlight: "border-brand-200 dark:border-brand-800 bg-brand-50/50 dark:bg-brand-900/30 shadow-md"
   };
 
   const sizeStyles = {
@@ -66,7 +67,7 @@ export function StyledCard({
           {title && (
             <CardTitle className={cn(
               size === "sm" ? "text-base" : "text-lg",
-              "font-bold text-foreground"
+              variant === "highlight" ? "text-xl font-bold text-brand-700 dark:text-brand-300" : "font-bold text-foreground"
             )}>
               {title}
             </CardTitle>
@@ -114,6 +115,7 @@ export interface MetricItemProps {
   };
   className?: string;
   valueClassName?: string;
+  isHighlighted?: boolean;
 }
 
 export function MetricItem({ 
@@ -122,17 +124,35 @@ export function MetricItem({
   value, 
   trend, 
   className,
-  valueClassName
+  valueClassName,
+  isHighlighted = false
 }: MetricItemProps) {
   return (
-    <div className={cn("border border-border/10 rounded-lg p-3 bg-white dark:bg-gray-800/70 shadow-sm", className)}>
+    <div className={cn(
+      "border border-border/10 rounded-lg p-3 bg-white dark:bg-gray-800/70 shadow-sm transition-all duration-200",
+      isHighlighted && "bg-brand-50/30 dark:bg-brand-900/20 border-brand-100 dark:border-brand-800/40 shadow-md",
+      className
+    )}>
       <div className="flex items-center gap-2 mb-2">
-        <div className="bg-brand-50 dark:bg-brand-900/30 p-2 rounded-md">
+        <div className={cn(
+          "p-2 rounded-md",
+          isHighlighted ? "bg-brand-100 dark:bg-brand-800/30" : "bg-brand-50 dark:bg-brand-900/30"
+        )}>
           {icon}
         </div>
-        <span className="font-medium">{title}</span>
+        <span className={cn(
+          "font-medium",
+          isHighlighted && "text-brand-700 dark:text-brand-300"
+        )}>
+          {title}
+        </span>
       </div>
-      <p className={cn("text-xl font-bold", valueClassName)}>{value}</p>
+      <p className={cn(
+        isHighlighted ? "text-2xl font-bold" : "text-xl font-bold", 
+        valueClassName
+      )}>
+        {value}
+      </p>
       {trend && (
         <div className="mt-1 text-xs flex items-center">
           <span className={cn(

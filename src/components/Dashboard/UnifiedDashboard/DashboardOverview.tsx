@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { UnifiedDashboardMetrics } from "../Metrics/UnifiedDashboardMetrics";
 import { AIInsightsPanel } from "../AIInsights";
 import { NPSChart } from "../NPSChart";
@@ -7,6 +7,9 @@ import { AIInsightsWidget } from "../AIInsightsWidget";
 import { getStoredAIInsights } from "@/utils/aiDataAnalyzer";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { Card } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 export function DashboardOverview() {
   const {
@@ -16,6 +19,9 @@ export function DashboardOverview() {
     npsData,
     error
   } = useDashboardData();
+  
+  const [insightsPanelExpanded, setInsightsPanelExpanded] = useState(true);
+  const [chartsPanelExpanded, setChartsPanelExpanded] = useState(true);
 
   if (error) {
     return null; // Error is handled by parent component
@@ -25,7 +31,7 @@ export function DashboardOverview() {
     active: clientCounts?.active || 0,
     atRisk: clientCounts?.["at-risk"] || 0,
     churned: clientCounts?.churned || 0,
-    new: clientCounts?.new || 0, // Adding the missing 'new' property
+    new: clientCounts?.new || 0,
     total: clientCounts ? Object.values(clientCounts).reduce((a, b) => a + b, 0) : 0
   };
 
@@ -55,7 +61,8 @@ export function DashboardOverview() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Key Metrics Section */}
       <UnifiedDashboardMetrics 
         metrics={consolidatedMetrics}
         statusCounts={statusCounts}
@@ -63,22 +70,57 @@ export function DashboardOverview() {
         performanceData={performanceData}
       />
       
-      <AIInsightsPanel 
-        clients={clients || []}
-        metrics={metrics || {}}
-        statusCounts={statusCounts}
-        rates={rates}
-      />
+      {/* AI Insights Panel */}
+      <Collapsible open={insightsPanelExpanded} onOpenChange={setInsightsPanelExpanded}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold">AI Insights</h2>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm">
+              {insightsPanelExpanded ? (
+                <><ChevronUp className="h-4 w-4 mr-1" /> Collapse</>
+              ) : (
+                <><ChevronDown className="h-4 w-4 mr-1" /> Expand</>
+              )}
+            </Button>
+          </CollapsibleTrigger>
+        </div>
+        <CollapsibleContent>
+          <AIInsightsPanel 
+            clients={clients || []}
+            metrics={metrics || {}}
+            statusCounts={statusCounts}
+            rates={rates}
+          />
+        </CollapsibleContent>
+      </Collapsible>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <div className="p-6">
-            <NPSChart />
+      {/* Charts Panel */}
+      <Collapsible open={chartsPanelExpanded} onOpenChange={setChartsPanelExpanded}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold">Performance Charts</h2>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm">
+              {chartsPanelExpanded ? (
+                <><ChevronUp className="h-4 w-4 mr-1" /> Collapse</>
+              ) : (
+                <><ChevronDown className="h-4 w-4 mr-1" /> Expand</>
+              )}
+            </Button>
+          </CollapsibleTrigger>
+        </div>
+        <CollapsibleContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="shadow-md hover:shadow-lg transition-all duration-200">
+              <div className="p-6">
+                <h3 className="text-base font-semibold mb-4">NPS Trend</h3>
+                <NPSChart />
+              </div>
+            </Card>
+            
+            <AIInsightsWidget insights={getStoredAIInsights()} />
           </div>
-        </Card>
-        
-        <AIInsightsWidget insights={getStoredAIInsights()} />
-      </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }

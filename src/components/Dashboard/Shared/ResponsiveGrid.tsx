@@ -57,31 +57,31 @@ export function ResponsiveGrid({
   if (cols.lg) gridClasses.push(`lg:${getColsClass(cols.lg)}`);
   if (cols.xl) gridClasses.push(`xl:${getColsClass(cols.xl)}`);
 
-  // Update gap classes for better mobile spacing
+  // Improved gap classes for better spacing across devices
   const gapClass = rowGap || columnGap ? '' : {
     'none': 'gap-0',
-    'xs': 'gap-2 sm:gap-1',
-    'sm': 'gap-3 sm:gap-2',
-    'md': 'gap-4 sm:gap-4',
-    'lg': 'gap-6 sm:gap-6'
+    'xs': 'gap-2 sm:gap-3',
+    'sm': 'gap-3 sm:gap-4',
+    'md': 'gap-4 sm:gap-6',
+    'lg': 'gap-6 sm:gap-8'
   }[gap];
 
-  // Update row gap classes for mobile
+  // Updated row gap classes for better spacing
   const rowGapClass = rowGap ? {
     'none': 'gap-y-0',
-    'xs': 'gap-y-2 sm:gap-y-1',
-    'sm': 'gap-y-3 sm:gap-y-2',
-    'md': 'gap-y-4 sm:gap-y-4',
-    'lg': 'gap-y-6 sm:gap-y-6'
+    'xs': 'gap-y-2 sm:gap-y-3',
+    'sm': 'gap-y-3 sm:gap-y-4',
+    'md': 'gap-y-4 sm:gap-y-6',
+    'lg': 'gap-y-6 sm:gap-y-8'
   }[rowGap] : '';
 
-  // Update column gap classes for mobile
+  // Updated column gap classes for better spacing
   const columnGapClass = columnGap ? {
     'none': 'gap-x-0',
-    'xs': 'gap-x-2 sm:gap-x-1',
-    'sm': 'gap-x-3 sm:gap-x-2',
-    'md': 'gap-x-4 sm:gap-x-4',
-    'lg': 'gap-x-6 sm:gap-x-6'
+    'xs': 'gap-x-2 sm:gap-x-3',
+    'sm': 'gap-x-3 sm:gap-x-4',
+    'md': 'gap-x-4 sm:gap-x-6',
+    'lg': 'gap-x-6 sm:gap-x-8'
   }[columnGap] : '';
 
   // Set alignment classes

@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
   ArrowUp, 
@@ -11,7 +11,9 @@ import {
   AlertTriangle,
   TrendingUp,
   BarChart,
-  Plus
+  Plus,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -20,6 +22,7 @@ import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { EmptyState } from "@/components/EmptyState";
 import { ResponsiveGrid } from "./Shared/ResponsiveGrid";
+import { Badge } from "@/components/ui/badge";
 
 function MetricsError({ error, resetErrorBoundary }: { error: Error, resetErrorBoundary: () => void }) {
   return (
@@ -49,7 +52,7 @@ function MetricsError({ error, resetErrorBoundary }: { error: Error, resetErrorB
 
 export function MetricsCardsContent() {
   const { metrics, clientCounts, error } = useDashboardData();
-  const [isExpanded, setIsExpanded] = React.useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   if (error) {
     throw error;
@@ -62,21 +65,27 @@ export function MetricsCardsContent() {
   const successRate = 85;
   const retentionRate = 92;
 
-  const data = [
-    {
-      title: "Total Clients",
-      value: totalClients,
-      trend: { value: "5%", direction: "up" },
-      icon: <Users className="h-8 w-8 text-brand-500/70" />,
-      ariaLabel: "Total number of clients"
-    },
+  // Organize data into primary and secondary metrics
+  const primaryMetrics = [
     {
       title: "Monthly Revenue",
       value: `$${metrics?.totalMRR || 0}`,
       trend: { value: "8%", direction: "up" },
-      icon: <DollarSign className="h-8 w-8 text-brand-500/70" />,
-      ariaLabel: "Monthly recurring revenue"
+      icon: <DollarSign className="h-8 w-8 text-brand-500" />,
+      ariaLabel: "Monthly recurring revenue",
+      isPrimary: true
     },
+    {
+      title: "Total Clients",
+      value: totalClients,
+      trend: { value: "5%", direction: "up" },
+      icon: <Users className="h-8 w-8 text-brand-500" />,
+      ariaLabel: "Total number of clients",
+      isPrimary: true
+    },
+  ];
+
+  const secondaryMetrics = [
     {
       title: "Success Rate",
       value: `${successRate}%`,
@@ -136,68 +145,139 @@ export function MetricsCardsContent() {
   }
 
   return (
-    <ResponsiveGrid 
-      cols={{ xs: 1, sm: 2, md: 3, xl: 6 }} 
-      gap="md" 
-      className="w-full" 
-      role="region"
-      aria-label="Key performance indicators"
-    >
-      {data.map((item, index) => (
-        <Card 
-          key={index} 
-          className="border-border/30 shadow-sm hover:shadow-md transition-all duration-200 bg-gradient-to-b from-white to-gray-50 dark:from-gray-800/90 dark:to-gray-900/80"
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold">Key Performance Indicators</h2>
+        <CollapsibleTrigger asChild>
+          <Button variant="ghost" size="sm" onClick={() => setIsExpanded(!isExpanded)}>
+            {isExpanded ? (
+              <><ChevronUp className="h-4 w-4 mr-1" /> Collapse</>
+            ) : (
+              <><ChevronDown className="h-4 w-4 mr-1" /> Expand</>
+            )}
+          </Button>
+        </CollapsibleTrigger>
+      </div>
+      
+      <CollapsibleContent forceMount open={isExpanded}>
+        {/* Primary metrics - larger, more prominent */}
+        <ResponsiveGrid 
+          cols={{ xs: 1, sm: 2 }} 
+          gap="md" 
+          className="w-full mb-6" 
+          role="region"
+          aria-label="Primary metrics"
         >
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <p 
-                  className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1" 
-                  id={`metric-${index}-label`}
+          {primaryMetrics.map((item, index) => (
+            <Card 
+              key={`primary-${index}`} 
+              className="border-border/30 shadow-md hover:shadow-lg transition-all duration-200 bg-gradient-to-b from-white to-gray-50 dark:from-gray-800/90 dark:to-gray-900/80"
+            >
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p 
+                      className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1" 
+                      id={`metric-${index}-label`}
+                    >
+                      {item.title}
+                    </p>
+                    <h3 
+                      className="text-3xl font-bold text-gray-900 dark:text-white"
+                      aria-labelledby={`metric-${index}-label`}
+                      tabIndex={0}
+                    >
+                      {item.value}
+                    </h3>
+                  </div>
+                  <div className="bg-brand-100 dark:bg-brand-800/50 p-4 rounded-full">
+                    {item.icon}
+                  </div>
+                </div>
+                <Separator className="my-3 bg-border/30" />
+                <div 
+                  className={`text-sm flex items-center font-medium ${
+                    item.trend.direction === "up" 
+                      ? "text-emerald-600 dark:text-emerald-400" 
+                      : "text-brand-500 dark:text-brand-400"
+                  }`}
+                  aria-label={`${item.trend.value} ${item.trend.direction === "up" ? "increase" : "decrease"} from last month`}
                 >
-                  {item.title}
-                </p>
+                  {item.trend.direction === "up" ? (
+                    <ArrowUp className="h-4 w-4 mr-1" aria-hidden="true" />
+                  ) : (
+                    <ArrowDown className="h-4 w-4 mr-1" aria-hidden="true" />
+                  )}
+                  <span>{item.trend.value} from last month</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </ResponsiveGrid>
+
+        {/* Secondary metrics - smaller cards */}
+        <ResponsiveGrid 
+          cols={{ xs: 2, sm: 2, md: 4 }} 
+          gap="md" 
+          className="w-full" 
+          role="region"
+          aria-label="Secondary metrics"
+        >
+          {secondaryMetrics.map((item, index) => (
+            <Card 
+              key={`secondary-${index}`} 
+              className="border-border/30 shadow-sm hover:shadow-md transition-all duration-200 bg-white dark:bg-gray-800/70"
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <p 
+                    className="text-xs font-medium text-gray-600 dark:text-gray-300" 
+                    id={`metric-sec-${index}-label`}
+                  >
+                    {item.title}
+                  </p>
+                  <div className="bg-gray-100 dark:bg-gray-700/40 p-1.5 rounded-md">
+                    {item.icon}
+                  </div>
+                </div>
                 <h3 
-                  className="text-2xl font-bold text-gray-900 dark:text-white"
-                  aria-labelledby={`metric-${index}-label`}
+                  className="text-xl font-bold text-gray-900 dark:text-white mb-2"
+                  aria-labelledby={`metric-sec-${index}-label`}
                   tabIndex={0}
                 >
                   {item.value}
                 </h3>
-              </div>
-              <div className="bg-brand-50 dark:bg-brand-950/50 p-3 rounded-full">
-                {item.icon}
-              </div>
-            </div>
-            <Separator className="my-3 bg-border/30" />
-            <div 
-              className={`text-xs flex items-center font-medium ${
-                item.trend.direction === "up" 
-                  ? "text-emerald-600 dark:text-emerald-400" 
-                  : "text-brand-500 dark:text-brand-400"
-              }`}
-              aria-label={`${item.trend.value} ${item.trend.direction === "up" ? "increase" : "decrease"} from last month`}
-            >
-              {item.trend.direction === "up" ? (
-                <ArrowUp className="h-3 w-3 mr-1" aria-hidden="true" />
-              ) : (
-                <ArrowDown className="h-3 w-3 mr-1" aria-hidden="true" />
-              )}
-              <span>{item.trend.value} from last month</span>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </ResponsiveGrid>
+                <div 
+                  className={`text-xs flex items-center font-medium ${
+                    item.trend.direction === "up" 
+                      ? "text-emerald-600 dark:text-emerald-400" 
+                      : "text-red-500 dark:text-red-400"
+                  }`}
+                >
+                  {item.trend.direction === "up" ? (
+                    <ArrowUp className="h-3 w-3 mr-1" />
+                  ) : (
+                    <ArrowDown className="h-3 w-3 mr-1" />
+                  )}
+                  <span>{item.trend.value}</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </ResponsiveGrid>
+      </CollapsibleContent>
+    </div>
   );
 }
 
 export function MetricsCards() {
   return (
-    <ErrorBoundary
-      fallback={<MetricsError error={new Error("Failed to load metrics")} resetErrorBoundary={() => window.location.reload()} />}
-    >
-      <MetricsCardsContent />
-    </ErrorBoundary>
+    <Collapsible defaultOpen={true} className="w-full">
+      <ErrorBoundary
+        fallback={<MetricsError error={new Error("Failed to load metrics")} resetErrorBoundary={() => window.location.reload()} />}
+      >
+        <MetricsCardsContent />
+      </ErrorBoundary>
+    </Collapsible>
   );
 }

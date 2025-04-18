@@ -41,12 +41,12 @@ export function FilterBar({
 }: FilterBarProps) {
   return (
     <div 
-      className={`sticky top-0 z-10 -mx-2 sm:-mx-6 px-2 sm:px-6 py-3 sm:py-4 
-        bg-background/95 backdrop-blur-sm border-b border-border/20 shadow-sm
+      className={`sticky top-0 z-10 -mx-2 sm:-mx-6 px-2 sm:px-6 py-4 sm:py-5 
+        bg-background/95 backdrop-blur-sm border-b border-border/40 shadow-md
         ${className}`}
     >
       <div className="flex items-center gap-2 text-primary mb-3">
-        <Filter className="h-4 w-4" />
+        <Filter className="h-4 w-4 text-brand-500" />
         <span className="text-sm sm:text-base font-medium">Filters</span>
       </div>
       <UnifiedFilter
