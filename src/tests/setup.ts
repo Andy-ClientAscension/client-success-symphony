@@ -1,3 +1,4 @@
+
 import '@testing-library/jest-dom';
 import { vi, afterEach, expect } from 'vitest';
 import { cleanup } from '@testing-library/react';
@@ -41,9 +42,4 @@ expect.extend({
   // Add any custom matchers here
 });
 
-// Explicitly declare vi as a global
-declare global {
-  const vi: typeof import('vitest')['vi'];
-}
-
-export {};  // This ensures the global declaration works
+export {}; // Ensures the file is treated as a module

@@ -23,11 +23,6 @@ vi.mock('@/lib/data', () => ({
   getClientMetricsByTeam: vi.fn()
 }));
 
-// Mock the aiDataAnalyzer utilities
-vi.mock('@/utils/aiDataAnalyzer', () => ({
-  calculatePerformanceTrends: vi.fn(() => [])
-}));
-
 describe('useDashboardData', () => {
   const queryClient = new QueryClient({
     defaultOptions: {
