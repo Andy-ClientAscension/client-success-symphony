@@ -42,7 +42,13 @@ describe('Dashboard Integration', () => {
     (getClientMetricsByTeam as unknown as vi.Mock).mockResolvedValue({
       totalMRR: 10000,
       totalCallsBooked: 42,
-      totalDealsClosed: 15
+      totalDealsClosed: 15,
+      performanceTrends: [],
+      trends: {
+        retentionTrend: 5,
+        atRiskTrend: -2,
+        churnTrend: -3
+      }
     });
   });
 

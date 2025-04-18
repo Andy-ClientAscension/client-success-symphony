@@ -9,6 +9,7 @@ import {
   getClientMetricsByTeam
 } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
+import { calculatePerformanceTrends } from '@/utils/aiDataAnalyzer';
 
 export function useDashboardData() {
   const { toast } = useToast();
@@ -66,7 +67,7 @@ export function useDashboardData() {
   });
 
   const { 
-    data: metrics,
+    data: metricsData,
     isLoading: isMetricsLoading,
     error: metricsError
   } = useQuery({
@@ -79,6 +80,19 @@ export function useDashboardData() {
   });
 
   const error = clientsError || countsError || npsError || churnError || metricsError;
+
+  // Process metrics to add missing required properties
+  const metrics = metricsData ? {
+    ...metricsData,
+    // Add performanceTrends if it doesn't exist
+    performanceTrends: metricsData.performanceTrends || (clients ? calculatePerformanceTrends(clients) : []),
+    // Add trends if it doesn't exist
+    trends: metricsData.trends || { 
+      retentionTrend: 0, 
+      atRiskTrend: 0, 
+      churnTrend: 0 
+    }
+  } : undefined;
 
   return {
     clients,

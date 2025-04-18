@@ -16,6 +16,11 @@ vi.mock('@/lib/data', () => ({
   getClientMetricsByTeam: vi.fn()
 }));
 
+// Mock the aiDataAnalyzer utilities
+vi.mock('@/utils/aiDataAnalyzer', () => ({
+  calculatePerformanceTrends: vi.fn(() => [])
+}));
+
 describe('useDashboardData', () => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -51,8 +56,8 @@ describe('useDashboardData', () => {
     };
 
     const mockNPSData = [
-      { month: 'Jan', score: 8 },
-      { month: 'Feb', score: 9 }
+      { month: 'Jan', score: 8, count: 10 },
+      { month: 'Feb', score: 9, count: 12 }
     ];
 
     const mockChurnData = [
@@ -63,7 +68,13 @@ describe('useDashboardData', () => {
     const mockMetrics = {
       totalMRR: 10000,
       totalCallsBooked: 42,
-      totalDealsClosed: 15
+      totalDealsClosed: 15,
+      performanceTrends: [],
+      trends: {
+        retentionTrend: 5,
+        atRiskTrend: -2,
+        churnTrend: -3
+      }
     };
 
     // Fix type casting for mocked functions

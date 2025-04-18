@@ -8,7 +8,7 @@ describe('ClientsTable', () => {
     {
       id: '1',
       name: 'Test Client 1',
-      status: 'active',
+      status: 'active' as const,
       progress: 75,
       endDate: '2025-12-31',
       csm: 'John Doe',
@@ -16,14 +16,14 @@ describe('ClientsTable', () => {
       dealsClosed: 3,
       mrr: 1000,
       npsScore: 8,
-      startDate: '2023-01-01',  // Added missing properties
-      contractValue: 50000,     // Added missing properties
-      team: 'enterprise'        // Optional property but common
+      startDate: '2023-01-01',
+      contractValue: 50000,
+      team: 'enterprise'
     },
     {
       id: '2',
       name: 'Test Client 2',
-      status: 'at-risk',
+      status: 'at-risk' as const,
       progress: 45,
       endDate: '2025-12-31',
       csm: 'Jane Smith',
@@ -31,8 +31,8 @@ describe('ClientsTable', () => {
       dealsClosed: 1,
       mrr: 800,
       npsScore: 6,
-      startDate: '2023-01-01',  // Added missing properties
-      contractValue: 30000      // Added missing properties
+      startDate: '2023-01-01',
+      contractValue: 30000
     }
   ];
 
