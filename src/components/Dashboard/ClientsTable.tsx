@@ -66,11 +66,19 @@ export function ClientsTable({
         <div 
           className="flex items-center justify-center cursor-pointer" 
           onClick={() => onSelectAll()}
+          role="checkbox"
+          aria-checked={selectedClientIds.length === clients.length && clients.length > 0}
+          tabIndex={0}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              onSelectAll();
+            }
+          }}
         >
           {selectedClientIds.length === clients.length && clients.length > 0 ? (
-            <CheckSquare className="h-4 w-4" />
+            <CheckSquare className="h-4 w-4" aria-hidden="true" />
           ) : (
-            <Square className="h-4 w-4" />
+            <Square className="h-4 w-4" aria-hidden="true" />
           )}
         </div>
       ),
@@ -81,11 +89,19 @@ export function ClientsTable({
             e.stopPropagation();
             onSelectClient(client.id);
           }}
+          role="checkbox"
+          aria-checked={selectedClientIds.includes(client.id)}
+          tabIndex={0}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              onSelectClient(client.id);
+            }
+          }}
         >
           {selectedClientIds.includes(client.id) ? (
-            <CheckSquare className="h-4 w-4" />
+            <CheckSquare className="h-4 w-4" aria-hidden="true" />
           ) : (
-            <Square className="h-4 w-4" />
+            <Square className="h-4 w-4" aria-hidden="true" />
           )}
         </div>
       ),
@@ -259,7 +275,11 @@ export function ClientsTable({
   ];
 
   return (
-    <div className="w-full">
+    <div 
+      className="w-full"
+      role="region"
+      aria-label="Clients Table"
+    >
       <VirtualizedTable
         data={clients}
         columns={columns}

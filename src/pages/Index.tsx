@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/Layout/Layout";
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -147,16 +148,29 @@ export default function Index() {
 
   return (
     <Layout>
-      <div className="w-full p-4 px-6 bg-gray-50 dark:bg-gray-900" role="region" aria-label="Performance Dashboard">
-        {/* First F-pattern stroke: Main header with strong visual hierarchy */}
+      <div 
+        className="w-full p-4 px-6 bg-gray-50 dark:bg-gray-900" 
+        role="region" 
+        aria-label="Performance Dashboard"
+      >
         <div className="flex items-start justify-between flex-wrap mb-8">
           <div className="space-y-1">
-            <h1 className="text-2xl font-bold tracking-tight">Performance Report</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl font-bold tracking-tight" tabIndex={0}>
+              Performance Report
+            </h1>
+            <p 
+              className="text-muted-foreground"
+              tabIndex={0}
+              aria-label="Dashboard description"
+            >
               Monitor your team's performance and track key metrics
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div 
+            className="flex items-center gap-2"
+            role="toolbar"
+            aria-label="Dashboard controls"
+          >
             <BackgroundProcessingIndicator 
               tasks={backgroundTasks}
               onClick={handleViewBackgroundTasks}
@@ -172,18 +186,25 @@ export default function Index() {
           </div>
         </div>
 
-        {/* Second F-pattern stroke: Action bar and filters */}
-        <div className="mb-6 pb-4 border-b border-gray-200 dark:border-gray-800">
+        <div 
+          className="mb-6 pb-4 border-b border-gray-200 dark:border-gray-800"
+          role="toolbar"
+          aria-label="Dashboard actions"
+        >
           <DashboardHeader
             isRefreshing={isRefreshing || isLoading}
             handleRefreshData={handleRefreshData}
           />
         </div>
 
-        {/* Display AI analysis errors if any */}
         {aiError && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertTriangle className="h-4 w-4" />
+          <Alert 
+            variant="destructive" 
+            className="mb-6"
+            role="alert"
+            aria-live="assertive"
+          >
+            <AlertTriangle className="h-4 w-4" aria-hidden="true" />
             <AlertTitle>AI Analysis Error</AlertTitle>
             <AlertDescription>
               {aiError.message}
@@ -194,8 +215,11 @@ export default function Index() {
           </Alert>
         )}
 
-        {/* Unified Metrics Section */}
-        <div className="mb-6">
+        <div 
+          className="mb-6"
+          role="region"
+          aria-label="Metrics Overview"
+        >
           <UnifiedMetricsGrid
             metrics={clientMetrics}
             columns={7}
@@ -203,18 +227,24 @@ export default function Index() {
           />
         </div>
 
-        {/* Consolidated Charts Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div 
+          className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6"
+          role="region"
+          aria-label="Performance Charts"
+        >
           <NPSMetricChart />
           <ChurnMetricChart />
         </div>
 
-        {/* Vertical F-pattern stem: Main content */}
         <div className="space-y-6">
           {performanceMode && <PerformanceAlert />}
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
+            <div 
+              className="lg:col-span-2"
+              role="main"
+              aria-label="Main Dashboard Content"
+            >
               <DashboardTabs
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
@@ -229,7 +259,11 @@ export default function Index() {
                 lastAnalyzed={lastAnalyzed}
               />
             </div>
-            <div className="lg:col-span-1">
+            <div 
+              className="lg:col-span-1"
+              role="complementary"
+              aria-label="Data Synchronization Status"
+            >
               <DataSyncMonitor />
             </div>
           </div>

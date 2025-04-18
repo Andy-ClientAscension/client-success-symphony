@@ -64,8 +64,15 @@ export function DashboardTabs({
       className="w-full"
       aria-label="Dashboard Sections"
     >
-      <TabsList className="mb-4 flex-wrap gap-2 justify-start overflow-x-auto max-w-full">
-        <TabsTrigger value="overview" aria-label="Overview Section">
+      <TabsList 
+        className="mb-4 flex-wrap gap-2 justify-start overflow-x-auto max-w-full"
+        aria-label="Dashboard navigation"
+      >
+        <TabsTrigger 
+          value="overview" 
+          aria-label="Overview Section"
+          role="tab"
+        >
           <LineChart 
             className="h-4 w-4 mr-2" 
             aria-hidden="true"
@@ -74,7 +81,11 @@ export function DashboardTabs({
           />
           <span className="sm:inline">Overview</span>
         </TabsTrigger>
-        <TabsTrigger value="team-analytics" aria-label="Team Analytics Section">
+        <TabsTrigger 
+          value="team-analytics" 
+          aria-label="Team Analytics Section"
+          role="tab"
+        >
           <PieChart 
             className="h-4 w-4 mr-2" 
             aria-hidden="true"
@@ -83,7 +94,11 @@ export function DashboardTabs({
           />
           <span className="sm:inline">Team Analytics</span>
         </TabsTrigger>
-        <TabsTrigger value="client-analytics" aria-label="Client Analytics Section">
+        <TabsTrigger 
+          value="client-analytics" 
+          aria-label="Client Analytics Section"
+          role="tab"
+        >
           <BarChart2 
             className="h-4 w-4 mr-2" 
             aria-hidden="true"
@@ -92,7 +107,11 @@ export function DashboardTabs({
           />
           <span className="sm:inline">Client Analytics</span>
         </TabsTrigger>
-        <TabsTrigger value="ai-insights" aria-label="AI Insights Section">
+        <TabsTrigger 
+          value="ai-insights" 
+          aria-label="AI Insights Section"
+          role="tab"
+        >
           <Bot 
             className="h-4 w-4 mr-2" 
             aria-hidden="true"
@@ -103,24 +122,47 @@ export function DashboardTabs({
         </TabsTrigger>
       </TabsList>
 
-      <div className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md">
-        <TabsContent value="overview" role="tabpanel" tabIndex={0}>
+      <div 
+        className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
+        role="tabpanel"
+      >
+        <TabsContent 
+          value="overview" 
+          role="tabpanel" 
+          tabIndex={0}
+          aria-label="Overview Content"
+        >
           <DashboardOverview />
         </TabsContent>
 
-        <TabsContent value="team-analytics" role="tabpanel" tabIndex={0}>
+        <TabsContent 
+          value="team-analytics" 
+          role="tabpanel" 
+          tabIndex={0}
+          aria-label="Team Analytics Content"
+        >
           <Suspense fallback={<TabSkeleton />}>
             <TeamAnalytics />
           </Suspense>
         </TabsContent>
 
-        <TabsContent value="client-analytics" role="tabpanel" tabIndex={0}>
+        <TabsContent 
+          value="client-analytics" 
+          role="tabpanel" 
+          tabIndex={0}
+          aria-label="Client Analytics Content"
+        >
           <Suspense fallback={<TabSkeleton />}>
             <ClientAnalytics />
           </Suspense>
         </TabsContent>
 
-        <TabsContent value="ai-insights" role="tabpanel" tabIndex={0}>
+        <TabsContent 
+          value="ai-insights" 
+          role="tabpanel" 
+          tabIndex={0}
+          aria-label="AI Insights Content"
+        >
           <Suspense fallback={<TabSkeleton />}>
             <AIInsightsTab 
               predictions={predictions}
