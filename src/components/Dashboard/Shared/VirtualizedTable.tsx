@@ -11,6 +11,9 @@ import {
 } from "@/components/ui/table";
 import { Pagination } from "../Pagination";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { LoadingState } from "@/components/LoadingState";
+import { EmptyState } from "@/components/EmptyState";
+import { ValidationError } from "@/components/ValidationError";
 
 export interface Column<T> {
   key: string;
@@ -30,6 +33,8 @@ interface VirtualizedTableProps<T> {
   roundedBorders?: boolean;
   hoverable?: boolean;
   itemHeight?: number;
+  isLoading?: boolean;
+  error?: Error | null;
   pagination?: {
     currentPage: number;
     totalPages: number;
@@ -39,6 +44,7 @@ interface VirtualizedTableProps<T> {
     startIndex: number;
     endIndex: number;
   };
+  onRetry?: () => void;
 }
 
 export function VirtualizedTable<T>({
@@ -51,7 +57,10 @@ export function VirtualizedTable<T>({
   roundedBorders = false,
   hoverable = true,
   itemHeight = 48,
-  pagination
+  isLoading = false,
+  error = null,
+  pagination,
+  onRetry
 }: VirtualizedTableProps<T>) {
   const { isMobile } = useIsMobile();
   const tableBodyRef = useRef<HTMLTableSectionElement>(null);
@@ -86,6 +95,44 @@ export function VirtualizedTable<T>({
     estimateSize: useCallback(() => itemHeight, [itemHeight]),
     overscan: 10,
   });
+
+  if (isLoading) {
+    return (
+      <div className={cn("min-h-[300px]", className)}>
+        <LoadingState message="Loading data..." />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={cn("min-h-[300px]", className)}>
+        <ValidationError
+          type="error"
+          message={error.message}
+          title="Error Loading Data"
+        />
+        {onRetry && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onRetry}
+            className="mt-4"
+          >
+            Try Again
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  if (!data?.length) {
+    return (
+      <div className={cn("min-h-[300px]", className)}>
+        <EmptyState message={emptyMessage} />
+      </div>
+    );
+  }
 
   return (
     <div className={cn("w-full", className)}>
