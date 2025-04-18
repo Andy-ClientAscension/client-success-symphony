@@ -146,7 +146,6 @@ export default function SignUp() {
               <LoadingState 
                 message="Creating your account..." 
                 size="md" 
-                color="primary" 
                 showProgress={true}
               />
             </div>

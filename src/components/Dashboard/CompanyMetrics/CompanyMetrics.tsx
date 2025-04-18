@@ -1,5 +1,7 @@
+
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { getClientsCountByStatus, getAverageNPS, getNPSMonthlyTrend, getChurnData, getAllClients } from "@/lib/data";
 import { CompanySummary } from "./CompanySummary";
 import { ClientDistribution } from "./ClientDistribution";
@@ -8,6 +10,7 @@ import { calculateStatusCounts, calculateRates } from "@/utils/analyticsUtils";
 import { LoadingState } from "@/components/LoadingState";
 import { ValidationError } from "@/components/ValidationError";
 import { useToast } from "@/hooks/use-toast";
+import { EmptyState } from "@/components/EmptyState";
 
 export function CompanyMetrics() {
   const [isLoading, setIsLoading] = useState(true);
@@ -158,7 +161,7 @@ export function CompanyMetrics() {
           
           <PerformanceIndicators 
             data={{
-              totalClients,
+              totalClients: metrics.totalClients,
               totalMRR,
               totalCallsBooked,
               totalDealsClosed,

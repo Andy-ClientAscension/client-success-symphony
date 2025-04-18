@@ -197,7 +197,6 @@ export default function Login() {
                 <LoadingState 
                   message="Authenticating..." 
                   size="md" 
-                  color="primary" 
                   showProgress={true}
                 />
               </div>
