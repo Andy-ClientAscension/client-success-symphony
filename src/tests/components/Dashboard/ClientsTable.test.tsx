@@ -2,13 +2,14 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ClientsTable } from '@/components/Dashboard/ClientsTable';
+import { Client } from '@/lib/data';
 
 describe('ClientsTable', () => {
-  const mockClients = [
+  const mockClients: Client[] = [
     {
       id: '1',
       name: 'Test Client 1',
-      status: 'active' as const,
+      status: 'active',
       progress: 75,
       endDate: '2025-12-31',
       csm: 'John Doe',
@@ -23,7 +24,7 @@ describe('ClientsTable', () => {
     {
       id: '2',
       name: 'Test Client 2',
-      status: 'at-risk' as const,
+      status: 'at-risk',
       progress: 45,
       endDate: '2025-12-31',
       csm: 'Jane Smith',

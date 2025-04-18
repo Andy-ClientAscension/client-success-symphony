@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { Layout } from "@/components/Layout/Layout";
 import { useToast } from "@/hooks/use-toast";
@@ -124,11 +123,11 @@ export default function UnifiedDashboard() {
             predictions={predictions}
             insights={insights}
             isAnalyzing={isAnalyzing}
-            error={error} // Changed from aiError to error
+            error={error}
             comparisons={comparisons}
             handleRefreshData={handleRefreshData}
             cancelAnalysis={cancelAnalysis}
-            trendData={metrics?.performanceTrends || []}
+            trendData={Array.isArray(metrics?.performanceTrends) ? metrics?.performanceTrends : []}
             lastAnalyzed={lastAnalyzed}
           />
         </ErrorBoundary>

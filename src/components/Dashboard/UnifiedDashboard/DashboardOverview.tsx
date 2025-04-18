@@ -35,9 +35,10 @@ export function DashboardOverview() {
   const npsScore = npsData && npsData.length > 0 ? npsData[npsData.length - 1].score : undefined;
   
   // Get growth rate from performance trends if available
-  // The PerformanceTrend type has percentChange instead of growth
-  const growthRate = metrics?.performanceTrends && metrics.performanceTrends.length > 0 
-    ? metrics.performanceTrends[0].percentChange 
+  // Ensure performanceTrends is an array before accessing its length property
+  const performanceTrends = metrics?.performanceTrends || [];
+  const growthRate = Array.isArray(performanceTrends) && performanceTrends.length > 0 
+    ? performanceTrends[0].percentChange 
     : undefined;
 
   const consolidatedMetrics = {
