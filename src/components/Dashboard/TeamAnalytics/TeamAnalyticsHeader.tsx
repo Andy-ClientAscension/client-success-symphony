@@ -6,7 +6,7 @@ import { FilterBar } from "../Shared/FilterBar";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface TeamAnalyticsHeaderProps {
-  title?: string; // Making title optional
+  title?: string; // Title is optional with default in the component
   selectedTeam: string;
   teams: string[];
   onTeamChange: (team: string) => void;
@@ -15,7 +15,7 @@ interface TeamAnalyticsHeaderProps {
 }
 
 export function TeamAnalyticsHeader({
-  title = "Team Analytics", // Setting a default value
+  title = "Team Analytics", // Default value
   selectedTeam,
   teams,
   onTeamChange,
@@ -28,14 +28,14 @@ export function TeamAnalyticsHeader({
     <div className="flex flex-col space-y-4 w-full">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h2 className="text-lg font-semibold">{title}</h2>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button 
             size="sm"
             variant="outline"
             onClick={onAddTeam}
             className="h-8 w-full sm:w-auto"
           >
-            <PlusCircle className="h-4 w-4 mr-1" /> Add Team
+            <PlusCircle className="h-4 w-4 mr-1" /> {isMobile ? "Add" : "Add Team"}
           </Button>
           <Button 
             size="sm"
@@ -43,7 +43,7 @@ export function TeamAnalyticsHeader({
             onClick={onDeleteTeam}
             className="h-8 w-full sm:w-auto" 
           >
-            <Trash2 className="h-4 w-4 mr-1" /> Delete Team
+            <Trash2 className="h-4 w-4 mr-1" /> {isMobile ? "Delete" : "Delete Team"}
           </Button>
         </div>
       </div>

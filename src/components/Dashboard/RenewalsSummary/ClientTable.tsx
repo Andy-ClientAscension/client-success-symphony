@@ -1,7 +1,7 @@
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ResponsiveTable, Column } from "@/components/Dashboard/Shared/ResponsiveTable";
 
 interface BackEndSale {
   id: string;
@@ -22,56 +22,59 @@ interface ClientTableProps {
 export function ClientTable({ filteredSales, formatTeamName }: ClientTableProps) {
   const { isMobile } = useIsMobile();
   
+  const columns: Column<BackEndSale>[] = [
+    {
+      key: 'clientName',
+      header: 'Client Name',
+      cell: (sale) => <span className="font-medium">{sale.clientName}</span>
+    },
+    {
+      key: 'team',
+      header: 'Team',
+      cell: (sale) => <span>{sale.team ? formatTeamName(sale.team) : "Unassigned"}</span>,
+      hideOnMobile: true
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      cell: (sale) => (
+        <Badge
+          variant={sale.status === "renewed" ? "outline" : "destructive"}
+        >
+          {sale.status === "renewed" ? "Renewed" : "Churned"}
+        </Badge>
+      )
+    },
+    {
+      key: 'reasons',
+      header: isMobile ? "Reasons" : "Churn Reasons",
+      cell: (sale) => (
+        sale.status === "churned" && sale.painPoints.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {sale.painPoints.map((point, index) => (
+              <Badge 
+                key={`${sale.id}-reason-${index}`} 
+                variant="outline" 
+                className="bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800 text-xs"
+              >
+                {isMobile && point.length > 10 ? `${point.slice(0, 10)}...` : point}
+              </Badge>
+            ))}
+          </div>
+        ) : sale.status === "churned" ? (
+          <span className="text-muted-foreground text-sm">No reasons provided</span>
+        ) : null
+      )
+    }
+  ];
+
   return (
-    <div className="overflow-x-auto -mx-4 sm:mx-0">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Client Name</TableHead>
-            {!isMobile && <TableHead>Team</TableHead>}
-            <TableHead>Status</TableHead>
-            <TableHead>{isMobile ? "Reasons" : "Churn Reasons"}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filteredSales.length > 0 ? (
-            filteredSales.map((sale) => (
-              <TableRow key={sale.id}>
-                <TableCell className="font-medium">{sale.clientName}</TableCell>
-                {!isMobile && (
-                  <TableCell>{sale.team ? formatTeamName(sale.team) : "Unassigned"}</TableCell>
-                )}
-                <TableCell>
-                  <Badge
-                    variant={sale.status === "renewed" ? "outline" : "destructive"}
-                  >
-                    {sale.status === "renewed" ? "Renewed" : "Churned"}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {sale.status === "churned" && sale.painPoints.length > 0 ? (
-                    <div className="flex flex-wrap gap-1">
-                      {sale.painPoints.map((point, index) => (
-                        <Badge key={`${sale.id}-reason-${index}`} variant="outline" className="bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800 text-xs">
-                          {isMobile && point.length > 10 ? `${point.slice(0, 10)}...` : point}
-                        </Badge>
-                      ))}
-                    </div>
-                  ) : sale.status === "churned" ? (
-                    <span className="text-muted-foreground text-sm">No reasons provided</span>
-                  ) : null}
-                </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={isMobile ? 3 : 4} className="text-center py-4 text-muted-foreground">
-                No clients found for the selected filter.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </div>
+    <ResponsiveTable
+      data={filteredSales}
+      columns={columns}
+      keyExtractor={(sale) => sale.id}
+      emptyMessage="No clients found for the selected filter."
+      stripedRows={true}
+    />
   );
 }

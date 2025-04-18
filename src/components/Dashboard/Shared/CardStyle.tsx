@@ -1,29 +1,41 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 
-export type CardVariant = "default" | "primary" | "success" | "warning" | "danger" | "info";
+export type CardSize = "sm" | "md" | "lg";
+export type CardVariant = "default" | "primary" | "success" | "warning" | "danger" | "info" | "outline";
 
 interface StyledCardProps {
   title?: string;
+  description?: string;
   variant?: CardVariant;
+  size?: CardSize;
   className?: string;
   headerClassName?: string;
   contentClassName?: string;
+  footerClassName?: string;
+  footer?: React.ReactNode;
   children: React.ReactNode;
+  isLoading?: boolean;
 }
 
 export function StyledCard({
   title,
+  description,
   variant = "default",
+  size = "md",
   className,
   headerClassName,
   contentClassName,
-  children
+  footerClassName,
+  footer,
+  children,
+  isLoading = false
 }: StyledCardProps) {
   const variantStyles = {
     default: "",
+    outline: "border-2 border-border dark:border-gray-800",
     primary: "border-brand-100 dark:border-brand-900/50 bg-brand-50/30 dark:bg-brand-950/30",
     success: "border-success-100 dark:border-success-900/50 bg-success-50/30 dark:bg-success-950/30",
     warning: "border-warning-100 dark:border-warning-900/50 bg-warning-50/30 dark:bg-warning-950/30",
@@ -31,16 +43,96 @@ export function StyledCard({
     info: "border-blue-100 dark:border-blue-900/50 bg-blue-50/30 dark:bg-blue-950/30"
   };
 
+  const sizeStyles = {
+    sm: "p-2",
+    md: "",
+    lg: "p-6"
+  };
+
   return (
-    <Card className={cn(variantStyles[variant], className)}>
-      {title && (
-        <CardHeader className={cn("pb-2", headerClassName)}>
-          <CardTitle className="text-lg font-semibold">{title}</CardTitle>
+    <Card className={cn(variantStyles[variant], sizeStyles[size], className)}>
+      {(title || description) && (
+        <CardHeader className={cn(
+          size === "sm" ? "pb-1 px-3 pt-3" : "pb-2",
+          headerClassName
+        )}>
+          {title && (
+            <CardTitle className={cn(
+              size === "sm" ? "text-base" : "text-lg",
+              "font-semibold"
+            )}>
+              {title}
+            </CardTitle>
+          )}
+          {description && (
+            <CardDescription>{description}</CardDescription>
+          )}
         </CardHeader>
       )}
-      <CardContent className={cn(contentClassName)}>
-        {children}
+      <CardContent className={cn(
+        size === "sm" ? "pt-0 px-3 pb-3" : "",
+        contentClassName
+      )}>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-6">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        ) : (
+          children
+        )}
       </CardContent>
+      {footer && (
+        <CardFooter className={cn(
+          size === "sm" ? "pt-0 px-3 pb-3" : "",
+          footerClassName
+        )}>
+          {footer}
+        </CardFooter>
+      )}
     </Card>
+  );
+}
+
+// Metric Item component that can be reused across dashboard
+export interface MetricItemProps {
+  icon: React.ReactNode;
+  title: string;
+  value: string;
+  trend?: {
+    value: number;
+    label: string;
+  };
+  className?: string;
+  valueClassName?: string;
+}
+
+export function MetricItem({ 
+  icon, 
+  title, 
+  value, 
+  trend, 
+  className,
+  valueClassName
+}: MetricItemProps) {
+  return (
+    <div className={cn("border border-border rounded-lg p-3", className)}>
+      <div className="flex items-center gap-2 mb-2">
+        {icon}
+        <span className="font-medium">{title}</span>
+      </div>
+      <p className={cn("text-xl font-bold", valueClassName)}>{value}</p>
+      {trend && (
+        <div className="mt-1 text-xs flex items-center">
+          <span className={cn(
+            trend.value > 0 ? "text-success-600 dark:text-success-400" : 
+            trend.value < 0 ? "text-danger-600 dark:text-danger-400" : 
+            "text-muted-foreground"
+          )}>
+            {trend.value > 0 ? "↑ " : trend.value < 0 ? "↓ " : "→ "}
+            {Math.abs(trend.value)}% {trend.label}
+          </span>
+        </div>
+      )}
+    </div>
   );
 }
