@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { Layout } from "@/components/Layout/Layout";
 import { useToast } from "@/hooks/use-toast";
@@ -6,10 +5,10 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAIInsights } from '@/hooks/use-ai-insights';
 import { useSystemHealth } from '@/hooks/use-system-health';
-import { getAllClients } from '@/lib/data';
 import { generateClientComparisons } from '@/utils/aiDataAnalyzer';
 import { DashboardHeader } from "@/components/Dashboard/UnifiedDashboard/DashboardHeader";
 import { DashboardTabs } from "@/components/Dashboard/UnifiedDashboard/DashboardTabs";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
 
 export default function UnifiedDashboard() {
   const queryClient = useQueryClient();
@@ -17,28 +16,28 @@ export default function UnifiedDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [isRefetching, setIsRefetching] = useState(false);
   const { runSystemHealthCheck } = useSystemHealth();
-  const [clients] = useState(() => getAllClients());
-  const [comparisons, setComparisons] = useState(() => generateClientComparisons(clients));
+
+  const {
+    clients,
+    clientCounts,
+    npsData,
+    churnData,
+    metrics,
+    isLoading
+  } = useDashboardData();
+
+  const [comparisons, setComparisons] = useState(() => 
+    clients ? generateClientComparisons(clients) : []
+  );
   
-  const [trendData] = useState([
-    { month: 'Jan', mrr: 2500, churn: 5, growth: 15 },
-    { month: 'Feb', mrr: 3000, churn: 4, growth: 20 },
-    { month: 'Mar', mrr: 3200, churn: 6, growth: 10 },
-    { month: 'Apr', mrr: 4000, churn: 3, growth: 25 },
-    { month: 'May', mrr: 4200, churn: 2, growth: 12 },
-    { month: 'Jun', mrr: 5000, churn: 4, growth: 18 },
-  ]);
-
-  const isRefreshing = queryClient.isFetching({queryKey: ['ai-insights']}) > 0 || 
-                       queryClient.isFetching({queryKey: ['nps-data']}) > 0 || 
-                       isRefetching;
-
   const { 
     insights, 
     predictions, 
     isAnalyzing, 
     analyzeClients
-  } = useAIInsights(clients);
+  } = useAIInsights(clients || []);
+
+  const isRefreshing = isLoading || isRefetching;
 
   const handleRefreshData = useCallback(async () => {
     if (isRefreshing) return;
@@ -51,13 +50,12 @@ export default function UnifiedDashboard() {
     
     try {
       await analyzeClients(true);
-      const newComparisons = generateClientComparisons(clients);
-      setComparisons(newComparisons);
+      if (clients) {
+        const newComparisons = generateClientComparisons(clients);
+        setComparisons(newComparisons);
+      }
       
-      await queryClient.invalidateQueries({
-        queryKey: ['nps-data', 'ai-insights'],
-        refetchType: 'active',
-      });
+      await queryClient.invalidateQueries();
       
       toast({
         title: "Refreshing data",
@@ -77,7 +75,7 @@ export default function UnifiedDashboard() {
   }, [isRefreshing, queryClient, toast, activeTab, analyzeClients, clients, runSystemHealthCheck]);
 
   const handleErrorReset = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['nps-data', 'ai-insights'] });
+    queryClient.invalidateQueries();
   }, [queryClient]);
 
   return (
@@ -97,7 +95,7 @@ export default function UnifiedDashboard() {
             isAnalyzing={isAnalyzing}
             comparisons={comparisons}
             handleRefreshData={handleRefreshData}
-            trendData={trendData}
+            trendData={metrics?.trends || []}
           />
         </ErrorBoundary>
       </div>

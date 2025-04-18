@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
@@ -31,16 +30,15 @@ import NotFound from "@/pages/NotFound";
 import AIDashboard from "@/pages/AIDashboard";
 import UnifiedDashboard from "@/pages/UnifiedDashboard";
 
-// Create a new query client instance with optimized settings for large datasets
+// Update the queryClient configuration
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
-      refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      // Update to use proper React Query v5 options
-      gcTime: 10 * 60 * 1000, // 10 minutes instead of keepPreviousData
-      refetchOnMount: "always",
+      refetchOnWindowFocus: true,
+      staleTime: 15000, // Data is fresh for 15 seconds
+      gcTime: 10 * 60 * 1000, // Unused data is garbage collected after 10 minutes
+      refetchInterval: 30000, // Default 30 second refresh
     },
   },
 });
