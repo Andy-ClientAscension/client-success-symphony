@@ -5,7 +5,7 @@ import { PlusCircle, Trash2 } from "lucide-react";
 import { FilterBar } from "../Shared/FilterBar";
 
 interface TeamAnalyticsHeaderProps {
-  title: string;
+  title?: string; // Making title optional
   selectedTeam: string;
   teams: string[];
   onTeamChange: (team: string) => void;
@@ -14,7 +14,7 @@ interface TeamAnalyticsHeaderProps {
 }
 
 export function TeamAnalyticsHeader({
-  title,
+  title = "Team Analytics", // Setting a default value
   selectedTeam,
   teams,
   onTeamChange,

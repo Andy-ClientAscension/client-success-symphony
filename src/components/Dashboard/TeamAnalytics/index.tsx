@@ -30,21 +30,17 @@ export function TeamAnalytics() {
   
   const clients = useMemo(() => getAllClients(), []);
   
-  // Check for client deletions in localStorage
   useEffect(() => {
     const checkForClientDeletions = () => {
       const persistEnabled = localStorage.getItem("persistDashboard") === "true";
       if (persistEnabled) {
         const savedClients = loadData(STORAGE_KEYS.CLIENTS, null);
         if (savedClients && Array.isArray(savedClients)) {
-          // This will make the component re-render if the client list has changed
-          // in localStorage, which means deletions in other components will be reflected
           console.log("Client list in storage updated, reflecting changes in TeamAnalytics");
         }
       }
     };
     
-    // Set up an interval to check for client deletions
     const interval = setInterval(checkForClientDeletions, 2000);
     return () => clearInterval(interval);
   }, []);
