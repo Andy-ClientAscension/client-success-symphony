@@ -41,14 +41,20 @@ export function Layout({ children }: LayoutProps) {
   };
   
   return (
-    <div className="flex h-screen w-full bg-gradient-to-br from-background to-background/95 overflow-hidden" role="application">
-      <div 
+    <div 
+      className="flex h-screen w-full bg-gradient-to-br from-background to-background/95 overflow-hidden" 
+      role="application"
+      aria-label="Dashboard Layout"
+    >
+      <nav 
         className={cn(
           "fixed md:relative h-full z-40 transition-transform duration-300 ease-in-out",
           isMobile ? 
             (sidebarOpen ? "translate-x-0" : "-translate-x-full") :
             (sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0")
         )}
+        role="navigation"
+        aria-label="Main Navigation"
       >
         <Sidebar 
           isMobile={isMobile} 
@@ -56,12 +62,13 @@ export function Layout({ children }: LayoutProps) {
           collapsed={!isMobile && sidebarCollapsed} 
           toggleCollapse={toggleSidebarCollapse}
         />
-      </div>
+      </nav>
       
       {sidebarOpen && isMobile && (
         <div 
           className="fixed inset-0 bg-black/50 z-30 transition-opacity duration-300 ease-in-out"
           onClick={closeSidebar}
+          role="presentation"
           aria-hidden="true"
         />
       )}
@@ -76,7 +83,11 @@ export function Layout({ children }: LayoutProps) {
           sidebarVisible={sidebarOpen} 
           sidebarCollapsed={sidebarCollapsed} 
         />
-        <main className="flex-1 w-full overflow-auto bg-gradient-to-br from-background to-background/95 rounded-tl-xl" role="main">
+        <main 
+          className="flex-1 w-full overflow-auto bg-gradient-to-br from-background to-background/95 rounded-tl-xl" 
+          role="main"
+          aria-label="Main Content"
+        >
           <ErrorBoundary>
             {children}
           </ErrorBoundary>

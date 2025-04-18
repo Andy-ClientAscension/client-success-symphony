@@ -16,9 +16,19 @@ export function DashboardHeader({ isRefreshing, handleRefreshData }: DashboardHe
   const teams = ["all", ...getAllTeams()];
 
   return (
-    <div className="space-y-4" role="banner">
+    <header 
+      className="space-y-4" 
+      role="banner" 
+      aria-label="Dashboard Header"
+    >
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl font-bold" tabIndex={0}>Unified Dashboard</h1>
+        <h1 
+          className="text-2xl font-bold" 
+          tabIndex={0}
+          aria-label="Unified Dashboard"
+        >
+          Unified Dashboard
+        </h1>
         <Button
           onClick={handleRefreshData}
           disabled={isRefreshing}
@@ -27,8 +37,12 @@ export function DashboardHeader({ isRefreshing, handleRefreshData }: DashboardHe
           className="h-9"
           aria-label={isRefreshing ? "Refreshing data..." : "Refresh dashboard data"}
         >
-          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} aria-hidden="true" />
-          <span>{isRefreshing ? "Refreshing..." : "Refresh Data"}</span>
+          <RefreshCw 
+            className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} 
+            aria-hidden="true"
+          />
+          <span className="sr-only">{isRefreshing ? "Refreshing..." : "Refresh Data"}</span>
+          <span aria-hidden="true">{isRefreshing ? "Refreshing..." : "Refresh Data"}</span>
         </Button>
       </div>
       
@@ -42,6 +56,6 @@ export function DashboardHeader({ isRefreshing, handleRefreshData }: DashboardHe
         onSortOrderChange={(order) => console.log(`Sort order changed to ${order}`)}
         aria-label="Dashboard filters"
       />
-    </div>
+    </header>
   );
 }
