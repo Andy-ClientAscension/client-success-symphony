@@ -31,13 +31,16 @@ import NotFound from "@/pages/NotFound";
 import AIDashboard from "@/pages/AIDashboard";
 import UnifiedDashboard from "@/pages/UnifiedDashboard";
 
-// Create a new query client instance
+// Create a new query client instance with optimized settings for large datasets
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
       staleTime: 5 * 60 * 1000, // 5 minutes
+      // Add optimizations for large data sets
+      keepPreviousData: true,
+      refetchOnMount: "always",
     },
   },
 });
@@ -63,10 +66,10 @@ function App() {
 
     // Initialize data sync service
     if (navigator.onLine) {
-      dataSyncService.startAutoSync();
+      dataSyncService.initializeDataSync(); // Use initializeDataSync to prevent duplicate initializations
       
-      // Set shorter sync interval (10 seconds) for responsive real-time updates
-      dataSyncService.setInterval(10000);
+      // Set optimal sync interval (20 seconds) to balance real-time updates and performance
+      dataSyncService.setInterval(20000);
       
       // Initial sync
       dataSyncService.manualSync().then(() => {

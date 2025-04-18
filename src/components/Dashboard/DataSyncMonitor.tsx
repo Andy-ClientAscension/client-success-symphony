@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -27,6 +27,18 @@ export function DataSyncMonitor() {
   const [syncInterval, setSyncInterval] = useState(30);
   const [showLog, setShowLog] = useState(false);
   const [autoSyncEnabled, setAutoSyncEnabled] = useState(false);
+  const [visibleLogItems, setVisibleLogItems] = useState<SyncEvent[]>([]);
+  const MAX_VISIBLE_LOG_ITEMS = 50; // Only show most recent 50 events
+
+  // Update visible log items when the full log changes
+  useEffect(() => {
+    if (syncLog.length > 0) {
+      // Take only the most recent MAX_VISIBLE_LOG_ITEMS
+      setVisibleLogItems([...syncLog].reverse().slice(0, MAX_VISIBLE_LOG_ITEMS));
+    } else {
+      setVisibleLogItems([]);
+    }
+  }, [syncLog]);
 
   const handleToggleAutoSync = (enabled: boolean) => {
     if (enabled) {
@@ -201,7 +213,7 @@ export function DataSyncMonitor() {
         {showLog && (
           <div className="pt-2">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium">Event Log</h3>
+              <h3 className="text-sm font-medium">Event Log ({syncLog.length > MAX_VISIBLE_LOG_ITEMS ? `Showing ${MAX_VISIBLE_LOG_ITEMS} of ${syncLog.length}` : syncLog.length})</h3>
               <Button 
                 variant="ghost" 
                 onClick={clearSyncLog} 
@@ -212,12 +224,12 @@ export function DataSyncMonitor() {
             </div>
             <ScrollArea className="h-[200px] w-full rounded border">
               <div className="p-4 space-y-2">
-                {syncLog.length === 0 ? (
+                {visibleLogItems.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">
                     No sync events logged yet
                   </p>
                 ) : (
-                  [...syncLog].reverse().map((event, index) => (
+                  visibleLogItems.map((event, index) => (
                     <div key={index} className="flex items-start space-x-2 text-sm">
                       <div className="pt-0.5">
                         {getEventIcon(event)}

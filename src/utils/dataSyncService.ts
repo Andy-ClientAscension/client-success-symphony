@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { STORAGE_KEYS, loadData, saveData } from './persistence';
 
@@ -164,6 +163,9 @@ function createBackup() {
   }
 }
 
+// Cap the log size to prevent memory issues
+const MAX_LOG_SIZE = 500;
+
 // Log a sync event
 function logSyncEvent(type: string, details?: Record<string, any>) {
   const event: SyncEvent = {
@@ -181,9 +183,9 @@ function logSyncEvent(type: string, details?: Record<string, any>) {
     syncStats.failureCount++;
   }
   
-  // Keep log size manageable (max 100 events)
-  if (syncLog.length > 100) {
-    syncLog.shift();
+  // Keep log size manageable
+  if (syncLog.length > MAX_LOG_SIZE) {
+    syncLog.splice(0, syncLog.length - MAX_LOG_SIZE);
   }
   
   broadcastSyncEvent(type, details);
@@ -234,6 +236,94 @@ export function saveDataAndSync<T>(key: string, data: T): void {
   saveData(key, data);
   markKeyAsUpdated(key);
   console.info(`Saved data for key: ${key}`);
+}
+
+/**
+ * Hook to use real-time synchronized data with pagination
+ * @param key Storage key to watch
+ * @param defaultValue Default value if none exists
+ * @param pageSize Number of items per page
+ * @param withSetter Whether to return a setter function as the third element
+ * @returns [data, pagination state and controls, setter function?]
+ */
+export function usePaginatedData<T>(
+  key: string,
+  defaultValue: T[],
+  pageSize: number = 10,
+  withSetter: boolean = false
+) {
+  const [allData, setAllData] = useState<T[]>(() => loadData(key, defaultValue));
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const initialized = useRef(false);
+  
+  // Calculate pagination values
+  const totalItems = allData.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const currentPageSafe = Math.min(Math.max(1, currentPage), totalPages);
+  
+  // If current page is out of bounds, adjust it
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+  
+  // Get current page data
+  const indexOfLastItem = currentPageSafe * pageSize;
+  const indexOfFirstItem = indexOfLastItem - pageSize;
+  const currentItems = allData.slice(indexOfFirstItem, indexOfLastItem);
+  
+  // Set up subscriber for this key
+  useEffect(() => {
+    if (!subscribers.has(key)) {
+      subscribers.set(key, []);
+    }
+    
+    const callback = (newData: T[]) => {
+      setAllData(newData !== null ? newData : defaultValue);
+      setIsLoading(false);
+    };
+    
+    subscribers.get(key)?.push(callback);
+    
+    // Load initial data
+    if (!initialized.current) {
+      const storedData = loadData(key, defaultValue);
+      setAllData(storedData);
+      setIsLoading(false);
+      initialized.current = true;
+    }
+    
+    // Clean up subscriber when component unmounts
+    return () => {
+      if (subscribers.has(key)) {
+        const callbacks = subscribers.get(key) || [];
+        subscribers.set(key, callbacks.filter(cb => cb !== callback));
+      }
+    };
+  }, [key, defaultValue]);
+  
+  // Define setter function if requested
+  const setDataAndSync = useCallback((newData: T[]) => {
+    saveDataAndSync(key, newData);
+    setAllData(newData);
+  }, [key]);
+  
+  const paginationState = {
+    currentPage: currentPageSafe,
+    totalPages,
+    totalItems,
+    pageSize,
+    indexOfFirstItem,
+    indexOfLastItem: Math.min(indexOfLastItem, totalItems),
+    onPageChange: setCurrentPage
+  };
+  
+  // Return appropriate values based on withSetter flag
+  return withSetter 
+    ? [currentItems, paginationState, isLoading, setDataAndSync] as const
+    : [currentItems, paginationState, isLoading] as const;
 }
 
 /**

@@ -1,182 +1,230 @@
 
-import { useState } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Client } from "@/lib/data";
-import { ClientMetricsForm } from "../ClientMetricsForm";
-import { NPSUpdateForm } from "../NPSUpdateForm";
+import { Filter, PlusCircle, Grid, List } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { ClientSearchBar } from "../ClientSearchBar";
-import { ClientBulkActionDialog } from "../ClientBulkActionDialog";
-import { ClientListHeader } from "./ClientListHeader";
+import { STORAGE_KEYS } from "@/utils/persistence";
+import { usePaginatedData } from "@/utils/dataSyncService";
 import { ClientListContent } from "./ClientListContent";
-import { useClientList } from "./useClientList";
+import { Client } from "@/lib/data";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-interface ClientListProps {
-  statusFilter?: Client['status'];
-}
-
-export function ClientList({ statusFilter }: ClientListProps) {
-  const {
-    clients,
-    setClients,
-    filteredClients,
-    selectedClient,
-    setSelectedClient,
-    metricsModalOpen,
-    setMetricsModalOpen,
-    npsModalOpen,
-    setNpsModalOpen,
-    selectedTeam,
-    searchQuery,
-    selectedClientIds,
-    setSelectedClientIds,
-    bulkActionDialogOpen,
-    setBulkActionDialogOpen,
-    bulkActionType,
-    setBulkActionType,
-    bulkActionValue,
-    setBulkActionValue,
-    currentPage,
-    itemsPerPage,
-    viewMode,
-    indexOfLastItem,
-    indexOfFirstItem,
-    currentItems,
-    totalPages,
-    handlePageChange,
-    handleItemsPerPageChange,
-    handleSelectClient,
-    handleSelectAll,
-    handleTeamChange,
-    handleSearchChange,
-    handleViewModeChange,
-    deleteClients,
-    updateClientStatus
-  } = useClientList({ statusFilter });
-  
+export function ClientList({ activeTab = "all" }) {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
   
-  const handleViewDetails = (client: Client) => {
-    navigate(`/clients/${client.id}`);
-  };
+  // Use the new optimized hook for paginated data
+  const [clients, paginationState, isLoading] = usePaginatedData<Client>(
+    STORAGE_KEYS.CLIENTS, 
+    [], 
+    itemsPerPage
+  );
   
-  const handleAddNewClient = () => {
-    navigate("/add-client");
-  };
-
-  const handleEditMetrics = (client: Client) => {
-    setSelectedClient(client);
-    setMetricsModalOpen(true);
-  };
-
-  const handleUpdateNPS = (client: Client) => {
-    setSelectedClient(client);
-    setNpsModalOpen(true);
-  };
-
-  const handleMetricsUpdate = (data: { callsBooked: number; dealsClosed: number; mrr: number }) => {
-    if (!selectedClient) return;
-
-    const updatedClients = clients.map(client => 
-      client.id === selectedClient.id
-        ? { ...client, callsBooked: data.callsBooked, dealsClosed: data.dealsClosed, mrr: data.mrr }
-        : client
+  // Filter clients based on active tab, search query, and status filter
+  const filteredClients = useMemo(() => {
+    if (!clients || !Array.isArray(clients)) return [];
+    
+    let filtered = [...clients];
+    
+    // Filter by tab
+    if (activeTab !== "all") {
+      filtered = filtered.filter(client => client.status === activeTab);
+    }
+    
+    // Filter by status if not "all"
+    if (selectedStatus !== "all") {
+      filtered = filtered.filter(client => client.status === selectedStatus);
+    }
+    
+    // Filter by search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        client => client.name.toLowerCase().includes(query) || 
+                 (client.csm && client.csm.toLowerCase().includes(query))
+      );
+    }
+    
+    return filtered;
+  }, [clients, activeTab, searchQuery, selectedStatus]);
+  
+  // Get paginated clients for current view
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  // Recalculate pagination when filters change
+  const currentPaginationState = useMemo(() => {
+    const totalItems = filteredClients.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+    
+    // Ensure current page is in bounds
+    const currentPageSafe = Math.min(Math.max(1, currentPage), totalPages || 1);
+    if (currentPageSafe !== currentPage) {
+      setCurrentPage(currentPageSafe);
+    }
+    
+    const indexOfLastItem = currentPageSafe * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    
+    return {
+      currentPage: currentPageSafe,
+      totalPages,
+      totalItems,
+      itemsPerPage,
+      indexOfFirstItem,
+      indexOfLastItem: Math.min(indexOfLastItem, totalItems),
+      onPageChange: setCurrentPage
+    };
+  }, [filteredClients.length, itemsPerPage, currentPage]);
+  
+  // Get current items for display
+  const currentItems = useMemo(() => {
+    return filteredClients.slice(
+      currentPaginationState.indexOfFirstItem,
+      currentPaginationState.indexOfLastItem
     );
+  }, [filteredClients, currentPaginationState]);
+  
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, searchQuery, selectedStatus, itemsPerPage]);
+  
+  // Handle client selection
+  const handleSelectClient = useCallback((clientId: string) => {
+    setSelectedClientIds(prev => {
+      if (prev.includes(clientId)) {
+        return prev.filter(id => id !== clientId);
+      } else {
+        return [...prev, clientId];
+      }
+    });
+  }, []);
+  
+  const handleSelectAll = useCallback(() => {
+    if (selectedClientIds.length === currentItems.length) {
+      setSelectedClientIds([]);
+    } else {
+      setSelectedClientIds(currentItems.map(client => client.id));
+    }
+  }, [currentItems, selectedClientIds]);
+  
+  const handleViewDetails = useCallback((client: Client) => {
+    navigate(`/clients/${client.id}`);
+  }, [navigate]);
+  
+  const handleEditMetrics = useCallback((client: Client) => {
+    // Implementation will be handled elsewhere
+    toast({
+      title: "Edit Metrics",
+      description: `Opening metrics editor for ${client.name}`,
+    });
+  }, [toast]);
+  
+  const handleUpdateNPS = useCallback((client: Client) => {
+    // Implementation will be handled elsewhere
+    toast({
+      title: "Update NPS",
+      description: `Opening NPS form for ${client.name}`,
+    });
+  }, [toast]);
 
-    setClients(updatedClients);
-    
-    toast({
-      title: "Metrics Updated",
-      description: `${selectedClient.name}'s metrics have been updated successfully.`,
-    });
-  };
-  
-  const openBulkActionDialog = (actionType: 'status' | 'team' | 'column' | 'delete') => {
-    if (selectedClientIds.length === 0) {
-      toast({
-        title: "No Clients Selected",
-        description: "Please select at least one client to perform bulk actions.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setBulkActionType(actionType);
-    setBulkActionDialogOpen(true);
-  };
-  
-  const handleBulkActionConfirm = () => {
-    if (!bulkActionType) {
-      return;
-    }
-    
-    if (bulkActionType === 'delete') {
-      deleteClients(selectedClientIds);
-      setBulkActionDialogOpen(false);
-      return;
-    }
-    
-    if (!bulkActionValue) {
-      toast({
-        title: "No Value Selected",
-        description: "Please select a value to continue.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (bulkActionType === 'status') {
-      updateClientStatus(selectedClientIds, bulkActionValue as Client['status']);
-    } else if (bulkActionType === 'team') {
-      const updatedClients = clients.map(client => {
-        if (selectedClientIds.includes(client.id)) {
-          return { ...client, team: bulkActionValue };
-        }
-        return client;
-      });
-      
-      setClients(updatedClients);
-    } else if (bulkActionType === 'column') {
-      // This maps to status in our application
-      updateClientStatus(selectedClientIds, bulkActionValue as Client['status']);
-    }
-    
-    setSelectedClientIds([]);
-    setBulkActionDialogOpen(false);
-    
-    toast({
-      title: "Bulk Action Completed",
-      description: `Updated ${selectedClientIds.length} clients`,
-    });
-  };
+  if (isLoading) {
+    return (
+      <Card className="w-full">
+        <CardContent className="p-6">
+          <div className="flex justify-center">
+            <div className="w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <ClientListHeader
-          filteredClientCount={filteredClients.length}
-          selectedTeam={selectedTeam}
-          searchQuery={searchQuery}
-          viewMode={viewMode}
-          itemsPerPage={itemsPerPage}
-          onTeamChange={handleTeamChange}
-          onSearchChange={handleSearchChange}
-          onViewModeChange={handleViewModeChange}
-          onAddNewClient={handleAddNewClient}
-          onItemsPerPageChange={handleItemsPerPageChange}
-        />
+      <CardHeader className="flex flex-row items-center justify-between p-4">
+        <CardTitle>Client Management</CardTitle>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center">
+            <Input
+              placeholder="Search clients..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-[200px] h-9"
+            />
+          </div>
+          
+          <div className="flex items-center">
+            <Select
+              value={selectedStatus}
+              onValueChange={setSelectedStatus}
+            >
+              <SelectTrigger className="w-[130px] h-9">
+                <SelectValue placeholder="Filter by Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="at-risk">At Risk</SelectItem>
+                <SelectItem value="churned">Churned</SelectItem>
+                <SelectItem value="new">New</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex items-center">
+            <Select
+              value={String(itemsPerPage)}
+              onValueChange={(value) => setItemsPerPage(Number(value))}
+            >
+              <SelectTrigger className="w-[100px] h-9">
+                <SelectValue placeholder="Page Size" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10 per page</SelectItem>
+                <SelectItem value="25">25 per page</SelectItem>
+                <SelectItem value="50">50 per page</SelectItem>
+                <SelectItem value="100">100 per page</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex items-center border rounded-md overflow-hidden">
+            <Button
+              variant={viewMode === 'table' ? 'default' : 'ghost'}
+              size="icon"
+              onClick={() => setViewMode('table')}
+              className="rounded-none h-9 w-9"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'kanban' ? 'default' : 'ghost'}
+              size="icon"
+              onClick={() => setViewMode('kanban')}
+              className="rounded-none h-9 w-9"
+            >
+              <Grid className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          <Button onClick={() => navigate('/add-client')}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Client
+          </Button>
+        </div>
       </CardHeader>
-      <CardContent>
-        <ClientSearchBar 
-          searchQuery={searchQuery}
-          onSearchChange={handleSearchChange}
-          selectedClientCount={selectedClientIds.length}
-          onOpenBulkActions={() => openBulkActionDialog('status')}
-          onDelete={() => openBulkActionDialog('delete')}
-        />
-
+      
+      <CardContent className="p-4 pt-0">
         <ClientListContent 
           viewMode={viewMode}
           currentItems={currentItems}
@@ -186,48 +234,29 @@ export function ClientList({ statusFilter }: ClientListProps) {
           onViewDetails={handleViewDetails}
           onEditMetrics={handleEditMetrics}
           onUpdateNPS={handleUpdateNPS}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={handlePageChange}
-          totalItems={filteredClients.length}
-          itemsPerPage={itemsPerPage}
-          indexOfFirstItem={indexOfFirstItem}
-          indexOfLastItem={indexOfLastItem}
+          {...currentPaginationState}
         />
+        
+        {selectedClientIds.length > 0 && (
+          <div className="mt-4 p-2 border rounded bg-muted/50 flex items-center justify-between">
+            <div>
+              <span className="font-medium">{selectedClientIds.length}</span> clients selected
+            </div>
+            <div className="space-x-2">
+              <Button size="sm" variant="outline">
+                Bulk Actions
+              </Button>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                onClick={() => setSelectedClientIds([])}
+              >
+                Clear Selection
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
-      
-      {selectedClient && metricsModalOpen && (
-        <ClientMetricsForm
-          isOpen={metricsModalOpen}
-          onClose={() => setMetricsModalOpen(false)}
-          onSubmit={handleMetricsUpdate}
-          clientName={selectedClient.name}
-          initialData={{
-            callsBooked: selectedClient.callsBooked || 0,
-            dealsClosed: selectedClient.dealsClosed || 0,
-            mrr: selectedClient.mrr || 0
-          }}
-        />
-      )}
-      
-      {selectedClient && npsModalOpen && (
-        <NPSUpdateForm
-          isOpen={npsModalOpen}
-          onClose={() => setNpsModalOpen(false)}
-          clientId={selectedClient.id}
-          clientName={selectedClient.name}
-          currentScore={selectedClient.npsScore}
-        />
-      )}
-      
-      <ClientBulkActionDialog 
-        open={bulkActionDialogOpen}
-        onOpenChange={setBulkActionDialogOpen}
-        actionType={bulkActionType}
-        selectedCount={selectedClientIds.length}
-        onValueChange={setBulkActionValue}
-        onConfirm={handleBulkActionConfirm}
-      />
     </Card>
   );
 }

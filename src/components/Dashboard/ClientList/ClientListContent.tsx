@@ -4,6 +4,7 @@ import { Client } from "@/lib/data";
 import { ClientsTable } from "../ClientsTable";
 import { Pagination } from "../Pagination";
 import { ClientKanbanView } from "../ClientKanbanView";
+import { VirtualizedTable } from "../Shared/VirtualizedTable";
 
 interface ClientListContentProps {
   viewMode: 'table' | 'kanban';
@@ -61,7 +62,7 @@ export function ClientListContent({
             totalItems={totalItems}
             itemsPerPage={itemsPerPage}
             startIndex={indexOfFirstItem}
-            endIndex={Math.min(indexOfLastItem, totalItems)}
+            endIndex={indexOfLastItem}
           />
         </>
       ) : (
