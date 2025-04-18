@@ -1,8 +1,16 @@
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { getAllClients, getClientsCountByStatus, getAverageNPS, getNPSMonthlyTrend, getChurnData, getClientMetricsByTeam } from '@/lib/data';
+import { 
+  getAllClients, 
+  getClientsCountByStatus, 
+  getAverageNPS, 
+  getNPSMonthlyTrend, 
+  getChurnData, 
+  getClientMetricsByTeam 
+} from '@/lib/data';
 import React from 'react';
 
 // Mock the data functions

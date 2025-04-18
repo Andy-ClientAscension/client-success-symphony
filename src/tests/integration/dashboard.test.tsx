@@ -3,7 +3,14 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import UnifiedDashboard from '@/pages/UnifiedDashboard';
 import { BrowserRouter } from 'react-router-dom';
-import { getAllClients, getClientsCountByStatus, getAverageNPS, getNPSMonthlyTrend, getChurnData, getClientMetricsByTeam } from '@/lib/data';
+import { 
+  getAllClients, 
+  getClientsCountByStatus, 
+  getAverageNPS, 
+  getNPSMonthlyTrend, 
+  getChurnData, 
+  getClientMetricsByTeam 
+} from '@/lib/data';
 
 // Mock the data functions
 vi.mock('@/lib/data', () => ({

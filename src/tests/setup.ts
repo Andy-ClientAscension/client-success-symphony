@@ -45,3 +45,5 @@ expect.extend({
 declare global {
   const vi: typeof import('vitest')['vi'];
 }
+
+export {};  // This ensures the global declaration works
