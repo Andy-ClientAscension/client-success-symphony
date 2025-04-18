@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout/Layout";
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +18,14 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { MetricsCards } from "@/components/Dashboard/MetricsCards";
 import { Separator } from "@/components/ui/separator";
+
+interface BackgroundTaskStatus {
+  id: string;
+  name: string;
+  status: 'idle' | 'running' | 'success' | 'error';
+  lastRun?: Date;
+  message?: string;
+}
 
 export default function Index() {
   const { toast } = useToast();
@@ -141,104 +148,100 @@ export default function Index() {
   return (
     <Layout>
       <div 
-        className="w-full p-4 px-6 bg-gray-50 dark:bg-gray-900 space-y-8" 
+        className="w-full space-y-12 bg-gray-100 dark:bg-gray-900/50 min-h-screen" 
         role="region" 
         aria-label="Performance Dashboard"
       >
-        <div className="flex items-start justify-between flex-wrap mb-8">
+        <div className="p-6 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           <div className="space-y-1">
             <h1 className="text-2xl font-bold tracking-tight" tabIndex={0}>
               Performance Report
             </h1>
-            <p 
-              className="text-muted-foreground"
-              tabIndex={0}
-              aria-label="Dashboard description"
-            >
+            <p className="text-muted-foreground">
               Monitor your team's performance and track key metrics
             </p>
           </div>
-          <div 
-            className="flex items-center gap-2"
-            role="toolbar"
-            aria-label="Dashboard controls"
-          >
-            <BackgroundProcessingIndicator 
-              tasks={backgroundTasks}
-              onClick={handleViewBackgroundTasks}
-            />
-            <DashboardSettingsBar
-              persistDashboard={persistDashboard}
-              togglePersistDashboard={togglePersistDashboard}
-              performanceMode={performanceMode}
-              setPerformanceMode={setPerformanceMode}
-              focusMode={focusMode}
-              onFocusModeChange={setFocusMode}
-            />
-          </div>
         </div>
 
-        <div 
-          className="mb-6 pb-4 border-b border-gray-200 dark:border-gray-800"
-          role="toolbar"
-          aria-label="Dashboard actions"
-        >
-          <DashboardHeader
-            isRefreshing={isRefreshing || isLoading}
-            handleRefreshData={handleRefreshData}
-          />
-        </div>
-
-        {aiError && (
-          <Alert 
-            variant="destructive" 
-            className="mb-6"
-            role="alert"
-            aria-live="assertive"
-          >
-            <AlertTriangle className="h-4 w-4" aria-hidden="true" />
-            <AlertTitle>AI Analysis Error</AlertTitle>
-            <AlertDescription>
-              {aiError.message}
-              <p className="text-sm mt-1">
-                AI insights may be outdated or unavailable. The system will retry automatically.
-              </p>
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <section className="space-y-6">
-          <MetricsCards />
-          
-          <Separator className="my-6 bg-gray-200 dark:bg-gray-700" />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <NPSMetricChart />
-            <ChurnMetricChart />
-          </div>
-        </section>
-
-        <div className="space-y-6 mt-6">
-          {performanceMode && <PerformanceAlert />}
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <DashboardTabs
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                predictions={predictions}
-                insights={aiInsights}
-                isAnalyzing={isAnalyzing}
-                error={aiError}
-                comparisons={comparisons}
-                handleRefreshData={handleRefreshData}
-                cancelAnalysis={cancelAnalysis}
-                trendData={trendData}
-                lastAnalyzed={lastAnalyzed}
+        <div className="px-6 space-y-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <DashboardHeader
+              isRefreshing={isRefreshing}
+              handleRefreshData={handleRefreshData}
+            />
+            <div className="flex items-center gap-2">
+              <BackgroundProcessingIndicator 
+                tasks={backgroundTasks}
+                onClick={handleViewBackgroundTasks}
+              />
+              <DashboardSettingsBar
+                persistDashboard={persistDashboard}
+                togglePersistDashboard={togglePersistDashboard}
+                performanceMode={performanceMode}
+                setPerformanceMode={setPerformanceMode}
+                focusMode={focusMode}
+                onFocusModeChange={setFocusMode}
               />
             </div>
-            <div className="lg:col-span-1">
-              <DataSyncMonitor />
+          </div>
+
+          {aiError && (
+            <Alert 
+              variant="destructive"
+              className="mb-8 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+              role="alert"
+              aria-live="assertive"
+            >
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>AI Analysis Error</AlertTitle>
+              <AlertDescription>
+                {aiError.message}
+                <p className="text-sm mt-1">
+                  AI insights may be outdated or unavailable. The system will retry automatically.
+                </p>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <section className="space-y-8">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+              <MetricsCards />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                <NPSMetricChart />
+              </div>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                <ChurnMetricChart />
+              </div>
+            </div>
+          </section>
+
+          <div className="space-y-8">
+            {performanceMode && <PerformanceAlert />}
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2">
+                <DashboardTabs
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  predictions={predictions}
+                  insights={aiInsights}
+                  isAnalyzing={isAnalyzing}
+                  error={aiError}
+                  comparisons={comparisons}
+                  handleRefreshData={handleRefreshData}
+                  cancelAnalysis={cancelAnalysis}
+                  trendData={trendData}
+                  lastAnalyzed={lastAnalyzed}
+                />
+              </div>
+              <div className="lg:col-span-1">
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                  <DataSyncMonitor />
+                </div>
+              </div>
             </div>
           </div>
         </div>

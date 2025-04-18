@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -53,8 +54,8 @@ export function MetricsCardsContent() {
     ? Object.values(clientCounts).reduce((sum, count) => sum + count, 0) 
     : 0;
 
-  const successRate = 85; // Default value
-  const retentionRate = 92; // Default value
+  const successRate = 85;
+  const retentionRate = 92;
 
   const data = [
     {
@@ -103,17 +104,17 @@ export function MetricsCardsContent() {
 
   return (
     <div 
-      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 p-4 bg-gray-50 dark:bg-gray-900/20 rounded-lg" 
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6" 
       role="region"
       aria-label="Key performance indicators"
     >
       {data.map((item, index) => (
         <Card 
           key={index} 
-          className="shadow-sm hover:shadow-md transition-shadow duration-300 bg-white dark:bg-gray-800/50"
+          className="bg-white dark:bg-gray-800/50 shadow-sm hover:shadow transition-shadow duration-200"
         >
-          <CardContent className="p-5 space-y-3">
-            <div className="flex items-center justify-between">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between mb-4">
               <div>
                 <p 
                   className="text-sm text-muted-foreground mb-1" 
@@ -131,10 +132,12 @@ export function MetricsCardsContent() {
               </div>
               {item.icon}
             </div>
-            <Separator className="my-2 bg-gray-200 dark:bg-gray-700" />
+            <Separator className="my-3" />
             <div 
               className={`text-xs flex items-center ${
-                item.trend.direction === "up" ? "text-green-600 dark:text-green-400" : "text-amber-600 dark:text-amber-400"
+                item.trend.direction === "up" 
+                  ? "text-green-600 dark:text-green-400" 
+                  : "text-amber-600 dark:text-amber-400"
               }`}
               aria-label={`${item.trend.value} ${item.trend.direction === "up" ? "increase" : "decrease"} from last month`}
             >
@@ -155,10 +158,7 @@ export function MetricsCardsContent() {
 export function MetricsCards() {
   return (
     <ErrorBoundary
-      fallback={<MetricsError 
-        error={new Error("Failed to load metrics")} 
-        resetErrorBoundary={() => window.location.reload()} 
-      />}
+      fallback={MetricsError}
     >
       <MetricsCardsContent />
     </ErrorBoundary>
