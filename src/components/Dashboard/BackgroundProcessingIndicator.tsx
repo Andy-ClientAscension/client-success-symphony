@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CircleAlert, Bot, RefreshCw, Check } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
@@ -40,7 +41,7 @@ export function BackgroundProcessingIndicator({
   const getStatusIcon = () => {
     const iconProps = {
       className: "h-4 w-4",
-      "aria-hidden": "true",
+      "aria-hidden": true, // Changed from string to boolean
       role: "img"
     };
 
