@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { Layout } from "@/components/Layout/Layout";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +13,7 @@ import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { ValidationError } from "@/components/ValidationError";
 import { Card } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function UnifiedDashboard() {
   const queryClient = useQueryClient();
@@ -27,7 +29,8 @@ export default function UnifiedDashboard() {
     churnData,
     metrics,
     isLoading,
-    error: dashboardError
+    error: dashboardError,
+    refetch: refetchDashboardData
   } = useDashboardData();
 
   const [comparisons, setComparisons] = useState(() => 
@@ -40,7 +43,7 @@ export default function UnifiedDashboard() {
     isAnalyzing, 
     analyzeClients,
     cancelAnalysis,
-    error, // Changed from aiError to error to match the property name in the hook
+    error: aiError, 
     lastAnalyzed
   } = useAIInsights(clients || []);
 
@@ -62,7 +65,7 @@ export default function UnifiedDashboard() {
         setComparisons(newComparisons);
       }
       
-      await queryClient.invalidateQueries();
+      await refetchDashboardData();
       
       toast({
         title: "Refreshing data",
@@ -79,11 +82,11 @@ export default function UnifiedDashboard() {
     } finally {
       setIsRefetching(false);
     }
-  }, [isRefreshing, queryClient, toast, activeTab, analyzeClients, clients, runSystemHealthCheck]);
+  }, [isRefreshing, queryClient, toast, activeTab, analyzeClients, clients, refetchDashboardData, runSystemHealthCheck]);
 
   const handleErrorReset = useCallback(() => {
-    queryClient.invalidateQueries();
-  }, [queryClient]);
+    refetchDashboardData();
+  }, [refetchDashboardData]);
 
   if (dashboardError) {
     return (
@@ -91,7 +94,7 @@ export default function UnifiedDashboard() {
         <Card className="m-6 p-6">
           <ValidationError
             type="error"
-            message="There was an error loading the dashboard data. Please try again."
+            message="There was an error loading the dashboard data."
             showIcon
             title="Dashboard Error"
           />
@@ -99,6 +102,13 @@ export default function UnifiedDashboard() {
             <p className="text-sm text-muted-foreground">
               Error details: {dashboardError instanceof Error ? dashboardError.message : 'Unknown error'}
             </p>
+            <Button 
+              variant="outline" 
+              onClick={handleErrorReset} 
+              className="mt-4"
+            >
+              Retry Loading Dashboard
+            </Button>
           </div>
         </Card>
       </Layout>
@@ -123,7 +133,7 @@ export default function UnifiedDashboard() {
             predictions={predictions}
             insights={insights}
             isAnalyzing={isAnalyzing}
-            error={error}
+            error={aiError}
             comparisons={comparisons}
             handleRefreshData={handleRefreshData}
             cancelAnalysis={cancelAnalysis}
@@ -131,6 +141,23 @@ export default function UnifiedDashboard() {
             lastAnalyzed={lastAnalyzed}
           />
         </ErrorBoundary>
+        
+        {aiError && !dashboardError && (
+          <Card className="p-4 mt-4 border-orange-200 bg-orange-50 dark:bg-orange-950 dark:border-orange-800">
+            <div className="flex items-start">
+              <AlertCircle className="h-5 w-5 text-orange-600 dark:text-orange-400 mr-2 mt-0.5" />
+              <div>
+                <h3 className="font-medium text-orange-800 dark:text-orange-300">AI Analysis Error</h3>
+                <p className="text-sm text-orange-700 dark:text-orange-400">
+                  {aiError.message || "There was an error analyzing the data."}
+                </p>
+                <p className="text-xs text-orange-600 dark:text-orange-500 mt-1">
+                  Dashboard data is still available, but AI insights may be limited.
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
       </div>
     </Layout>
   );

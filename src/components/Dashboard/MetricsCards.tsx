@@ -1,22 +1,45 @@
 
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowUp, ArrowDown, Users, DollarSign, PhoneCall, Calendar } from "lucide-react";
+import { ArrowUp, ArrowDown, Users, DollarSign, PhoneCall, Calendar, AlertTriangle } from "lucide-react";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Button } from "@/components/ui/button";
 
-export function MetricsCards() {
+// Error fallback component
+function MetricsError({ error, resetErrorBoundary }: { error: Error, resetErrorBoundary: () => void }) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <Card className="col-span-full bg-red-50 dark:bg-red-900/20">
+        <CardContent className="p-6">
+          <div className="flex items-start">
+            <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mr-3 mt-0.5" />
+            <div>
+              <h3 className="font-medium text-red-800 dark:text-red-300">Error loading metrics</h3>
+              <p className="text-sm text-red-700 dark:text-red-400 mt-1">
+                {error.message || "Failed to load dashboard metrics"}
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={resetErrorBoundary}
+                className="mt-3 text-red-700 hover:text-red-800 border-red-300 hover:border-red-400"
+              >
+                Retry
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+export function MetricsCardsContent() {
   const { metrics, clientCounts, error } = useDashboardData();
 
   if (error) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-red-50">
-          <CardContent className="p-4">
-            <p className="text-red-600">Error loading metrics data</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    throw error; // This will be caught by the ErrorBoundary
   }
 
   const totalClients = clientCounts 
@@ -89,5 +112,16 @@ export function MetricsCards() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+// Wrap the component with ErrorBoundary
+export function MetricsCards() {
+  return (
+    <ErrorBoundary fallback={({ error, resetErrorBoundary }) => (
+      <MetricsError error={error} resetErrorBoundary={resetErrorBoundary} />
+    )}>
+      <MetricsCardsContent />
+    </ErrorBoundary>
   );
 }

@@ -1,4 +1,3 @@
-
 import { toast } from "@/hooks/use-toast";
 import { NPSData, NPSMonthlyTrend } from './data';
 
@@ -15,12 +14,6 @@ export const fetchNPSDataFromSheets = async (): Promise<{
   trendData: NPSMonthlyTrend[] 
 } | null> => {
   try {
-    // For browser compatibility, we'll simulate the Google Sheets API response
-    // In a production environment, you would:
-    // 1. Create a backend API endpoint that uses googleapis and returns the data
-    // 2. Call that endpoint from the frontend
-    // 3. Or use Google Sheets API v4 via direct REST calls with an API key
-    
     // Check network connectivity first
     if (!navigator.onLine) {
       throw new Error('You are currently offline. Please check your internet connection.');
@@ -131,18 +124,27 @@ export const fetchNPSDataFromSheets = async (): Promise<{
     console.error('Error fetching NPS data from Google Sheets:', error);
     
     // Provide more specific error messaging
-    const errorMessage = error instanceof Error 
-      ? error.message 
-      : "Unknown error occurred while fetching data";
+    let errorMessage: string;
     
-    toast({
-      title: "Error fetching NPS data",
-      description: errorMessage,
-      variant: "destructive",
-    });
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    } else {
+      errorMessage = "Unknown error occurred while fetching data";
+    }
+    
+    // Only show toast if it's a runtime error (not during SSR)
+    if (typeof window !== 'undefined') {
+      toast({
+        title: "Error fetching NPS data",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
     
     // Important: Throw the error so that React Query's retry and error handling can work
-    throw error;
+    throw error instanceof Error ? error : new Error(errorMessage);
   }
 };
 
@@ -165,7 +167,6 @@ const getCategoryScore = (category: string): number => {
 };
 
 // Update a specific NPS score in Google Sheets
-// This would require a backend implementation in a real-world scenario
 export const updateNPSScoreInSheets = async (
   clientId: string, 
   score: number
@@ -181,6 +182,11 @@ export const updateNPSScoreInSheets = async (
     // Simulate API delay and potential errors
     await new Promise(resolve => setTimeout(resolve, 600));
     
+    // Add random failure for testing error handling (5% chance)
+    if (Math.random() < 0.05) {
+      throw new Error('Failed to update score: Service temporarily unavailable');
+    }
+    
     // Simulate successful update
     toast({
       title: "NPS Score Updated",
@@ -191,9 +197,14 @@ export const updateNPSScoreInSheets = async (
   } catch (error) {
     console.error('Error updating NPS score:', error);
     
-    const errorMessage = error instanceof Error 
-      ? error.message 
-      : "Failed to update NPS score. Please try again.";
+    let errorMessage: string;
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    } else {
+      errorMessage = "Failed to update NPS score. Please try again.";
+    }
     
     toast({
       title: "Error Updating Score",
@@ -201,6 +212,6 @@ export const updateNPSScoreInSheets = async (
       variant: "destructive",
     });
     
-    throw error;
+    throw error instanceof Error ? error : new Error(errorMessage);
   }
 };
