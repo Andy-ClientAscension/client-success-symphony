@@ -156,14 +156,14 @@ export function MetricsCardsContent() {
   );
 }
 
-// Wrap the component with ErrorBoundary
+// Wrap the component with ErrorBoundary - Fixed to use React.ReactElement
 export function MetricsCards() {
   return (
     <ErrorBoundary
-      fallback={({ error, resetErrorBoundary }) => (
+      fallback={(props) => (
         <MetricsError 
-          error={error} 
-          resetErrorBoundary={resetErrorBoundary} 
+          error={props.error} 
+          resetErrorBoundary={props.resetErrorBoundary} 
         />
       )}
     >
