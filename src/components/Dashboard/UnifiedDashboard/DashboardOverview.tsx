@@ -25,6 +25,7 @@ export function DashboardOverview() {
     active: clientCounts?.active || 0,
     atRisk: clientCounts?.["at-risk"] || 0,
     churned: clientCounts?.churned || 0,
+    new: clientCounts?.new || 0, // Adding the missing 'new' property
     total: clientCounts ? Object.values(clientCounts).reduce((a, b) => a + b, 0) : 0
   };
 

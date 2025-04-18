@@ -21,6 +21,7 @@ interface UnifiedDashboardMetricsProps {
     active: number;
     atRisk: number;
     churned: number;
+    new: number;
     total: number;
   };
   rates: {
@@ -50,7 +51,7 @@ export function UnifiedDashboardMetrics({
       value: metrics.total,
       trend: metrics.growthRate ? {
         value: `+${metrics.growthRate}% growth`,
-        direction: "up"
+        direction: "up" as const // Explicitly type as "up"
       } : undefined
     },
     {
@@ -58,7 +59,7 @@ export function UnifiedDashboardMetrics({
       value: `$${metrics.mrr}`,
       trend: {
         value: "+8% from last month",
-        direction: "up"
+        direction: "up" as const // Explicitly type as "up"
       }
     },
     {
@@ -66,7 +67,7 @@ export function UnifiedDashboardMetrics({
       value: `${metrics.success}%`,
       trend: {
         value: "+2.5% this quarter",
-        direction: "up"
+        direction: "up" as const // Explicitly type as "up"
       }
     },
     {
@@ -74,7 +75,7 @@ export function UnifiedDashboardMetrics({
       value: `${metrics.churn}%`,
       trend: {
         value: "-0.2% this month",
-        direction: "down"
+        direction: "down" as const // Explicitly type as "down"
       }
     }
   ];

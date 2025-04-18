@@ -15,6 +15,7 @@ export function CompanyMetrics() {
     active: clientCounts.active,
     atRisk: clientCounts["at-risk"],
     churned: clientCounts.churned,
+    new: clientCounts.new, // Adding the missing 'new' property
     total: totalClients
   };
   
