@@ -1,3 +1,4 @@
+
 /**
  * Dashboard Data Synchronization Service
  * 
@@ -46,6 +47,7 @@ class DataSyncService {
   private MAX_RETRIES = 3;
   private syncLog: SyncEvent[] = [];
   private MAX_LOG_ENTRIES = 100;
+  private listeners: Map<string, Set<(data: any) => void>> = new Map();
   
   constructor() {
     // Initialize version tracking for all storage keys
@@ -140,6 +142,48 @@ class DataSyncService {
       this.stopAutoSync();
       this.startAutoSync();
     }
+  }
+  
+  /**
+   * Subscribe to changes for a specific data key
+   */
+  public subscribe<T>(key: string, callback: (data: T) => void): () => void {
+    if (!this.listeners.has(key)) {
+      this.listeners.set(key, new Set());
+    }
+    
+    this.listeners.get(key)?.add(callback as (data: any) => void);
+    
+    // Immediately trigger with current data
+    try {
+      const currentData = loadData<T>(key, null as unknown as T);
+      if (currentData !== null) {
+        callback(currentData);
+      }
+    } catch (error) {
+      console.error(`Error loading initial data for ${key}:`, error);
+    }
+    
+    // Return unsubscribe function
+    return () => {
+      this.listeners.get(key)?.delete(callback as (data: any) => void);
+    };
+  }
+  
+  /**
+   * Subscribe to multiple data keys at once
+   */
+  public subscribeToMultiple(keyCallbackMap: Record<string, (data: any) => void>): () => void {
+    const unsubscribers: Array<() => void> = [];
+    
+    Object.entries(keyCallbackMap).forEach(([key, callback]) => {
+      unsubscribers.push(this.subscribe(key, callback));
+    });
+    
+    // Return combined unsubscribe function
+    return () => {
+      unsubscribers.forEach(unsubscribe => unsubscribe());
+    };
   }
   
   /**
@@ -311,14 +355,32 @@ class DataSyncService {
    * Broadcast data change event to all components
    */
   private broadcastDataChange(key: string): void {
-    // Use native browser events for simple pub/sub
-    const event = new CustomEvent('data:changed', {
-      detail: { key, timestamp: new Date().toISOString() }
-    });
-    
-    window.dispatchEvent(event);
-    this.logSyncEvent('data:changed', 'system', { key });
-    console.log(`Data change broadcast for: ${key}`);
+    try {
+      // Load the updated data
+      const updatedData = loadData(key, null);
+      
+      // Notify all subscribers for this key
+      if (this.listeners.has(key)) {
+        this.listeners.get(key)?.forEach(callback => {
+          try {
+            callback(updatedData);
+          } catch (callbackError) {
+            console.error(`Error in subscriber callback for ${key}:`, callbackError);
+          }
+        });
+      }
+      
+      // Use native browser events for simple pub/sub
+      const event = new CustomEvent('data:changed', {
+        detail: { key, timestamp: new Date().toISOString(), data: updatedData }
+      });
+      
+      window.dispatchEvent(event);
+      this.logSyncEvent('data:changed', 'system', { key });
+      console.log(`Data change broadcast for: ${key}`);
+    } catch (error) {
+      console.error(`Error broadcasting data change for ${key}:`, error);
+    }
   }
   
   /**
@@ -383,7 +445,7 @@ const dataSyncService = new DataSyncService();
 export default dataSyncService;
 
 // Custom hook for components to use the sync service
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export function useSyncService() {
   const [syncStats, setSyncStats] = useState(() => dataSyncService.getSyncStats());
@@ -421,9 +483,91 @@ export function useSyncService() {
     stopAutoSync: () => dataSyncService.stopAutoSync(),
     manualSync: () => dataSyncService.manualSync(),
     setInterval: (ms: number) => dataSyncService.setInterval(ms),
+    subscribe: dataSyncService.subscribe.bind(dataSyncService),
+    subscribeToMultiple: dataSyncService.subscribeToMultiple.bind(dataSyncService),
     syncStats,
     isSyncing,
     syncLog: dataSyncService.getSyncLog(),
     clearSyncLog: () => dataSyncService.clearSyncLog()
   };
+}
+
+// New hook specifically for live data updates
+export function useRealtimeData<T>(key: string, defaultValue: T): [T, boolean] {
+  const [data, setData] = useState<T>(defaultValue);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    setIsLoading(true);
+    
+    // Initial data load
+    try {
+      const initialData = loadData<T>(key, defaultValue);
+      setData(initialData);
+    } catch (error) {
+      console.error(`Error loading initial data for ${key}:`, error);
+    } finally {
+      setIsLoading(false);
+    }
+    
+    // Subscribe to updates
+    const unsubscribe = dataSyncService.subscribe<T>(key, (updatedData) => {
+      setData(updatedData);
+    });
+    
+    return unsubscribe;
+  }, [key, defaultValue]);
+  
+  return [data, isLoading];
+}
+
+// Hook for multiple data sources
+export function useMultipleRealtimeData<T extends Record<string, any>>(
+  keys: string[], 
+  defaultValues: Partial<T>
+): [T, boolean] {
+  const [data, setData] = useState<T>(defaultValues as T);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    setIsLoading(true);
+    
+    // Initial data load for all keys
+    const initialData = { ...defaultValues } as T;
+    let loadingComplete = 0;
+    
+    keys.forEach(key => {
+      try {
+        const keyData = loadData(key, defaultValues[key] || null);
+        initialData[key as keyof T] = keyData;
+      } catch (error) {
+        console.error(`Error loading initial data for ${key}:`, error);
+      } finally {
+        loadingComplete++;
+        if (loadingComplete === keys.length) {
+          setIsLoading(false);
+        }
+      }
+    });
+    
+    setData(initialData);
+    
+    // Subscribe to updates for all keys
+    const callbacks: Record<string, (updatedValue: any) => void> = {};
+    
+    keys.forEach(key => {
+      callbacks[key] = (updatedValue) => {
+        setData(prevData => ({
+          ...prevData,
+          [key]: updatedValue
+        }));
+      };
+    });
+    
+    const unsubscribe = dataSyncService.subscribeToMultiple(callbacks);
+    
+    return unsubscribe;
+  }, [keys, defaultValues]);
+  
+  return [data, isLoading];
 }

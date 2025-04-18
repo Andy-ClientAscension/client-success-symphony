@@ -10,6 +10,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import dataSyncService from "@/utils/dataSyncService";
+import { RefreshCw } from "lucide-react";
 
 // Pages
 import Index from "@/pages/Index";
@@ -44,10 +45,18 @@ const queryClient = new QueryClient({
 function App() {
   // We'll keep this state for future use if needed, but won't pass it to OfflineDetector
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [syncReady, setSyncReady] = useState(false);
 
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    const handleOnline = () => {
+      setIsOnline(true);
+      dataSyncService.startAutoSync();
+    };
+    
+    const handleOffline = () => {
+      setIsOnline(false);
+      dataSyncService.stopAutoSync();
+    };
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
@@ -55,6 +64,16 @@ function App() {
     // Initialize data sync service
     if (navigator.onLine) {
       dataSyncService.startAutoSync();
+      
+      // Set shorter sync interval (10 seconds) for responsive real-time updates
+      dataSyncService.setInterval(10000);
+      
+      // Initial sync
+      dataSyncService.manualSync().then(() => {
+        setSyncReady(true);
+      });
+    } else {
+      setSyncReady(true);
     }
 
     return () => {
@@ -63,6 +82,17 @@ function App() {
       dataSyncService.stopAutoSync();
     };
   }, []);
+
+  if (!syncReady) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 animate-spin mx-auto text-blue-500" />
+          <p className="mt-4 text-lg">Initializing dashboard data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Router>

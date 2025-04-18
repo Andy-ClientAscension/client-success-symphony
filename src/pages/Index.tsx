@@ -7,6 +7,9 @@ import { DashboardSettingsBar } from "@/components/Dashboard/DashboardSettingsBa
 import { DashboardTabs } from "@/components/Dashboard/UnifiedDashboard/DashboardTabs";
 import { DashboardHeader } from "@/components/Dashboard/UnifiedDashboard/DashboardHeader";
 import { PerformanceAlert } from "@/components/Dashboard/PerformanceAlert";
+import { useRealtimeData } from "@/utils/dataSyncService";
+import { STORAGE_KEYS } from "@/utils/persistence";
+import { DataSyncMonitor } from "@/components/Dashboard/DataSyncMonitor";
 
 export default function Index() {
   const { toast } = useToast();
@@ -16,10 +19,21 @@ export default function Index() {
   const [performanceMode, setPerformanceMode] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
-  const [insights, setInsights] = useState([]);
-  const [predictions, setPredictions] = useState([]);
-  const [comparisons, setComparisons] = useState([]);
-  const [trendData, setTrendData] = useState([]);
+  // Use realtime data hooks for dashboard data
+  const [insights, isInsightsLoading] = useRealtimeData(STORAGE_KEYS.AI_INSIGHTS, []);
+  const [predictions, isPredictionsLoading] = useRealtimeData('aiPredictions', []);
+  const [comparisons, isComparisonsLoading] = useRealtimeData('clientComparisons', []);
+  const [trendData, isTrendDataLoading] = useRealtimeData('trendData', [
+    { month: 'Jan', mrr: 2500, churn: 5, growth: 15 },
+    { month: 'Feb', mrr: 3000, churn: 4, growth: 20 },
+    { month: 'Mar', mrr: 3200, churn: 6, growth: 10 },
+    { month: 'Apr', mrr: 4000, churn: 3, growth: 25 },
+    { month: 'May', mrr: 4200, churn: 2, growth: 12 },
+    { month: 'Jun', mrr: 5000, churn: 4, growth: 18 },
+  ]);
+
+  // Compute overall loading state
+  const isLoading = isInsightsLoading || isPredictionsLoading || isComparisonsLoading || isTrendDataLoading;
 
   useEffect(() => {
     const persistEnabled = localStorage.getItem("persistDashboard") === "true";
@@ -63,7 +77,7 @@ export default function Index() {
         {/* Second F-pattern stroke: Action bar and filters */}
         <div className="mb-6 pb-4 border-b border-gray-200 dark:border-gray-800">
           <DashboardHeader
-            isRefreshing={isRefreshing}
+            isRefreshing={isRefreshing || isLoading}
             handleRefreshData={handleRefreshData}
           />
         </div>
@@ -72,16 +86,23 @@ export default function Index() {
         <div className="space-y-6">
           {performanceMode && <PerformanceAlert />}
           
-          <DashboardTabs
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            predictions={predictions}
-            insights={insights}
-            isAnalyzing={isRefreshing}
-            comparisons={comparisons}
-            handleRefreshData={handleRefreshData}
-            trendData={trendData}
-          />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <DashboardTabs
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                predictions={predictions}
+                insights={insights}
+                isAnalyzing={isRefreshing || isLoading}
+                comparisons={comparisons}
+                handleRefreshData={handleRefreshData}
+                trendData={trendData}
+              />
+            </div>
+            <div className="lg:col-span-1">
+              <DataSyncMonitor />
+            </div>
+          </div>
         </div>
       </div>
     </Layout>

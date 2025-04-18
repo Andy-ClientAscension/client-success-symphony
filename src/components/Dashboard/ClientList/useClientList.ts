@@ -1,9 +1,11 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { Client, getAllClients } from '@/lib/data';
 import { STORAGE_KEYS, saveData, loadData, deleteClientsGlobally } from '@/utils/persistence';
 import { useToast } from "@/hooks/use-toast";
 import { useKanbanStore } from "@/utils/kanbanStore";
 import { validateClients } from '@/utils/clientValidation';
+import { useRealtimeData } from '@/utils/dataSyncService';
 
 interface UseClientListProps {
   statusFilter?: Client['status'];
@@ -13,6 +15,7 @@ export function useClientList({ statusFilter }: UseClientListProps) {
   const { toast } = useToast();
   const kanbanStore = useKanbanStore();
   
+  // Get default clients as a memoized value
   const defaultClients = useMemo(() => {
     try {
       const allClients = getAllClients();
@@ -28,7 +31,9 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     }
   }, [toast]);
   
-  const [clients, setClients] = useState<Client[]>(defaultClients);
+  // Use the realtime data hook for clients
+  const [clients, isClientsLoading] = useRealtimeData<Client[]>(STORAGE_KEYS.CLIENTS, defaultClients);
+  
   const [filteredClients, setFilteredClients] = useState<Client[]>(clients);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [metricsModalOpen, setMetricsModalOpen] = useState(false);
@@ -43,6 +48,7 @@ export function useClientList({ statusFilter }: UseClientListProps) {
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
 
+  // Filter clients when any related state changes
   useEffect(() => {
     const persistEnabled = localStorage.getItem("persistDashboard") === "true";
     
@@ -75,17 +81,15 @@ export function useClientList({ statusFilter }: UseClientListProps) {
 
     setFilteredClients(filtered);
     
+    // Reset to page 1 when filters change
     setCurrentPage(1);
   }, [clients, selectedTeam, statusFilter, searchQuery, defaultClients]);
 
+  // Calculate pagination
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredClients.slice(indexOfFirstItem, Math.min(indexOfLastItem, filteredClients.length));
   const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
-
-  useEffect(() => {
-    setClients(validateClients(defaultClients));
-  }, [defaultClients]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
@@ -129,32 +133,6 @@ export function useClientList({ statusFilter }: UseClientListProps) {
   const deleteClients = (clientIdsToDelete: string[]) => {
     deleteClientsGlobally(clientIdsToDelete);
     
-    setClients(prev => validateClients(prev.filter(client => !clientIdsToDelete.includes(client.id))));
-    
-    if (kanbanStore && kanbanStore.updateData) {
-      const updatedKanbanData = { ...kanbanStore.data };
-      
-      if (updatedKanbanData.columns) {
-        Object.keys(updatedKanbanData.columns).forEach(columnId => {
-          if (updatedKanbanData.columns[columnId] && updatedKanbanData.columns[columnId].studentIds) {
-            updatedKanbanData.columns[columnId].studentIds = updatedKanbanData.columns[columnId].studentIds.filter(
-              id => !clientIdsToDelete.includes(id)
-            );
-          }
-        });
-      }
-      
-      if (updatedKanbanData.students) {
-        clientIdsToDelete.forEach(id => {
-          if (updatedKanbanData.students[id]) {
-            delete updatedKanbanData.students[id];
-          }
-        });
-      }
-      
-      kanbanStore.updateData(updatedKanbanData);
-    }
-    
     setSelectedClientIds([]);
     
     toast({
@@ -170,8 +148,6 @@ export function useClientList({ statusFilter }: UseClientListProps) {
       }
       return client;
     });
-    
-    setClients(validateClients(updatedClients));
     
     saveData(STORAGE_KEYS.CLIENTS, updatedClients);
     saveData(STORAGE_KEYS.CLIENT_STATUS, updatedClients);
@@ -199,39 +175,11 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     });
   };
 
-  useEffect(() => {
-    const handleStorageEvent = (event: any) => {
-      const isRelevant = event.key === STORAGE_KEYS.CLIENTS || 
-                          event.key === STORAGE_KEYS.CLIENT_STATUS || 
-                          (event.detail && (
-                            event.detail.key === STORAGE_KEYS.CLIENTS || 
-                            event.detail.key === STORAGE_KEYS.CLIENT_STATUS
-                          ));
-      
-      if (isRelevant) {
-        const updatedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
-        setClients(validateClients(updatedClients));
-        console.log("Clients updated in useClientList due to external change");
-      }
-    };
-    
-    window.addEventListener('storage', handleStorageEvent);
-    window.addEventListener('storageUpdated', handleStorageEvent);
-    window.addEventListener('storageRestored', () => {
-      const updatedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
-      setClients(validateClients(updatedClients));
-    });
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageEvent);
-      window.removeEventListener('storageUpdated', handleStorageEvent);
-      window.removeEventListener('storageRestored', handleStorageEvent as EventListener);
-    };
-  }, []);
-
   return {
     clients,
-    setClients,
+    setClients: (newClients: Client[]) => {
+      saveData(STORAGE_KEYS.CLIENTS, validateClients(newClients));
+    },
     filteredClients,
     selectedClient,
     setSelectedClient,
@@ -264,6 +212,7 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     handleSearchChange,
     handleViewModeChange,
     deleteClients,
-    updateClientStatus
+    updateClientStatus,
+    isLoading: isClientsLoading
   };
 }
