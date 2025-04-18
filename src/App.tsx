@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
@@ -8,6 +9,7 @@ import { OfflineDetector } from "@/components/OfflineDetector";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import dataSyncService from "@/utils/dataSyncService";
 
 // Pages
 import Index from "@/pages/Index";
@@ -50,9 +52,15 @@ function App() {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
+    // Initialize data sync service
+    if (navigator.onLine) {
+      dataSyncService.startAutoSync();
+    }
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      dataSyncService.stopAutoSync();
     };
   }, []);
 
