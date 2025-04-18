@@ -99,16 +99,21 @@ export function ResponsiveGrid({
   }[justify] : '';
 
   return (
-    <div className={cn(
-      "grid",
-      ...gridClasses,
-      gapClass,
-      rowGapClass,
-      columnGapClass,
-      alignClass,
-      justifyClass,
-      className
-    )}>
+    <div 
+      className={cn(
+        "grid w-full",
+        "min-w-0", // Prevent overflow on small screens
+        ...gridClasses,
+        gapClass,
+        rowGapClass,
+        columnGapClass,
+        alignClass,
+        justifyClass,
+        className
+      )}
+      role="region"
+      aria-label="Content Grid"
+    >
       {children}
     </div>
   );

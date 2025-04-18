@@ -1,9 +1,9 @@
-
 import React, { lazy, Suspense } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bot, LineChart, PieChart, BarChart2 } from "lucide-react";
 import { DashboardOverview } from "./DashboardOverview";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Lazy-loaded components
 const TeamAnalytics = lazy(() => import("../TeamAnalytics").then(mod => ({ default: mod.TeamAnalytics })));
@@ -12,7 +12,7 @@ const AIInsightsTab = lazy(() => import("./AIInsightsTab").then(mod => ({ defaul
 
 // Loading component for lazy-loaded content
 const TabSkeleton = () => (
-  <div className="w-full space-y-4">
+  <div className="w-full space-y-4" role="status" aria-label="Loading tab content">
     <Skeleton className="h-[60px] w-full rounded-md" />
     <Skeleton className="h-[200px] w-full rounded-md" />
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -20,6 +20,7 @@ const TabSkeleton = () => (
       <Skeleton className="h-[100px] rounded-md" />
       <Skeleton className="h-[100px] rounded-md" />
     </div>
+    <span className="sr-only">Loading...</span>
   </div>
 );
 
@@ -50,58 +51,91 @@ export function DashboardTabs({
   trendData,
   lastAnalyzed
 }: DashboardTabsProps) {
+  const { isMobile } = useIsMobile();
+  
+  const getIconLabel = (iconName: string) => {
+    return isMobile ? iconName : `${iconName} Icon`;
+  };
+
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="mb-4">
-        <TabsTrigger value="overview">
-          <LineChart className="h-4 w-4 mr-2" />
-          Overview
+    <Tabs 
+      value={activeTab} 
+      onValueChange={setActiveTab} 
+      className="w-full"
+      aria-label="Dashboard Sections"
+    >
+      <TabsList className="mb-4 flex-wrap gap-2 justify-start overflow-x-auto max-w-full">
+        <TabsTrigger value="overview" aria-label="Overview Section">
+          <LineChart 
+            className="h-4 w-4 mr-2" 
+            aria-hidden="true"
+            role="img"
+            aria-label={getIconLabel("Line Chart")} 
+          />
+          <span className="sm:inline">Overview</span>
         </TabsTrigger>
-        <TabsTrigger value="team-analytics">
-          <PieChart className="h-4 w-4 mr-2" />
-          Team Analytics
+        <TabsTrigger value="team-analytics" aria-label="Team Analytics Section">
+          <PieChart 
+            className="h-4 w-4 mr-2" 
+            aria-hidden="true"
+            role="img"
+            aria-label={getIconLabel("Pie Chart")}
+          />
+          <span className="sm:inline">Team Analytics</span>
         </TabsTrigger>
-        <TabsTrigger value="client-analytics">
-          <BarChart2 className="h-4 w-4 mr-2" />
-          Client Analytics
+        <TabsTrigger value="client-analytics" aria-label="Client Analytics Section">
+          <BarChart2 
+            className="h-4 w-4 mr-2" 
+            aria-hidden="true"
+            role="img"
+            aria-label={getIconLabel("Bar Chart")}
+          />
+          <span className="sm:inline">Client Analytics</span>
         </TabsTrigger>
-        <TabsTrigger value="ai-insights">
-          <Bot className="h-4 w-4 mr-2" />
-          AI Insights
+        <TabsTrigger value="ai-insights" aria-label="AI Insights Section">
+          <Bot 
+            className="h-4 w-4 mr-2" 
+            aria-hidden="true"
+            role="img"
+            aria-label={getIconLabel("Bot")}
+          />
+          <span className="sm:inline">AI Insights</span>
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="overview">
-        <DashboardOverview />
-      </TabsContent>
+      <div className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md">
+        <TabsContent value="overview" role="tabpanel" tabIndex={0}>
+          <DashboardOverview />
+        </TabsContent>
 
-      <TabsContent value="team-analytics">
-        <Suspense fallback={<TabSkeleton />}>
-          <TeamAnalytics />
-        </Suspense>
-      </TabsContent>
+        <TabsContent value="team-analytics" role="tabpanel" tabIndex={0}>
+          <Suspense fallback={<TabSkeleton />}>
+            <TeamAnalytics />
+          </Suspense>
+        </TabsContent>
 
-      <TabsContent value="client-analytics">
-        <Suspense fallback={<TabSkeleton />}>
-          <ClientAnalytics />
-        </Suspense>
-      </TabsContent>
+        <TabsContent value="client-analytics" role="tabpanel" tabIndex={0}>
+          <Suspense fallback={<TabSkeleton />}>
+            <ClientAnalytics />
+          </Suspense>
+        </TabsContent>
 
-      <TabsContent value="ai-insights">
-        <Suspense fallback={<TabSkeleton />}>
-          <AIInsightsTab 
-            predictions={predictions}
-            insights={insights}
-            isAnalyzing={isAnalyzing}
-            error={error}
-            comparisons={comparisons}
-            handleRefreshData={handleRefreshData}
-            cancelAnalysis={cancelAnalysis}
-            trendData={trendData}
-            lastAnalyzed={lastAnalyzed}
-          />
-        </Suspense>
-      </TabsContent>
+        <TabsContent value="ai-insights" role="tabpanel" tabIndex={0}>
+          <Suspense fallback={<TabSkeleton />}>
+            <AIInsightsTab 
+              predictions={predictions}
+              insights={insights}
+              isAnalyzing={isAnalyzing}
+              error={error}
+              comparisons={comparisons}
+              handleRefreshData={handleRefreshData}
+              cancelAnalysis={cancelAnalysis}
+              trendData={trendData}
+              lastAnalyzed={lastAnalyzed}
+            />
+          </Suspense>
+        </TabsContent>
+      </div>
     </Tabs>
   );
 }

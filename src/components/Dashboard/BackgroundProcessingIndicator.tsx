@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CircleAlert, Bot, RefreshCw, Check } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
@@ -25,13 +24,9 @@ export function BackgroundProcessingIndicator({
   className,
   onClick
 }: BackgroundProcessingIndicatorProps) {
-  // Count active tasks
   const activeTasks = tasks.filter(task => task.status === 'running').length;
-  
-  // Count error tasks
   const errorTasks = tasks.filter(task => task.status === 'error').length;
   
-  // Determine overall status
   let overallStatus: 'idle' | 'running' | 'success' | 'error' = 'idle';
   
   if (errorTasks > 0) {
@@ -42,76 +37,81 @@ export function BackgroundProcessingIndicator({
     overallStatus = 'success';
   }
   
-  // Get icon based on status
   const getStatusIcon = () => {
+    const iconProps = {
+      className: "h-4 w-4",
+      "aria-hidden": "true",
+      role: "img"
+    };
+
     switch (overallStatus) {
       case 'running':
-        return <RefreshCw className="h-4 w-4 animate-spin text-blue-500" />;
+        return <RefreshCw {...iconProps} className="h-4 w-4 animate-spin text-blue-500" aria-label="Processing" />;
       case 'success':
-        return <Check className="h-4 w-4 text-green-500" />;
+        return <Check {...iconProps} className="h-4 w-4 text-green-500" aria-label="Completed" />;
       case 'error':
-        return <CircleAlert className="h-4 w-4 text-red-500" />;
+        return <CircleAlert {...iconProps} className="h-4 w-4 text-red-500" aria-label="Error" />;
       default:
-        return <Bot className="h-4 w-4 text-muted-foreground" />;
+        return <Bot {...iconProps} className="h-4 w-4 text-muted-foreground" aria-label="Idle" />;
     }
   };
-  
-  // Get color based on status
-  const getStatusColor = () => {
-    switch (overallStatus) {
-      case 'running':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-      case 'success':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'error':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
-    }
-  };
-  
-  // Get tooltip message
-  const getTooltipMessage = () => {
+
+  const getStatusDescription = () => {
     if (errorTasks > 0) {
-      return `${errorTasks} background ${errorTasks === 1 ? 'task has' : 'tasks have'} encountered errors`;
+      return `${errorTasks} ${errorTasks === 1 ? 'task has' : 'tasks have'} encountered errors`;
     } else if (activeTasks > 0) {
-      return `${activeTasks} background ${activeTasks === 1 ? 'task is' : 'tasks are'} running`;
+      return `${activeTasks} ${activeTasks === 1 ? 'task is' : 'tasks are'} running`;
     } else if (tasks.some(task => task.status === 'success')) {
-      return 'All background tasks completed successfully';
-    } else {
-      return 'No background tasks running';
+      return 'All tasks completed successfully';
     }
+    return 'No tasks running';
   };
-  
+
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
           <Badge 
             variant="outline" 
+            role="status"
+            aria-live="polite"
             className={cn(
-              "cursor-pointer",
-              getStatusColor(),
+              "cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+              overallStatus === 'running' && "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+              overallStatus === 'success' && "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+              overallStatus === 'error' && "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+              overallStatus === 'idle' && "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
               className
             )}
             onClick={onClick}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onClick?.();
+              }
+            }}
+            tabIndex={0}
           >
             {getStatusIcon()}
-            <span className="ml-1 text-xs">
+            <span className="ml-1 text-xs whitespace-nowrap">
               {activeTasks > 0 ? `${activeTasks} running` : 'Background Tasks'}
             </span>
           </Badge>
         </TooltipTrigger>
         <TooltipContent>
           <div className="space-y-1 p-1">
-            <p className="text-sm font-medium">{getTooltipMessage()}</p>
+            <p className="text-sm font-medium" role="status">{getStatusDescription()}</p>
             <ul className="text-xs space-y-1">
               {tasks.map(task => (
-                <li key={task.id} className="flex items-center gap-1">
-                  {task.status === 'running' && <RefreshCw className="h-3 w-3 animate-spin text-blue-500" />}
-                  {task.status === 'success' && <Check className="h-3 w-3 text-green-500" />}
-                  {task.status === 'error' && <CircleAlert className="h-3 w-3 text-red-500" />}
-                  {task.status === 'idle' && <Bot className="h-3 w-3 text-muted-foreground" />}
+                <li 
+                  key={task.id} 
+                  className="flex items-center gap-1"
+                  role="listitem"
+                >
+                  {task.status === 'running' && <RefreshCw className="h-3 w-3 animate-spin text-blue-500" aria-label="Running" />}
+                  {task.status === 'success' && <Check className="h-3 w-3 text-green-500" aria-label="Complete" />}
+                  {task.status === 'error' && <CircleAlert className="h-3 w-3 text-red-500" aria-label="Error" />}
+                  {task.status === 'idle' && <Bot className="h-3 w-3 text-muted-foreground" aria-label="Idle" />}
                   <span>{task.name}:</span>
                   <span className="font-medium">
                     {task.status === 'running' ? 'Running' : 
