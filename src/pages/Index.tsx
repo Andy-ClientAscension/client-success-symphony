@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout/Layout";
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +16,7 @@ import { useAIInsights } from "@/hooks/use-ai-insights";
 import { BackgroundProcessingIndicator, BackgroundTaskStatus } from "@/components/Dashboard/BackgroundProcessingIndicator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
+import { MetricsCards } from "@/components/Dashboard/MetricsCards";
 
 export default function Index() {
   const { toast } = useToast();
@@ -215,24 +215,12 @@ export default function Index() {
           </Alert>
         )}
 
-        <div 
-          className="mb-6"
-          role="region"
-          aria-label="Metrics Overview"
-        >
-          <UnifiedMetricsGrid
-            metrics={clientMetrics}
-            columns={7}
-            className="mb-6"
-          />
+        <div className="mb-8">
+          <MetricsCards />
         </div>
 
-        <div 
-          className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6"
-          role="region"
-          aria-label="Performance Charts"
-        >
-          <NPSMetricChart />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <NPSChart />
           <ChurnMetricChart />
         </div>
 
@@ -240,11 +228,7 @@ export default function Index() {
           {performanceMode && <PerformanceAlert />}
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div 
-              className="lg:col-span-2"
-              role="main"
-              aria-label="Main Dashboard Content"
-            >
+            <div className="lg:col-span-2">
               <DashboardTabs
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
@@ -259,11 +243,7 @@ export default function Index() {
                 lastAnalyzed={lastAnalyzed}
               />
             </div>
-            <div 
-              className="lg:col-span-1"
-              role="complementary"
-              aria-label="Data Synchronization Status"
-            >
+            <div className="lg:col-span-1">
               <DataSyncMonitor />
             </div>
           </div>
