@@ -1,13 +1,32 @@
+
+import React, { useState, lazy, Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bot, RefreshCw, AlertTriangle, TrendingUp, BarChart2 } from "lucide-react";
-import { ClientHealthAnalysis } from "../PredictiveAnalysis";
-import { RiskOpportunityMap } from "../RiskOpportunity";
-import { TrendChart, ComparativeTrends } from "../PerformanceTrends";
-import { RecommendationsEngine } from "../Recommendations";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSystemHealth } from "@/hooks/use-system-health";
-import { useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { LazyRiskOpportunityMap } from "../RiskOpportunity";
+import { LazyTrendChart } from "../PerformanceTrends";
+
+// Lazy-loaded components
+const ClientHealthAnalysis = lazy(() => 
+  import("../PredictiveAnalysis").then(mod => ({ default: mod.ClientHealthAnalysis }))
+);
+const ComparativeTrends = lazy(() => 
+  import("../PerformanceTrends").then(mod => ({ default: mod.ComparativeTrends }))
+);
+const RecommendationsEngine = lazy(() => 
+  import("../Recommendations").then(mod => ({ default: mod.RecommendationsEngine }))
+);
+
+// Loading component for lazy-loaded content
+const ChartSkeleton = () => (
+  <div className="w-full space-y-3">
+    <Skeleton className="h-[40px] w-full rounded-md" />
+    <Skeleton className="h-[300px] w-full rounded-md" />
+  </div>
+);
 
 interface AIInsightsTabProps {
   predictions: any[];
@@ -76,13 +95,15 @@ export function AIInsightsTab({
         
         <TabsContent value="health" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ClientHealthAnalysis predictions={predictions} />
-            <RiskOpportunityMap predictions={predictions} />
+            <Suspense fallback={<ChartSkeleton />}>
+              <ClientHealthAnalysis predictions={predictions} />
+            </Suspense>
+            <LazyRiskOpportunityMap predictions={predictions} />
           </div>
         </TabsContent>
         
         <TabsContent value="trends" className="space-y-6">
-          <TrendChart 
+          <LazyTrendChart 
             title="Performance Metrics Over Time"
             data={trendData}
             dataKeys={[
@@ -92,11 +113,15 @@ export function AIInsightsTab({
             ]}
             xAxisKey="month"
           />
-          <ComparativeTrends comparisons={comparisons} />
+          <Suspense fallback={<ChartSkeleton />}>
+            <ComparativeTrends comparisons={comparisons} />
+          </Suspense>
         </TabsContent>
         
         <TabsContent value="recommendations" className="space-y-6">
-          <RecommendationsEngine insights={insights} />
+          <Suspense fallback={<ChartSkeleton />}>
+            <RecommendationsEngine insights={insights} />
+          </Suspense>
         </TabsContent>
       </Tabs>
       

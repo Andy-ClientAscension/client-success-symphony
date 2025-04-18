@@ -1,11 +1,22 @@
 
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TeamMetricsOverview } from "./TeamMetricsOverview";
-import { SSCPerformanceTable } from "../SSCPerformanceTable";
-import { HealthScoreSheet } from "../HealthScoreSheet";
-import { HealthScoreHistory } from "../HealthScoreHistory";
 import { Client } from "@/lib/data";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Lazy load heavy components
+const SSCPerformanceTable = lazy(() => import("../SSCPerformanceTable").then(mod => ({ default: mod.SSCPerformanceTable })));
+const HealthScoreSheet = lazy(() => import("../HealthScoreSheet").then(mod => ({ default: mod.HealthScoreSheet })));
+const HealthScoreHistory = lazy(() => import("../HealthScoreHistory").then(mod => ({ default: mod.HealthScoreHistory })));
+
+// Loading fallback for lazy-loaded components
+const ChartSkeleton = () => (
+  <div className="w-full space-y-3">
+    <Skeleton className="h-[40px] w-full rounded-md" />
+    <Skeleton className="h-[300px] w-full rounded-md" />
+  </div>
+);
 
 interface TeamAnalyticsTabsProps {
   activeTab: string;
@@ -71,23 +82,29 @@ export function TeamAnalyticsTabs({
       </TabsContent>
       
       <TabsContent value="performance">
-        <div className="overflow-x-auto">
-          <SSCPerformanceTable 
-            csmList={csmList}
-            clients={clients}
-            selectedTeam={selectedTeam}
-          />
-        </div>
+        <Suspense fallback={<ChartSkeleton />}>
+          <div className="overflow-x-auto">
+            <SSCPerformanceTable 
+              csmList={csmList}
+              clients={clients}
+              selectedTeam={selectedTeam}
+            />
+          </div>
+        </Suspense>
       </TabsContent>
       
       <TabsContent value="health-scores">
-        <div className="overflow-x-auto">
-          <HealthScoreSheet clients={performanceData.teamClients} />
-        </div>
+        <Suspense fallback={<ChartSkeleton />}>
+          <div className="overflow-x-auto">
+            <HealthScoreSheet clients={performanceData.teamClients} />
+          </div>
+        </Suspense>
       </TabsContent>
       
       <TabsContent value="health-trends">
-        <HealthScoreHistory />
+        <Suspense fallback={<ChartSkeleton />}>
+          <HealthScoreHistory />
+        </Suspense>
       </TabsContent>
     </Tabs>
   );

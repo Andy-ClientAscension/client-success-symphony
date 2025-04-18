@@ -1,10 +1,27 @@
 
+import React, { lazy, Suspense } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bot, LineChart, PieChart, BarChart2 } from "lucide-react";
-import { TeamAnalytics } from "../TeamAnalytics";
-import { ClientAnalytics } from "../ClientAnalytics";
 import { DashboardOverview } from "./DashboardOverview";
-import { AIInsightsTab } from "./AIInsightsTab";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Lazy-loaded components
+const TeamAnalytics = lazy(() => import("../TeamAnalytics").then(mod => ({ default: mod.TeamAnalytics })));
+const ClientAnalytics = lazy(() => import("../ClientAnalytics").then(mod => ({ default: mod.ClientAnalytics })));
+const AIInsightsTab = lazy(() => import("./AIInsightsTab").then(mod => ({ default: mod.AIInsightsTab })));
+
+// Loading component for lazy-loaded content
+const TabSkeleton = () => (
+  <div className="w-full space-y-4">
+    <Skeleton className="h-[60px] w-full rounded-md" />
+    <Skeleton className="h-[200px] w-full rounded-md" />
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <Skeleton className="h-[100px] rounded-md" />
+      <Skeleton className="h-[100px] rounded-md" />
+      <Skeleton className="h-[100px] rounded-md" />
+    </div>
+  </div>
+);
 
 interface DashboardTabsProps {
   activeTab: string;
@@ -53,22 +70,28 @@ export function DashboardTabs({
       </TabsContent>
 
       <TabsContent value="team-analytics">
-        <TeamAnalytics />
+        <Suspense fallback={<TabSkeleton />}>
+          <TeamAnalytics />
+        </Suspense>
       </TabsContent>
 
       <TabsContent value="client-analytics">
-        <ClientAnalytics />
+        <Suspense fallback={<TabSkeleton />}>
+          <ClientAnalytics />
+        </Suspense>
       </TabsContent>
 
       <TabsContent value="ai-insights">
-        <AIInsightsTab 
-          predictions={predictions}
-          insights={insights}
-          isAnalyzing={isAnalyzing}
-          comparisons={comparisons}
-          handleRefreshData={handleRefreshData}
-          trendData={trendData}
-        />
+        <Suspense fallback={<TabSkeleton />}>
+          <AIInsightsTab 
+            predictions={predictions}
+            insights={insights}
+            isAnalyzing={isAnalyzing}
+            comparisons={comparisons}
+            handleRefreshData={handleRefreshData}
+            trendData={trendData}
+          />
+        </Suspense>
       </TabsContent>
     </Tabs>
   );
