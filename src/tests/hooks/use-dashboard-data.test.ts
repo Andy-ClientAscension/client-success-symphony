@@ -49,8 +49,9 @@ describe('useDashboardData', () => {
       new: 3
     };
 
-    (getAllClients as jest.Mock).mockResolvedValue(mockClients);
-    (getClientsCountByStatus as jest.Mock).mockResolvedValue(mockCounts);
+    // Fix type casting for mocked functions
+    (getAllClients as unknown as jest.Mock).mockResolvedValue(mockClients);
+    (getClientsCountByStatus as unknown as jest.Mock).mockResolvedValue(mockCounts);
 
     const { result } = renderHook(() => useDashboardData(), { wrapper });
 
@@ -65,7 +66,7 @@ describe('useDashboardData', () => {
 
   it('handles errors appropriately', async () => {
     const error = new Error('Failed to fetch clients');
-    (getAllClients as jest.Mock).mockRejectedValue(error);
+    (getAllClients as unknown as jest.Mock).mockRejectedValue(error);
 
     const { result } = renderHook(() => useDashboardData(), { wrapper });
 
