@@ -10,7 +10,9 @@ import {
   getAverageNPS, 
   getNPSMonthlyTrend, 
   getChurnData, 
-  getClientMetricsByTeam 
+  getClientMetricsByTeam,
+  getRecentActivity,
+  getUpcomingRenewals 
 } from '@/lib/data';
 
 // Mock the data functions
@@ -57,6 +59,8 @@ describe('Dashboard Integration', () => {
         churnTrend: -3
       }
     });
+    (getRecentActivity as unknown as vi.Mock).mockResolvedValue([]);
+    (getUpcomingRenewals as unknown as vi.Mock).mockResolvedValue([]);
   });
 
   it('renders dashboard and loads data', async () => {

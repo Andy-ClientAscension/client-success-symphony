@@ -3,6 +3,15 @@ import '@testing-library/jest-dom';
 import { vi, afterEach, expect } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
+// Add vi to the global scope
+global.vi = vi;
+
+// Explicitly declare vi as a global type
+declare global {
+  // eslint-disable-next-line no-var
+  var vi: typeof import('vitest')['vi'];
+}
+
 // Mock ResizeObserver
 global.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),

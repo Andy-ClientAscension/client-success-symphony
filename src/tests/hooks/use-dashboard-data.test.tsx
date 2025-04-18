@@ -12,6 +12,7 @@ import {
   getClientMetricsByTeam 
 } from '@/lib/data';
 import React from 'react';
+import { calculatePerformanceTrends } from '@/utils/aiDataAnalyzer';
 
 // Mock the data functions
 vi.mock('@/lib/data', () => ({
@@ -21,6 +22,11 @@ vi.mock('@/lib/data', () => ({
   getNPSMonthlyTrend: vi.fn(),
   getChurnData: vi.fn(),
   getClientMetricsByTeam: vi.fn()
+}));
+
+// Mock the aiDataAnalyzer utility
+vi.mock('@/utils/aiDataAnalyzer', () => ({
+  calculatePerformanceTrends: vi.fn(() => [])
 }));
 
 describe('useDashboardData', () => {
@@ -79,13 +85,14 @@ describe('useDashboardData', () => {
       }
     };
 
-    // Fix type casting for mocked functions
+    // Set up mock return values
     (getAllClients as unknown as vi.Mock).mockResolvedValue(mockClients);
     (getClientsCountByStatus as unknown as vi.Mock).mockResolvedValue(mockCounts);
     (getAverageNPS as unknown as vi.Mock).mockResolvedValue(9.2);
     (getNPSMonthlyTrend as unknown as vi.Mock).mockResolvedValue(mockNPSData);
     (getChurnData as unknown as vi.Mock).mockResolvedValue(mockChurnData);
     (getClientMetricsByTeam as unknown as vi.Mock).mockResolvedValue(mockMetrics);
+    (calculatePerformanceTrends as unknown as vi.Mock).mockReturnValue([]);
 
     const { result } = renderHook(() => useDashboardData(), { wrapper });
 
