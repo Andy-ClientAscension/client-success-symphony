@@ -1,4 +1,3 @@
-
 import '@testing-library/jest-dom';
 import { vi, afterEach, expect } from 'vitest';
 import { cleanup } from '@testing-library/react';
@@ -41,3 +40,8 @@ Object.defineProperty(window, 'matchMedia', {
 expect.extend({
   // Add any custom matchers here
 });
+
+// Explicitly declare vi as a global
+declare global {
+  const vi: typeof import('vitest')['vi'];
+}
