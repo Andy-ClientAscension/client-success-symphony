@@ -6,6 +6,7 @@ import { NPSChart } from "../NPSChart";
 import { getStoredAIInsights } from "@/utils/aiDataAnalyzer";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { calculateStatusCounts, calculateRates } from "@/utils/analyticsUtils";
+import { AIInsightsPanel } from "../AIInsights";
 
 export function DashboardOverview() {
   const {
@@ -65,6 +66,14 @@ export function DashboardOverview() {
         statusCounts={statusCounts}
         rates={rates}
         performanceData={performanceData}
+      />
+      
+      {/* AI Insights Panel */}
+      <AIInsightsPanel 
+        clients={clients || []}
+        metrics={metrics || {}}
+        statusCounts={statusCounts}
+        rates={rates}
       />
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
