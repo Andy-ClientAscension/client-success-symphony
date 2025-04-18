@@ -119,9 +119,17 @@ export function MetricsCardsContent() {
 export function MetricsCards() {
   return (
     <ErrorBoundary
-      fallback={(errorInfo: { error: Error; resetErrorBoundary: () => void }) => (
-        <MetricsError error={errorInfo.error} resetErrorBoundary={errorInfo.resetErrorBoundary} />
-      )}
+      fallback={
+        // The key fix: Pass JSX directly rather than a function
+        <MetricsError 
+          error={new Error("An error occurred loading metrics")} 
+          resetErrorBoundary={() => window.location.reload()} 
+        />
+      }
+      onReset={() => {
+        // This ensures the error boundary's reset function will work
+        console.log("Resetting error boundary");
+      }}
     >
       <MetricsCardsContent />
     </ErrorBoundary>
