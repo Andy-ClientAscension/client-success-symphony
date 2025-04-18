@@ -17,7 +17,7 @@ export function DataSyncMonitor() {
     startAutoSync, 
     stopAutoSync, 
     manualSync, 
-    setInterval,
+    setInterval, // This now maps to setSyncInterval internally
     syncStats, 
     isSyncing,
     syncLog,

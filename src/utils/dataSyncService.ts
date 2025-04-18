@@ -35,7 +35,7 @@ const syncStats: SyncStats = {
 
 // Initialize the data sync service
 export function initializeDataSync() {
-  if (syncInterval) return; // Already initialized
+  if (syncInterval !== null) return; // Already initialized
   
   console.info('Starting data sync service');
   startAutoSync();
@@ -54,7 +54,7 @@ export function initializeDataSync() {
 
 // Start automatic synchronization
 export function startAutoSync() {
-  if (syncInterval) {
+  if (syncInterval !== null) {
     clearInterval(syncInterval);
     syncInterval = null;
   }
@@ -90,7 +90,7 @@ export function startAutoSync() {
 
 // Stop automatic synchronization
 export function stopAutoSync() {
-  if (syncInterval) {
+  if (syncInterval !== null) {
     clearInterval(syncInterval);
     syncInterval = null;
   }
@@ -99,15 +99,15 @@ export function stopAutoSync() {
   console.info('Auto sync stopped');
 }
 
-// Adjust sync interval
-export function setInterval(ms: number) {
+// Adjust sync interval - renamed from setInterval to avoid collision with built-in function
+export function setSyncInterval(ms: number) {
   // Store the new interval value
   syncIntervalMs = ms;
   
   // If sync is active, restart with new interval
   if (isSyncActive) {
     // First stop the current sync
-    if (syncInterval) {
+    if (syncInterval !== null) {
       clearInterval(syncInterval);
       syncInterval = null;
     }
@@ -316,7 +316,7 @@ export function useSyncService() {
     startAutoSync,
     stopAutoSync,
     manualSync: handleManualSync,
-    setInterval,
+    setInterval: setSyncInterval, // Map to the renamed function
     clearSyncLog,
     syncStats,
     syncLog,
@@ -330,7 +330,7 @@ const dataSyncService = {
   startAutoSync,
   stopAutoSync,
   manualSync,
-  setInterval,
+  setInterval: setSyncInterval, // Map to the renamed function
   clearSyncLog,
   markKeyAsUpdated,
   saveDataAndSync
