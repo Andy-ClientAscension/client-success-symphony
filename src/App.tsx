@@ -38,8 +38,8 @@ const queryClient = new QueryClient({
       retry: 1,
       refetchOnWindowFocus: false,
       staleTime: 5 * 60 * 1000, // 5 minutes
-      // Add optimizations for large data sets
-      keepPreviousData: true,
+      // Update to use proper React Query v5 options
+      gcTime: 10 * 60 * 1000, // 10 minutes instead of keepPreviousData
       refetchOnMount: "always",
     },
   },

@@ -1,4 +1,3 @@
-
 import React, { useRef, useCallback, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -11,7 +10,7 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Pagination } from "../Pagination";
-import { useVirtual } from "@tanstack/react-virtual";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 export interface Column<T> {
   key: string;
@@ -51,27 +50,24 @@ export function VirtualizedTable<T>({
   stripedRows = false,
   roundedBorders = false,
   hoverable = true,
-  itemHeight = 48, // Default row height
+  itemHeight = 48,
   pagination
 }: VirtualizedTableProps<T>) {
   const { isMobile } = useIsMobile();
   const tableBodyRef = useRef<HTMLTableSectionElement>(null);
-  const [tableHeight, setTableHeight] = useState(400); // Default height
-  
-  // Determine visible columns based on mobile status
+  const [tableHeight, setTableHeight] = useState(400);
+
   const visibleColumns = React.useMemo(() => {
     return isMobile 
       ? columns.filter(col => !col.hideOnMobile) 
       : columns;
   }, [columns, isMobile]);
 
-  // Adjust table height based on container size
   useEffect(() => {
     if (!tableBodyRef.current) return;
     
     const resizeObserver = new ResizeObserver(entries => {
       for (const entry of entries) {
-        // Limit table height to prevent excessive rendering
         const maxHeight = Math.min(entry.contentRect.height, 600);
         setTableHeight(maxHeight > 0 ? maxHeight : 400);
       }
@@ -84,10 +80,9 @@ export function VirtualizedTable<T>({
     };
   }, []);
 
-  // Set up virtualization
-  const rowVirtualizer = useVirtual({
-    size: data.length,
-    parentRef: tableBodyRef,
+  const rowVirtualizer = useVirtualizer({
+    count: data.length,
+    getScrollElement: () => tableBodyRef.current,
     estimateSize: useCallback(() => itemHeight, [itemHeight]),
     overscan: 10,
   });
@@ -131,7 +126,7 @@ export function VirtualizedTable<T>({
                 </TableCell>
               </TableRow>
             ) : (
-              rowVirtualizer.virtualItems.map(virtualRow => {
+              rowVirtualizer.getVirtualItems().map(virtualRow => {
                 const item = data[virtualRow.index];
                 return (
                   <TableRow 
