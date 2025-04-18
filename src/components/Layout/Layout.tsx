@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
@@ -19,7 +18,6 @@ export function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
-  // Close sidebar by default on mobile and when screen size changes to mobile
   useEffect(() => {
     if (isMobile) {
       setSidebarOpen(false);
@@ -43,7 +41,6 @@ export function Layout({ children }: LayoutProps) {
   
   return (
     <div className="flex h-screen w-full bg-gradient-to-br from-background to-background/95 overflow-hidden" role="application">
-      {/* Sidebar for desktop - always in DOM but transforms out of view */}
       <div 
         className={cn(
           "fixed md:relative h-full z-40 transition-transform duration-300 ease-in-out",
@@ -60,7 +57,6 @@ export function Layout({ children }: LayoutProps) {
         />
       </div>
       
-      {/* Overlay for mobile */}
       {sidebarOpen && isMobile && (
         <div 
           className="fixed inset-0 bg-black/50 z-30 transition-opacity duration-300 ease-in-out"
