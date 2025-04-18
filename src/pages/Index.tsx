@@ -27,7 +27,6 @@ export default function Index() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [clients, setClients] = useState([]);
   
-  // Use real-time data hooks for dashboard data
   const [insights, isInsightsLoading] = useRealtimeData(STORAGE_KEYS.AI_INSIGHTS, []);
   const [comparisons, isComparisonsLoading] = useRealtimeData('clientComparisons', []);
   const [trendData, isTrendDataLoading] = useRealtimeData('trendData', [
@@ -39,10 +38,8 @@ export default function Index() {
     { month: 'Jun', mrr: 5000, churn: 4, growth: 18 },
   ]);
   
-  // Get client status counts for metrics
   const [clientCounts] = useRealtimeData('clientCounts', getClientsCountByStatus());
 
-  // Use the enhanced AI insights hook with background processing
   const { 
     insights: aiInsights,
     predictions,
@@ -54,16 +51,14 @@ export default function Index() {
     status
   } = useAIInsights(clients, {
     autoAnalyze: true,
-    refreshInterval: 3600000, // Auto-analyze every hour
-    silentMode: true // Don't show toasts for background analysis
+    refreshInterval: 3600000,
+    silentMode: true
   });
   
-  // Load clients on mount
   useEffect(() => {
     setClients(getAllClients());
   }, []);
 
-  // Update background task status
   const [backgroundTasks, setBackgroundTasks] = useState<BackgroundTaskStatus[]>([
     {
       id: 'ai-analysis',
@@ -77,7 +72,6 @@ export default function Index() {
     }
   ]);
   
-  // Update background task status when analysis state changes
   useEffect(() => {
     setBackgroundTasks(prev => 
       prev.map(task => 
@@ -99,7 +93,6 @@ export default function Index() {
     );
   }, [isAnalyzing, aiError, aiInsights, lastAnalyzed]);
 
-  // Compute overall loading state
   const isLoading = isInsightsLoading || isComparisonsLoading || isTrendDataLoading || isAnalyzing;
 
   useEffect(() => {
@@ -115,13 +108,11 @@ export default function Index() {
   const handleRefreshData = useCallback(() => {
     setIsRefreshing(true);
     
-    // Trigger AI analysis
     analyzeClients(true).finally(() => {
       setIsRefreshing(false);
     });
   }, [analyzeClients]);
   
-  // Handle background task details view
   const handleViewBackgroundTasks = () => {
     toast({
       title: "Background Tasks Status",
@@ -135,15 +126,14 @@ export default function Index() {
     });
   };
   
-  // Generate metrics data from client counts
   const clientMetrics = generateClientMetrics({
     total: clientCounts.active + clientCounts["at-risk"] + clientCounts.new + clientCounts.churned,
     active: clientCounts.active,
     atRisk: clientCounts["at-risk"],
     newClients: clientCounts.new,
     churn: clientCounts.churned || 0,
-    success: 85, // Example value
-    growthRate: 12 // Example value
+    success: 85,
+    growthRate: 12
   });
 
   return (
@@ -220,7 +210,7 @@ export default function Index() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <NPSChart />
+          <NPSMetricChart />
           <ChurnMetricChart />
         </div>
 
