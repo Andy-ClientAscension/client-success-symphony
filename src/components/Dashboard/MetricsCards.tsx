@@ -13,7 +13,7 @@ function MetricsError({ error, resetErrorBoundary }: { error: Error, resetErrorB
       <Card className="col-span-full bg-red-50 dark:bg-red-900/20">
         <CardContent className="p-6">
           <div className="flex items-start">
-            <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mr-3 mt-0.5" />
+            <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mr-3 mt-0.5" aria-hidden="true" />
             <div>
               <h3 className="font-medium text-red-800 dark:text-red-300">Error loading metrics</h3>
               <p className="text-sm text-red-700 dark:text-red-400 mt-1">
@@ -24,6 +24,7 @@ function MetricsError({ error, resetErrorBoundary }: { error: Error, resetErrorB
                 size="sm" 
                 onClick={resetErrorBoundary}
                 className="mt-3 text-red-700 hover:text-red-800 border-red-300 hover:border-red-400"
+                aria-label="Retry loading metrics"
               >
                 Retry
               </Button>
@@ -47,18 +48,31 @@ export function MetricsCardsContent() {
     : 0;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div 
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+      role="region"
+      aria-label="Key metrics summary"
+    >
       <Card>
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Total Clients</p>
-              <h3 className="text-2xl font-semibold">{totalClients}</h3>
+              <p className="text-sm text-muted-foreground" id="total-clients-label">Total Clients</p>
+              <h3 
+                className="text-2xl font-semibold" 
+                aria-labelledby="total-clients-label"
+                tabIndex={0}
+              >
+                {totalClients}
+              </h3>
             </div>
-            <Users className="h-8 w-8 text-primary/40" />
+            <Users className="h-8 w-8 text-primary/40" aria-hidden="true" />
           </div>
-          <div className="text-xs text-green-600 flex items-center mt-2">
-            <ArrowUp className="h-3 w-3 mr-1" />
+          <div 
+            className="text-xs text-green-600 flex items-center mt-2"
+            aria-label="5% increase from last month"
+          >
+            <ArrowUp className="h-3 w-3 mr-1" aria-hidden="true" />
             <span>5% from last month</span>
           </div>
         </CardContent>
@@ -68,13 +82,22 @@ export function MetricsCardsContent() {
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Monthly Revenue</p>
-              <h3 className="text-2xl font-semibold">${metrics?.totalMRR || 0}</h3>
+              <p className="text-sm text-muted-foreground" id="monthly-revenue-label">Monthly Revenue</p>
+              <h3 
+                className="text-2xl font-semibold"
+                aria-labelledby="monthly-revenue-label"
+                tabIndex={0}
+              >
+                ${metrics?.totalMRR || 0}
+              </h3>
             </div>
-            <DollarSign className="h-8 w-8 text-primary/40" />
+            <DollarSign className="h-8 w-8 text-primary/40" aria-hidden="true" />
           </div>
-          <div className="text-xs text-green-600 flex items-center mt-2">
-            <ArrowUp className="h-3 w-3 mr-1" />
+          <div 
+            className="text-xs text-green-600 flex items-center mt-2"
+            aria-label="8% increase from last month"
+          >
+            <ArrowUp className="h-3 w-3 mr-1" aria-hidden="true" />
             <span>8% from last month</span>
           </div>
         </CardContent>
@@ -84,13 +107,22 @@ export function MetricsCardsContent() {
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Calls Booked</p>
-              <h3 className="text-2xl font-semibold">{metrics?.totalCallsBooked || 0}</h3>
+              <p className="text-sm text-muted-foreground" id="calls-booked-label">Calls Booked</p>
+              <h3 
+                className="text-2xl font-semibold"
+                aria-labelledby="calls-booked-label"
+                tabIndex={0}
+              >
+                {metrics?.totalCallsBooked || 0}
+              </h3>
             </div>
-            <PhoneCall className="h-8 w-8 text-primary/40" />
+            <PhoneCall className="h-8 w-8 text-primary/40" aria-hidden="true" />
           </div>
-          <div className="text-xs text-green-600 flex items-center mt-2">
-            <ArrowUp className="h-3 w-3 mr-1" />
+          <div 
+            className="text-xs text-green-600 flex items-center mt-2"
+            aria-label="12% increase from last month"
+          >
+            <ArrowUp className="h-3 w-3 mr-1" aria-hidden="true" />
             <span>12% from last month</span>
           </div>
         </CardContent>
@@ -100,13 +132,22 @@ export function MetricsCardsContent() {
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Deals Closed</p>
-              <h3 className="text-2xl font-semibold">{metrics?.totalDealsClosed || 0}</h3>
+              <p className="text-sm text-muted-foreground" id="deals-closed-label">Deals Closed</p>
+              <h3 
+                className="text-2xl font-semibold"
+                aria-labelledby="deals-closed-label"
+                tabIndex={0}
+              >
+                {metrics?.totalDealsClosed || 0}
+              </h3>
             </div>
-            <Calendar className="h-8 w-8 text-primary/40" />
+            <Calendar className="h-8 w-8 text-primary/40" aria-hidden="true" />
           </div>
-          <div className="text-xs text-amber-600 flex items-center mt-2">
-            <ArrowDown className="h-3 w-3 mr-1" />
+          <div 
+            className="text-xs text-amber-600 flex items-center mt-2"
+            aria-label="3% decrease from last month"
+          >
+            <ArrowDown className="h-3 w-3 mr-1" aria-hidden="true" />
             <span>3% from last month</span>
           </div>
         </CardContent>
@@ -119,17 +160,12 @@ export function MetricsCardsContent() {
 export function MetricsCards() {
   return (
     <ErrorBoundary
-      fallback={
-        // The key fix: Pass JSX directly rather than a function
+      fallback={({ error, resetErrorBoundary }) => (
         <MetricsError 
-          error={new Error("An error occurred loading metrics")} 
-          resetErrorBoundary={() => window.location.reload()} 
+          error={error} 
+          resetErrorBoundary={resetErrorBoundary} 
         />
-      }
-      onReset={() => {
-        // This ensures the error boundary's reset function will work
-        console.log("Resetting error boundary");
-      }}
+      )}
     >
       <MetricsCardsContent />
     </ErrorBoundary>

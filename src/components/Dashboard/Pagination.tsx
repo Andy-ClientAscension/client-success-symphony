@@ -52,8 +52,10 @@ export function Pagination({
           key={pageNumber}
           variant={pageNumber === currentPage ? "default" : "outline"}
           size="sm"
-          className={`h-8 w-8 p-0 ${pageNumber === currentPage ? 'bg-red-600 hover:bg-red-700' : ''}`}
+          className={`h-8 w-8 p-0 ${pageNumber === currentPage ? 'bg-primary hover:bg-primary/90' : ''}`}
           onClick={() => onPageChange(pageNumber)}
+          aria-current={pageNumber === currentPage ? "page" : undefined}
+          aria-label={pageNumber === currentPage ? `Current Page, Page ${pageNumber}` : `Go to Page ${pageNumber}`}
         >
           {pageNumber}
         </Button>
@@ -91,8 +93,16 @@ export function Pagination({
   }, [totalPages]);
   
   return (
-    <div className="flex items-center justify-between mt-4">
-      <div className="text-xs text-muted-foreground">
+    <div 
+      className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mt-4"
+      role="navigation"
+      aria-label="Pagination navigation"
+    >
+      <div 
+        className="text-xs text-muted-foreground"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         Showing {startIndex + 1}-{endIndex} of {totalItems} items
       </div>
       <div className="flex items-center gap-1">
@@ -102,8 +112,10 @@ export function Pagination({
           className="h-8 w-8 p-0"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
+          aria-label="Go to previous page"
         >
           <ChevronLeft className="h-4 w-4" />
+          <span className="sr-only">Previous page</span>
         </Button>
         
         {pageButtons}
@@ -113,7 +125,10 @@ export function Pagination({
             value={currentPage.toString()} 
             onValueChange={(value) => onPageChange(parseInt(value))}
           >
-            <SelectTrigger className="h-8 w-[70px] ml-1">
+            <SelectTrigger 
+              className="h-8 w-[70px] ml-1"
+              aria-label="Jump to page"
+            >
               <SelectValue placeholder="Jump" />
             </SelectTrigger>
             <SelectContent>
@@ -128,8 +143,10 @@ export function Pagination({
           className="h-8 w-8 p-0"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
+          aria-label="Go to next page"
         >
           <ChevronRight className="h-4 w-4" />
+          <span className="sr-only">Next page</span>
         </Button>
       </div>
     </div>

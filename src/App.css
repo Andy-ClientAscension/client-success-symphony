@@ -121,3 +121,65 @@ a:not(.button) {
   @apply sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50;
   @apply focus:px-4 focus:py-2 focus:bg-white focus:text-black focus:shadow-lg focus:rounded;
 }
+
+/* Enhanced keyboard focus styles */
+.keyboard-focus {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+}
+
+/* Improved text spacing for readability */
+.readable-text {
+  @apply leading-relaxed tracking-wide;
+}
+
+/* Reduced motion preference support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Better support for high contrast mode */
+@media (forced-colors: active) {
+  .primary-button {
+    border: 2px solid transparent;
+  }
+  
+  .button-outline {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Improved table cell padding for mobile */
+@media (max-width: 640px) {
+  .table-cell-mobile {
+    @apply px-2 py-3;
+  }
+}
+
+/* ARIA-based focus enhancements */
+[aria-selected="true"] {
+  @apply bg-primary/10;
+}
+
+[aria-current="page"] {
+  @apply font-medium;
+}
+
+/* Improved form field spacing */
+.form-field-stack > * + * {
+  @apply mt-1.5;
+}
+
+/* Screen reader only announcements */
+.sr-announce {
+  @apply sr-only;
+  display: block;
+  width: 1px;
+  height: 1px;
+  position: absolute;
+  overflow: hidden;
+}
