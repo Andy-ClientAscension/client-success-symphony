@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Layout } from "@/components/Layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Pagination } from "@/components/Dashboard/Pagination";
 import { BackEndSalesTracker } from "@/components/Dashboard/BackEndSalesTracker";
-import { RenewalsSummary } from "@/components/Dashboard/RenewalsSummary/RenewalsSummary";
+import { RenewalsSummary } from "@/components/Dashboard/RenewalsSummary";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Available teams for filtering
