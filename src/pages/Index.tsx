@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/Layout/Layout";
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -221,8 +222,8 @@ export default function Index() {
           <div className="space-y-8">
             {performanceMode && <PerformanceAlert />}
             
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <div className="lg:col-span-9">
                 <DashboardTabs
                   activeTab={activeTab}
                   setActiveTab={setActiveTab}
@@ -237,11 +238,11 @@ export default function Index() {
                   lastAnalyzed={lastAnalyzed}
                 />
               </div>
-              <div className="lg:col-span-1">
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+              <aside className="lg:col-span-3 space-y-4">
+                <div className="bg-white/50 dark:bg-gray-800/50 rounded-lg shadow-sm">
                   <DataSyncMonitor />
                 </div>
-              </div>
+              </aside>
             </div>
           </div>
         </div>

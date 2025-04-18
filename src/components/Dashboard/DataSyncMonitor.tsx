@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { RefreshCw, AlertCircle, CheckCircle2 } from "lucide-react";
 import { dataSyncService, useSyncService, SyncEvent } from "@/utils/dataSyncService";
+import { APIConnectionDialog } from "./APIConnectionDialog";
 
 export function DataSyncMonitor() {
   const { toast } = useToast();
@@ -28,6 +28,7 @@ export function DataSyncMonitor() {
   const [showLog, setShowLog] = useState(false);
   const [autoSyncEnabled, setAutoSyncEnabled] = useState(false);
   const [visibleLogItems, setVisibleLogItems] = useState<SyncEvent[]>([]);
+  const [apiDialogOpen, setApiDialogOpen] = useState(false);
   const MAX_VISIBLE_LOG_ITEMS = 50; // Only show most recent 50 events
 
   // Update visible log items when the full log changes
@@ -117,23 +118,17 @@ export function DataSyncMonitor() {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Data Synchronization</span>
-          {isSyncing && <RefreshCw className="h-4 w-4 animate-spin ml-2" />}
+    <Card className="border-0 shadow-none bg-transparent">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center justify-between text-muted-foreground">
+          <span>Sync Status</span>
+          {isSyncing && <RefreshCw className="h-3 w-3 animate-spin ml-2" />}
         </CardTitle>
-        <CardDescription>
-          Manage how dashboard data is synchronized across all sections
-        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between text-sm">
           <div className="space-y-0.5">
-            <Label htmlFor="auto-sync">Automatic Synchronization</Label>
-            <p className="text-sm text-muted-foreground">
-              Keep all dashboard data in sync automatically
-            </p>
+            <Label htmlFor="auto-sync" className="text-muted-foreground">Auto-Sync</Label>
           </div>
           <Switch
             id="auto-sync"
@@ -142,37 +137,42 @@ export function DataSyncMonitor() {
           />
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="sync-interval">Sync Interval (seconds)</Label>
-          <div className="flex space-x-2">
-            <Input
-              id="sync-interval"
-              type="number"
-              min="5"
-              max="300"
-              value={syncInterval}
-              onChange={(e) => setSyncInterval(Number(e.target.value))}
-              onBlur={() => handleIntervalChange(syncInterval)}
-              disabled={!autoSyncEnabled}
-            />
-            <Button 
-              variant="outline" 
-              onClick={() => handleIntervalChange(syncInterval)}
-              disabled={!autoSyncEnabled}
-            >
-              Apply
-            </Button>
+        {autoSyncEnabled && (
+          <div className="space-y-2">
+            <Label htmlFor="sync-interval" className="text-sm text-muted-foreground">Interval (s)</Label>
+            <div className="flex gap-2">
+              <Input
+                id="sync-interval"
+                type="number"
+                min="5"
+                max="300"
+                value={syncInterval}
+                onChange={(e) => setSyncInterval(Number(e.target.value))}
+                onBlur={() => handleIntervalChange(syncInterval)}
+                className="h-8 text-sm"
+              />
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => handleIntervalChange(syncInterval)}
+                className="h-8"
+              >
+                Apply
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
         
         <Button 
+          variant="ghost" 
+          size="sm"
           onClick={handleManualSync} 
           disabled={isSyncing}
-          className="w-full"
+          className="w-full h-8 text-sm"
         >
           {isSyncing ? (
             <>
-              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+              <RefreshCw className="mr-2 h-3 w-3 animate-spin" />
               Syncing...
             </>
           ) : (
@@ -180,75 +180,44 @@ export function DataSyncMonitor() {
           )}
         </Button>
         
-        <div className="pt-2">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium">Sync Statistics</h3>
-            <Button 
-              variant="ghost" 
-              onClick={() => setShowLog(!showLog)} 
-              className="h-8 px-2"
-            >
-              {showLog ? "Hide Log" : "Show Log"}
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-2 mt-2">
-            <div className="bg-background rounded border p-2 text-center">
-              <div className="text-xs text-muted-foreground">Last Sync</div>
-              <div className="text-sm font-medium">
-                {syncStats.lastSync ? new Date(syncStats.lastSync).toLocaleTimeString() : 'Never'}
-              </div>
-            </div>
-            <div className="bg-background rounded border p-2 text-center">
-              <div className="text-xs text-muted-foreground">Total Events</div>
-              <div className="text-sm font-medium">{syncStats.totalEvents}</div>
-            </div>
-            <div className="bg-background rounded border p-2 text-center">
-              <div className="text-xs text-muted-foreground">Failures</div>
-              <div className="text-sm font-medium">{syncStats.failureCount}</div>
-            </div>
-          </div>
-        </div>
-        
         {showLog && (
-          <div className="pt-2">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium">Event Log ({syncLog.length > MAX_VISIBLE_LOG_ITEMS ? `Showing ${MAX_VISIBLE_LOG_ITEMS} of ${syncLog.length}` : syncLog.length})</h3>
+          <div className="pt-2 space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <h3 className="font-medium text-muted-foreground">Recent Events</h3>
               <Button 
                 variant="ghost" 
-                onClick={clearSyncLog} 
-                className="h-8 px-2"
+                size="sm"
+                onClick={() => setShowLog(false)}
+                className="h-6 px-2 text-xs"
               >
-                Clear
+                Hide
               </Button>
             </div>
-            <ScrollArea className="h-[200px] w-full rounded border">
-              <div className="p-4 space-y-2">
+            
+            <ScrollArea className="h-[120px] w-full rounded border border-muted/20">
+              <div className="p-2 space-y-1">
                 {visibleLogItems.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No sync events logged yet
+                  <p className="text-xs text-muted-foreground text-center py-2">
+                    No sync events logged
                   </p>
                 ) : (
-                  visibleLogItems.map((event, index) => (
-                    <div key={index} className="flex items-start space-x-2 text-sm">
+                  visibleLogItems.slice(0, 5).map((event, index) => (
+                    <div key={index} className="flex items-start space-x-2 text-xs">
                       <div className="pt-0.5">
                         {getEventIcon(event)}
                       </div>
-                      <div className="flex-1">
+                      <div className="flex-1 text-muted-foreground">
                         <div className="flex items-center">
-                          <Badge variant="outline" className="mr-2">
+                          <Badge 
+                            variant="outline" 
+                            className="mr-2 text-[10px] px-1"
+                          >
                             {event.type.replace('sync:', '').replace(':', ' ')}
                           </Badge>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-[10px]">
                             {formatTimestamp(event.timestamp)}
                           </span>
                         </div>
-                        {event.details && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {event.details.key || event.details.mode || 
-                             (event.details.error ? `Error: ${event.details.error}` : '')}
-                          </p>
-                        )}
                       </div>
                     </div>
                   ))
@@ -257,6 +226,7 @@ export function DataSyncMonitor() {
             </ScrollArea>
           </div>
         )}
+        
       </CardContent>
     </Card>
   );
