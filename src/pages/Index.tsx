@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/Layout/Layout";
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -13,10 +14,11 @@ import { getAllClients, getClientsCountByStatus } from "@/lib/data";
 import { UnifiedMetricsGrid, generateClientMetrics } from "@/components/Dashboard/Metrics/UnifiedMetricsGrid";
 import { ChurnMetricChart, NPSMetricChart } from "@/components/Dashboard/Charts/UnifiedMetricChart";
 import { useAIInsights } from "@/hooks/use-ai-insights";
-import { BackgroundProcessingIndicator, BackgroundTaskStatus } from "@/components/Dashboard/BackgroundProcessingIndicator";
+import { BackgroundProcessingIndicator } from "@/components/Dashboard/BackgroundProcessingIndicator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { MetricsCards } from "@/components/Dashboard/MetricsCards";
+import { Separator } from "@/components/ui/separator";
 
 export default function Index() {
   const { toast } = useToast();
@@ -139,7 +141,7 @@ export default function Index() {
   return (
     <Layout>
       <div 
-        className="w-full p-4 px-6 bg-gray-50 dark:bg-gray-900" 
+        className="w-full p-4 px-6 bg-gray-50 dark:bg-gray-900 space-y-8" 
         role="region" 
         aria-label="Performance Dashboard"
       >
@@ -205,16 +207,18 @@ export default function Index() {
           </Alert>
         )}
 
-        <div className="mb-8">
+        <section className="space-y-6">
           <MetricsCards />
-        </div>
+          
+          <Separator className="my-6 bg-gray-200 dark:bg-gray-700" />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <NPSMetricChart />
-          <ChurnMetricChart />
-        </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <NPSMetricChart />
+            <ChurnMetricChart />
+          </div>
+        </section>
 
-        <div className="space-y-6">
+        <div className="space-y-6 mt-6">
           {performanceMode && <PerformanceAlert />}
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

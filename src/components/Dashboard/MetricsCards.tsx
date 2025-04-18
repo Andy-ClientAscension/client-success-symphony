@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -15,7 +14,7 @@ import {
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Button } from "@/components/ui/button";
-import { ChurnMetricChart, NPSMetricChart } from "@/components/Dashboard/Charts/UnifiedMetricChart";
+import { Separator } from "@/components/ui/separator";
 
 function MetricsError({ error, resetErrorBoundary }: { error: Error, resetErrorBoundary: () => void }) {
   return (
@@ -54,8 +53,6 @@ export function MetricsCardsContent() {
     ? Object.values(clientCounts).reduce((sum, count) => sum + count, 0) 
     : 0;
 
-  // Use fixed default values and type-safe property access
-  // Safely access nested properties without TypeScript errors
   const successRate = 85; // Default value
   const retentionRate = 92; // Default value
 
@@ -106,17 +103,20 @@ export function MetricsCardsContent() {
 
   return (
     <div 
-      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4"
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 p-4 bg-gray-50 dark:bg-gray-900/20 rounded-lg" 
       role="region"
       aria-label="Key performance indicators"
     >
       {data.map((item, index) => (
-        <Card key={index}>
-          <CardContent className="p-4">
+        <Card 
+          key={index} 
+          className="shadow-sm hover:shadow-md transition-shadow duration-300 bg-white dark:bg-gray-800/50"
+        >
+          <CardContent className="p-5 space-y-3">
             <div className="flex items-center justify-between">
               <div>
                 <p 
-                  className="text-sm text-muted-foreground" 
+                  className="text-sm text-muted-foreground mb-1" 
                   id={`metric-${index}-label`}
                 >
                   {item.title}
@@ -131,9 +131,10 @@ export function MetricsCardsContent() {
               </div>
               {item.icon}
             </div>
+            <Separator className="my-2 bg-gray-200 dark:bg-gray-700" />
             <div 
-              className={`text-xs flex items-center mt-2 ${
-                item.trend.direction === "up" ? "text-green-600" : "text-amber-600"
+              className={`text-xs flex items-center ${
+                item.trend.direction === "up" ? "text-green-600 dark:text-green-400" : "text-amber-600 dark:text-amber-400"
               }`}
               aria-label={`${item.trend.value} ${item.trend.direction === "up" ? "increase" : "decrease"} from last month`}
             >
