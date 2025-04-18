@@ -17,8 +17,8 @@ describe('Analytics Utils', () => {
       mrr: 100, 
       callsBooked: 5, 
       dealsClosed: 2,
-      startDate: new Date(),
-      endDate: new Date(),
+      startDate: '2023-01-01',
+      endDate: '2024-01-01',
       contractValue: 1000,
       team: 'Team A'
     },
@@ -29,8 +29,8 @@ describe('Analytics Utils', () => {
       mrr: 200, 
       callsBooked: 3, 
       dealsClosed: 1,
-      startDate: new Date(),
-      endDate: new Date(),
+      startDate: '2023-02-15',
+      endDate: '2024-02-15',
       contractValue: 2000,
       team: 'Team B'
     },
@@ -41,8 +41,8 @@ describe('Analytics Utils', () => {
       mrr: 0, 
       callsBooked: 0, 
       dealsClosed: 0,
-      startDate: new Date(),
-      endDate: new Date(),
+      startDate: '2022-08-01',
+      endDate: '2023-08-01',
       contractValue: 0,
       team: 'Team A'
     },
@@ -53,8 +53,8 @@ describe('Analytics Utils', () => {
       mrr: 150, 
       callsBooked: 4, 
       dealsClosed: 3,
-      startDate: new Date(),
-      endDate: new Date(),
+      startDate: '2023-03-15',
+      endDate: '2024-03-15',
       contractValue: 1500,
       team: 'Team C'
     }
@@ -105,8 +105,8 @@ describe('Analytics Utils', () => {
       mrr: Math.random() * 1000,
       callsBooked: Math.floor(Math.random() * 10),
       dealsClosed: Math.floor(Math.random() * 5),
-      startDate: new Date(),
-      endDate: new Date(),
+      startDate: `2023-01-${(i % 28) + 1}`.padEnd(10, '0').substring(0, 10),
+      endDate: `2024-01-${(i % 28) + 1}`.padEnd(10, '0').substring(0, 10),
       contractValue: Math.random() * 10000,
       team: `Team ${Math.floor(i / 1000)}`
     }));
