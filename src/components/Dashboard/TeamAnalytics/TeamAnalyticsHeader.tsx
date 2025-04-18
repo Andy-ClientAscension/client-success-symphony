@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Trash2 } from "lucide-react";
 import { FilterBar } from "../Shared/FilterBar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ResponsiveGrid } from "../Shared/ResponsiveGrid";
 
 interface TeamAnalyticsHeaderProps {
   title?: string; // Title is optional with default in the component
@@ -27,7 +28,7 @@ export function TeamAnalyticsHeader({
   return (
     <div className="flex flex-col space-y-4 w-full">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h2 className="text-lg font-semibold">{title}</h2>
+        <h2 className="text-lg font-semibold hidden md:block">{title}</h2>
         <div className="flex flex-wrap items-center gap-2">
           <Button 
             size="sm"

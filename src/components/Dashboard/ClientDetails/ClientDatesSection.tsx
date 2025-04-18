@@ -13,7 +13,7 @@ interface ClientDatesSectionProps {
 export function ClientDatesSection({ client }: ClientDatesSectionProps) {
   return (
     <ResponsiveGrid 
-      cols={{ xs: 1, sm: 2 }} 
+      cols={{ xs: 1, sm: 2, md: 2, lg: 4 }} 
       gap="md"
     >
       <MetricItem 
