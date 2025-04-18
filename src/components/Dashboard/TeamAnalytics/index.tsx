@@ -126,47 +126,14 @@ export function TeamAnalytics() {
       </CardHeader>
       
       <CardContent className="pb-4">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="overflow-x-auto">
-            <TabsList className="mb-4">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="performance">Team Performance</TabsTrigger>
-              <TabsTrigger value="health-scores">Health Score Sheet</TabsTrigger>
-              <TabsTrigger value="health-trends">Health Trends</TabsTrigger>
-            </TabsList>
-          </div>
-          
-          <TabsContent value="overview">
-            <TeamMetricsOverview
-              metrics={performanceData.metrics}
-              statusCounts={performanceData.statusCounts}
-              rates={{
-                ...performanceData.rates,
-                ...performanceData.trends
-              }}
-            />
-          </TabsContent>
-          
-          <TabsContent value="performance">
-            <div className="overflow-x-auto">
-              <SSCPerformanceTable 
-                csmList={csmList}
-                clients={clients}
-                selectedTeam={selectedTeam}
-              />
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="health-scores">
-            <div className="overflow-x-auto">
-              <HealthScoreSheet clients={performanceData.teamClients} />
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="health-trends">
-            <HealthScoreHistory />
-          </TabsContent>
-        </Tabs>
+        <TeamAnalyticsTabs 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab}
+          performanceData={performanceData}
+          csmList={csmList}
+          clients={clients}
+          selectedTeam={selectedTeam}
+        />
       </CardContent>
 
       <TeamManagementDialog
