@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { EmptyState } from "@/components/EmptyState";
+import { ResponsiveGrid } from "./Shared/ResponsiveGrid";
 
 function MetricsError({ error, resetErrorBoundary }: { error: Error, resetErrorBoundary: () => void }) {
   return (
@@ -66,42 +67,42 @@ export function MetricsCardsContent() {
       title: "Total Clients",
       value: totalClients,
       trend: { value: "5%", direction: "up" },
-      icon: <Users className="h-8 w-8 text-primary/40" />,
+      icon: <Users className="h-8 w-8 text-brand-500/70" />,
       ariaLabel: "Total number of clients"
     },
     {
       title: "Monthly Revenue",
       value: `$${metrics?.totalMRR || 0}`,
       trend: { value: "8%", direction: "up" },
-      icon: <DollarSign className="h-8 w-8 text-primary/40" />,
+      icon: <DollarSign className="h-8 w-8 text-brand-500/70" />,
       ariaLabel: "Monthly recurring revenue"
     },
     {
       title: "Success Rate",
       value: `${successRate}%`,
       trend: { value: "3%", direction: "up" },
-      icon: <TrendingUp className="h-8 w-8 text-primary/40" />,
+      icon: <TrendingUp className="h-8 w-8 text-brand-500/70" />,
       ariaLabel: "Client success rate"
     },
     {
       title: "Calls Booked",
       value: metrics?.totalCallsBooked || 0,
       trend: { value: "12%", direction: "up" },
-      icon: <PhoneCall className="h-8 w-8 text-primary/40" />,
+      icon: <PhoneCall className="h-8 w-8 text-brand-500/70" />,
       ariaLabel: "Total calls booked"
     },
     {
       title: "Deals Closed",
       value: metrics?.totalDealsClosed || 0,
       trend: { value: "-3%", direction: "down" },
-      icon: <Calendar className="h-8 w-8 text-primary/40" />,
+      icon: <Calendar className="h-8 w-8 text-brand-500/70" />,
       ariaLabel: "Total deals closed"
     },
     {
       title: "Retention Rate",
       value: `${retentionRate}%`,
       trend: { value: "2%", direction: "up" },
-      icon: <BarChart className="h-8 w-8 text-primary/40" />,
+      icon: <BarChart className="h-8 w-8 text-brand-500/70" />,
       ariaLabel: "Client retention rate"
     }
   ];
@@ -135,38 +136,42 @@ export function MetricsCardsContent() {
   }
 
   return (
-    <div 
-      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6" 
+    <ResponsiveGrid 
+      cols={{ xs: 1, sm: 2, md: 3, xl: 6 }} 
+      gap="md" 
+      className="w-full" 
       role="region"
       aria-label="Key performance indicators"
     >
       {data.map((item, index) => (
         <Card 
           key={index} 
-          className="bg-white dark:bg-gray-800/50 shadow-sm hover:shadow-md transition-all duration-200 border-border/50"
+          className="border-border/30 shadow-sm hover:shadow-md transition-all duration-200 bg-gradient-to-b from-white to-gray-50 dark:from-gray-800/90 dark:to-gray-900/80"
         >
           <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3">
               <div>
                 <p 
-                  className="text-sm text-muted-foreground mb-1" 
+                  className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1" 
                   id={`metric-${index}-label`}
                 >
                   {item.title}
                 </p>
                 <h3 
-                  className="text-2xl font-semibold text-foreground"
+                  className="text-2xl font-bold text-gray-900 dark:text-white"
                   aria-labelledby={`metric-${index}-label`}
                   tabIndex={0}
                 >
                   {item.value}
                 </h3>
               </div>
-              {item.icon}
+              <div className="bg-brand-50 dark:bg-brand-950/50 p-3 rounded-full">
+                {item.icon}
+              </div>
             </div>
-            <Separator className="my-3 bg-border/50" />
+            <Separator className="my-3 bg-border/30" />
             <div 
-              className={`text-xs flex items-center ${
+              className={`text-xs flex items-center font-medium ${
                 item.trend.direction === "up" 
                   ? "text-emerald-600 dark:text-emerald-400" 
                   : "text-brand-500 dark:text-brand-400"
@@ -183,7 +188,7 @@ export function MetricsCardsContent() {
           </CardContent>
         </Card>
       ))}
-    </div>
+    </ResponsiveGrid>
   );
 }
 

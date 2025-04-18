@@ -42,12 +42,12 @@ export function FilterBar({
   return (
     <div 
       className={`sticky top-0 z-10 -mx-2 sm:-mx-6 px-2 sm:px-6 py-3 sm:py-4 
-        bg-background/95 backdrop-blur-sm border-b border-border/50 shadow-sm
+        bg-background/95 backdrop-blur-sm border-b border-border/20 shadow-sm
         ${className}`}
     >
-      <div className="text-sm sm:text-base font-medium mb-3 flex items-center gap-2 text-primary">
+      <div className="flex items-center gap-2 text-primary mb-3">
         <Filter className="h-4 w-4" />
-        <span>Filters</span>
+        <span className="text-sm sm:text-base font-medium">Filters</span>
       </div>
       <UnifiedFilter
         selectedTeam={selectedTeam}

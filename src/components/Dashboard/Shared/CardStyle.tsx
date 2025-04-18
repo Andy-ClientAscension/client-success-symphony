@@ -34,8 +34,8 @@ export function StyledCard({
   isLoading = false
 }: StyledCardProps) {
   const variantStyles = {
-    default: "bg-white dark:bg-gray-800/50 border-border/50",
-    outline: "border-2 border-border dark:border-gray-800",
+    default: "bg-white dark:bg-gray-800/70 border-border/10",
+    outline: "border-2 border-border dark:border-gray-700",
     primary: "border-brand-100 dark:border-brand-900/50 bg-brand-50/30 dark:bg-brand-950/30",
     success: "border-success-100 dark:border-success-900/50 bg-success-50/30 dark:bg-success-950/30",
     warning: "border-warning-100 dark:border-warning-900/50 bg-warning-50/30 dark:bg-warning-950/30",
@@ -66,7 +66,7 @@ export function StyledCard({
           {title && (
             <CardTitle className={cn(
               size === "sm" ? "text-base" : "text-lg",
-              "font-semibold text-foreground"
+              "font-bold text-foreground"
             )}>
               {title}
             </CardTitle>
@@ -93,7 +93,7 @@ export function StyledCard({
       {footer && (
         <CardFooter className={cn(
           size === "sm" ? "pt-0 px-3 pb-3" : "",
-          "border-t border-border/50",
+          "border-t border-border/10",
           footerClassName
         )}>
           {footer}
@@ -125,9 +125,11 @@ export function MetricItem({
   valueClassName
 }: MetricItemProps) {
   return (
-    <div className={cn("border border-border rounded-lg p-3", className)}>
+    <div className={cn("border border-border/10 rounded-lg p-3 bg-white dark:bg-gray-800/70 shadow-sm", className)}>
       <div className="flex items-center gap-2 mb-2">
-        {icon}
+        <div className="bg-brand-50 dark:bg-brand-900/30 p-2 rounded-md">
+          {icon}
+        </div>
         <span className="font-medium">{title}</span>
       </div>
       <p className={cn("text-xl font-bold", valueClassName)}>{value}</p>

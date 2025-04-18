@@ -5,7 +5,7 @@
 
 @layer base {
   :root {
-    /* Light mode variables - brand colors: red, black, white */
+    /* Brand colors: red, black, white theme */
     --background: 0 0% 100%;
     --foreground: 0 0% 10%;
 
@@ -53,8 +53,8 @@
     --brand-300: 0 100% 80%;
     --brand-400: 0 100% 70%;
     --brand-500: 0 93% 47%; /* Main brand red */
-    --brand-600: 0 93% 47%; /* Consistent red */
-    --brand-700: 0 93% 40%;
+    --brand-600: 0 93% 42%;
+    --brand-700: 0 93% 35%;
     --brand-800: 0 93% 30%;
     --brand-900: 0 0% 20%;  /* Near black */
     --brand-950: 0 0% 10%;  /* Black */
@@ -109,6 +109,7 @@
 
   body {
     @apply bg-background text-foreground transition-colors duration-300;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
   }
   
   /* Make the app fully scrollable */
@@ -121,10 +122,10 @@
     padding: 0;
   }
 
-  /* Improve scrollbar visibility - these are now in App.css */
+  /* Improve scrollbar visibility */
   ::-webkit-scrollbar {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
   }
 
   ::-webkit-scrollbar-track {
@@ -139,6 +140,16 @@
 
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-gray-500/80 dark:bg-gray-500;
+  }
+  
+  /* Card styles */
+  .card-gradient {
+    @apply bg-gradient-to-b from-white to-gray-50 dark:from-gray-800/90 dark:to-gray-900/80;
+  }
+  
+  /* Glass effect for panels */
+  .glass-panel {
+    @apply backdrop-blur-md bg-white/40 dark:bg-black/40 border border-white/20 dark:border-white/10;
   }
 }
 
@@ -169,12 +180,24 @@
     scroll-behavior: smooth;
   }
   
-  .scroll-pt-4 {
-    scroll-padding-top: 1rem;
+  /* Red accent for brand highlights */
+  .brand-accent {
+    @apply text-brand-500 dark:text-brand-400;
   }
   
-  .scroll-pb-4 {
-    scroll-padding-bottom: 1rem;
+  /* Text gradient effect */
+  .text-gradient {
+    @apply bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-transparent;
+  }
+  
+  /* Shadow effects */
+  .shadow-brand {
+    box-shadow: 0 4px 12px -2px rgba(220, 38, 38, 0.1);
+  }
+  
+  /* Button hover effect */
+  .hover-lift {
+    @apply transition-transform duration-200 hover:-translate-y-0.5;
   }
   
   /* High zoom support */
