@@ -2,9 +2,13 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getClientsCountByStatus, getAverageNPS, getNPSMonthlyTrend, getChurnData } from "@/lib/data";
-import { MetricsGrid, GrowthRetentionSection, PerformanceTrends } from "@/components/Dashboard/Metrics";
+import { MetricsGrid } from "@/components/Dashboard/Metrics";
+import { StatusDistribution, PerformanceMetrics } from "./Shared";
+import { calculateStatusCounts, calculateRates } from "@/utils/analyticsUtils";
+import { getAllClients } from "@/lib/data";
 
 export function CompanyMetrics() {
+  const clients = getAllClients();
   const clientCounts = getClientsCountByStatus();
   const npsMonthlyData = getNPSMonthlyTrend();
   const churnData = getChurnData();
@@ -23,6 +27,25 @@ export function CompanyMetrics() {
   // Success metrics (simulated)
   const successRate = 84; // 84% success rate
   const averageTimeToValue = 3.2; // 3.2 months to value
+
+  // Calculate performance metrics from clients
+  const totalMRR = clients.reduce((sum, client) => sum + (client.mrr || 0), 0);
+  const totalCallsBooked = clients.reduce((sum, client) => sum + (client.callsBooked || 0), 0);
+  const totalDealsClosed = clients.reduce((sum, client) => sum + (client.dealsClosed || 0), 0);
+  
+  // Status counts and rates for StatusDistribution
+  const statusCounts = {
+    active: clientCounts.active,
+    atRisk: clientCounts["at-risk"],
+    churned: clientCounts.churned,
+    total: totalClients
+  };
+  
+  const rates = {
+    retentionRate: activeClientsPercentage,
+    atRiskRate: atRiskPercentage,
+    churnRate: churnedPercentage
+  };
   
   return (
     <Card className="shadow-sm">
@@ -34,7 +57,11 @@ export function CompanyMetrics() {
         <MetricsGrid 
           totalClients={totalClients}
           growthRate={growthRate}
-          clientCounts={clientCounts}
+          clientCounts={{
+            active: clientCounts.active,
+            "at-risk": clientCounts["at-risk"],
+            new: clientCounts.new
+          }}
           percentages={{
             activeClientsPercentage,
             atRiskPercentage,
@@ -44,18 +71,26 @@ export function CompanyMetrics() {
           churnRate={churnData[churnData.length - 1].rate}
         />
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <GrowthRetentionSection 
-            growthRate={growthRate}
-            avgClientValue={avgClientValue}
-            clientLifetimeMonths={clientLifetimeMonths}
-            averageTimeToValue={averageTimeToValue}
-          />
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium">Client Status Distribution</h3>
+            <StatusDistribution 
+              statusCounts={statusCounts}
+              rates={rates}
+            />
+          </div>
           
-          <PerformanceTrends 
-            npsMonthlyData={npsMonthlyData}
-            churnData={churnData}
-          />
+          <div className="space-y-4">
+            <PerformanceMetrics 
+              data={{
+                totalClients,
+                totalMRR,
+                totalCallsBooked,
+                totalDealsClosed,
+                averageRevenuePerClient: avgClientValue
+              }}
+            />
+          </div>
         </div>
       </CardContent>
     </Card>
