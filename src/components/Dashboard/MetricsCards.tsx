@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -9,7 +10,8 @@ import {
   Calendar,
   AlertTriangle,
   TrendingUp,
-  BarChart 
+  BarChart,
+  Plus
 } from "lucide-react";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
