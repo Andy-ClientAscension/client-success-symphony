@@ -29,9 +29,12 @@ interface DashboardTabsProps {
   predictions: any[];
   insights: any[];
   isAnalyzing: boolean;
+  error?: Error | null;
   comparisons: any[];
   handleRefreshData: () => void;
+  cancelAnalysis?: () => void;
   trendData: any[];
+  lastAnalyzed?: Date | null;
 }
 
 export function DashboardTabs({
@@ -40,9 +43,12 @@ export function DashboardTabs({
   predictions,
   insights,
   isAnalyzing,
+  error,
   comparisons,
   handleRefreshData,
-  trendData
+  cancelAnalysis,
+  trendData,
+  lastAnalyzed
 }: DashboardTabsProps) {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -87,9 +93,12 @@ export function DashboardTabs({
             predictions={predictions}
             insights={insights}
             isAnalyzing={isAnalyzing}
+            error={error}
             comparisons={comparisons}
             handleRefreshData={handleRefreshData}
+            cancelAnalysis={cancelAnalysis}
             trendData={trendData}
+            lastAnalyzed={lastAnalyzed}
           />
         </Suspense>
       </TabsContent>

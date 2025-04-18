@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-interface BackgroundTaskStatus {
+export interface BackgroundTaskStatus {
   id: string;
   name: string;
   status: 'idle' | 'running' | 'success' | 'error';

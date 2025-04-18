@@ -10,7 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { LazyRiskOpportunityMap } from "../RiskOpportunity";
 import { LazyTrendChart } from "../PerformanceTrends";
 import { LoadingState } from "@/components/LoadingState";
-import { BackgroundProcessingIndicator } from "../BackgroundProcessingIndicator";
+import { BackgroundProcessingIndicator, BackgroundTaskStatus } from "../BackgroundProcessingIndicator";
 import { useToast } from "@/hooks/use-toast";
 
 // Lazy-loaded components
@@ -59,17 +59,17 @@ export function AIInsightsTab({
   const { healthChecks } = useSystemHealth();
   const { toast } = useToast();
   
-  // Track background tasks for the indicator
-  const [backgroundTasks, setBackgroundTasks] = useState([
+  // Track background tasks for the indicator with the proper type
+  const [backgroundTasks, setBackgroundTasks] = useState<BackgroundTaskStatus[]>([
     {
       id: 'ai-analysis',
       name: 'AI Analysis',
-      status: 'idle' as const
+      status: 'idle'
     },
     {
       id: 'data-sync',
       name: 'Data Synchronization',
-      status: 'idle' as const
+      status: 'idle'
     }
   ]);
   

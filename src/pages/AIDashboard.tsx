@@ -28,7 +28,7 @@ import { RiskOpportunityMap } from "@/components/Dashboard/RiskOpportunity";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { LoadingState } from "@/components/LoadingState";
-import { BackgroundProcessingIndicator } from "@/components/Dashboard/BackgroundProcessingIndicator";
+import { BackgroundProcessingIndicator, BackgroundTaskStatus } from "@/components/Dashboard/BackgroundProcessingIndicator";
 
 export default function AIDashboard() {
   const queryClient = useQueryClient();
@@ -58,17 +58,17 @@ export default function AIDashboard() {
     cancelAnalysis
   } = useAIInsights(clients);
   
-  // Update background task status
-  const [backgroundTasks, setBackgroundTasks] = useState([
+  // Update background task status with proper type
+  const [backgroundTasks, setBackgroundTasks] = useState<BackgroundTaskStatus[]>([
     {
       id: 'ai-analysis',
       name: 'AI Analysis',
-      status: 'idle' as const
+      status: 'idle'
     },
     {
       id: 'data-sync',
       name: 'Data Synchronization',
-      status: 'idle' as const
+      status: 'idle'
     }
   ]);
   
