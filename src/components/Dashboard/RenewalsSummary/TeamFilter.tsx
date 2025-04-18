@@ -1,6 +1,6 @@
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users } from "lucide-react";
+import { UnifiedFilter } from "../Shared/UnifiedFilter";
 
 interface TeamFilterProps {
   selectedTeam: string;
@@ -10,21 +10,20 @@ interface TeamFilterProps {
 }
 
 export function TeamFilter({ selectedTeam, setSelectedTeam, teams, formatTeamName }: TeamFilterProps) {
+  const formattedTeams = teams.map(team => ({
+    value: team,
+    label: formatTeamName(team)
+  }));
+  
   return (
-    <div className="flex items-center gap-2">
-      <Users className="h-4 w-4 text-muted-foreground" />
-      <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Filter by team" />
-        </SelectTrigger>
-        <SelectContent>
-          {teams.map((team) => (
-            <SelectItem key={team} value={team}>
-              {formatTeamName(team)}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <UnifiedFilter
+      selectedTeam={selectedTeam}
+      teams={teams}
+      onTeamChange={setSelectedTeam}
+      showTeamFilter={true}
+      showDateFilter={false}
+      showSearch={false}
+      showSort={false}
+    />
   );
 }

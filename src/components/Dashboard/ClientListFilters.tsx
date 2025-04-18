@@ -1,27 +1,9 @@
-
-import { Search, Users, Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { exportToCSV } from "@/utils/exportUtils";
 import { Client } from "@/lib/data";
-
-const TEAMS = [
-  { id: "all", name: "All Teams" },
-  { id: "Team-Andy", name: "Team Andy" },
-  { id: "Team-Chris", name: "Team Chris" },
-  { id: "Team-Alex", name: "Team Alex" },
-  { id: "Team-Cillin", name: "Team Cillin" },
-  { id: "Enterprise", name: "Enterprise" },
-  { id: "SMB", name: "SMB" },
-  { id: "Mid-Market", name: "Mid Market" },
-];
+import { UnifiedFilter } from "./Shared/UnifiedFilter";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
+import { exportToCSV } from "@/utils/exportUtils";
+import React from "react";
 
 interface ClientListFiltersProps {
   selectedTeam: string;
@@ -34,13 +16,23 @@ interface ClientListFiltersProps {
   onItemsPerPageChange?: (value: number) => void;
 }
 
+const TEAMS = [
+  "all",
+  "Team-Andy",
+  "Team-Chris",
+  "Team-Alex",
+  "Team-Cillin",
+  "Enterprise",
+  "SMB",
+  "Mid-Market",
+];
+
 export function ClientListFilters({
   selectedTeam,
   searchQuery,
   onTeamChange,
   onSearchChange,
   filteredClients,
-  onAddNewClient,
   itemsPerPage = 25,
   onItemsPerPageChange
 }: ClientListFiltersProps) {
@@ -61,51 +53,29 @@ export function ClientListFilters({
   };
 
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex items-center gap-2">
-        <Users className="h-4 w-4 text-muted-foreground" />
-        <Select value={selectedTeam} onValueChange={onTeamChange}>
-          <SelectTrigger className="w-[180px] h-8 text-xs">
-            <SelectValue placeholder="Filter by team" />
-          </SelectTrigger>
-          <SelectContent>
-            {TEAMS.map((team) => (
-              <SelectItem key={team.id} value={team.id}>
-                {team.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      
-      {onItemsPerPageChange && (
-        <div className="flex items-center gap-2">
-          <Select 
-            value={String(itemsPerPage)} 
-            onValueChange={(value) => onItemsPerPageChange(Number(value))}
-          >
-            <SelectTrigger className="w-[100px] h-8 text-xs">
-              <SelectValue placeholder="Show" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10">10 per page</SelectItem>
-              <SelectItem value="25">25 per page</SelectItem>
-              <SelectItem value="50">50 per page</SelectItem>
-              <SelectItem value="100">100 per page</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-      
-      <Button 
-        onClick={handleExportCSV}
-        variant="outline"
-        size="sm"
-        className="flex gap-1 h-8 text-xs"
-        title="Export to CSV"
-      >
-        <Download className="h-3 w-3" /> Export
-      </Button>
+    <div className="flex flex-col gap-4">
+      <UnifiedFilter
+        selectedTeam={selectedTeam}
+        teams={TEAMS}
+        onTeamChange={onTeamChange}
+        searchQuery={searchQuery}
+        onSearchChange={onSearchChange}
+        showTeamFilter={true}
+        showSearch={true}
+        additionalFilters={
+          <>
+            <Button 
+              onClick={handleExportCSV}
+              variant="outline"
+              size="sm"
+              className="flex gap-1 h-8 text-xs"
+              title="Export to CSV"
+            >
+              <Download className="h-3 w-3" /> Export
+            </Button>
+          </>
+        }
+      />
     </div>
   );
 }

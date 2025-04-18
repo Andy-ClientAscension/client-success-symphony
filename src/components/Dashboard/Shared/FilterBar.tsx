@@ -1,9 +1,7 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TeamFilter } from "../RenewalsSummary/TeamFilter";
-import { Filter, Calendar, SortAsc, SortDesc } from "lucide-react";
+import { Filter } from "lucide-react";
+import { UnifiedFilter, FilterConfig } from "./UnifiedFilter";
 
 interface FilterBarProps {
   selectedTeam: string;
@@ -12,8 +10,11 @@ interface FilterBarProps {
   selectedDateRange?: string;
   dateRanges?: string[];
   onDateRangeChange?: (range: string) => void;
-  selectedSortOrder?: string;
-  onSortOrderChange?: (order: string) => void;
+  selectedSortOrder?: "asc" | "desc";
+  onSortOrderChange?: (order: "asc" | "desc") => void;
+  searchQuery?: string;
+  onSearchChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  filterConfig?: FilterConfig;
   additionalFilters?: React.ReactNode;
   className?: string;
 }
@@ -23,70 +24,42 @@ export function FilterBar({
   teams,
   onTeamChange,
   selectedDateRange,
-  dateRanges = ["Last 7 days", "Last 30 days", "Last 90 days", "This year", "All time"],
+  dateRanges,
   onDateRangeChange,
   selectedSortOrder,
   onSortOrderChange,
+  searchQuery,
+  onSearchChange,
+  filterConfig = {
+    showTeamFilter: true,
+    showDateFilter: true,
+    showSearch: false,
+    showSort: false
+  },
   additionalFilters,
   className = ""
 }: FilterBarProps) {
-  const formatTeamName = (team: string) => {
-    if (team === "all") return "All Teams";
-    return team.replace(/^Team-/, "Team ");
-  };
-
   return (
-    <div className={`flex flex-wrap items-center gap-3 mb-4 ${className}`}>
-      <div className="flex items-center gap-2 bg-secondary/30 p-1.5 rounded-md">
+    <div className={`space-y-4 ${className}`}>
+      <div className="flex items-center gap-2 bg-secondary/30 p-1.5 rounded-md w-fit">
         <Filter className="h-4 w-4 text-muted-foreground" />
         <span className="text-sm font-medium">Filters:</span>
       </div>
       
-      <TeamFilter
+      <UnifiedFilter
         selectedTeam={selectedTeam}
-        setSelectedTeam={onTeamChange}
         teams={teams}
-        formatTeamName={formatTeamName}
+        onTeamChange={onTeamChange}
+        selectedDateRange={selectedDateRange}
+        dateRanges={dateRanges}
+        onDateRangeChange={onDateRangeChange}
+        selectedSortOrder={selectedSortOrder}
+        onSortOrderChange={onSortOrderChange}
+        searchQuery={searchQuery}
+        onSearchChange={onSearchChange}
+        {...filterConfig}
+        additionalFilters={additionalFilters}
       />
-      
-      {onDateRangeChange && dateRanges && (
-        <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
-          <Select value={selectedDateRange} onValueChange={onDateRangeChange}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Date range" />
-            </SelectTrigger>
-            <SelectContent>
-              {dateRanges.map((range) => (
-                <SelectItem key={range} value={range}>
-                  {range}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-      
-      {onSortOrderChange && (
-        <div className="flex items-center gap-2">
-          {selectedSortOrder === "desc" ? (
-            <SortDesc className="h-4 w-4 text-muted-foreground" />
-          ) : (
-            <SortAsc className="h-4 w-4 text-muted-foreground" />
-          )}
-          <Select value={selectedSortOrder} onValueChange={onSortOrderChange}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Sort order" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="asc">Ascending</SelectItem>
-              <SelectItem value="desc">Descending</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-      
-      {additionalFilters}
     </div>
   );
 }
