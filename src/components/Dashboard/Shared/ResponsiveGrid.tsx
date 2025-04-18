@@ -1,3 +1,4 @@
+
 import React from "react";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,8 @@ interface ResponsiveGridProps {
   columnGap?: 'none' | 'xs' | 'sm' | 'md' | 'lg';
   align?: 'start' | 'center' | 'end' | 'stretch';
   justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
+  role?: string;
+  'aria-label'?: string;
 }
 
 export function ResponsiveGrid({
@@ -28,7 +31,9 @@ export function ResponsiveGrid({
   rowGap,
   columnGap,
   align,
-  justify
+  justify,
+  role,
+  "aria-label": ariaLabel
 }: ResponsiveGridProps) {
   // Convert column numbers to tailwind grid classes
   const getColsClass = (size: GridColumns): string => {
@@ -110,8 +115,8 @@ export function ResponsiveGrid({
         justifyClass,
         className
       )}
-      role="region"
-      aria-label="Content Grid"
+      role={role}
+      aria-label={ariaLabel}
     >
       {children}
     </div>
