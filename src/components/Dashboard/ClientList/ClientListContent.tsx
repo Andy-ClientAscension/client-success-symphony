@@ -44,16 +44,23 @@ export function ClientListContent({
   // Get the columns from ClientsTable
   const getColumns = () => {
     const getStatusBadge = (status: Client['status']) => {
-      const table = new ClientsTable({
-        clients: [],
-        selectedClientIds: [],
-        onSelectClient: () => {},
-        onSelectAll: () => {},
-        onViewDetails: () => {},
-        onEditMetrics: () => {},
-        onUpdateNPS: () => {}
-      });
-      // @ts-ignore - This is a hack to get access to the private method
+      // Create a temporary instance of ClientsTable without using 'new'
+      const table = {
+        getStatusBadge: (status: Client['status']) => {
+          const clientsTable = new ClientsTable({
+            clients: [],
+            selectedClientIds: [],
+            onSelectClient: () => {},
+            onSelectAll: () => {},
+            onViewDetails: () => {},
+            onEditMetrics: () => {},
+            onUpdateNPS: () => {}
+          });
+          // @ts-ignore - This is a hack to get access to the method
+          return clientsTable.getStatusBadge(status);
+        }
+      };
+      
       return table.getStatusBadge(status);
     };
 
