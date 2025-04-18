@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { Layout } from "@/components/Layout/Layout";
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +9,9 @@ import { generateClientComparisons } from '@/utils/aiDataAnalyzer';
 import { DashboardHeader } from "@/components/Dashboard/UnifiedDashboard/DashboardHeader";
 import { DashboardTabs } from "@/components/Dashboard/UnifiedDashboard/DashboardTabs";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { ValidationError } from "@/components/ValidationError";
+import { Card } from "@/components/ui/card";
+import { AlertCircle } from "lucide-react";
 
 export default function UnifiedDashboard() {
   const queryClient = useQueryClient();
@@ -24,7 +26,8 @@ export default function UnifiedDashboard() {
     npsData,
     churnData,
     metrics,
-    isLoading
+    isLoading,
+    error: dashboardError
   } = useDashboardData();
 
   const [comparisons, setComparisons] = useState(() => 
@@ -35,7 +38,10 @@ export default function UnifiedDashboard() {
     insights, 
     predictions, 
     isAnalyzing, 
-    analyzeClients
+    analyzeClients,
+    cancelAnalysis,
+    aiError,
+    lastAnalyzed
   } = useAIInsights(clients || []);
 
   const isRefreshing = isLoading || isRefetching;
@@ -79,6 +85,26 @@ export default function UnifiedDashboard() {
     queryClient.invalidateQueries();
   }, [queryClient]);
 
+  if (dashboardError) {
+    return (
+      <Layout>
+        <Card className="m-6 p-6">
+          <ValidationError
+            type="error"
+            message="There was an error loading the dashboard data. Please try again."
+            showIcon
+            title="Dashboard Error"
+          />
+          <div className="mt-4">
+            <p className="text-sm text-muted-foreground">
+              Error details: {dashboardError instanceof Error ? dashboardError.message : 'Unknown error'}
+            </p>
+          </div>
+        </Card>
+      </Layout>
+    );
+  }
+
   // Convert metrics.trends object to an array format expected by DashboardTabs
   const trendsArray = metrics?.trends ? [metrics.trends] : [];
 
@@ -97,9 +123,12 @@ export default function UnifiedDashboard() {
             predictions={predictions}
             insights={insights}
             isAnalyzing={isAnalyzing}
+            error={aiError}
             comparisons={comparisons}
             handleRefreshData={handleRefreshData}
+            cancelAnalysis={cancelAnalysis}
             trendData={metrics?.performanceTrends || []}
+            lastAnalyzed={lastAnalyzed}
           />
         </ErrorBoundary>
       </div>
