@@ -59,11 +59,11 @@ describe('useDashboardData', () => {
     ];
 
     // Fix type casting for mocked functions
-    (getAllClients as unknown as vi.Mock).mockResolvedValue(mockClients);
-    (getClientsCountByStatus as unknown as vi.Mock).mockResolvedValue(mockCounts);
-    (getAverageNPS as unknown as vi.Mock).mockResolvedValue(9.2);
-    (getNPSMonthlyTrend as unknown as vi.Mock).mockResolvedValue(mockNPSData);
-    (getChurnData as unknown as vi.Mock).mockResolvedValue(mockChurnData);
+    (getAllClients as vi.Mock).mockResolvedValue(mockClients);
+    (getClientsCountByStatus as vi.Mock).mockResolvedValue(mockCounts);
+    (getAverageNPS as vi.Mock).mockResolvedValue(9.2);
+    (getNPSMonthlyTrend as vi.Mock).mockResolvedValue(mockNPSData);
+    (getChurnData as vi.Mock).mockResolvedValue(mockChurnData);
 
     const { result } = renderHook(() => useDashboardData(), { wrapper });
 
@@ -80,7 +80,7 @@ describe('useDashboardData', () => {
 
   it('handles errors appropriately', async () => {
     const error = new Error('Failed to fetch clients');
-    (getAllClients as unknown as vi.Mock).mockRejectedValue(error);
+    (getAllClients as vi.Mock).mockRejectedValue(error);
 
     const { result } = renderHook(() => useDashboardData(), { wrapper });
 
