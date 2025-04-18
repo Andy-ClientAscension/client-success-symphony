@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { Layout } from "@/components/Layout/Layout";
 import { useToast } from "@/hooks/use-toast";
@@ -40,7 +41,7 @@ export default function UnifiedDashboard() {
     isAnalyzing, 
     analyzeClients,
     cancelAnalysis,
-    aiError,
+    error, // Changed from aiError to error to match the property name in the hook
     lastAnalyzed
   } = useAIInsights(clients || []);
 
@@ -123,7 +124,7 @@ export default function UnifiedDashboard() {
             predictions={predictions}
             insights={insights}
             isAnalyzing={isAnalyzing}
-            error={aiError}
+            error={error} // Changed from aiError to error
             comparisons={comparisons}
             handleRefreshData={handleRefreshData}
             cancelAnalysis={cancelAnalysis}
