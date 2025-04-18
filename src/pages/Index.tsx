@@ -10,6 +10,9 @@ import { PerformanceAlert } from "@/components/Dashboard/PerformanceAlert";
 import { useRealtimeData } from "@/utils/dataSyncService";
 import { STORAGE_KEYS } from "@/utils/persistence";
 import { DataSyncMonitor } from "@/components/Dashboard/DataSyncMonitor";
+import { getClientsCountByStatus } from "@/lib/data";
+import { UnifiedMetricsGrid, generateClientMetrics } from "@/components/Dashboard/Metrics/UnifiedMetricsGrid";
+import { ChurnMetricChart, NPSMetricChart } from "@/components/Dashboard/Charts/UnifiedMetricChart";
 
 export default function Index() {
   const { toast } = useToast();
@@ -31,6 +34,9 @@ export default function Index() {
     { month: 'May', mrr: 4200, churn: 2, growth: 12 },
     { month: 'Jun', mrr: 5000, churn: 4, growth: 18 },
   ]);
+  
+  // Get client status counts for metrics
+  const [clientCounts] = useRealtimeData('clientCounts', getClientsCountByStatus());
 
   // Compute overall loading state
   const isLoading = isInsightsLoading || isPredictionsLoading || isComparisonsLoading || isTrendDataLoading;
@@ -52,6 +58,17 @@ export default function Index() {
       setIsRefreshing(false);
     }, 1000);
   };
+  
+  // Generate metrics data from client counts
+  const clientMetrics = generateClientMetrics({
+    total: clientCounts.active + clientCounts["at-risk"] + clientCounts.new + clientCounts.churned,
+    active: clientCounts.active,
+    atRisk: clientCounts["at-risk"],
+    newClients: clientCounts.new,
+    churn: clientCounts.churned || 0,
+    success: 85, // Example value
+    growthRate: 12 // Example value
+  });
 
   return (
     <Layout>
@@ -80,6 +97,21 @@ export default function Index() {
             isRefreshing={isRefreshing || isLoading}
             handleRefreshData={handleRefreshData}
           />
+        </div>
+
+        {/* Unified Metrics Section */}
+        <div className="mb-6">
+          <UnifiedMetricsGrid
+            metrics={clientMetrics}
+            columns={7}
+            className="mb-6"
+          />
+        </div>
+
+        {/* Consolidated Charts Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <NPSMetricChart />
+          <ChurnMetricChart />
         </div>
 
         {/* Vertical F-pattern stem: Main content */}

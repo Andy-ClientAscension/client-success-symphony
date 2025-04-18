@@ -1,32 +1,34 @@
-
 import { Client, getAllClients } from '@/lib/data';
 import { calculatePerformanceTrends, generateClientComparisons } from './aiDataAnalyzer';
 
 /**
- * Get basic company metrics from a set of clients
+ * Get complete metrics data for a set of clients
  */
-export function getCompanyMetrics(clients: Client[] = getAllClients()) {
+export function getComprehensiveMetrics(clients: Client[] = getAllClients()) {
+  // Get status counts
+  const statusCounts = calculateStatusCounts(clients);
+  
+  // Calculate rates
+  const rates = calculateRates(statusCounts);
+  
+  // Calculate trends
+  const trends = generateTrendData(rates);
+  
+  // Calculate other metrics
+  const totalMRR = clients.reduce((sum, client) => sum + (client.mrr || 0), 0);
+  const totalCallsBooked = clients.reduce((sum, client) => sum + (client.callsBooked || 0), 0);
+  const totalDealsClosed = clients.reduce((sum, client) => sum + (client.dealsClosed || 0), 0);
+  
   return {
-    totalMRR: clients.reduce((sum, client) => sum + (client.mrr || 0), 0),
-    totalCallsBooked: clients.reduce((sum, client) => sum + (client.callsBooked || 0), 0),
-    totalDealsClosed: clients.reduce((sum, client) => sum + (client.dealsClosed || 0), 0),
+    statusCounts,
+    rates,
+    trends,
+    totalMRR,
+    totalCallsBooked,
+    totalDealsClosed,
     clientCount: clients.length,
     performanceTrends: calculatePerformanceTrends(clients),
     clientComparisons: generateClientComparisons(clients)
-  };
-}
-
-/**
- * Calculate metrics for a specific team or all clients
- */
-export function calculateTeamMetrics(team?: string, clients: Client[] = getAllClients()) {
-  const teamClients = team && team !== 'all' 
-    ? clients.filter(client => client.team === team)
-    : clients;
-
-  return {
-    ...getCompanyMetrics(teamClients),
-    teamClients
   };
 }
 
@@ -78,22 +80,37 @@ export function generateTrendData(rates: ReturnType<typeof calculateRates>) {
 
 /**
  * Get complete team performance data for analytics
+ * This consolidates multiple functions into a single comprehensive function
  */
-export function getTeamPerformanceData(selectedTeam: string, clients: Client[]) {
+export function getTeamPerformanceData(selectedTeam: string, clients: Client[] = getAllClients()) {
   const teamClients = selectedTeam === "all" 
     ? clients 
     : clients.filter(client => client.team === selectedTeam);
   
-  const statusCounts = calculateStatusCounts(teamClients);
-  const rates = calculateRates(statusCounts);
-  const trends = generateTrendData(rates);
-  const metrics = getCompanyMetrics(teamClients);
-  
+  return getComprehensiveMetrics(teamClients);
+}
+
+// Keep backwards compatibility for legacy code
+export function getCompanyMetrics(clients: Client[] = getAllClients()) {
+  const metrics = getComprehensiveMetrics(clients);
   return {
-    teamClients,
-    statusCounts,
-    rates,
-    trends,
-    metrics
+    totalMRR: metrics.totalMRR,
+    totalCallsBooked: metrics.totalCallsBooked,
+    totalDealsClosed: metrics.totalDealsClosed,
+    clientCount: metrics.clientCount,
+    performanceTrends: metrics.performanceTrends,
+    clientComparisons: metrics.clientComparisons
+  };
+}
+
+// Maintain backwards compatibility for existing components
+export function calculateTeamMetrics(team?: string, clients: Client[] = getAllClients()) {
+  const teamClients = team && team !== 'all' 
+    ? clients.filter(client => client.team === team)
+    : clients;
+
+  return {
+    ...getCompanyMetrics(teamClients),
+    teamClients
   };
 }

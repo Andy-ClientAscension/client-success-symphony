@@ -6,6 +6,7 @@ import { StatisticsCards } from "./StatisticsCards";
 import { ClientTable } from "./ClientTable";
 import { ChurnReasons } from "./ChurnReasons";
 import { TeamFilter } from "./TeamFilter";
+import { useRealtimeData } from "@/utils/dataSyncService";
 
 interface BackEndSale {
   id: string;
@@ -20,7 +21,7 @@ interface BackEndSale {
 
 export function RenewalsSummary() {
   const [selectedTeam, setSelectedTeam] = useState("all");
-  const backEndSales = loadData<BackEndSale[]>(STORAGE_KEYS.CHURN, []);
+  const [backEndSales] = useRealtimeData<BackEndSale[]>(STORAGE_KEYS.CHURN, []);
   
   // Get unique teams
   const teams = useMemo(() => {
