@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertCircle, Bot, RefreshCw, TrendingUp, Brain, AlertTriangle, ChartBarHorizontal } from "lucide-react";
+import { AlertCircle, Bot, RefreshCw, TrendingUp, BarChartHorizontal, AlertTriangle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -78,7 +77,6 @@ export function AIInsightsPanel({
   };
 
   useEffect(() => {
-    // Check if we have an API key whenever the component mounts
     setHasApiKey(hasOpenAIKey());
   }, []);
 
@@ -108,7 +106,6 @@ export function AIInsightsPanel({
     });
   };
 
-  // Get the appropriate icon for the insight type
   const getInsightIcon = (type: AIInsight['type']) => {
     switch (type) {
       case 'warning':
@@ -116,13 +113,12 @@ export function AIInsightsPanel({
       case 'recommendation':
         return <TrendingUp className="h-4 w-4 text-green-500" />;
       case 'improvement':
-        return <ChartBarHorizontal className="h-4 w-4 text-blue-500" />;
+        return <BarChartHorizontal className="h-4 w-4 text-blue-500" />;
       default:
         return <Bot className="h-4 w-4 text-primary" />;
     }
   };
 
-  // Get the severity badge color
   const getSeverityColor = (severity: AIInsight['severity']) => {
     switch (severity) {
       case 'high':
