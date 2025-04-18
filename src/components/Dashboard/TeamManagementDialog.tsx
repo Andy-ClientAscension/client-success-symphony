@@ -1,4 +1,5 @@
 
+import React, { useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,7 +11,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { Label } from "@/components/ui/label";
 
 interface TeamManagementDialogProps {
   open: boolean;
@@ -24,19 +25,27 @@ export function TeamManagementDialog({
   open,
   onOpenChange,
   actionType,
-  selectedTeam,
+  selectedTeam = "",
   onConfirm
 }: TeamManagementDialogProps) {
-  const [teamName, setTeamName] = useState(selectedTeam || "");
-  
+  const [teamName, setTeamName] = useState(selectedTeam);
+
   const handleConfirm = () => {
-    if (actionType === 'add' && teamName.trim()) {
-      onConfirm(teamName.trim());
-    } else if (actionType === 'delete' && selectedTeam) {
-      onConfirm(selectedTeam);
+    if (actionType === 'add' && !teamName.trim()) {
+      return; // Don't allow empty team names
     }
+    
+    onConfirm(actionType === 'delete' ? selectedTeam : teamName);
   };
-  
+
+  React.useEffect(() => {
+    if (open && actionType === 'delete') {
+      setTeamName(selectedTeam);
+    } else if (open && actionType === 'add') {
+      setTeamName("");
+    }
+  }, [open, actionType, selectedTeam]);
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
@@ -46,7 +55,7 @@ export function TeamManagementDialog({
           </AlertDialogTitle>
           <AlertDialogDescription>
             {actionType === 'add' 
-              ? 'Enter the name of the new team you want to add.'
+              ? 'Enter a name for the new team.'
               : `Are you sure you want to delete "${selectedTeam}"? This action cannot be undone.`
             }
           </AlertDialogDescription>
@@ -54,20 +63,23 @@ export function TeamManagementDialog({
         
         {actionType === 'add' && (
           <div className="py-4">
+            <Label htmlFor="team-name">Team Name</Label>
             <Input
-              placeholder="Enter team name"
+              id="team-name"
               value={teamName}
               onChange={(e) => setTeamName(e.target.value)}
-              className="w-full"
+              placeholder="Enter team name"
+              className="mt-2"
+              autoFocus
             />
           </div>
         )}
         
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => onOpenChange(false)}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction 
             onClick={handleConfirm}
-            className={actionType === 'delete' ? "bg-red-600 hover:bg-red-700 text-white" : "bg-red-600 hover:bg-red-700 text-white"}
+            className={actionType === 'delete' ? "bg-red-600 hover:bg-red-700" : ""}
           >
             {actionType === 'add' ? 'Add Team' : 'Delete Team'}
           </AlertDialogAction>
