@@ -1,6 +1,6 @@
 
 import '@testing-library/jest-dom';
-import { vi, afterEach, expect } from 'vitest';
+import { vi, afterEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
 // Add vi to the global scope
@@ -29,6 +29,7 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
 // Clean up after each test
 afterEach(() => {
   cleanup();
+  vi.clearAllMocks();
 });
 
 // Mock window.matchMedia
@@ -44,11 +45,6 @@ Object.defineProperty(window, 'matchMedia', {
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
   })),
-});
-
-// Add custom matchers if needed
-expect.extend({
-  // Add any custom matchers here
 });
 
 export {}; // Ensures the file is treated as a module
