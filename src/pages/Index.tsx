@@ -1,7 +1,5 @@
 
 import { Layout } from "@/components/Layout/Layout";
-import { CompanyMetrics } from "@/components/Dashboard/CompanyMetrics";
-import { TeamAnalytics } from "@/components/Dashboard/TeamAnalytics";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useDashboardPersistence } from "@/hooks/use-dashboard-persistence";
@@ -44,8 +42,14 @@ export default function Index() {
   return (
     <Layout>
       <div className="w-full p-4 px-6 bg-gray-50 dark:bg-gray-900" role="region" aria-label="Performance Dashboard">
-        <div className="flex items-center justify-between flex-wrap mb-6 pb-4 border-b border-gray-200 dark:border-gray-800">
-          <div className="text-xl font-bold">Performance Report</div>
+        {/* First F-pattern stroke: Main header with strong visual hierarchy */}
+        <div className="flex items-start justify-between flex-wrap mb-8">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-bold tracking-tight">Performance Report</h1>
+            <p className="text-muted-foreground">
+              Monitor your team's performance and track key metrics
+            </p>
+          </div>
           <DashboardSettingsBar
             persistDashboard={persistDashboard}
             togglePersistDashboard={togglePersistDashboard}
@@ -56,23 +60,29 @@ export default function Index() {
           />
         </div>
 
-        <DashboardHeader
-          isRefreshing={isRefreshing}
-          handleRefreshData={handleRefreshData}
-        />
+        {/* Second F-pattern stroke: Action bar and filters */}
+        <div className="mb-6 pb-4 border-b border-gray-200 dark:border-gray-800">
+          <DashboardHeader
+            isRefreshing={isRefreshing}
+            handleRefreshData={handleRefreshData}
+          />
+        </div>
 
-        <DashboardTabs
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          predictions={predictions}
-          insights={insights}
-          isAnalyzing={isRefreshing}
-          comparisons={comparisons}
-          handleRefreshData={handleRefreshData}
-          trendData={trendData}
-        />
-
-        {performanceMode && <PerformanceAlert />}
+        {/* Vertical F-pattern stem: Main content */}
+        <div className="space-y-6">
+          {performanceMode && <PerformanceAlert />}
+          
+          <DashboardTabs
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            predictions={predictions}
+            insights={insights}
+            isAnalyzing={isRefreshing}
+            comparisons={comparisons}
+            handleRefreshData={handleRefreshData}
+            trendData={trendData}
+          />
+        </div>
       </div>
     </Layout>
   );
