@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { Layout } from "@/components/Layout/Layout";
 import { useToast } from "@/hooks/use-toast";
@@ -78,6 +79,9 @@ export default function UnifiedDashboard() {
     queryClient.invalidateQueries();
   }, [queryClient]);
 
+  // Convert metrics.trends object to an array format expected by DashboardTabs
+  const trendsArray = metrics?.trends ? [metrics.trends] : [];
+
   return (
     <Layout>
       <div className="flex-1 space-y-6 p-6">
@@ -95,7 +99,7 @@ export default function UnifiedDashboard() {
             isAnalyzing={isAnalyzing}
             comparisons={comparisons}
             handleRefreshData={handleRefreshData}
-            trendData={metrics?.trends || []}
+            trendData={metrics?.performanceTrends || []}
           />
         </ErrorBoundary>
       </div>
