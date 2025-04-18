@@ -14,7 +14,7 @@ const queryClient = new QueryClient({
   },
 });
 
-const AllTheProviders = ({ children }) => (
+const AllTheProviders = ({ children }: { children: React.ReactNode }) => (
   <BrowserRouter>
     <QueryClientProvider client={queryClient}>
       {children}
