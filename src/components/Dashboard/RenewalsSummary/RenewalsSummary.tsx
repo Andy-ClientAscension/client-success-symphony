@@ -46,6 +46,23 @@ export function RenewalsSummary() {
   const churnedClients = filteredSales.filter(sale => sale.status === "churned").length;
   const renewalRate = totalClients > 0 ? (renewedClients / totalClients) * 100 : 0;
 
+  // Get top 3 churn reasons across filtered sales
+  const topChurnReasons = useMemo(() => {
+    const reasons: Record<string, number> = {};
+    
+    filteredSales
+      .filter(sale => sale.status === "churned")
+      .forEach(sale => {
+        sale.painPoints.forEach(point => {
+          reasons[point] = (reasons[point] || 0) + 1;
+        });
+      });
+    
+    return Object.entries(reasons)
+      .sort(([, countA], [, countB]) => countB - countA)
+      .slice(0, 3);
+  }, [filteredSales]);
+  
   // Format team name for display
   const formatTeamName = (team: string): string => {
     if (team === "all") return "All Teams";
