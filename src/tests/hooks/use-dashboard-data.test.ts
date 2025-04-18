@@ -62,6 +62,7 @@ describe('useDashboardData', () => {
     // Fix type casting for mocked functions
     (getAllClients as unknown as vi.Mock).mockResolvedValue(mockClients);
     (getClientsCountByStatus as unknown as vi.Mock).mockResolvedValue(mockCounts);
+    (getAverageNPS as unknown as vi.Mock).mockResolvedValue(9.2);
     (getNPSMonthlyTrend as unknown as vi.Mock).mockResolvedValue(mockNPSData);
     (getChurnData as unknown as vi.Mock).mockResolvedValue(mockChurnData);
 
