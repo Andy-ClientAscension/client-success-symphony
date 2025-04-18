@@ -1,12 +1,12 @@
 
-import { Card } from "@/components/ui/card";
-import { ClientMetricsSummary } from "../ConsolidatedMetrics/ClientMetricsSummary";
-import { AIInsightsWidget } from "../AIInsightsWidget";
+import React from "react";
+import { UnifiedDashboardMetrics } from "../Metrics/UnifiedDashboardMetrics";
+import { AIInsightsPanel } from "../AIInsights";
 import { NPSChart } from "../NPSChart";
+import { AIInsightsWidget } from "../AIInsightsWidget";
 import { getStoredAIInsights } from "@/utils/aiDataAnalyzer";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
-import { calculateStatusCounts, calculateRates } from "@/utils/analyticsUtils";
-import { AIInsightsPanel } from "../AIInsights";
+import { Card } from "@/components/ui/card";
 
 export function DashboardOverview() {
   const {
@@ -25,32 +25,25 @@ export function DashboardOverview() {
     active: clientCounts?.active || 0,
     atRisk: clientCounts?.["at-risk"] || 0,
     churned: clientCounts?.churned || 0,
-    new: clientCounts?.new || 0,
     total: clientCounts ? Object.values(clientCounts).reduce((a, b) => a + b, 0) : 0
   };
 
-  const rates = calculateRates(statusCounts);
-
-  // Get NPS score from the most recent NPS data if available
-  const npsScore = npsData && npsData.length > 0 ? npsData[npsData.length - 1].score : undefined;
-  
-  // Get growth rate from performance trends if available
-  // Ensure performanceTrends is an array before accessing its length property
-  const performanceTrends = metrics?.performanceTrends || [];
-  const growthRate = Array.isArray(performanceTrends) && performanceTrends.length > 0 
-    ? performanceTrends[0].percentChange 
-    : undefined;
+  const rates = {
+    retentionRate: statusCounts.total > 0 ? Math.round((statusCounts.active / statusCounts.total) * 100) : 0,
+    atRiskRate: statusCounts.total > 0 ? Math.round((statusCounts.atRisk / statusCounts.total) * 100) : 0,
+    churnRate: statusCounts.total > 0 ? Math.round((statusCounts.churned / statusCounts.total) * 100) : 0
+  };
 
   const consolidatedMetrics = {
     total: statusCounts.total,
     active: statusCounts.active,
     atRisk: statusCounts.atRisk,
-    newClients: statusCounts.new,
+    newClients: clientCounts?.new || 0,
     churn: rates.churnRate,
     success: rates.retentionRate,
     mrr: metrics?.totalMRR || 0,
-    nps: npsScore,
-    growthRate: growthRate
+    nps: npsData && npsData.length > 0 ? npsData[npsData.length - 1].score : undefined,
+    growthRate: metrics?.performanceTrends?.[0]?.percentChange
   };
 
   const performanceData = {
@@ -62,14 +55,13 @@ export function DashboardOverview() {
 
   return (
     <div className="space-y-6">
-      <ClientMetricsSummary 
+      <UnifiedDashboardMetrics 
         metrics={consolidatedMetrics}
         statusCounts={statusCounts}
         rates={rates}
         performanceData={performanceData}
       />
       
-      {/* AI Insights Panel */}
       <AIInsightsPanel 
         clients={clients || []}
         metrics={metrics || {}}
