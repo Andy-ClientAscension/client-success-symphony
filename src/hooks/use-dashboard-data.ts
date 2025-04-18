@@ -7,7 +7,6 @@ import {
   getNPSMonthlyTrend, 
   getChurnData 
 } from '@/lib/data';
-import { calculateStatusCounts, calculateRates, getComprehensiveMetrics } from '@/utils/analyticsUtils';
 import { useToast } from '@/hooks/use-toast';
 
 export function useDashboardData() {
@@ -19,20 +18,11 @@ export function useDashboardData() {
     error: clientsError
   } = useQuery({
     queryKey: ['clients'],
-    queryFn: async () => {
-      try {
-        return await getAllClients();
-      } catch (error) {
-        toast({
-          title: "Error loading clients",
-          description: error instanceof Error ? error.message : "Failed to load client data",
-          variant: "destructive",
-        });
-        throw error;
-      }
-    },
-    refetchInterval: 30000,
-    refetchOnWindowFocus: true
+    queryFn: getAllClients,
+    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    retry: 3, // Retry failed requests 3 times
+    staleTime: 10000, // Consider data stale after 10 seconds
   });
 
   const { 
@@ -41,20 +31,11 @@ export function useDashboardData() {
     error: countsError
   } = useQuery({
     queryKey: ['client-counts'],
-    queryFn: async () => {
-      try {
-        return await getClientsCountByStatus();
-      } catch (error) {
-        toast({
-          title: "Error loading client counts",
-          description: error instanceof Error ? error.message : "Failed to load client statistics",
-          variant: "destructive",
-        });
-        throw error;
-      }
-    },
+    queryFn: getClientsCountByStatus,
     refetchInterval: 30000,
-    refetchOnWindowFocus: true
+    refetchOnWindowFocus: true,
+    retry: 3,
+    staleTime: 10000,
   });
 
   const {
@@ -63,20 +44,11 @@ export function useDashboardData() {
     error: npsError
   } = useQuery({
     queryKey: ['nps-trend'],
-    queryFn: async () => {
-      try {
-        return await getNPSMonthlyTrend();
-      } catch (error) {
-        toast({
-          title: "Error loading NPS data",
-          description: error instanceof Error ? error.message : "Failed to load NPS trends",
-          variant: "destructive",
-        });
-        throw error;
-      }
-    },
+    queryFn: getNPSMonthlyTrend,
     refetchInterval: 30000,
-    refetchOnWindowFocus: true
+    refetchOnWindowFocus: true,
+    retry: 3,
+    staleTime: 10000,
   });
 
   const { 
@@ -85,43 +57,21 @@ export function useDashboardData() {
     error: churnError
   } = useQuery({
     queryKey: ['churn-data'],
-    queryFn: async () => {
-      try {
-        return await getChurnData();
-      } catch (error) {
-        toast({
-          title: "Error loading churn data",
-          description: error instanceof Error ? error.message : "Failed to load churn data",
-          variant: "destructive",
-        });
-        throw error;
-      }
-    },
+    queryFn: getChurnData,
     refetchInterval: 30000,
-    refetchOnWindowFocus: true
+    refetchOnWindowFocus: true,
+    retry: 3,
+    staleTime: 10000,
   });
 
-  const { 
-    data: metrics,
-    isLoading: isMetricsLoading,
-    error: metricsError
-  } = useQuery({
-    queryKey: ['comprehensive-metrics', clients],
-    queryFn: () => clients ? getComprehensiveMetrics(clients) : null,
-    enabled: !!clients,
-    refetchInterval: 30000,
-    refetchOnWindowFocus: true
-  });
-
-  const error = clientsError || countsError || npsError || churnError || metricsError;
+  const error = clientsError || countsError || npsError || churnError;
 
   return {
     clients,
     clientCounts,
     npsData,
     churnData,
-    metrics,
-    isLoading: isClientsLoading || isCountsLoading || isNPSLoading || isChurnLoading || isMetricsLoading,
+    isLoading: isClientsLoading || isCountsLoading || isNPSLoading || isChurnLoading,
     error
   };
 }
