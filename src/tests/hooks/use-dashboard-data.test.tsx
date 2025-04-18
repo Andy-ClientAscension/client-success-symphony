@@ -1,4 +1,3 @@
-
 import { describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
@@ -88,14 +87,14 @@ describe('useDashboardData', () => {
       }
     };
 
-    // Set up mock return values with typed mocks
-    (getAllClients as jest.Mock).mockResolvedValue(mockClients);
-    (getClientsCountByStatus as jest.Mock).mockResolvedValue(mockCounts);
-    (getAverageNPS as jest.Mock).mockResolvedValue(9.2);
-    (getNPSMonthlyTrend as jest.Mock).mockResolvedValue(mockNPSData);
-    (getChurnData as jest.Mock).mockResolvedValue(mockChurnData);
-    (getClientMetricsByTeam as jest.Mock).mockResolvedValue(mockMetrics);
-    (calculatePerformanceTrends as jest.Mock).mockReturnValue([]);
+    // Set up mock return values with Vitest mocks
+    (getAllClients as ReturnType<typeof vi.fn>).mockResolvedValue(mockClients);
+    (getClientsCountByStatus as ReturnType<typeof vi.fn>).mockResolvedValue(mockCounts);
+    (getAverageNPS as ReturnType<typeof vi.fn>).mockResolvedValue(9.2);
+    (getNPSMonthlyTrend as ReturnType<typeof vi.fn>).mockResolvedValue(mockNPSData);
+    (getChurnData as ReturnType<typeof vi.fn>).mockResolvedValue(mockChurnData);
+    (getClientMetricsByTeam as ReturnType<typeof vi.fn>).mockResolvedValue(mockMetrics);
+    (calculatePerformanceTrends as ReturnType<typeof vi.fn>).mockReturnValue([]);
 
     const { result } = renderHook(() => useDashboardData(), { wrapper });
 
@@ -113,7 +112,7 @@ describe('useDashboardData', () => {
 
   it('handles errors appropriately', async () => {
     const error = new Error('Failed to fetch clients');
-    (getAllClients as jest.Mock).mockRejectedValue(error);
+    (getAllClients as ReturnType<typeof vi.fn>).mockRejectedValue(error);
 
     const { result } = renderHook(() => useDashboardData(), { wrapper });
 

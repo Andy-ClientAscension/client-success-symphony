@@ -1,4 +1,3 @@
-
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -43,15 +42,15 @@ describe('Dashboard Integration', () => {
     queryClient.clear();
     vi.clearAllMocks();
     
-    // Setup mock return values using jest.Mock for proper typing
-    (getAllClients as jest.Mock).mockResolvedValue([]);
-    (getClientsCountByStatus as jest.Mock).mockResolvedValue({
+    // Setup mock return values using proper Vitest typing
+    (getAllClients as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (getClientsCountByStatus as ReturnType<typeof vi.fn>).mockResolvedValue({
       active: 5, 'at-risk': 2, churned: 1, new: 3
     });
-    (getAverageNPS as jest.Mock).mockResolvedValue(8.5);
-    (getNPSMonthlyTrend as jest.Mock).mockResolvedValue([]);
-    (getChurnData as jest.Mock).mockResolvedValue([]);
-    (getClientMetricsByTeam as jest.Mock).mockResolvedValue({
+    (getAverageNPS as ReturnType<typeof vi.fn>).mockResolvedValue(8.5);
+    (getNPSMonthlyTrend as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (getChurnData as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (getClientMetricsByTeam as ReturnType<typeof vi.fn>).mockResolvedValue({
       totalMRR: 10000,
       totalCallsBooked: 42,
       totalDealsClosed: 15,
@@ -62,8 +61,8 @@ describe('Dashboard Integration', () => {
         churnTrend: -3
       }
     });
-    (getRecentActivity as jest.Mock).mockResolvedValue([]);
-    (getUpcomingRenewals as jest.Mock).mockResolvedValue([]);
+    (getRecentActivity as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (getUpcomingRenewals as ReturnType<typeof vi.fn>).mockResolvedValue([]);
   });
 
   it('renders dashboard and loads data', async () => {
