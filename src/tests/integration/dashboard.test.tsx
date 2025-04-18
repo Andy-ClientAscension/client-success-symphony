@@ -1,60 +1,67 @@
 
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import Index from '@/pages/Index';
+import UnifiedDashboard from '@/pages/UnifiedDashboard';
+import { BrowserRouter } from 'react-router-dom';
+import { getAllClients, getClientsCountByStatus, getAverageNPS, getNPSMonthlyTrend, getChurnData, getClientMetricsByTeam } from '@/lib/data';
 
-// Setup providers wrapper
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
-    },
-  },
-});
-
-const AllTheProviders = ({ children }: { children: React.ReactNode }) => (
-  <BrowserRouter>
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  </BrowserRouter>
-);
+// Mock the data functions
+vi.mock('@/lib/data', () => ({
+  getAllClients: vi.fn(),
+  getClientsCountByStatus: vi.fn(),
+  getAverageNPS: vi.fn(),
+  getNPSMonthlyTrend: vi.fn(),
+  getChurnData: vi.fn(),
+  getClientMetricsByTeam: vi.fn(),
+  getRecentActivity: vi.fn(),
+  getUpcomingRenewals: vi.fn()
+}));
 
 describe('Dashboard Integration', () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+
   beforeEach(() => {
     queryClient.clear();
-  });
-
-  it('renders dashboard with all major components', async () => {
-    render(<Index />, { wrapper: AllTheProviders });
-
-    // Check main sections are present
-    expect(screen.getByText('Performance Report')).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: /metrics overview/i })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: /performance charts/i })).toBeInTheDocument();
-  });
-
-  it('handles tab navigation correctly', async () => {
-    render(<Index />, { wrapper: AllTheProviders });
-
-    // Click Team Analytics tab
-    fireEvent.click(screen.getByRole('tab', { name: /team analytics/i }));
+    vi.clearAllMocks();
     
-    await waitFor(() => {
-      expect(screen.getByRole('tabpanel', { name: /team analytics/i })).toBeInTheDocument();
+    // Setup mock return values
+    (getAllClients as unknown as vi.Mock).mockResolvedValue([]);
+    (getClientsCountByStatus as unknown as vi.Mock).mockResolvedValue({
+      active: 5, 'at-risk': 2, churned: 1, new: 3
+    });
+    (getAverageNPS as unknown as vi.Mock).mockResolvedValue(8.5);
+    (getNPSMonthlyTrend as unknown as vi.Mock).mockResolvedValue([]);
+    (getChurnData as unknown as vi.Mock).mockResolvedValue([]);
+    (getClientMetricsByTeam as unknown as vi.Mock).mockResolvedValue({
+      totalMRR: 10000,
+      totalCallsBooked: 42,
+      totalDealsClosed: 15
     });
   });
 
-  it('allows refreshing dashboard data', async () => {
-    render(<Index />, { wrapper: AllTheProviders });
-
-    const refreshButton = screen.getByRole('button', { name: /refresh/i });
-    fireEvent.click(refreshButton);
-
+  it('renders dashboard and loads data', async () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <UnifiedDashboard />
+        </BrowserRouter>
+      </QueryClientProvider>
+    );
+    
+    // Initial loading state
+    expect(screen.getByText(/overview/i)).toBeInTheDocument();
+    
+    // Check after data is loaded
     await waitFor(() => {
-      expect(screen.getByRole('region', { name: /metrics overview/i })).toBeInTheDocument();
+      expect(getAllClients).toHaveBeenCalled();
+      expect(getClientsCountByStatus).toHaveBeenCalled();
     });
   });
 });

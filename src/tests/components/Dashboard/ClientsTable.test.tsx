@@ -15,7 +15,10 @@ describe('ClientsTable', () => {
       callsBooked: 5,
       dealsClosed: 3,
       mrr: 1000,
-      npsScore: 8
+      npsScore: 8,
+      startDate: '2023-01-01',  // Added missing properties
+      contractValue: 50000,     // Added missing properties
+      team: 'enterprise'        // Optional property but common
     },
     {
       id: '2',
@@ -27,7 +30,9 @@ describe('ClientsTable', () => {
       callsBooked: 3,
       dealsClosed: 1,
       mrr: 800,
-      npsScore: 6
+      npsScore: 6,
+      startDate: '2023-01-01',  // Added missing properties
+      contractValue: 30000      // Added missing properties
     }
   ];
 

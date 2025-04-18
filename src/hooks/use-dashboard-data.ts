@@ -5,7 +5,8 @@ import {
   getClientsCountByStatus, 
   getAverageNPS, 
   getNPSMonthlyTrend, 
-  getChurnData 
+  getChurnData,
+  getClientMetricsByTeam
 } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 
@@ -64,14 +65,28 @@ export function useDashboardData() {
     staleTime: 10000,
   });
 
-  const error = clientsError || countsError || npsError || churnError;
+  const { 
+    data: metrics,
+    isLoading: isMetricsLoading,
+    error: metricsError
+  } = useQuery({
+    queryKey: ['client-metrics'],
+    queryFn: () => getClientMetricsByTeam(),
+    refetchInterval: 30000,
+    refetchOnWindowFocus: true,
+    retry: 3,
+    staleTime: 10000,
+  });
+
+  const error = clientsError || countsError || npsError || churnError || metricsError;
 
   return {
     clients,
     clientCounts,
     npsData,
     churnData,
-    isLoading: isClientsLoading || isCountsLoading || isNPSLoading || isChurnLoading,
+    metrics,
+    isLoading: isClientsLoading || isCountsLoading || isNPSLoading || isChurnLoading || isMetricsLoading,
     error
   };
 }
