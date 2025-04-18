@@ -23,6 +23,7 @@ export function DashboardOverview() {
     active: clientCounts?.active || 0,
     atRisk: clientCounts?.["at-risk"] || 0,
     churned: clientCounts?.churned || 0,
+    new: clientCounts?.new || 0, // Added the missing 'new' property
     total: clientCounts ? Object.values(clientCounts).reduce((a, b) => a + b, 0) : 0
   };
 
@@ -32,12 +33,12 @@ export function DashboardOverview() {
     total: statusCounts.total,
     active: statusCounts.active,
     atRisk: statusCounts.atRisk,
-    newClients: clientCounts?.new || 0,
+    newClients: statusCounts.new,
     churn: rates.churnRate,
     success: rates.retentionRate,
     mrr: metrics?.totalMRR || 0,
-    nps: metrics?.npsScore,
-    growthRate: metrics?.growthRate
+    nps: metrics?.npsScore !== undefined ? metrics.npsScore : undefined,
+    growthRate: metrics?.growthRate !== undefined ? metrics.growthRate : undefined
   };
 
   const performanceData = {
