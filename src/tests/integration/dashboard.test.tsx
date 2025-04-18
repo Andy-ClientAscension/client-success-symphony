@@ -1,5 +1,5 @@
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import UnifiedDashboard from '@/pages/UnifiedDashboard';
@@ -14,6 +14,9 @@ import {
   getRecentActivity,
   getUpcomingRenewals 
 } from '@/lib/data';
+
+// Import vi explicitly
+import { vi } from 'vitest';
 
 // Mock the data functions
 vi.mock('@/lib/data', () => ({
@@ -40,15 +43,15 @@ describe('Dashboard Integration', () => {
     queryClient.clear();
     vi.clearAllMocks();
     
-    // Setup mock return values
-    (getAllClients as unknown as vi.Mock).mockResolvedValue([]);
-    (getClientsCountByStatus as unknown as vi.Mock).mockResolvedValue({
+    // Setup mock return values using jest.Mock for proper typing
+    (getAllClients as jest.Mock).mockResolvedValue([]);
+    (getClientsCountByStatus as jest.Mock).mockResolvedValue({
       active: 5, 'at-risk': 2, churned: 1, new: 3
     });
-    (getAverageNPS as unknown as vi.Mock).mockResolvedValue(8.5);
-    (getNPSMonthlyTrend as unknown as vi.Mock).mockResolvedValue([]);
-    (getChurnData as unknown as vi.Mock).mockResolvedValue([]);
-    (getClientMetricsByTeam as unknown as vi.Mock).mockResolvedValue({
+    (getAverageNPS as jest.Mock).mockResolvedValue(8.5);
+    (getNPSMonthlyTrend as jest.Mock).mockResolvedValue([]);
+    (getChurnData as jest.Mock).mockResolvedValue([]);
+    (getClientMetricsByTeam as jest.Mock).mockResolvedValue({
       totalMRR: 10000,
       totalCallsBooked: 42,
       totalDealsClosed: 15,
@@ -59,8 +62,8 @@ describe('Dashboard Integration', () => {
         churnTrend: -3
       }
     });
-    (getRecentActivity as unknown as vi.Mock).mockResolvedValue([]);
-    (getUpcomingRenewals as unknown as vi.Mock).mockResolvedValue([]);
+    (getRecentActivity as jest.Mock).mockResolvedValue([]);
+    (getUpcomingRenewals as jest.Mock).mockResolvedValue([]);
   });
 
   it('renders dashboard and loads data', async () => {

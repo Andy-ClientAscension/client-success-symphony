@@ -1,5 +1,5 @@
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -13,6 +13,9 @@ import {
 } from '@/lib/data';
 import React from 'react';
 import { calculatePerformanceTrends } from '@/utils/aiDataAnalyzer';
+
+// Import vi explicitly
+import { vi } from 'vitest';
 
 // Mock the data functions
 vi.mock('@/lib/data', () => ({
@@ -85,14 +88,14 @@ describe('useDashboardData', () => {
       }
     };
 
-    // Set up mock return values
-    (getAllClients as unknown as vi.Mock).mockResolvedValue(mockClients);
-    (getClientsCountByStatus as unknown as vi.Mock).mockResolvedValue(mockCounts);
-    (getAverageNPS as unknown as vi.Mock).mockResolvedValue(9.2);
-    (getNPSMonthlyTrend as unknown as vi.Mock).mockResolvedValue(mockNPSData);
-    (getChurnData as unknown as vi.Mock).mockResolvedValue(mockChurnData);
-    (getClientMetricsByTeam as unknown as vi.Mock).mockResolvedValue(mockMetrics);
-    (calculatePerformanceTrends as unknown as vi.Mock).mockReturnValue([]);
+    // Set up mock return values with typed mocks
+    (getAllClients as jest.Mock).mockResolvedValue(mockClients);
+    (getClientsCountByStatus as jest.Mock).mockResolvedValue(mockCounts);
+    (getAverageNPS as jest.Mock).mockResolvedValue(9.2);
+    (getNPSMonthlyTrend as jest.Mock).mockResolvedValue(mockNPSData);
+    (getChurnData as jest.Mock).mockResolvedValue(mockChurnData);
+    (getClientMetricsByTeam as jest.Mock).mockResolvedValue(mockMetrics);
+    (calculatePerformanceTrends as jest.Mock).mockReturnValue([]);
 
     const { result } = renderHook(() => useDashboardData(), { wrapper });
 
@@ -110,7 +113,7 @@ describe('useDashboardData', () => {
 
   it('handles errors appropriately', async () => {
     const error = new Error('Failed to fetch clients');
-    (getAllClients as unknown as vi.Mock).mockRejectedValue(error);
+    (getAllClients as jest.Mock).mockRejectedValue(error);
 
     const { result } = renderHook(() => useDashboardData(), { wrapper });
 
