@@ -27,65 +27,100 @@ export interface ClientComparison {
   averageValue: number;
 }
 
-export async function analyzeClientData(clients: Client[]): Promise<AIInsight[]> {
-  try {
-    // Define default insights in case of failure
-    const defaultInsights: AIInsight[] = [{
-      type: 'improvement',
-      message: 'No critical issues detected in your client data at this time.',
-      severity: 'low'
-    }];
-    
-    // If no clients, return default insights
-    if (!clients || clients.length === 0) {
-      console.log('No clients provided for analysis');
-      saveData(STORAGE_KEYS.AI_INSIGHTS, defaultInsights);
-      return defaultInsights;
-    }
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 2000; // 2 seconds
 
-    const systemPrompt: OpenAIMessage = {
-      role: 'system',
-      content: `Analyze client data for potential issues, risks, and improvements. 
-      Focus on:
-      - Clients at risk of churn
-      - Performance inconsistencies
-      - Potential growth opportunities
-      - Unusual patterns in metrics
-      
-      Return insights in JSON format with 'type', 'message', 'affectedClients', and 'severity' fields.
-      Types can be: 'warning', 'recommendation', or 'improvement'.
-      Severity can be: 'low', 'medium', or 'high'.
-      
-      YOUR RESPONSE MUST CONTAIN ONLY VALID JSON LIKE THIS: 
-      [
-        {"type": "warning", "message": "Example message", "severity": "medium"},
-        {"type": "recommendation", "message": "Another message", "severity": "low"}
-      ]
+/**
+ * Sleep utility for implementing delay between retries
+ */
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-      Do not include any explanation or text outside the JSON array.`
-    };
+/**
+ * Analyze client data with retry and abort functionality
+ */
+export async function analyzeClientData(
+  clients: Client[], 
+  signal?: AbortSignal
+): Promise<AIInsight[]> {
+  let retries = 0;
+  
+  // Define default insights in case of failure
+  const defaultInsights: AIInsight[] = [{
+    type: 'improvement',
+    message: 'No critical issues detected in your client data at this time.',
+    severity: 'low'
+  }];
+  
+  // If no clients, return default insights
+  if (!clients || clients.length === 0) {
+    console.log('No clients provided for analysis');
+    saveData(STORAGE_KEYS.AI_INSIGHTS, defaultInsights);
+    return defaultInsights;
+  }
 
-    const userPrompt: OpenAIMessage = {
-      role: 'user',
-      content: JSON.stringify(clients.map(client => ({
-        id: client.id,
-        name: client.name,
-        status: client.status,
-        progress: client.progress,
-        mrr: client.mrr,
-        callsBooked: client.callsBooked,
-        dealsClosed: client.dealsClosed,
-        npsScore: client.npsScore
-      })))
-    };
+  // Check if operation was aborted before starting
+  if (signal?.aborted) {
+    throw new Error('Analysis aborted');
+  }
 
+  // Try the analysis with retries
+  while (retries < MAX_RETRIES) {
     try {
-      // Try to get AI response with a timeout
+      // Check for abort signal before each attempt
+      if (signal?.aborted) {
+        throw new Error('Analysis aborted');
+      }
+      
+      const systemPrompt: OpenAIMessage = {
+        role: 'system',
+        content: `Analyze client data for potential issues, risks, and improvements. 
+        Focus on:
+        - Clients at risk of churn
+        - Performance inconsistencies
+        - Potential growth opportunities
+        - Unusual patterns in metrics
+        
+        Return insights in JSON format with 'type', 'message', 'affectedClients', and 'severity' fields.
+        Types can be: 'warning', 'recommendation', or 'improvement'.
+        Severity can be: 'low', 'medium', or 'high'.
+        
+        YOUR RESPONSE MUST CONTAIN ONLY VALID JSON LIKE THIS: 
+        [
+          {"type": "warning", "message": "Example message", "severity": "medium"},
+          {"type": "recommendation", "message": "Another message", "severity": "low"}
+        ]
+
+        Do not include any explanation or text outside the JSON array.`
+      };
+
+      const userPrompt: OpenAIMessage = {
+        role: 'user',
+        content: JSON.stringify(clients.map(client => ({
+          id: client.id,
+          name: client.name,
+          status: client.status,
+          progress: client.progress,
+          mrr: client.mrr,
+          callsBooked: client.callsBooked,
+          dealsClosed: client.dealsClosed,
+          npsScore: client.npsScore
+        })))
+      };
+
+      // Try to get AI response with a timeout and abort signal
       const response = await Promise.race([
         generateAIResponse([systemPrompt, userPrompt], ''),
         new Promise<string>((_, reject) => 
-          setTimeout(() => reject(new Error('AI request timed out')), 10000)
-        )
+          setTimeout(() => reject(new Error('AI request timed out')), 15000)
+        ),
+        // Create a promise that rejects if the signal aborts
+        new Promise<string>((_, reject) => {
+          if (signal) {
+            signal.addEventListener('abort', () => 
+              reject(new Error('Analysis aborted by user'))
+            );
+          }
+        })
       ]) as string;
       
       // Parse the response with better error handling
@@ -117,37 +152,58 @@ export async function analyzeClientData(clients: Client[]): Promise<AIInsight[]>
         });
         
         console.log('Successfully parsed and validated AI insights:', insights.length);
-      } catch (error) {
-        console.error('Error parsing AI response:', error);
+        
+        // Ensure we always have at least one insight
+        if (!insights || insights.length === 0) {
+          insights = defaultInsights;
+        }
+        
+        // Save insights to local storage
+        saveData(STORAGE_KEYS.AI_INSIGHTS, insights);
+        
+        return insights;
+      } catch (parseError) {
+        console.error('Error parsing AI response:', parseError);
         console.log('Raw response:', response);
-        insights = defaultInsights;
+        
+        // Increment retry counter and try again if we haven't exceeded max retries
+        retries++;
+        
+        if (retries < MAX_RETRIES) {
+          console.log(`Retrying analysis (${retries}/${MAX_RETRIES})...`);
+          await sleep(RETRY_DELAY * retries); // Exponential backoff
+          continue;
+        }
+        
+        // If we've exhausted retries, use default insights
+        saveData(STORAGE_KEYS.AI_INSIGHTS, defaultInsights);
+        return defaultInsights;
       }
-      
-      // Ensure we always have at least one insight
-      if (!insights || insights.length === 0) {
-        insights = defaultInsights;
-      }
-      
-      // Save insights to local storage
-      saveData(STORAGE_KEYS.AI_INSIGHTS, insights);
-      
-      return insights;
     } catch (error) {
+      // Check if the operation was aborted
+      if (error instanceof Error && error.message.includes('aborted')) {
+        throw error; // Re-throw abort errors
+      }
+      
       console.error('AI response error:', error);
+      
+      // Increment retry counter and try again if we haven't exceeded max retries
+      retries++;
+      
+      if (retries < MAX_RETRIES) {
+        console.log(`Retrying analysis (${retries}/${MAX_RETRIES})...`);
+        await sleep(RETRY_DELAY * retries); // Exponential backoff
+        continue;
+      }
+      
+      // If we've exhausted retries, use default insights
       saveData(STORAGE_KEYS.AI_INSIGHTS, defaultInsights);
       return defaultInsights;
     }
-  } catch (error) {
-    console.error('AI Data Analysis Error:', error);
-    const fallbackInsight = {
-      type: 'warning' as const,
-      message: 'An error occurred while analyzing client data. Please try again later.',
-      severity: 'medium' as const
-    };
-    
-    saveData(STORAGE_KEYS.AI_INSIGHTS, [fallbackInsight]);
-    return [fallbackInsight];
   }
+  
+  // This should not be reached, but just in case
+  return defaultInsights;
 }
 
 export function getStoredAIInsights(): AIInsight[] {

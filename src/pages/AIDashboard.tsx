@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { 
   ArrowLeft, Bot, RefreshCw, AlertTriangle, 
-  TrendingUp, LineChart, BarChart2, PieChart 
+  TrendingUp, LineChart, BarChart2, PieChart, Info
 } from "lucide-react";
 import { useCallback, useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -26,11 +26,13 @@ import { TrendChart, ComparativeTrends } from "@/components/Dashboard/Performanc
 import { RecommendationsEngine } from "@/components/Dashboard/Recommendations";
 import { RiskOpportunityMap } from "@/components/Dashboard/RiskOpportunity";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { LoadingState } from "@/components/LoadingState";
+import { BackgroundProcessingIndicator } from "@/components/Dashboard/BackgroundProcessingIndicator";
 
 export default function AIDashboard() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [isRefetching, setIsRefetching] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
   const [comparisons, setComparisons] = useState<ClientComparison[]>([]);
   const { healthChecks, runSystemHealthCheck } = useSystemHealth();
@@ -45,17 +47,52 @@ export default function AIDashboard() {
     { month: 'Jun', mrr: 5000, churn: 4, growth: 18 },
   ]);
   
-  const isRefreshing = queryClient.isFetching({queryKey: ['ai-insights']}) > 0 || isRefetching;
-
-  // Use the AI insights hook to get insights and predictions
+  // Use the enhanced AI insights hook with background processing
   const { 
     insights, 
     predictions, 
-    isAnalyzing, 
-    analyzeClients, 
-    getHighRiskClients, 
-    getHighGrowthClients 
+    isAnalyzing,
+    error: aiError,
+    lastAnalyzed,
+    analyzeClients,
+    cancelAnalysis
   } = useAIInsights(clients);
+  
+  // Update background task status
+  const [backgroundTasks, setBackgroundTasks] = useState([
+    {
+      id: 'ai-analysis',
+      name: 'AI Analysis',
+      status: 'idle' as const
+    },
+    {
+      id: 'data-sync',
+      name: 'Data Synchronization',
+      status: 'idle' as const
+    }
+  ]);
+  
+  // Update background task status when analysis state changes
+  useEffect(() => {
+    setBackgroundTasks(prev => 
+      prev.map(task => 
+        task.id === 'ai-analysis' 
+          ? { 
+              ...task, 
+              status: isAnalyzing 
+                ? 'running' 
+                : aiError 
+                  ? 'error' 
+                  : insights.length > 0 
+                    ? 'success'
+                    : 'idle',
+              lastRun: isAnalyzing ? undefined : lastAnalyzed || undefined,
+              message: aiError ? aiError.message : undefined
+            }
+          : task
+      )
+    );
+  }, [isAnalyzing, aiError, insights, lastAnalyzed]);
 
   useEffect(() => {
     // Get all clients
@@ -76,12 +113,25 @@ export default function AIDashboard() {
     // Refresh comparison data
     const newComparisons = generateClientComparisons(clients);
     setComparisons(newComparisons);
-    
   }, [clients, analyzeClients, isAnalyzing, runSystemHealthCheck]);
 
   const handleErrorReset = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['ai-insights'] });
   }, [queryClient]);
+  
+  // Handle background task details view
+  const handleViewBackgroundTasks = () => {
+    toast({
+      title: "Background Tasks Status",
+      description: isAnalyzing 
+        ? "AI analysis is currently running in the background" 
+        : aiError 
+          ? `Last analysis encountered an error: ${aiError.message}` 
+          : lastAnalyzed 
+            ? `Last analyzed at ${lastAnalyzed.toLocaleString()}` 
+            : "No recent analysis data",
+    });
+  };
 
   return (
     <Layout>
@@ -96,7 +146,12 @@ export default function AIDashboard() {
             <h2 className="text-xl font-bold">AI Insights Dashboard</h2>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <BackgroundProcessingIndicator 
+              tasks={backgroundTasks}
+              onClick={handleViewBackgroundTasks}
+            />
+            
             <Button 
               variant="outline" 
               onClick={handleRefreshAnalysis}
@@ -106,8 +161,53 @@ export default function AIDashboard() {
               <RefreshCw className={`h-4 w-4 ${isAnalyzing ? 'animate-spin' : ''}`} />
               Refresh Analysis
             </Button>
+            
+            {isAnalyzing && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={cancelAnalysis}
+              >
+                Cancel
+              </Button>
+            )}
           </div>
         </div>
+        
+        {lastAnalyzed && (
+          <div className="flex items-center text-xs text-muted-foreground">
+            <Info className="h-3 w-3 mr-1" />
+            Last analyzed: {lastAnalyzed.toLocaleString()}
+          </div>
+        )}
+        
+        {isAnalyzing && (
+          <Alert className="bg-blue-50 dark:bg-blue-950/10 border-blue-200">
+            <RefreshCw className="h-4 w-4 text-blue-500 animate-spin" />
+            <AlertTitle>Analysis in Progress</AlertTitle>
+            <AlertDescription>
+              AI analysis is running in the background. You can continue using the dashboard.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {aiError && !isAnalyzing && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Error During Analysis</AlertTitle>
+            <AlertDescription>
+              {aiError.message}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleRefreshAnalysis} 
+                className="mt-2"
+              >
+                Retry Analysis
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
         
         <ErrorBoundary onReset={handleErrorReset}>
           {predictions.length === 0 ? (
@@ -153,27 +253,69 @@ export default function AIDashboard() {
                 
                 <TabsContent value="health" className="space-y-6">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <ClientHealthAnalysis predictions={predictions} />
-                    <RiskOpportunityMap predictions={predictions} />
+                    {isAnalyzing ? (
+                      <>
+                        <Card>
+                          <CardContent className="p-6">
+                            <LoadingState message="Analyzing client health..." />
+                          </CardContent>
+                        </Card>
+                        <Card>
+                          <CardContent className="p-6">
+                            <LoadingState message="Mapping risks and opportunities..." />
+                          </CardContent>
+                        </Card>
+                      </>
+                    ) : (
+                      <>
+                        <ClientHealthAnalysis predictions={predictions} />
+                        <RiskOpportunityMap predictions={predictions} />
+                      </>
+                    )}
                   </div>
                 </TabsContent>
                 
                 <TabsContent value="trends" className="space-y-6">
-                  <TrendChart 
-                    title="Performance Metrics Over Time"
-                    data={trendData}
-                    dataKeys={[
-                      { name: 'mrr', color: '#3b82f6' },
-                      { name: 'churn', color: '#ef4444' },
-                      { name: 'growth', color: '#22c55e' }
-                    ]}
-                    xAxisKey="month"
-                  />
-                  <ComparativeTrends comparisons={comparisons} />
+                  {isAnalyzing ? (
+                    <>
+                      <Card>
+                        <CardContent className="p-6">
+                          <LoadingState message="Processing performance metrics..." />
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="p-6">
+                          <LoadingState message="Analyzing comparative trends..." />
+                        </CardContent>
+                      </Card>
+                    </>
+                  ) : (
+                    <>
+                      <TrendChart 
+                        title="Performance Metrics Over Time"
+                        data={trendData}
+                        dataKeys={[
+                          { name: 'mrr', color: '#3b82f6' },
+                          { name: 'churn', color: '#ef4444' },
+                          { name: 'growth', color: '#22c55e' }
+                        ]}
+                        xAxisKey="month"
+                      />
+                      <ComparativeTrends comparisons={comparisons} />
+                    </>
+                  )}
                 </TabsContent>
                 
                 <TabsContent value="recommendations" className="space-y-6">
-                  <RecommendationsEngine insights={insights} />
+                  {isAnalyzing ? (
+                    <Card>
+                      <CardContent className="p-6">
+                        <LoadingState message="Generating recommendations..." />
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <RecommendationsEngine insights={insights} />
+                  )}
                 </TabsContent>
               </Tabs>
               
@@ -191,7 +333,7 @@ export default function AIDashboard() {
                         <div key={index} className="flex items-start gap-2">
                           {check.type === 'warning' && <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5" />}
                           {check.type === 'error' && <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5" />}
-                          {check.type === 'info' && <AlertTriangle className="h-4 w-4 text-blue-500 mt-0.5" />}
+                          {check.type === 'info' && <Info className="h-4 w-4 text-blue-500 mt-0.5" />}
                           <div>
                             <p className="text-sm">{check.message}</p>
                             <p className="text-xs text-muted-foreground">

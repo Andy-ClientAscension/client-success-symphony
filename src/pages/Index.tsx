@@ -1,6 +1,6 @@
 
 import { Layout } from "@/components/Layout/Layout";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useDashboardPersistence } from "@/hooks/use-dashboard-persistence";
 import { DashboardSettingsBar } from "@/components/Dashboard/DashboardSettingsBar";
@@ -10,9 +10,13 @@ import { PerformanceAlert } from "@/components/Dashboard/PerformanceAlert";
 import { useRealtimeData } from "@/utils/dataSyncService";
 import { STORAGE_KEYS } from "@/utils/persistence";
 import { DataSyncMonitor } from "@/components/Dashboard/DataSyncMonitor";
-import { getClientsCountByStatus } from "@/lib/data";
+import { getAllClients, getClientsCountByStatus } from "@/lib/data";
 import { UnifiedMetricsGrid, generateClientMetrics } from "@/components/Dashboard/Metrics/UnifiedMetricsGrid";
 import { ChurnMetricChart, NPSMetricChart } from "@/components/Dashboard/Charts/UnifiedMetricChart";
+import { useAIInsights } from "@/hooks/use-ai-insights";
+import { BackgroundProcessingIndicator } from "@/components/Dashboard/BackgroundProcessingIndicator";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 export default function Index() {
   const { toast } = useToast();
@@ -21,10 +25,10 @@ export default function Index() {
   const { persistDashboard, togglePersistDashboard } = useDashboardPersistence();
   const [performanceMode, setPerformanceMode] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [clients, setClients] = useState([]);
   
-  // Use realtime data hooks for dashboard data
+  // Use real-time data hooks for dashboard data
   const [insights, isInsightsLoading] = useRealtimeData(STORAGE_KEYS.AI_INSIGHTS, []);
-  const [predictions, isPredictionsLoading] = useRealtimeData('aiPredictions', []);
   const [comparisons, isComparisonsLoading] = useRealtimeData('clientComparisons', []);
   const [trendData, isTrendDataLoading] = useRealtimeData('trendData', [
     { month: 'Jan', mrr: 2500, churn: 5, growth: 15 },
@@ -38,8 +42,65 @@ export default function Index() {
   // Get client status counts for metrics
   const [clientCounts] = useRealtimeData('clientCounts', getClientsCountByStatus());
 
+  // Use the enhanced AI insights hook with background processing
+  const { 
+    insights: aiInsights,
+    predictions,
+    isAnalyzing,
+    error: aiError,
+    lastAnalyzed,
+    analyzeClients,
+    cancelAnalysis,
+    status
+  } = useAIInsights(clients, {
+    autoAnalyze: true,
+    refreshInterval: 3600000, // Auto-analyze every hour
+    silentMode: true // Don't show toasts for background analysis
+  });
+  
+  // Load clients on mount
+  useEffect(() => {
+    setClients(getAllClients());
+  }, []);
+
+  // Update background task status
+  const [backgroundTasks, setBackgroundTasks] = useState([
+    {
+      id: 'ai-analysis',
+      name: 'AI Analysis',
+      status: 'idle' as const
+    },
+    {
+      id: 'data-sync',
+      name: 'Data Synchronization',
+      status: 'idle' as const
+    }
+  ]);
+  
+  // Update background task status when analysis state changes
+  useEffect(() => {
+    setBackgroundTasks(prev => 
+      prev.map(task => 
+        task.id === 'ai-analysis' 
+          ? { 
+              ...task, 
+              status: isAnalyzing 
+                ? 'running' 
+                : aiError 
+                  ? 'error' 
+                  : aiInsights.length > 0 
+                    ? 'success'
+                    : 'idle',
+              lastRun: isAnalyzing ? undefined : lastAnalyzed || undefined,
+              message: aiError ? aiError.message : undefined
+            }
+          : task
+      )
+    );
+  }, [isAnalyzing, aiError, aiInsights, lastAnalyzed]);
+
   // Compute overall loading state
-  const isLoading = isInsightsLoading || isPredictionsLoading || isComparisonsLoading || isTrendDataLoading;
+  const isLoading = isInsightsLoading || isComparisonsLoading || isTrendDataLoading || isAnalyzing;
 
   useEffect(() => {
     const persistEnabled = localStorage.getItem("persistDashboard") === "true";
@@ -51,12 +112,27 @@ export default function Index() {
     }
   }, [toast]);
 
-  const handleRefreshData = () => {
+  const handleRefreshData = useCallback(() => {
     setIsRefreshing(true);
-    // Simulated refresh delay
-    setTimeout(() => {
+    
+    // Trigger AI analysis
+    analyzeClients(true).finally(() => {
       setIsRefreshing(false);
-    }, 1000);
+    });
+  }, [analyzeClients]);
+  
+  // Handle background task details view
+  const handleViewBackgroundTasks = () => {
+    toast({
+      title: "Background Tasks Status",
+      description: isAnalyzing 
+        ? "AI analysis is currently running in the background" 
+        : aiError 
+          ? `Last analysis encountered an error: ${aiError.message}` 
+          : lastAnalyzed 
+            ? `Last analyzed at ${lastAnalyzed.toLocaleString()}` 
+            : "No recent analysis data",
+    });
   };
   
   // Generate metrics data from client counts
@@ -81,14 +157,20 @@ export default function Index() {
               Monitor your team's performance and track key metrics
             </p>
           </div>
-          <DashboardSettingsBar
-            persistDashboard={persistDashboard}
-            togglePersistDashboard={togglePersistDashboard}
-            performanceMode={performanceMode}
-            setPerformanceMode={setPerformanceMode}
-            focusMode={focusMode}
-            onFocusModeChange={setFocusMode}
-          />
+          <div className="flex items-center gap-2">
+            <BackgroundProcessingIndicator 
+              tasks={backgroundTasks}
+              onClick={handleViewBackgroundTasks}
+            />
+            <DashboardSettingsBar
+              persistDashboard={persistDashboard}
+              togglePersistDashboard={togglePersistDashboard}
+              performanceMode={performanceMode}
+              setPerformanceMode={setPerformanceMode}
+              focusMode={focusMode}
+              onFocusModeChange={setFocusMode}
+            />
+          </div>
         </div>
 
         {/* Second F-pattern stroke: Action bar and filters */}
@@ -98,6 +180,20 @@ export default function Index() {
             handleRefreshData={handleRefreshData}
           />
         </div>
+
+        {/* Display AI analysis errors if any */}
+        {aiError && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>AI Analysis Error</AlertTitle>
+            <AlertDescription>
+              {aiError.message}
+              <p className="text-sm mt-1">
+                AI insights may be outdated or unavailable. The system will retry automatically.
+              </p>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Unified Metrics Section */}
         <div className="mb-6">
@@ -124,11 +220,14 @@ export default function Index() {
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
                 predictions={predictions}
-                insights={insights}
-                isAnalyzing={isRefreshing || isLoading}
+                insights={aiInsights}
+                isAnalyzing={isAnalyzing}
+                error={aiError}
                 comparisons={comparisons}
                 handleRefreshData={handleRefreshData}
+                cancelAnalysis={cancelAnalysis}
                 trendData={trendData}
+                lastAnalyzed={lastAnalyzed}
               />
             </div>
             <div className="lg:col-span-1">
