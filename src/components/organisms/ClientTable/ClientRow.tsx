@@ -13,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { focusRingClasses } from '@/lib/accessibility';
 
 interface ClientRowProps {
   client: Client;
@@ -24,10 +25,16 @@ export function ClientRow({ client, style }: ClientRowProps) {
   const isSelected = selectedClientIds.includes(client.id);
 
   return (
-    <TableRow className="absolute w-full" style={style}>
+    <TableRow 
+      className="absolute w-full" 
+      style={style}
+      data-state={isSelected ? "selected" : "unselected"}
+      data-id={client.id}
+      aria-selected={isSelected}
+    >
       <TableCell>
         <div 
-          className="flex items-center justify-center cursor-pointer" 
+          className={`flex items-center justify-center cursor-pointer ${focusRingClasses}`} 
           onClick={(e) => {
             e.stopPropagation();
             onSelectClient(client.id);
@@ -48,23 +55,34 @@ export function ClientRow({ client, style }: ClientRowProps) {
           ) : (
             <Square className="h-4 w-4" aria-hidden="true" />
           )}
+          <span className="sr-only">
+            {isSelected ? `Unselect ${client.name}` : `Select ${client.name}`}
+          </span>
         </div>
       </TableCell>
       <TableCell>
         <span className="font-medium">{client.name}</span>
       </TableCell>
       <TableCell>
-        <Badge variant={
-          client.status === 'active' ? 'default' :
-          client.status === 'at-risk' ? 'destructive' :
-          client.status === 'churned' ? 'secondary' : 'outline'
-        }>
+        <Badge 
+          variant={
+            client.status === 'active' ? 'default' :
+            client.status === 'at-risk' ? 'destructive' :
+            client.status === 'churned' ? 'secondary' : 'outline'
+          }
+        >
           {client.status}
         </Badge>
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2">
-          <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+          <div 
+            className="w-24 h-2 bg-muted rounded-full overflow-hidden"
+            role="progressbar"
+            aria-valuenow={client.progress}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
             <div 
               className={`h-full ${
                 client.progress >= 70 ? 'bg-green-500' : 
@@ -90,19 +108,19 @@ export function ClientRow({ client, style }: ClientRowProps) {
       <TableCell>{client.csm || 'Unassigned'}</TableCell>
       <TableCell>
         <div className="flex items-center">
-          <Phone className="h-3 w-3 mr-1 text-red-600" />
+          <Phone className="h-3 w-3 mr-1 text-red-600" aria-hidden="true" />
           <span>{client.callsBooked}</span>
         </div>
       </TableCell>
       <TableCell>
         <div className="flex items-center">
-          <BarChart2 className="h-3 w-3 mr-1 text-red-600" />
+          <BarChart2 className="h-3 w-3 mr-1 text-red-600" aria-hidden="true" />
           <span>{client.dealsClosed}</span>
         </div>
       </TableCell>
       <TableCell>
         <div className="flex items-center">
-          <DollarSign className="h-3 w-3 mr-1 text-red-600" />
+          <DollarSign className="h-3 w-3 mr-1 text-red-600" aria-hidden="true" />
           <span>${client.mrr}</span>
         </div>
       </TableCell>
@@ -122,13 +140,14 @@ export function ClientRow({ client, style }: ClientRowProps) {
           <Button 
             variant="ghost" 
             size="icon"
-            className="h-6 w-6"
+            className={`h-6 w-6 ${focusRingClasses}`}
             onClick={(e) => {
               e.stopPropagation();
               onUpdateNPS(client);
             }}
+            aria-label={`Update NPS score for ${client.name}`}
           >
-            <TrendingUp className="h-3 w-3" />
+            <TrendingUp className="h-3 w-3" aria-hidden="true" />
           </Button>
         </div>
       </TableCell>
@@ -137,30 +156,34 @@ export function ClientRow({ client, style }: ClientRowProps) {
           <Button 
             variant="ghost" 
             size="icon"
+            className={focusRingClasses}
             onClick={(e) => {
               e.stopPropagation();
               onEditMetrics(client);
             }}
+            aria-label={`Edit metrics for ${client.name}`}
           >
-            <Edit className="h-4 w-4" />
+            <Edit className="h-4 w-4" aria-hidden="true" />
           </Button>
           <Button 
             variant="ghost" 
             size="icon"
+            className={focusRingClasses}
             onClick={(e) => {
               e.stopPropagation();
               onViewDetails(client);
             }}
+            aria-label={`View details for ${client.name}`}
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4" aria-hidden="true" />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreHorizontal className="h-4 w-4" />
+              <Button variant="ghost" size="icon" className={focusRingClasses} aria-label={`More options for ${client.name}`}>
+                <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="z-50 bg-white dark:bg-gray-800">
               <DropdownMenuItem onClick={() => onViewDetails(client)}>
                 View Details
               </DropdownMenuItem>

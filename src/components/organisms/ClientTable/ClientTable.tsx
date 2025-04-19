@@ -7,6 +7,7 @@ import { ClientTableProvider } from './ClientTableContext';
 import { TableHeader } from './TableHeader';
 import { ClientRow } from './ClientRow';
 import { TablePagination } from './TablePagination';
+import { reducedMotionConfig } from '@/lib/accessibility';
 
 interface ClientTableProps {
   clients: Client[];
@@ -60,9 +61,23 @@ export function ClientTable({
 
   return (
     <ClientTableProvider value={contextValue}>
-      <div className="rounded-md border">
-        <div ref={tableRef} className="relative overflow-auto" style={{ height: '600px' }}>
-          <Table>
+      <div 
+        className="rounded-md border"
+        role="region"
+        aria-label="Client data table"
+      >
+        <div 
+          ref={tableRef} 
+          className="relative overflow-auto" 
+          style={{ height: '600px' }}
+          tabIndex={0}
+          aria-label="Scrollable client table content"
+        >
+          <Table 
+            role="grid" 
+            aria-rowcount={clients.length + 1} // +1 for header row
+            aria-colcount={11}
+          >
             <TableHeader />
             <TableBody>
               {rowVirtualizer.getVirtualItems().map((virtualRow) => (
@@ -72,6 +87,7 @@ export function ClientTable({
                   style={{
                     height: `${virtualRow.size}px`,
                     transform: `translateY(${virtualRow.start}px)`,
+                    transition: reducedMotionConfig.duration()
                   }}
                 />
               ))}

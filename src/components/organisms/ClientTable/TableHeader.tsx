@@ -2,6 +2,7 @@
 import { useClientTable } from './ClientTableContext';
 import { TableRow, TableHead, TableHeader as ShadcnTableHeader } from '@/components/ui/table';
 import { CheckSquare, Square } from 'lucide-react';
+import { focusRingClasses } from '@/lib/accessibility';
 
 export function TableHeader() {
   const { clients, selectedClientIds, onSelectAll } = useClientTable();
@@ -12,7 +13,7 @@ export function TableHeader() {
       <TableRow>
         <TableHead className="w-[40px]">
           <div 
-            className="flex items-center justify-center cursor-pointer" 
+            className={`flex items-center justify-center cursor-pointer ${focusRingClasses}`} 
             onClick={onSelectAll}
             role="checkbox"
             aria-checked={allSelected}
@@ -24,6 +25,7 @@ export function TableHeader() {
               }
             }}
           >
+            <span className="sr-only">{allSelected ? 'Unselect all clients' : 'Select all clients'}</span>
             {allSelected ? (
               <CheckSquare className="h-4 w-4" aria-hidden="true" />
             ) : (
