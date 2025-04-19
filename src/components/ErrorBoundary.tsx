@@ -1,3 +1,4 @@
+
 import React, { ErrorInfo, Component, ReactNode } from 'react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    logError(error, errorInfo);
+    logError(error, {
+      componentStack: errorInfo.componentStack,
+      ...errorInfo
+    });
   }
 
   handleReset = (): void => {
