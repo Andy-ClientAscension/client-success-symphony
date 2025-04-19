@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { TableCell, TableBody, TableHead, TableHeader, TableRow, Table } from "@/components/ui/table";
 import { SSCPerformanceRow } from "./SSCPerformanceRow";
@@ -18,8 +19,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, VirtualizedTable } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { VirtualizedTable, Column } from "@/components/Dashboard/Shared/VirtualizedTable";
 
 interface SSCPerformanceTableProps {
   csmList: string[];

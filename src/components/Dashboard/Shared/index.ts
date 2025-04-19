@@ -8,3 +8,5 @@ export { ResponsiveTable } from "./ResponsiveTable";
 export type { Column } from "./ResponsiveTable";
 export { ResponsiveGrid } from "./ResponsiveGrid";
 export type { GridColumns } from "./ResponsiveGrid";
+export { VirtualizedTable } from "./VirtualizedTable";
+export type { Column as VirtualTableColumn } from "./VirtualizedTable";
