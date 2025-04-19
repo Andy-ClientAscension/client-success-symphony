@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout/Layout";
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +18,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { MetricsCards } from "@/components/Dashboard/MetricsCards";
 import { Separator } from "@/components/ui/separator";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { MetricErrorFallback } from "@/components/Dashboard/Shared/MetricErrorFallback";
+import { TableErrorFallback } from "@/components/Dashboard/Shared/TableErrorFallback";
 
 interface BackgroundTaskStatus {
   id: string;
@@ -206,16 +208,24 @@ export default function Index() {
 
           <section className="space-y-8">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-              <MetricsCards />
+              <ErrorBoundary fallback={({ error, resetErrorBoundary }) => (
+                <MetricErrorFallback error={error} resetErrorBoundary={resetErrorBoundary} />
+              )}>
+                <MetricsCards />
+              </ErrorBoundary>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+              <ErrorBoundary fallback={({ error, resetErrorBoundary }) => (
+                <TableErrorFallback error={error} resetErrorBoundary={resetErrorBoundary} />
+              )}>
                 <NPSMetricChart />
-              </div>
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+              </ErrorBoundary>
+              <ErrorBoundary fallback={({ error, resetErrorBoundary }) => (
+                <TableErrorFallback error={error} resetErrorBoundary={resetErrorBoundary} />
+              )}>
                 <ChurnMetricChart />
-              </div>
+              </ErrorBoundary>
             </div>
           </section>
 
