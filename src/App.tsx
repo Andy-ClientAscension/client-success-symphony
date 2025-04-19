@@ -13,6 +13,7 @@ import { dataSyncService } from "@/utils/dataSyncService";
 import { RefreshCw } from "lucide-react";
 import { logStartupPhase, logDetailedError } from "@/utils/errorHandling";
 import DiagnosticIndex from "./pages/DiagnosticIndex";
+import { enhancedStorage } from "@/utils/storageUtils";
 
 // Import all the page components
 import Index from "@/pages/Index";
@@ -51,8 +52,9 @@ function App() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [syncReady, setSyncReady] = useState(false);
   const [useDiagnosticMode, setUseDiagnosticMode] = useState(true);
+  const [storageIssue, setStorageIssue] = useState(false);
   
-  logStartupPhase("App component initial state", { isOnline, syncReady, useDiagnosticMode });
+  logStartupPhase("App component initial state", { isOnline, syncReady, useDiagnosticMode, storageIssue });
 
   useEffect(() => {
     logStartupPhase("App useEffect running - initializing network and sync");
@@ -74,6 +76,20 @@ function App() {
     if (navigator.onLine) {
       logStartupPhase("Initializing data sync");
       try {
+        // Test localStorage access
+        try {
+          enhancedStorage.setItem('storageTest', 'test');
+          const testValue = enhancedStorage.getItem('storageTest');
+          if (testValue !== 'test') {
+            console.warn("localStorage test failed - falling back to memory storage");
+            setStorageIssue(true);
+          }
+          enhancedStorage.removeItem('storageTest');
+        } catch (error) {
+          console.warn("localStorage test failed with error:", error);
+          setStorageIssue(true);
+        }
+        
         dataSyncService.initializeDataSync();
         dataSyncService.setInterval(20000);
         dataSyncService.manualSync().then(() => {
@@ -138,6 +154,15 @@ function App() {
             <AuthProvider>
               <BrowserCompatibilityCheck />
               <OfflineDetector />
+              {storageIssue && (
+                <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 fixed top-0 right-0 left-0 z-50">
+                  <p className="font-bold">Storage Warning</p>
+                  <p>
+                    Browser storage quota exceeded. Some data may not persist between sessions.
+                    Try clearing your browser storage or using a different browser.
+                  </p>
+                </div>
+              )}
               <Toaster />
               <Suspense fallback={<div>Loading...</div>}>
                 <Routes>
