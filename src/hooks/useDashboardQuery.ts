@@ -9,22 +9,30 @@ export function useDashboardQuery() {
   return useQuery({
     queryKey: ['dashboard-data'],
     queryFn: async () => {
-      const [clients, clientCounts, npsData, churnData] = await Promise.all([
+      const [clients, clientCounts, npsData, npsTrend, churnData] = await Promise.all([
         getAllClients(),
         getClientsCountByStatus(),
         getAverageNPS(),
-        getNPSMonthlyTrend()
+        getNPSMonthlyTrend(),
+        getChurnData()
       ]);
+
+      // Get the last NPS score from the trend data
+      const lastNPSScore = npsTrend.length > 0 ? npsTrend[npsTrend.length - 1].score : 0;
+      
+      // Get the last churn rate from churn data
+      const lastChurnRate = churnData.length > 0 ? churnData[churnData.length - 1].rate : 0;
 
       return {
         clients,
         clientCounts,
         npsData,
+        npsTrend,
         churnData,
         metrics: {
           totalClients: Object.values(clientCounts).reduce((a, b) => a + b, 0),
           avgNPS: npsData.current,
-          churnRate: churnData[churnData.length - 1]?.rate || 0
+          churnRate: lastChurnRate
         }
       };
     },
