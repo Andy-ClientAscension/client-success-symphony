@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -65,7 +64,6 @@ export function MetricsCardsContent() {
   const successRate = 85;
   const retentionRate = 92;
 
-  // Organize data into primary and secondary metrics
   const primaryMetrics = [
     {
       title: "Monthly Revenue",
@@ -160,13 +158,12 @@ export function MetricsCardsContent() {
       </div>
       
       <CollapsibleContent forceMount>
-        {/* Primary metrics - larger, more prominent */}
         <ResponsiveGrid 
           cols={{ xs: 1, sm: 2 }} 
           gap="md" 
           className="w-full mb-6" 
           role="region"
-          aria-label="Primary metrics"
+          aria-label="Primary performance metrics"
         >
           {primaryMetrics.map((item, index) => (
             <Card 
@@ -215,13 +212,12 @@ export function MetricsCardsContent() {
           ))}
         </ResponsiveGrid>
 
-        {/* Secondary metrics - smaller cards */}
         <ResponsiveGrid 
           cols={{ xs: 2, sm: 2, md: 4 }} 
           gap="md" 
           className="w-full" 
           role="region"
-          aria-label="Secondary metrics"
+          aria-label="Secondary performance metrics"
         >
           {secondaryMetrics.map((item, index) => (
             <Card 

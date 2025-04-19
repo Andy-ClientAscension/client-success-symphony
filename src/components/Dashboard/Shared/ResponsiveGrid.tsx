@@ -32,8 +32,8 @@ export function ResponsiveGrid({
   columnGap,
   align,
   justify,
-  role,
-  "aria-label": ariaLabel
+  role = 'grid',
+  "aria-label": ariaLabel = "Dashboard grid layout"
 }: ResponsiveGridProps) {
   // Convert column numbers to tailwind grid classes
   const getColsClass = (size: GridColumns): string => {

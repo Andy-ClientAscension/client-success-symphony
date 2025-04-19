@@ -15,6 +15,8 @@ export function ClientDatesSection({ client }: ClientDatesSectionProps) {
     <ResponsiveGrid 
       cols={{ xs: 1, sm: 2, md: 2, lg: 4 }} 
       gap="md"
+      aria-label={`Important dates for client ${client.name}`}
+      role="region"
     >
       <MetricItem 
         icon={<Calendar className="h-4 w-4 text-primary" />}

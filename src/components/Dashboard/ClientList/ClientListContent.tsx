@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Client } from "@/lib/data";
 import { ResponsiveTable } from "../Shared/ResponsiveTable";
@@ -193,6 +192,8 @@ export function ClientListContent({
           cols={{ xs: 1, sm: 2, md: 2, lg: 3 }}
           gap="lg"
           className="w-full"
+          role="region"
+          aria-label="Client kanban board"
         >
           <ClientKanbanView 
             clients={currentItems} 

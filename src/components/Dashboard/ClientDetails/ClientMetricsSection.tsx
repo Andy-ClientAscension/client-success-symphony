@@ -14,6 +14,8 @@ export function ClientMetricsSection({ client }: ClientMetricsSectionProps) {
     <ResponsiveGrid 
       cols={{ xs: 1, sm: 2, md: 3, lg: 3 }} 
       gap="md"
+      aria-label={`Metrics for client ${client.name}`}
+      role="region"
     >
       <MetricItem 
         icon={<Phone className="h-4 w-4 text-primary" />}
