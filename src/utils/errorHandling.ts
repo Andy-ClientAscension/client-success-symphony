@@ -44,11 +44,11 @@ export async function safeApiCall<T>(
 }
 
 // Create a reusable error handler for API calls
-export const createApiErrorHandler = (toast: any) => (error: unknown, title = 'Error') => {
+export const createApiErrorHandler = (customToast: typeof toast) => (error: unknown, title = 'Error') => {
   const message = formatAPIError(error);
   console.error(message, error);
   
-  toast({
+  customToast({
     title,
     description: message,
     variant: "destructive",

@@ -29,7 +29,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     console.error("Error caught by ErrorBoundary:", error, errorInfo);
-    // TODO: Implement external error logging service integration
+    // We can implement external error logging here
     // logToService(error, errorInfo.componentStack);
   }
 
