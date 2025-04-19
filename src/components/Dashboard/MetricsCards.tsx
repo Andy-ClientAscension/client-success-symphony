@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { AlertTriangle, Users, DollarSign, PhoneCall, Calendar, TrendingUp, BarChart, Plus, ChevronDown, ChevronUp } from "lucide-react";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { MetricsErrorFallback } from "./Shared/ErrorFallbacks";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
@@ -174,7 +175,7 @@ export function MetricsCards() {
   return (
     <Collapsible defaultOpen={true} className="w-full">
       <ErrorBoundary
-        fallback={<MetricsError error={new Error("Failed to load metrics")} resetErrorBoundary={() => window.location.reload()} />}
+        fallback={<MetricsErrorFallback error={new Error("Failed to load metrics")} resetErrorBoundary={() => window.location.reload()} />}
       >
         <MetricsCardsContent />
       </ErrorBoundary>

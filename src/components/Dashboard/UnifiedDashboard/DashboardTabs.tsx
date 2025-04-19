@@ -4,6 +4,8 @@ import { Bot, LineChart, PieChart, BarChart2 } from "lucide-react";
 import { DashboardOverview } from "./DashboardOverview";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ChartErrorFallback } from "../Shared/ErrorFallbacks";
 
 // Lazy-loaded components
 const TeamAnalytics = lazy(() => import("../TeamAnalytics").then(mod => ({ default: mod.TeamAnalytics })));
@@ -132,7 +134,9 @@ export function DashboardTabs({
           tabIndex={0}
           aria-label="Overview Content"
         >
-          <DashboardOverview />
+          <ErrorBoundary fallback={<ChartErrorFallback error={new Error("Failed to load overview")} resetErrorBoundary={() => window.location.reload()} />}>
+            <DashboardOverview />
+          </ErrorBoundary>
         </TabsContent>
 
         <TabsContent 
@@ -141,9 +145,11 @@ export function DashboardTabs({
           tabIndex={0}
           aria-label="Team Analytics Content"
         >
-          <Suspense fallback={<TabSkeleton />}>
-            <TeamAnalytics />
-          </Suspense>
+          <ErrorBoundary fallback={<ChartErrorFallback error={new Error("Failed to load team analytics")} resetErrorBoundary={() => window.location.reload()} />}>
+            <Suspense fallback={<TabSkeleton />}>
+              <TeamAnalytics />
+            </Suspense>
+          </ErrorBoundary>
         </TabsContent>
 
         <TabsContent 
@@ -152,9 +158,11 @@ export function DashboardTabs({
           tabIndex={0}
           aria-label="Client Analytics Content"
         >
-          <Suspense fallback={<TabSkeleton />}>
-            <ClientAnalytics />
-          </Suspense>
+          <ErrorBoundary fallback={<ChartErrorFallback error={new Error("Failed to load client analytics")} resetErrorBoundary={() => window.location.reload()} />}>
+            <Suspense fallback={<TabSkeleton />}>
+              <ClientAnalytics />
+            </Suspense>
+          </ErrorBoundary>
         </TabsContent>
 
         <TabsContent 
@@ -163,19 +171,21 @@ export function DashboardTabs({
           tabIndex={0}
           aria-label="AI Insights Content"
         >
-          <Suspense fallback={<TabSkeleton />}>
-            <AIInsightsTab 
-              predictions={predictions}
-              insights={insights}
-              isAnalyzing={isAnalyzing}
-              error={error}
-              comparisons={comparisons}
-              handleRefreshData={handleRefreshData}
-              cancelAnalysis={cancelAnalysis}
-              trendData={trendData}
-              lastAnalyzed={lastAnalyzed}
-            />
-          </Suspense>
+          <ErrorBoundary fallback={<ChartErrorFallback error={new Error("Failed to load AI insights")} resetErrorBoundary={() => window.location.reload()} />}>
+            <Suspense fallback={<TabSkeleton />}>
+              <AIInsightsTab 
+                predictions={predictions}
+                insights={insights}
+                isAnalyzing={isAnalyzing}
+                error={error}
+                comparisons={comparisons}
+                handleRefreshData={handleRefreshData}
+                cancelAnalysis={cancelAnalysis}
+                trendData={trendData}
+                lastAnalyzed={lastAnalyzed}
+              />
+            </Suspense>
+          </ErrorBoundary>
         </TabsContent>
       </div>
     </Tabs>
