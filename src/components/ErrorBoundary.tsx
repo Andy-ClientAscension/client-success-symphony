@@ -1,9 +1,9 @@
-
 import React, { ErrorInfo, Component, ReactNode } from 'react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { logError } from '@/utils/errorLogger';
+import { logDetailedError } from '@/utils/errorHandling';
 import { setupErrorTesting } from '@/utils/errorTesting';
 
 // Initialize error testing utilities in development
@@ -44,6 +44,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       componentStack: errorInfo.componentStack,
       ...errorInfo
     });
+    
+    logDetailedError(error, `Error boundary caught error: ${errorInfo.componentStack}`);
   }
 
   componentDidMount() {
@@ -88,10 +90,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     
     if (this.state.hasError) {
       console.log("ErrorBoundary rendering error state");
+      
+      // First, check if a custom fallback was provided
       if (this.props.fallback) {
         return this.props.fallback;
       }
       
+      // Otherwise, render the default error UI
       return (
         <div className="flex flex-col items-center justify-center min-h-[50vh] p-4" role="alert">
           <Alert className="max-w-md">

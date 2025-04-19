@@ -1,6 +1,6 @@
 
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -11,6 +11,8 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { dataSyncService } from "@/utils/dataSyncService";
 import { RefreshCw } from "lucide-react";
+import { logStartupPhase, logDetailedError } from "@/utils/errorHandling";
+import DiagnosticIndex from "./pages/DiagnosticIndex";
 
 // Import all the page components
 import Index from "@/pages/Index";
@@ -29,9 +31,9 @@ import Login from "@/pages/Login";
 import SignUp from "@/pages/SignUp";
 import NotFound from "@/pages/NotFound";
 
-console.log("App.tsx: Module loading started");
+logStartupPhase("App.tsx: Module loading started");
 
-console.log("App.tsx: Creating QueryClient");
+logStartupPhase("App.tsx: Creating QueryClient");
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -45,14 +47,15 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  console.log("App component rendering");
+  logStartupPhase("App component rendering");
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [syncReady, setSyncReady] = useState(false);
+  const [useDiagnosticMode, setUseDiagnosticMode] = useState(true);
   
-  console.log("App component initial state:", { isOnline, syncReady });
+  logStartupPhase("App component initial state", { isOnline, syncReady, useDiagnosticMode });
 
   useEffect(() => {
-    console.log("App useEffect running - initializing network and sync");
+    logStartupPhase("App useEffect running - initializing network and sync");
     const handleOnline = () => {
       console.log("Network is online");
       setIsOnline(true);
@@ -69,20 +72,31 @@ function App() {
     window.addEventListener('offline', handleOffline);
 
     if (navigator.onLine) {
-      console.log("Initializing data sync");
-      dataSyncService.initializeDataSync();
-      dataSyncService.setInterval(20000);
-      dataSyncService.manualSync().then(() => {
-        console.log("Initial sync complete");
-        setSyncReady(true);
-      }).catch(err => {
-        console.error("Error during initial sync:", err);
-        // Set syncReady to true anyway to avoid hanging
-        setSyncReady(true);
-      });
+      logStartupPhase("Initializing data sync");
+      try {
+        dataSyncService.initializeDataSync();
+        dataSyncService.setInterval(20000);
+        dataSyncService.manualSync().then(() => {
+          logStartupPhase("Initial sync complete");
+          setSyncReady(true);
+        }).catch(err => {
+          logDetailedError(err, "Error during initial sync");
+          // Set syncReady to true anyway to avoid hanging
+          setSyncReady(true);
+        });
+      } catch (error) {
+        logDetailedError(error, "Fatal error during data sync initialization");
+        setSyncReady(true); // Proceed anyway to avoid a blank screen
+      }
     } else {
-      console.log("Offline mode - skipping sync");
+      logStartupPhase("Offline mode - skipping sync");
       setSyncReady(true);
+    }
+
+    // Check URL params for diagnostic mode toggle
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('diagnostic')) {
+      setUseDiagnosticMode(urlParams.get('diagnostic') !== 'false');
     }
 
     return () => {
@@ -92,10 +106,10 @@ function App() {
     };
   }, []);
 
-  console.log("App syncReady state:", syncReady);
+  logStartupPhase("App syncReady state", syncReady);
   
   if (!syncReady) {
-    console.log("Rendering loading screen");
+    logStartupPhase("Rendering loading screen");
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -106,11 +120,11 @@ function App() {
     );
   }
 
-  console.log("Rendering full application with router");
+  logStartupPhase("Rendering full application with router");
   
   return (
     <ErrorBoundary
-      customMessage="The application encountered an unexpected error. Please refresh the page."
+      customMessage="The application encountered an unexpected error. Please refresh the page or try again later."
     >
       <Router>
         <ThemeProvider defaultTheme="system" storageKey="vite-react-theme">
@@ -119,25 +133,31 @@ function App() {
               <BrowserCompatibilityCheck />
               <OfflineDetector />
               <Toaster />
-              <Routes>
-                <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-                <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
-                <Route path="/clients/:id" element={<ProtectedRoute><ClientDetails /></ProtectedRoute>} />
-                <Route path="/add-client" element={<ProtectedRoute><AddClient /></ProtectedRoute>} />
-                <Route path="/renewals" element={<ProtectedRoute><Renewals /></ProtectedRoute>} />
-                <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
-                <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
-                <Route path="/dashboard" element={<ProtectedRoute><UnifiedDashboard /></ProtectedRoute>} />
-                <Route path="/analytics" element={<Navigate to="/dashboard" replace />} />
-                <Route path="/ai-dashboard" element={<Navigate to="/dashboard" replace />} />
-                <Route path="/health-score" element={<ProtectedRoute><HealthScoreDashboard /></ProtectedRoute>} />
-                <Route path="/automations" element={<ProtectedRoute><Automations /></ProtectedRoute>} />
-                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<SignUp />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <Suspense fallback={<div>Loading...</div>}>
+                <Routes>
+                  {/* Diagnostic route first, it can be toggled with ?diagnostic=false in URL */}
+                  <Route path="/" element={useDiagnosticMode ? 
+                    <ProtectedRoute><DiagnosticIndex /></ProtectedRoute> : 
+                    <ProtectedRoute><Index /></ProtectedRoute>} 
+                  />
+                  <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
+                  <Route path="/clients/:id" element={<ProtectedRoute><ClientDetails /></ProtectedRoute>} />
+                  <Route path="/add-client" element={<ProtectedRoute><AddClient /></ProtectedRoute>} />
+                  <Route path="/renewals" element={<ProtectedRoute><Renewals /></ProtectedRoute>} />
+                  <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
+                  <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
+                  <Route path="/dashboard" element={<ProtectedRoute><UnifiedDashboard /></ProtectedRoute>} />
+                  <Route path="/analytics" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/ai-dashboard" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/health-score" element={<ProtectedRoute><HealthScoreDashboard /></ProtectedRoute>} />
+                  <Route path="/automations" element={<ProtectedRoute><Automations /></ProtectedRoute>} />
+                  <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                  <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<SignUp />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
             </AuthProvider>
           </QueryClientProvider>
         </ThemeProvider>
@@ -146,6 +166,6 @@ function App() {
   );
 }
 
-console.log("App.tsx: Module fully loaded");
+logStartupPhase("App.tsx: Module fully loaded");
 
 export default App;
