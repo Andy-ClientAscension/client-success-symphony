@@ -29,6 +29,7 @@ import Login from "@/pages/Login";
 import SignUp from "@/pages/SignUp";
 import NotFound from "@/pages/NotFound";
 
+console.log("App.tsx: Creating QueryClient");
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -42,16 +43,20 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  console.log("App component rendering");
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [syncReady, setSyncReady] = useState(false);
 
   useEffect(() => {
+    console.log("App useEffect running - initializing network and sync");
     const handleOnline = () => {
+      console.log("Network is online");
       setIsOnline(true);
       dataSyncService.startAutoSync();
     };
     
     const handleOffline = () => {
+      console.log("Network is offline");
       setIsOnline(false);
       dataSyncService.stopAutoSync();
     };
@@ -60,12 +65,19 @@ function App() {
     window.addEventListener('offline', handleOffline);
 
     if (navigator.onLine) {
+      console.log("Initializing data sync");
       dataSyncService.initializeDataSync();
       dataSyncService.setInterval(20000);
       dataSyncService.manualSync().then(() => {
+        console.log("Initial sync complete");
+        setSyncReady(true);
+      }).catch(err => {
+        console.error("Error during initial sync:", err);
+        // Set syncReady to true anyway to avoid hanging
         setSyncReady(true);
       });
     } else {
+      console.log("Offline mode - skipping sync");
       setSyncReady(true);
     }
 
@@ -76,7 +88,10 @@ function App() {
     };
   }, []);
 
+  console.log("syncReady state:", syncReady);
+  
   if (!syncReady) {
+    console.log("Rendering loading screen");
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -87,6 +102,8 @@ function App() {
     );
   }
 
+  console.log("Rendering full application");
+  
   return (
     <ErrorBoundary
       customMessage="The application encountered an unexpected error. Please refresh the page."

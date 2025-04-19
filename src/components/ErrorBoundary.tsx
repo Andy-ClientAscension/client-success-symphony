@@ -1,3 +1,4 @@
+
 import React, { ErrorInfo, Component, ReactNode } from 'react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -27,13 +28,16 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
+    console.log("ErrorBoundary constructed");
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    console.error("ErrorBoundary caught an error:", error);
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+    console.error("ErrorBoundary componentDidCatch:", error, errorInfo);
     logError(error, {
       componentStack: errorInfo.componentStack,
       ...errorInfo
@@ -41,6 +45,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   handleReset = (): void => {
+    console.log("ErrorBoundary reset requested");
     this.setState({ hasError: false, error: undefined, errorInfo: undefined });
     if (this.props.onReset) {
       this.props.onReset();
@@ -67,6 +72,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   render(): ReactNode {
     if (this.state.hasError) {
+      console.log("ErrorBoundary rendering error state");
       if (this.props.fallback) {
         return this.props.fallback;
       }
