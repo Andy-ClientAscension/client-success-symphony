@@ -15,23 +15,6 @@ import DiagnosticIndex from "./pages/DiagnosticIndex";
 import { enhancedStorage } from "@/utils/storageUtils";
 import { routes } from "./routes";
 
-// Import all page components
-import Index from "./pages/Index";
-import Clients from "./pages/Clients";
-import ClientDetails from "./pages/ClientDetails";
-import AddClient from "./pages/AddClient";
-import Renewals from "./pages/Renewals";
-import Communications from "./pages/Communications";
-import Payments from "./pages/Payments";
-import UnifiedDashboard from "./pages/UnifiedDashboard";
-import HealthScoreDashboard from "./pages/HealthScoreDashboard";
-import Automations from "./pages/Automations";
-import Settings from "./pages/Settings";
-import Help from "./pages/Help";
-import Login from "./pages/Login";
-import SignUp from "./pages/SignUp";
-import NotFound from "./pages/NotFound";
-
 logStartupPhase("App.tsx: Module loading started");
 
 logStartupPhase("App.tsx: Creating QueryClient");
