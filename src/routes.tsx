@@ -1,15 +1,15 @@
+
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import DiagnosticIndex from './pages/DiagnosticIndex';
-import Index from './pages/Index'; // Ensure correct import with capital I
+import Index from './pages/Index';
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // This file provides alternative routes for diagnostic purposes
 export const routes = [
   {
     path: '/',
-    // Comment out the protected route temporarily for diagnostic purposes
-    // element: <ProtectedRoute><Index /></ProtectedRoute>,
+    // Use the diagnostic index to test basic rendering
     element: <DiagnosticIndex />,
   },
   {
