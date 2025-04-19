@@ -36,8 +36,24 @@ describe('Dashboard Screen Reader Accessibility', () => {
 
   describe('ClientsTable Component', () => {
     const mockClients = [
-      { id: '1', name: 'Test Client', status: 'active' },
-      { id: '2', name: 'Another Client', status: 'at-risk' }
+      { 
+        id: '1', 
+        name: 'Test Client', 
+        status: 'active' as const,
+        startDate: '2023-01-01',
+        endDate: '2024-01-01',
+        contractValue: 10000,
+        progress: 65
+      },
+      { 
+        id: '2', 
+        name: 'Another Client', 
+        status: 'at-risk' as const,
+        startDate: '2023-02-01',
+        endDate: '2024-02-01',
+        contractValue: 15000,
+        progress: 40
+      }
     ];
 
     it('supports keyboard navigation in table', async () => {
