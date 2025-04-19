@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { Layout } from "@/components/Layout/Layout";
 import { useToast } from "@/hooks/use-toast";
@@ -115,7 +114,6 @@ export default function UnifiedDashboard() {
     );
   }
 
-  // Convert metrics.trends object to an array format expected by DashboardTabs
   const trendsArray = metrics?.trends ? [metrics.trends] : [];
 
   return (
