@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/Layout/Layout";
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -30,6 +31,7 @@ interface BackgroundTaskStatus {
   message?: string;
 }
 
+// Make sure this is a default export
 export default function Index() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");

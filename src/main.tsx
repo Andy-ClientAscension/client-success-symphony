@@ -10,17 +10,14 @@ logStartupPhase("Application initialization starting");
 // Global error handler
 window.onerror = function(message, source, lineno, colno, error) {
   logDetailedError(error, `Global error at ${source}:${lineno}:${colno}`);
-  document.body.innerHTML = `
-    <div style="color: red; padding: 20px;">
-      A critical error occurred: ${message}
-    </div>
-  `;
+  console.error("Global error handler caught:", message);
   return false;
 };
 
 // Unhandled promise rejection handler
 window.addEventListener('unhandledrejection', function(event) {
   logDetailedError(event.reason, 'Unhandled promise rejection');
+  console.error("Unhandled rejection:", event.reason);
 });
 
 try {
