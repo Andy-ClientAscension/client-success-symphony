@@ -11,40 +11,19 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { dataSyncService } from "@/utils/dataSyncService";
 import { RefreshCw } from "lucide-react";
 
-// Pages
-import Index from "@/pages/Index";
-import Clients from "@/pages/Clients";
-import ClientDetails from "@/pages/ClientDetails";
-import AddClient from "@/pages/AddClient";
-import Analytics from "@/pages/Analytics";
-import Renewals from "@/pages/Renewals";
-import Communications from "@/pages/Communications";
-import Automations from "@/pages/Automations";
-import Payments from "@/pages/Payments";
-import Settings from "@/pages/Settings";
-import HealthScoreDashboard from "@/pages/HealthScoreDashboard";
-import Help from "@/pages/Help";
-import Login from "@/pages/Login";
-import SignUp from "@/pages/SignUp";
-import NotFound from "@/pages/NotFound";
-import AIDashboard from "@/pages/AIDashboard";
-import UnifiedDashboard from "@/pages/UnifiedDashboard";
-
-// Update the queryClient configuration
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
       refetchOnWindowFocus: true,
-      staleTime: 15000, // Data is fresh for 15 seconds
-      gcTime: 10 * 60 * 1000, // Unused data is garbage collected after 10 minutes
-      refetchInterval: 30000, // Default 30 second refresh
+      staleTime: 15000,
+      gcTime: 10 * 60 * 1000,
+      refetchInterval: 30000,
     },
   },
 });
 
 function App() {
-  // We'll keep this state for future use if needed, but won't pass it to OfflineDetector
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [syncReady, setSyncReady] = useState(false);
 
@@ -62,14 +41,9 @@ function App() {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Initialize data sync service
     if (navigator.onLine) {
-      dataSyncService.initializeDataSync(); // Use initializeDataSync to prevent duplicate initializations
-      
-      // Set optimal sync interval (20 seconds) to balance real-time updates and performance
+      dataSyncService.initializeDataSync();
       dataSyncService.setInterval(20000);
-      
-      // Initial sync
       dataSyncService.manualSync().then(() => {
         setSyncReady(true);
       });
@@ -96,36 +70,40 @@ function App() {
   }
 
   return (
-    <Router>
-      <ThemeProvider defaultTheme="system" storageKey="vite-react-theme">
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <BrowserCompatibilityCheck />
-            <OfflineDetector />
-            <Toaster />
-            <Routes>
-              <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-              <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
-              <Route path="/clients/:id" element={<ProtectedRoute><ClientDetails /></ProtectedRoute>} />
-              <Route path="/add-client" element={<ProtectedRoute><AddClient /></ProtectedRoute>} />
-              <Route path="/renewals" element={<ProtectedRoute><Renewals /></ProtectedRoute>} />
-              <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
-              <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
-              <Route path="/dashboard" element={<ProtectedRoute><UnifiedDashboard /></ProtectedRoute>} />
-              <Route path="/analytics" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/ai-dashboard" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/health-score" element={<ProtectedRoute><HealthScoreDashboard /></ProtectedRoute>} />
-              <Route path="/automations" element={<ProtectedRoute><Automations /></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<SignUp />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AuthProvider>
-        </QueryClientProvider>
-      </ThemeProvider>
-    </Router>
+    <ErrorBoundary
+      customMessage="The application encountered an unexpected error. Please refresh the page."
+    >
+      <Router>
+        <ThemeProvider defaultTheme="system" storageKey="vite-react-theme">
+          <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+              <BrowserCompatibilityCheck />
+              <OfflineDetector />
+              <Toaster />
+              <Routes>
+                <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+                <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
+                <Route path="/clients/:id" element={<ProtectedRoute><ClientDetails /></ProtectedRoute>} />
+                <Route path="/add-client" element={<ProtectedRoute><AddClient /></ProtectedRoute>} />
+                <Route path="/renewals" element={<ProtectedRoute><Renewals /></ProtectedRoute>} />
+                <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
+                <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
+                <Route path="/dashboard" element={<ProtectedRoute><UnifiedDashboard /></ProtectedRoute>} />
+                <Route path="/analytics" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/ai-dashboard" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/health-score" element={<ProtectedRoute><HealthScoreDashboard /></ProtectedRoute>} />
+                <Route path="/automations" element={<ProtectedRoute><Automations /></ProtectedRoute>} />
+                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<SignUp />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AuthProvider>
+          </QueryClientProvider>
+        </ThemeProvider>
+      </Router>
+    </ErrorBoundary>
   );
 }
 
