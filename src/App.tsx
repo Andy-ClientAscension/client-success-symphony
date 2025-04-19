@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
@@ -14,23 +13,6 @@ import { RefreshCw } from "lucide-react";
 import { logStartupPhase, logDetailedError } from "@/utils/errorHandling";
 import DiagnosticIndex from "./pages/DiagnosticIndex";
 import { enhancedStorage } from "@/utils/storageUtils";
-
-// Import all the page components
-import Index from "@/pages/Index";
-import Clients from "@/pages/Clients";
-import ClientDetails from "@/pages/ClientDetails";
-import AddClient from "@/pages/AddClient";
-import Renewals from "@/pages/Renewals";
-import Communications from "@/pages/Communications";
-import Payments from "@/pages/Payments";
-import UnifiedDashboard from "@/pages/UnifiedDashboard";
-import HealthScoreDashboard from "@/pages/HealthScoreDashboard";
-import Automations from "@/pages/Automations";
-import Settings from "@/pages/Settings";
-import Help from "@/pages/Help";
-import Login from "@/pages/Login";
-import SignUp from "@/pages/SignUp";
-import NotFound from "@/pages/NotFound";
 
 logStartupPhase("App.tsx: Module loading started");
 
@@ -51,7 +33,7 @@ function App() {
   logStartupPhase("App component rendering");
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [syncReady, setSyncReady] = useState(false);
-  const [useDiagnosticMode, setUseDiagnosticMode] = useState(true);
+  const [useDiagnosticMode, setUseDiagnosticMode] = useState(false);
   const [storageIssue, setStorageIssue] = useState(false);
   
   logStartupPhase("App component initial state", { isOnline, syncReady, useDiagnosticMode, storageIssue });
@@ -76,7 +58,6 @@ function App() {
     if (navigator.onLine) {
       logStartupPhase("Initializing data sync");
       try {
-        // Test localStorage access
         try {
           enhancedStorage.setItem('storageTest', 'test');
           const testValue = enhancedStorage.getItem('storageTest');
@@ -97,22 +78,20 @@ function App() {
           setSyncReady(true);
         }).catch(err => {
           logDetailedError(err, "Error during initial sync");
-          // Set syncReady to true anyway to avoid hanging
           setSyncReady(true);
         });
       } catch (error) {
         logDetailedError(error, "Fatal error during data sync initialization");
-        setSyncReady(true); // Proceed anyway to avoid a blank screen
+        setSyncReady(true);
       }
     } else {
       logStartupPhase("Offline mode - skipping sync");
       setSyncReady(true);
     }
 
-    // Check URL params for diagnostic mode toggle
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('diagnostic')) {
-      setUseDiagnosticMode(urlParams.get('diagnostic') !== 'false');
+      setUseDiagnosticMode(urlParams.get('diagnostic') === 'true');
     }
 
     return () => {
@@ -123,7 +102,6 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // Log diagnostic mode status
     console.log(`Diagnostic mode is ${useDiagnosticMode ? 'ENABLED' : 'DISABLED'}`);
     console.log('To toggle diagnostic mode, use URL parameter: ?diagnostic=true or ?diagnostic=false');
   }, [useDiagnosticMode]);
@@ -166,7 +144,6 @@ function App() {
               <Toaster />
               <Suspense fallback={<div>Loading...</div>}>
                 <Routes>
-                  {/* Diagnostic route first, it can be toggled with ?diagnostic=false in URL */}
                   <Route path="/" element={useDiagnosticMode ? 
                     <ProtectedRoute><DiagnosticIndex /></ProtectedRoute> : 
                     <ProtectedRoute><Index /></ProtectedRoute>} 

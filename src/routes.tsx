@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import DiagnosticIndex from './pages/DiagnosticIndex';
@@ -8,9 +9,9 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 export const routes = [
   {
     path: '/',
-    element: <ProtectedRoute><DiagnosticIndex /></ProtectedRoute>,
-    // Uncomment the line below and comment out the line above to switch back to the normal Index
-    // element: <ProtectedRoute><Index /></ProtectedRoute>,
+    // Uncomment the line below and comment the line above it to switch back to diagnostic mode
+    element: <ProtectedRoute><Index /></ProtectedRoute>,
+    // element: <ProtectedRoute><DiagnosticIndex /></ProtectedRoute>,
   },
   // Other routes can be defined here
 ];
