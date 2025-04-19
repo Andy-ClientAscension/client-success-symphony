@@ -13,6 +13,7 @@ import { RefreshCw } from "lucide-react";
 import { logStartupPhase, logDetailedError } from "@/utils/errorHandling";
 import DiagnosticIndex from "./pages/DiagnosticIndex";
 import { enhancedStorage } from "@/utils/storageUtils";
+import { routes } from "./routes";
 
 // Import all page components
 import Index from "./pages/Index";
@@ -161,10 +162,9 @@ function App() {
               <Toaster />
               <Suspense fallback={<div>Loading...</div>}>
                 <Routes>
-                  <Route path="/" element={useDiagnosticMode ? 
-                    <ProtectedRoute><DiagnosticIndex /></ProtectedRoute> : 
-                    <ProtectedRoute><Index /></ProtectedRoute>} 
-                  />
+                  {routes.map((route, index) => (
+                    <Route key={index} path={route.path} element={route.element} />
+                  ))}
                   <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
                   <Route path="/clients/:id" element={<ProtectedRoute><ClientDetails /></ProtectedRoute>} />
                   <Route path="/add-client" element={<ProtectedRoute><AddClient /></ProtectedRoute>} />
