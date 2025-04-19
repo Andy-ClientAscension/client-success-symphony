@@ -1,3 +1,4 @@
+
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, within, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -465,8 +466,33 @@ describe('WCAG 2.1 AA Compliance', () => {
 
   describe('Motion and Animation', () => {
     it('respects reduced motion preferences', () => {
-      const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-      mediaQuery.matches = true;
+      // Instead of modifying the property directly, we'll mock the matchMedia function
+      // to return an object with matches set to true for reduced motion preference
+      window.matchMedia = vi.fn().mockImplementation(query => {
+        if (query === '(prefers-reduced-motion: reduce)') {
+          return {
+            matches: true,
+            media: query,
+            onchange: null,
+            addListener: vi.fn(),
+            removeListener: vi.fn(),
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
+            dispatchEvent: vi.fn(),
+          };
+        }
+        
+        return {
+          matches: false,
+          media: query,
+          onchange: null,
+          addListener: vi.fn(),
+          removeListener: vi.fn(),
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+          dispatchEvent: vi.fn(),
+        };
+      });
       
       render(<MetricsCards />);
       
