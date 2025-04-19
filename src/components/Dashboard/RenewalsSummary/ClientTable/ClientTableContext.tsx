@@ -1,7 +1,7 @@
 
 import { createContext, useContext } from 'react';
 
-interface BackEndSale {
+export interface BackEndSale {
   id: string;
   clientId: string;
   clientName: string;

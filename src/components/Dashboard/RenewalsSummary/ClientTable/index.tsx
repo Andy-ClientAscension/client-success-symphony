@@ -2,10 +2,9 @@
 import { useRef, useEffect } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ClientTableContext } from "./ClientTableContext";
+import { ClientTableContext, BackEndSale } from "./ClientTableContext";
 import { TableHeader } from "./TableHeader";
 import { ClientRow } from "./ClientRow";
-import type { BackEndSale } from "@/lib/types";
 
 interface ClientTableProps {
   filteredSales: BackEndSale[];

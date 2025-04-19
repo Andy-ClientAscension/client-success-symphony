@@ -1,6 +1,6 @@
 
 import { Badge } from "@/components/ui/badge";
-import { BackEndSale } from "@/lib/types";
+import { useClientTable, BackEndSale } from "./ClientTableContext";
 
 interface ClientRowProps {
   sale: BackEndSale;

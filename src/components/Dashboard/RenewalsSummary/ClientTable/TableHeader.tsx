@@ -1,4 +1,6 @@
 
+import { useClientTable } from "./ClientTableContext";
+
 export function TableHeader() {
   const { isMobile } = useClientTable();
 
