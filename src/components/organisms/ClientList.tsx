@@ -10,7 +10,7 @@ import { STORAGE_KEYS } from "@/utils/persistence";
 import { usePaginatedData } from "@/utils/dataSyncService";
 import { Client } from "@/lib/data";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ClientListContent } from "./ClientList/ClientListContent";
+import { ClientListContent } from "@/components/Dashboard/ClientList/ClientListContent";
 
 export function ClientList({ activeTab = "all", statusFilter }: { 
   activeTab?: string, 
@@ -262,4 +262,3 @@ export function ClientList({ activeTab = "all", statusFilter }: {
     </Card>
   );
 }
-
