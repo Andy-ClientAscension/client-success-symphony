@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { Layout } from "@/components/Layout/Layout";
 import { useToast } from "@/hooks/use-toast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -11,11 +11,20 @@ import { ValidationError } from "@/components/ValidationError";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
+import { MetricsCards } from "@/components/Dashboard/MetricsCards";
 
 export default function UnifiedDashboard() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
   const { clients, clientCounts, metrics, error: dashboardError, refetch: refetchDashboardData } = useDashboardData();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefreshData = useCallback(() => {
+    setIsRefreshing(true);
+    refetchDashboardData().finally(() => {
+      setIsRefreshing(false);
+    });
+  }, [refetchDashboardData]);
 
   const handleErrorReset = useCallback(() => {
     refetchDashboardData();
@@ -28,7 +37,10 @@ export default function UnifiedDashboard() {
           customMessage="Unable to load dashboard header. Please refresh the page."
           onReset={handleErrorReset}
         >
-          <DashboardHeader />
+          <DashboardHeader 
+            isRefreshing={isRefreshing}
+            handleRefreshData={handleRefreshData}
+          />
         </ErrorBoundary>
 
         <ErrorBoundary
@@ -52,7 +64,7 @@ export default function UnifiedDashboard() {
             isAnalyzing={false}
             error={null}
             comparisons={[]}
-            handleRefreshData={() => refetchDashboardData()}
+            handleRefreshData={handleRefreshData}
             trendData={[]}
           />
         </ErrorBoundary>
