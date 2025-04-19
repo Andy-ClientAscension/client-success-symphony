@@ -76,6 +76,7 @@ export function HeroMetric({
                 "font-medium text-muted-foreground mb-1",
                 sizeClasses[size].title
               )}
+              id={`${title.toLowerCase().replace(/\s+/g, '-')}-label`}
             >
               {title}
             </p>
@@ -85,15 +86,19 @@ export function HeroMetric({
                 sizeClasses[size].value
               )}
               aria-label={ariaLabel || `${title}: ${value}`}
+              aria-labelledby={`${title.toLowerCase().replace(/\s+/g, '-')}-label`}
             >
               {value}
             </h3>
           </div>
           {icon && (
-            <div className={cn(
-              "text-brand-500 dark:text-brand-400",
-              sizeClasses[size].icon
-            )}>
+            <div 
+              className={cn(
+                "text-brand-500 dark:text-brand-400",
+                sizeClasses[size].icon
+              )}
+              aria-hidden="true"
+            >
               {icon}
             </div>
           )}
@@ -108,11 +113,12 @@ export function HeroMetric({
               sizeClasses[size].trend
             )}
             role="status"
+            aria-label={`Trend ${trend.direction === 'up' ? 'up' : 'down'} ${trend.value}% ${trend.label || ''}`}
           >
             {trend.direction === 'up' ? (
-              <ArrowUp className="h-4 w-4 mr-1" />
+              <ArrowUp className="h-4 w-4 mr-1" aria-hidden="true" />
             ) : (
-              <ArrowDown className="h-4 w-4 mr-1" />
+              <ArrowDown className="h-4 w-4 mr-1" aria-hidden="true" />
             )}
             {trend.value}%
             {trend.label && <span className="ml-1 text-muted-foreground">{trend.label}</span>}

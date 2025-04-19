@@ -8,11 +8,11 @@ interface ResponsiveGridProps {
   children: React.ReactNode;
   className?: string;
   cols?: {
-    xs?: GridColumns; // Extra small (mobile)
-    sm?: GridColumns; // Small
-    md?: GridColumns; // Medium
-    lg?: GridColumns; // Large
-    xl?: GridColumns; // Extra large
+    xs?: GridColumns;
+    sm?: GridColumns;
+    md?: GridColumns;
+    lg?: GridColumns;
+    xl?: GridColumns;
   };
   gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg';
   rowGap?: 'none' | 'xs' | 'sm' | 'md' | 'lg';

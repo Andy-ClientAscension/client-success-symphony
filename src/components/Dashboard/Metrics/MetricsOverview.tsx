@@ -58,24 +58,38 @@ export function MetricsOverview({ data }: MetricsOverviewProps) {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div 
+      className="space-y-6"
+      role="region"
+      aria-label="Dashboard metrics overview"
+    >
+      <div 
+        className="grid grid-cols-1 md:grid-cols-2 gap-4"
+        role="group"
+        aria-label="Primary metrics"
+      >
         {primaryMetrics.map((metric, index) => (
           <HeroMetric
             key={index}
             size="lg"
             variant="primary"
             {...metric}
+            aria-label={`${metric.title}: ${metric.value}`}
           />
         ))}
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div 
+        className="grid grid-cols-2 md:grid-cols-4 gap-4"
+        role="group"
+        aria-label="Secondary metrics"
+      >
         {secondaryMetrics.map((metric, index) => (
           <HeroMetric
             key={index}
             size="sm"
             variant="secondary"
             {...metric}
+            aria-label={`${metric.title}: ${metric.value}`}
           />
         ))}
       </div>
