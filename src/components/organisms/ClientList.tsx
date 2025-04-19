@@ -1,3 +1,4 @@
+
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Filter, PlusCircle, Grid, List } from "lucide-react";
@@ -11,10 +12,13 @@ import { Client } from "@/lib/data";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ClientListContent } from "./ClientList/ClientListContent";
 
-export function ClientList({ activeTab = "all" }) {
+export function ClientList({ activeTab = "all", statusFilter }: { 
+  activeTab?: string, 
+  statusFilter?: Client['status'] 
+}) {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [viewMode, setViewMode<'table' | 'kanban'>('table');
+  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -258,3 +262,4 @@ export function ClientList({ activeTab = "all" }) {
     </Card>
   );
 }
+
