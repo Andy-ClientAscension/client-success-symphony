@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/Layout/Layout";
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -208,22 +209,31 @@ export default function Index() {
 
           <section className="space-y-8">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-              <ErrorBoundary fallback={({ error, resetErrorBoundary }) => (
-                <MetricErrorFallback error={error} resetErrorBoundary={resetErrorBoundary} />
-              )}>
+              <ErrorBoundary
+                fallback={<MetricErrorFallback 
+                  error={new Error("Failed to load metrics")} 
+                  resetErrorBoundary={() => {}} 
+                />}
+              >
                 <MetricsCards />
               </ErrorBoundary>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <ErrorBoundary fallback={({ error, resetErrorBoundary }) => (
-                <TableErrorFallback error={error} resetErrorBoundary={resetErrorBoundary} />
-              )}>
+              <ErrorBoundary
+                fallback={<TableErrorFallback 
+                  error={new Error("Failed to load NPS chart")} 
+                  resetErrorBoundary={() => {}} 
+                />}
+              >
                 <NPSMetricChart />
               </ErrorBoundary>
-              <ErrorBoundary fallback={({ error, resetErrorBoundary }) => (
-                <TableErrorFallback error={error} resetErrorBoundary={resetErrorBoundary} />
-              )}>
+              <ErrorBoundary
+                fallback={<TableErrorFallback 
+                  error={new Error("Failed to load Churn chart")} 
+                  resetErrorBoundary={() => {}} 
+                />}
+              >
                 <ChurnMetricChart />
               </ErrorBoundary>
             </div>
