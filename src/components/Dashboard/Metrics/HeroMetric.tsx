@@ -15,6 +15,7 @@ export interface HeroMetricProps {
   };
   size?: 'sm' | 'md' | 'lg';
   className?: string;
+  variant?: 'primary' | 'secondary' | 'tertiary';
   "aria-label"?: string;
 }
 
@@ -24,6 +25,7 @@ export function HeroMetric({
   icon,
   trend,
   size = 'md',
+  variant = 'primary',
   className,
   "aria-label": ariaLabel,
 }: HeroMetricProps) {
@@ -33,29 +35,35 @@ export function HeroMetric({
       title: 'text-xs',
       value: 'text-xl',
       trend: 'text-xs',
-      icon: 'p-1.5'
+      icon: 'h-4 w-4'
     },
     md: {
       card: 'p-5',
       title: 'text-sm',
       value: 'text-2xl',
       trend: 'text-sm',
-      icon: 'p-2'
+      icon: 'h-5 w-5'
     },
     lg: {
       card: 'p-6',
       title: 'text-base',
       value: 'text-3xl',
-      trend: 'text-sm',
-      icon: 'p-3'
+      trend: 'text-base',
+      icon: 'h-6 w-6'
     }
+  };
+
+  const variantClasses = {
+    primary: 'bg-gradient-to-br from-brand-50 to-brand-100/50 dark:from-brand-950/50 dark:to-brand-900/30',
+    secondary: 'bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-900/30',
+    tertiary: 'bg-white dark:bg-gray-800'
   };
 
   return (
     <Card 
       className={cn(
         "border-border/30 shadow-sm hover:shadow-md transition-all duration-200",
-        "bg-gradient-to-b from-white to-gray-50 dark:from-gray-800/90 dark:to-gray-900/80",
+        variantClasses[variant],
         sizeClasses[size].card,
         className
       )}
@@ -65,7 +73,7 @@ export function HeroMetric({
           <div>
             <p 
               className={cn(
-                "font-medium text-gray-600 dark:text-gray-300 mb-1",
+                "font-medium text-muted-foreground mb-1",
                 sizeClasses[size].title
               )}
             >
@@ -73,7 +81,7 @@ export function HeroMetric({
             </p>
             <h3 
               className={cn(
-                "font-bold text-gray-900 dark:text-white",
+                "font-bold text-foreground",
                 sizeClasses[size].value
               )}
               aria-label={ariaLabel || `${title}: ${value}`}
@@ -83,7 +91,7 @@ export function HeroMetric({
           </div>
           {icon && (
             <div className={cn(
-              "bg-brand-100 dark:bg-brand-800/50 rounded-full",
+              "text-brand-500 dark:text-brand-400",
               sizeClasses[size].icon
             )}>
               {icon}
@@ -99,6 +107,7 @@ export function HeroMetric({
                 : "text-red-500 dark:text-red-400",
               sizeClasses[size].trend
             )}
+            role="status"
           >
             {trend.direction === 'up' ? (
               <ArrowUp className="h-4 w-4 mr-1" />
@@ -106,7 +115,7 @@ export function HeroMetric({
               <ArrowDown className="h-4 w-4 mr-1" />
             )}
             {trend.value}%
-            {trend.label && <span className="ml-1">{trend.label}</span>}
+            {trend.label && <span className="ml-1 text-muted-foreground">{trend.label}</span>}
           </div>
         )}
       </CardContent>
