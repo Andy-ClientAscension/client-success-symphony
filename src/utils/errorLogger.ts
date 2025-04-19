@@ -9,7 +9,13 @@ export function logError(error: Error, errorInfo?: ErrorInfo) {
   if (process.env.NODE_ENV !== 'production') {
     console.group('Error Boundary Caught Error:');
     console.error('Error:', error);
-    console.error('Component Stack:', errorInfo?.componentStack);
+    console.error('Error Name:', error.name);
+    console.error('Error Message:', error.message);
+    console.error('Error Stack:', error.stack);
+    if (errorInfo) {
+      console.error('Component Stack:', errorInfo.componentStack);
+      console.error('Additional Info:', errorInfo);
+    }
     console.groupEnd();
   }
   

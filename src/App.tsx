@@ -29,6 +29,8 @@ import Login from "@/pages/Login";
 import SignUp from "@/pages/SignUp";
 import NotFound from "@/pages/NotFound";
 
+console.log("App.tsx: Module loading started");
+
 console.log("App.tsx: Creating QueryClient");
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,6 +48,8 @@ function App() {
   console.log("App component rendering");
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [syncReady, setSyncReady] = useState(false);
+  
+  console.log("App component initial state:", { isOnline, syncReady });
 
   useEffect(() => {
     console.log("App useEffect running - initializing network and sync");
@@ -88,7 +92,7 @@ function App() {
     };
   }, []);
 
-  console.log("syncReady state:", syncReady);
+  console.log("App syncReady state:", syncReady);
   
   if (!syncReady) {
     console.log("Rendering loading screen");
@@ -102,7 +106,7 @@ function App() {
     );
   }
 
-  console.log("Rendering full application");
+  console.log("Rendering full application with router");
   
   return (
     <ErrorBoundary
@@ -141,5 +145,7 @@ function App() {
     </ErrorBoundary>
   );
 }
+
+console.log("App.tsx: Module fully loaded");
 
 export default App;

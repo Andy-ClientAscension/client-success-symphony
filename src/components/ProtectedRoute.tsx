@@ -1,6 +1,6 @@
 
-import { ReactNode } from "react";
-import { Navigate } from "react-router-dom";
+import { ReactNode, useEffect } from "react";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { LoadingState } from "@/components/LoadingState";
 
@@ -9,10 +9,24 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const location = useLocation();
+  console.log(`ProtectedRoute: Rendering at path "${location.pathname}"`);
   console.log("ProtectedRoute: Checking authentication...");
-  const { isAuthenticated, isLoading } = useAuth();
   
-  console.log("ProtectedRoute: isAuthenticated =", isAuthenticated, "isLoading =", isLoading);
+  const { isAuthenticated, isLoading, user } = useAuth();
+  
+  console.log("ProtectedRoute: Auth state =", { 
+    isAuthenticated, 
+    isLoading, 
+    user: user ? `User ID: ${user.email}` : 'No user' 
+  });
+  
+  useEffect(() => {
+    console.log("ProtectedRoute: Mount effect at path", location.pathname);
+    return () => {
+      console.log("ProtectedRoute: Unmount effect from path", location.pathname);
+    };
+  }, [location.pathname]);
   
   if (isLoading) {
     console.log("ProtectedRoute: Auth is loading, showing loading state");

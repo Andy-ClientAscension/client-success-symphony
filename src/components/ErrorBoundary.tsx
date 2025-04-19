@@ -37,10 +37,23 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    console.error("ErrorBoundary componentDidCatch:", error, errorInfo);
+    console.error("ErrorBoundary componentDidCatch:", error);
+    console.error("Component Stack:", errorInfo.componentStack);
+    
     logError(error, {
       componentStack: errorInfo.componentStack,
       ...errorInfo
+    });
+  }
+
+  componentDidMount() {
+    console.log("ErrorBoundary mounted");
+  }
+
+  componentDidUpdate(prevProps: ErrorBoundaryProps, prevState: ErrorBoundaryState) {
+    console.log("ErrorBoundary updated", { 
+      hasErrorChanged: prevState.hasError !== this.state.hasError,
+      currentError: this.state.error?.message || "None"
     });
   }
 
@@ -71,6 +84,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   render(): ReactNode {
+    console.log("ErrorBoundary rendering, hasError:", this.state.hasError);
+    
     if (this.state.hasError) {
       console.log("ErrorBoundary rendering error state");
       if (this.props.fallback) {
@@ -101,6 +116,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       );
     }
 
+    console.log("ErrorBoundary rendering children");
     return this.props.children;
   }
 }
