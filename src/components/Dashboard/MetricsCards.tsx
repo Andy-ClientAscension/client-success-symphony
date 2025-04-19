@@ -1,27 +1,13 @@
 import React, { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { 
-  ArrowUp, 
-  ArrowDown, 
-  Users, 
-  DollarSign, 
-  PhoneCall, 
-  Calendar,
-  AlertTriangle,
-  TrendingUp,
-  BarChart,
-  Plus,
-  ChevronDown,
-  ChevronUp
-} from "lucide-react";
+import { AlertTriangle, Users, DollarSign, PhoneCall, Calendar, TrendingUp, BarChart, Plus, ChevronDown, ChevronUp } from "lucide-react";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { EmptyState } from "@/components/EmptyState";
 import { ResponsiveGrid } from "./Shared/ResponsiveGrid";
-import { Badge } from "@/components/ui/badge";
+import { HeroMetric } from "./Metrics/HeroMetric";
 
 function MetricsError({ error, resetErrorBoundary }: { error: Error, resetErrorBoundary: () => void }) {
   return (
@@ -68,59 +54,49 @@ export function MetricsCardsContent() {
     {
       title: "Monthly Revenue",
       value: `$${metrics?.totalMRR || 0}`,
-      trend: { value: "8%", direction: "up" },
+      trend: { value: 8, direction: "up" as const, label: "from last month" },
       icon: <DollarSign className="h-8 w-8 text-brand-500" />,
-      ariaLabel: "Monthly recurring revenue",
-      isPrimary: true
+      ariaLabel: "Monthly recurring revenue"
     },
     {
       title: "Total Clients",
       value: totalClients,
-      trend: { value: "5%", direction: "up" },
+      trend: { value: 5, direction: "up" as const, label: "from last month" },
       icon: <Users className="h-8 w-8 text-brand-500" />,
-      ariaLabel: "Total number of clients",
-      isPrimary: true
-    },
+      ariaLabel: "Total number of clients"
+    }
   ];
 
   const secondaryMetrics = [
     {
       title: "Success Rate",
       value: `${successRate}%`,
-      trend: { value: "3%", direction: "up" },
-      icon: <TrendingUp className="h-8 w-8 text-brand-500/70" />,
-      ariaLabel: "Client success rate"
+      trend: { value: 3, direction: "up" as const },
+      icon: <TrendingUp className="h-6 w-6 text-brand-500/70" />
     },
     {
       title: "Calls Booked",
       value: metrics?.totalCallsBooked || 0,
-      trend: { value: "12%", direction: "up" },
-      icon: <PhoneCall className="h-8 w-8 text-brand-500/70" />,
-      ariaLabel: "Total calls booked"
+      trend: { value: 12, direction: "up" as const },
+      icon: <PhoneCall className="h-6 w-6 text-brand-500/70" />
     },
     {
       title: "Deals Closed",
       value: metrics?.totalDealsClosed || 0,
-      trend: { value: "-3%", direction: "down" },
-      icon: <Calendar className="h-8 w-8 text-brand-500/70" />,
-      ariaLabel: "Total deals closed"
+      trend: { value: 3, direction: "down" as const },
+      icon: <Calendar className="h-6 w-6 text-brand-500/70" />
     },
     {
       title: "Retention Rate",
       value: `${retentionRate}%`,
-      trend: { value: "2%", direction: "up" },
-      icon: <BarChart className="h-8 w-8 text-brand-500/70" />,
-      ariaLabel: "Client retention rate"
+      trend: { value: 2, direction: "up" as const },
+      icon: <BarChart className="h-6 w-6 text-brand-500/70" />
     }
   ];
 
   if (!metrics && !clientCounts) {
     return (
-      <Collapsible
-        open={isExpanded}
-        onOpenChange={setIsExpanded}
-        className="w-full"
-      >
+      <Collapsible open={isExpanded} onOpenChange={setIsExpanded} className="w-full">
         <CollapsibleTrigger asChild>
           <Button variant="outline" className="w-full justify-between">
             <span>Metrics Overview</span>
@@ -165,50 +141,12 @@ export function MetricsCardsContent() {
           role="region"
           aria-label="Primary performance metrics"
         >
-          {primaryMetrics.map((item, index) => (
-            <Card 
-              key={`primary-${index}`} 
-              className="border-border/30 shadow-md hover:shadow-lg transition-all duration-200 bg-gradient-to-b from-white to-gray-50 dark:from-gray-800/90 dark:to-gray-900/80"
-            >
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p 
-                      className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1" 
-                      id={`metric-${index}-label`}
-                    >
-                      {item.title}
-                    </p>
-                    <h3 
-                      className="text-3xl font-bold text-gray-900 dark:text-white"
-                      aria-labelledby={`metric-${index}-label`}
-                      tabIndex={0}
-                    >
-                      {item.value}
-                    </h3>
-                  </div>
-                  <div className="bg-brand-100 dark:bg-brand-800/50 p-4 rounded-full">
-                    {item.icon}
-                  </div>
-                </div>
-                <Separator className="my-3 bg-border/30" />
-                <div 
-                  className={`text-sm flex items-center font-medium ${
-                    item.trend.direction === "up" 
-                      ? "text-emerald-600 dark:text-emerald-400" 
-                      : "text-brand-500 dark:text-brand-400"
-                  }`}
-                  aria-label={`${item.trend.value} ${item.trend.direction === "up" ? "increase" : "decrease"} from last month`}
-                >
-                  {item.trend.direction === "up" ? (
-                    <ArrowUp className="h-4 w-4 mr-1" aria-hidden="true" />
-                  ) : (
-                    <ArrowDown className="h-4 w-4 mr-1" aria-hidden="true" />
-                  )}
-                  <span>{item.trend.value} from last month</span>
-                </div>
-              </CardContent>
-            </Card>
+          {primaryMetrics.map((metric, index) => (
+            <HeroMetric
+              key={`primary-${index}`}
+              size="lg"
+              {...metric}
+            />
           ))}
         </ResponsiveGrid>
 
@@ -219,46 +157,12 @@ export function MetricsCardsContent() {
           role="region"
           aria-label="Secondary performance metrics"
         >
-          {secondaryMetrics.map((item, index) => (
-            <Card 
-              key={`secondary-${index}`} 
-              className="border-border/30 shadow-sm hover:shadow-md transition-all duration-200 bg-white dark:bg-gray-800/70"
-            >
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <p 
-                    className="text-xs font-medium text-gray-600 dark:text-gray-300" 
-                    id={`metric-sec-${index}-label`}
-                  >
-                    {item.title}
-                  </p>
-                  <div className="bg-gray-100 dark:bg-gray-700/40 p-1.5 rounded-md">
-                    {item.icon}
-                  </div>
-                </div>
-                <h3 
-                  className="text-xl font-bold text-gray-900 dark:text-white mb-2"
-                  aria-labelledby={`metric-sec-${index}-label`}
-                  tabIndex={0}
-                >
-                  {item.value}
-                </h3>
-                <div 
-                  className={`text-xs flex items-center font-medium ${
-                    item.trend.direction === "up" 
-                      ? "text-emerald-600 dark:text-emerald-400" 
-                      : "text-red-500 dark:text-red-400"
-                  }`}
-                >
-                  {item.trend.direction === "up" ? (
-                    <ArrowUp className="h-3 w-3 mr-1" />
-                  ) : (
-                    <ArrowDown className="h-3 w-3 mr-1" />
-                  )}
-                  <span>{item.trend.value}</span>
-                </div>
-              </CardContent>
-            </Card>
+          {secondaryMetrics.map((metric, index) => (
+            <HeroMetric
+              key={`secondary-${index}`}
+              size="sm"
+              {...metric}
+            />
           ))}
         </ResponsiveGrid>
       </CollapsibleContent>
