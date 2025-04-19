@@ -454,8 +454,11 @@ describe('Form Accessibility', () => {
   it('ensures all form controls have associated labels', async () => {
     render(<MetricsCards />);
     
-    // Get all form controls
-    const formControls = screen.queryAllByRole(/textbox|combobox|checkbox|radio/);
+    // Get all form controls - Fix: Using string literals instead of RegExp
+    const formControls = screen.queryAllByRole('textbox')
+      .concat(screen.queryAllByRole('combobox'))
+      .concat(screen.queryAllByRole('checkbox'))
+      .concat(screen.queryAllByRole('radio'));
     
     // Check each control has an associated label
     formControls.forEach(control => {
