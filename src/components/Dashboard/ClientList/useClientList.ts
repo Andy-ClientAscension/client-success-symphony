@@ -31,11 +31,10 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     }
   }, [toast]);
   
-  // Use the realtime data hook for clients with updater function
-  const [clients, isClientsLoading, setClients] = useRealtimeData<Client[]>(
+  // Use the realtime data hook for clients
+  const [clients, isClientsLoading] = useRealtimeData<Client[]>(
     STORAGE_KEYS.CLIENTS, 
-    defaultClients,
-    true // Enable the setter
+    defaultClients
   );
   
   const [filteredClients, setFilteredClients] = useState<Client[]>(clients);
@@ -51,6 +50,15 @@ export function useClientList({ statusFilter }: UseClientListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
+  
+  // Create a function to update clients (we'll use manual storage updates)
+  const setClients = (updatedClients: Client[]) => {
+    saveData(STORAGE_KEYS.CLIENTS, updatedClients);
+    // Dispatch a custom event to notify other components of the change
+    window.dispatchEvent(new CustomEvent('storageUpdated', { 
+      detail: { key: STORAGE_KEYS.CLIENTS } 
+    }));
+  };
 
   // Filter clients when any related state changes
   useEffect(() => {
@@ -154,9 +162,7 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     });
     
     // Update both local state and persisted data
-    if (setClients) {
-      setClients(updatedClients);
-    }
+    setClients(updatedClients);
     
     if (kanbanStore && kanbanStore.moveStudent) {
       clientIds.forEach(clientId => {

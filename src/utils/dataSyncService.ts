@@ -1,6 +1,12 @@
-// Keep the existing imports if they exist, and add our new enhancedStorage import
 import { enhancedStorage } from "./storageUtils";
 import { useState, useEffect } from 'react';
+
+// Type definitions for our service
+export interface SyncEvent {
+  type: 'sync:started' | 'sync:completed' | 'sync:failed' | 'sync:config';
+  timestamp: string;
+  details?: any;
+}
 
 // We're creating a class to handle data synchronization
 class DataSyncService {
@@ -8,6 +14,11 @@ class DataSyncService {
   private autoSyncTimer: NodeJS.Timeout | null = null;
   private subscribers: Map<string, Function[]> = new Map();
   private isSyncing: boolean = false;
+  private syncStats: { lastSync: Date | null; totalSyncs: number } = {
+    lastSync: null,
+    totalSyncs: 0
+  };
+  private syncLog: SyncEvent[] = [];
   
   constructor() {
     console.log("DataSyncService initialized");
@@ -17,9 +28,12 @@ class DataSyncService {
   initializeDataSync(): void {
     try {
       console.log("Initializing data sync with enhanced storage handling");
-      // Check if we have any data to sync
+      // Check if we have any local data to sync
       const hasLocalData = this.checkForLocalData();
       console.log(`Local data check: ${hasLocalData ? 'Data found' : 'No data found'}`);
+      
+      // Log sync event
+      this.logSyncEvent('sync:config', { initialized: true });
     } catch (error) {
       console.error("Error in initializeDataSync:", error);
     }
@@ -55,6 +69,9 @@ class DataSyncService {
       this.stopAutoSync();
       this.startAutoSync();
     }
+    
+    // Log sync event
+    this.logSyncEvent('sync:config', { interval });
   }
   
   // Start automatic synchronization
@@ -69,6 +86,9 @@ class DataSyncService {
         console.error("Error during auto-sync:", err);
       });
     }, this.syncInterval);
+    
+    // Log sync event
+    this.logSyncEvent('sync:config', { autoSync: true, interval: this.syncInterval });
   }
   
   // Stop automatic synchronization
@@ -77,29 +97,90 @@ class DataSyncService {
       console.log("Stopping auto-sync");
       clearInterval(this.autoSyncTimer);
       this.autoSyncTimer = null;
+      
+      // Log sync event
+      this.logSyncEvent('sync:config', { autoSync: false });
     }
   }
   
   // Manually trigger a sync
-  async manualSync(): Promise<void> {
+  async manualSync(): Promise<boolean> {
     try {
       if (this.isSyncing) {
         console.log("Sync already in progress, skipping");
-        return;
+        return false;
       }
       
       this.isSyncing = true;
       console.log("Manual sync started");
       
+      // Log sync event
+      this.logSyncEvent('sync:started');
+      
       // Simulate sync process
       await this.syncData();
       
+      // Update stats
+      this.syncStats.lastSync = new Date();
+      this.syncStats.totalSyncs++;
+      
+      // Log sync event
+      this.logSyncEvent('sync:completed');
+      
       console.log("Manual sync completed");
+      return true;
     } catch (error) {
       console.error("Error in manualSync:", error);
+      
+      // Log sync event
+      this.logSyncEvent('sync:failed', { error: error instanceof Error ? error.message : 'Unknown error' });
+      
+      return false;
     } finally {
       this.isSyncing = false;
     }
+  }
+  
+  // Log sync events
+  private logSyncEvent(type: SyncEvent['type'], details?: any): void {
+    const event: SyncEvent = {
+      type,
+      timestamp: new Date().toISOString(),
+      details
+    };
+    
+    this.syncLog.push(event);
+    
+    // Keep log size reasonable
+    if (this.syncLog.length > 100) {
+      this.syncLog = this.syncLog.slice(-100);
+    }
+  }
+  
+  // Get sync stats
+  getSyncStats() {
+    return { ...this.syncStats };
+  }
+  
+  // Get sync state
+  getSyncState() {
+    return {
+      isSyncing: this.isSyncing,
+      autoSyncEnabled: this.autoSyncTimer !== null,
+      syncInterval: this.syncInterval,
+      stats: this.getSyncStats(),
+      syncLog: [...this.syncLog]
+    };
+  }
+  
+  // Get sync log
+  getSyncLog() {
+    return [...this.syncLog];
+  }
+  
+  // Clear sync log
+  clearSyncLog() {
+    this.syncLog = [];
   }
   
   // Simulate data synchronization
@@ -189,9 +270,39 @@ class DataSyncService {
 // Create and export a singleton instance
 export const dataSyncService = new DataSyncService();
 
+// Hook to access sync service functionality
+export function useSyncService() {
+  const [syncState, setSyncState] = useState(dataSyncService.getSyncState());
+  
+  useEffect(() => {
+    // Update state initially
+    setSyncState(dataSyncService.getSyncState());
+    
+    // Setup interval to refresh state
+    const intervalId = setInterval(() => {
+      setSyncState(dataSyncService.getSyncState());
+    }, 1000);
+    
+    return () => clearInterval(intervalId);
+  }, []);
+  
+  return {
+    startAutoSync: () => dataSyncService.startAutoSync(),
+    stopAutoSync: () => dataSyncService.stopAutoSync(),
+    manualSync: () => dataSyncService.manualSync(),
+    setInterval: (interval: number) => dataSyncService.setInterval(interval),
+    syncStats: syncState.stats,
+    isSyncing: syncState.isSyncing,
+    autoSyncEnabled: syncState.autoSyncEnabled,
+    syncInterval: syncState.syncInterval,
+    syncLog: syncState.syncLog,
+    clearSyncLog: () => dataSyncService.clearSyncLog()
+  };
+}
+
 // Add a hook to use realtime data with error handling
-export function useRealtimeData(key: string, defaultValue: any = null): [any, boolean] {
-  const [data, setData] = useState(defaultValue);
+export function useRealtimeData<T = any>(key: string, defaultValue: T = null as unknown as T): [T, boolean] {
+  const [data, setData] = useState<T>(defaultValue);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
@@ -202,7 +313,7 @@ export function useRealtimeData(key: string, defaultValue: any = null): [any, bo
       setIsLoading(false);
       
       // Subscribe to changes
-      const handleDataChange = (newData: any) => {
+      const handleDataChange = (newData: T) => {
         setData(newData);
       };
       
@@ -219,6 +330,56 @@ export function useRealtimeData(key: string, defaultValue: any = null): [any, bo
   }, [key, defaultValue]);
   
   return [data, isLoading];
+}
+
+// Add paginated data hook for optimized performance
+export function usePaginatedData<T = any>(key: string, defaultValue: T[] = [], itemsPerPage: number = 10) {
+  const [data, isLoading] = useRealtimeData<T[]>(key, defaultValue);
+  const [paginationState, setPaginationState] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    itemsPerPage,
+    indexOfFirstItem: 0,
+    indexOfLastItem: itemsPerPage,
+    onPageChange: (page: number) => {
+      setPaginationState(prev => {
+        const currentPage = Math.max(1, Math.min(page, prev.totalPages));
+        const indexOfLastItem = currentPage * prev.itemsPerPage;
+        const indexOfFirstItem = indexOfLastItem - prev.itemsPerPage;
+        
+        return {
+          ...prev,
+          currentPage,
+          indexOfFirstItem,
+          indexOfLastItem: Math.min(indexOfLastItem, prev.totalItems)
+        };
+      });
+    }
+  });
+  
+  // Update pagination when data or items per page changes
+  useEffect(() => {
+    if (data && Array.isArray(data)) {
+      const totalItems = data.length;
+      const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+      const currentPage = Math.min(paginationState.currentPage, totalPages);
+      const indexOfLastItem = currentPage * itemsPerPage;
+      const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+      
+      setPaginationState({
+        ...paginationState,
+        totalItems,
+        totalPages,
+        currentPage,
+        itemsPerPage,
+        indexOfFirstItem,
+        indexOfLastItem: Math.min(indexOfLastItem, totalItems)
+      });
+    }
+  }, [data, itemsPerPage]);
+  
+  return [data, paginationState, isLoading] as const;
 }
 
 // Export the enhanced storage for direct use

@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { STORAGE_KEYS } from "@/utils/persistence";
-import { usePaginatedData } from "@/utils/dataSyncService";
+import { useRealtimeData } from "@/utils/dataSyncService";
 import { Client } from "@/lib/data";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ClientListContent } from "@/components/Dashboard/ClientList/ClientListContent";
@@ -24,11 +24,10 @@ export function ClientList({ activeTab = "all", statusFilter }: {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
   
-  // Use the new optimized hook for paginated data
-  const [clients, paginationState, isLoading] = usePaginatedData<Client>(
+  // Use the realtime data hook for clients
+  const [clients, isLoading] = useRealtimeData<Client[]>(
     STORAGE_KEYS.CLIENTS, 
-    [], 
-    itemsPerPage
+    []
   );
   
   // Filter clients based on active tab, search query, and status filter

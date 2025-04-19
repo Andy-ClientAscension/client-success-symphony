@@ -21,7 +21,7 @@ interface BackEndSale {
 
 export function RenewalsSummary() {
   const [selectedTeam, setSelectedTeam] = useState("all");
-  const [backEndSales] = useRealtimeData<BackEndSale[]>(STORAGE_KEYS.CHURN, []);
+  const [backEndSales, isLoading] = useRealtimeData(STORAGE_KEYS.CHURN, [] as BackEndSale[]);
   
   // Get unique teams
   const teams = useMemo(() => {

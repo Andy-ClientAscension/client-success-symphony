@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,8 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { RefreshCw, AlertCircle, CheckCircle2 } from "lucide-react";
-import { dataSyncService, useSyncService, SyncEvent } from "@/utils/dataSyncService";
-import { APIConnectionDialog } from "./APIConnectionDialog";
+import { dataSyncService, useSyncService } from "@/utils/dataSyncService";
+import type { SyncEvent } from "@/utils/dataSyncService";
 
 export function DataSyncMonitor() {
   const { toast } = useToast();
@@ -17,23 +18,32 @@ export function DataSyncMonitor() {
     startAutoSync, 
     stopAutoSync, 
     manualSync, 
-    setInterval, // This now maps to setSyncInterval internally
+    setInterval,
     syncStats, 
     isSyncing,
     syncLog,
-    clearSyncLog
+    clearSyncLog,
+    autoSyncEnabled
   } = useSyncService();
   
   const [syncInterval, setSyncInterval] = useState(30);
   const [showLog, setShowLog] = useState(false);
-  const [autoSyncEnabled, setAutoSyncEnabled] = useState(false);
   const [visibleLogItems, setVisibleLogItems] = useState<SyncEvent[]>([]);
   const [apiDialogOpen, setApiDialogOpen] = useState(false);
   const MAX_VISIBLE_LOG_ITEMS = 50; // Only show most recent 50 events
 
+  // Initialize sync interval from current value
+  useEffect(() => {
+    // Set initial value to match what's in the service
+    if (dataSyncService) {
+      const interval = dataSyncService['syncInterval'] || 30000;
+      setSyncInterval(interval / 1000);
+    }
+  }, []);
+
   // Update visible log items when the full log changes
   useEffect(() => {
-    if (syncLog.length > 0) {
+    if (syncLog && syncLog.length > 0) {
       // Take only the most recent MAX_VISIBLE_LOG_ITEMS
       setVisibleLogItems([...syncLog].reverse().slice(0, MAX_VISIBLE_LOG_ITEMS));
     } else {
@@ -55,7 +65,6 @@ export function DataSyncMonitor() {
         description: "Automatic synchronization has been turned off",
       });
     }
-    setAutoSyncEnabled(enabled);
   };
 
   const handleManualSync = async () => {
