@@ -1,6 +1,8 @@
+
 /**
  * Utility functions for error handling
  */
+import { toast } from "@/hooks/use-toast";
 
 // Function to format API errors into user-friendly messages
 export const formatAPIError = (error: unknown): string => {

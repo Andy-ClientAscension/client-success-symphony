@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { toast } from "@/hooks/use-toast";
 import { ErrorResponse, fetchWithErrorHandling, handleFormSubmission } from '@/utils/errorHandling';
 
 export function useErrorHandling() {
@@ -71,4 +72,3 @@ export function useErrorHandling() {
     handleFormOperation
   };
 }
-
