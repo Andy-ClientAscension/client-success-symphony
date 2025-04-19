@@ -19,7 +19,8 @@ export function useDashboardData() {
     data: clients,
     isLoading: isClientsLoading,
     error: clientsError,
-    refetch: refetchClients
+    refetch: refetchClients,
+    dataUpdatedAt: clientsUpdatedAt
   } = useQuery({
     queryKey: ['clients'],
     queryFn: getAllClients,
@@ -42,7 +43,8 @@ export function useDashboardData() {
     data: clientCounts,
     isLoading: isCountsLoading,
     error: countsError,
-    refetch: refetchCounts
+    refetch: refetchCounts,
+    dataUpdatedAt: countsUpdatedAt
   } = useQuery({
     queryKey: ['client-counts'],
     queryFn: getClientsCountByStatus,
@@ -65,7 +67,8 @@ export function useDashboardData() {
     data: npsData,
     isLoading: isNPSLoading,
     error: npsError,
-    refetch: refetchNPS
+    refetch: refetchNPS,
+    dataUpdatedAt: npsUpdatedAt
   } = useQuery({
     queryKey: ['nps-trend'],
     queryFn: getNPSMonthlyTrend,
@@ -88,7 +91,8 @@ export function useDashboardData() {
     data: churnData,
     isLoading: isChurnLoading,
     error: churnError,
-    refetch: refetchChurn
+    refetch: refetchChurn,
+    dataUpdatedAt: churnUpdatedAt
   } = useQuery({
     queryKey: ['churn-data'],
     queryFn: getChurnData,
@@ -111,7 +115,8 @@ export function useDashboardData() {
     data: metricsData,
     isLoading: isMetricsLoading,
     error: metricsError,
-    refetch: refetchMetrics
+    refetch: refetchMetrics,
+    dataUpdatedAt: metricsUpdatedAt
   } = useQuery({
     queryKey: ['client-metrics'],
     queryFn: () => getClientMetricsByTeam(),
@@ -150,12 +155,12 @@ export function useDashboardData() {
 
   const dataUpdatedAt = Math.max(
     ...[
-      clients?.dataUpdatedAt,
-      clientCounts?.dataUpdatedAt,
-      npsData?.dataUpdatedAt,
-      churnData?.dataUpdatedAt,
-      metricsData?.dataUpdatedAt
-    ].filter(Boolean).map(date => date instanceof Date ? date.getTime() : 0)
+      clientsUpdatedAt,
+      countsUpdatedAt,
+      npsUpdatedAt,
+      churnUpdatedAt,
+      metricsUpdatedAt
+    ].filter(Boolean).map(timestamp => timestamp || 0)
   );
 
   // Combined refetch function for all queries

@@ -13,7 +13,10 @@ interface DashboardHeaderProps {
 export function DashboardHeader({ isRefreshing, handleRefreshData }: DashboardHeaderProps) {
   const { dataUpdatedAt } = useDashboardData();
   
-  const lastUpdated = dataUpdatedAt ? formatDistanceToNow(new Date(dataUpdatedAt), { addSuffix: true }) : 'never';
+  // Only try to format the date if dataUpdatedAt is valid
+  const lastUpdated = dataUpdatedAt && dataUpdatedAt > 0 
+    ? formatDistanceToNow(new Date(dataUpdatedAt), { addSuffix: true }) 
+    : 'never';
 
   return (
     <div className="flex items-center justify-between mb-4">
