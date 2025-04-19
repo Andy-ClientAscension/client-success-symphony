@@ -106,6 +106,12 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    // Log diagnostic mode status
+    console.log(`Diagnostic mode is ${useDiagnosticMode ? 'ENABLED' : 'DISABLED'}`);
+    console.log('To toggle diagnostic mode, use URL parameter: ?diagnostic=true or ?diagnostic=false');
+  }, [useDiagnosticMode]);
+
   logStartupPhase("App syncReady state", syncReady);
   
   if (!syncReady) {
