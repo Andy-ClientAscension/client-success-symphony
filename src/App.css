@@ -62,16 +62,44 @@ html, body {
 
 /* Improved color contrast for better accessibility */
 .text-muted-foreground {
-  @apply text-gray-600 dark:text-gray-400;
+  @apply text-gray-700 dark:text-gray-300;
 }
 
 .text-primary-foreground {
   @apply text-gray-900 dark:text-gray-50;
 }
 
-/* Better focus indicators for keyboard navigation */
+/* Enhanced focus indicators for keyboard navigation */
 :focus-visible {
   @apply outline-none ring-2 ring-offset-2 ring-primary;
+}
+
+/* Motion and animation controls */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .animate-spin,
+  .animate-pulse,
+  .animate-bounce,
+  .animate-ping {
+    animation: none !important;
+  }
+}
+
+/* Form accessibility improvements */
+[aria-invalid="true"] {
+  @apply border-red-500 dark:border-red-400;
+}
+
+.form-label {
+  @apply block text-sm font-medium mb-1 text-gray-900 dark:text-gray-100;
 }
 
 /* Skip to main content link */

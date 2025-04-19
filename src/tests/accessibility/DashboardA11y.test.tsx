@@ -1,4 +1,3 @@
-
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, within, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -447,6 +446,30 @@ describe('Dashboard Keyboard Navigation', () => {
       // This is a basic test - in a real environment, you might need visual regression testing
       // to truly verify focus styles are visually apparent
       expect(hasVisibleFocusStyles).toBe(true);
+    });
+  });
+});
+
+describe('Form Accessibility', () => {
+  it('ensures all form controls have associated labels', async () => {
+    render(<MetricsCards />);
+    
+    // Get all form controls
+    const formControls = screen.queryAllByRole(/textbox|combobox|checkbox|radio/);
+    
+    // Check each control has an associated label
+    formControls.forEach(control => {
+      const id = control.getAttribute('id');
+      if (id) {
+        const label = document.querySelector(`label[for="${id}"]`);
+        expect(label).toBeInTheDocument();
+      } else {
+        // If no ID, check for aria-label or aria-labelledby
+        expect(
+          control.hasAttribute('aria-label') || 
+          control.hasAttribute('aria-labelledby')
+        ).toBeTruthy();
+      }
     });
   });
 });
