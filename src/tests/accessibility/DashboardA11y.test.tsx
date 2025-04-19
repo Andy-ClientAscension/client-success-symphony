@@ -1,4 +1,3 @@
-
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, within, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -447,6 +446,96 @@ describe('Dashboard Keyboard Navigation', () => {
       // This is a basic test - in a real environment, you might need visual regression testing
       // to truly verify focus styles are visually apparent
       expect(hasVisibleFocusStyles).toBe(true);
+    });
+  });
+});
+
+describe('WCAG 2.1 AA Compliance', () => {
+  describe('Color Contrast', () => {
+    it('ensures sufficient color contrast for text elements', async () => {
+      const { container } = render(<MetricsCards />);
+      const results = await axe(container, {
+        rules: {
+          'color-contrast': { enabled: true }
+        }
+      });
+      expect(results).toHaveNoViolations();
+    });
+  });
+
+  describe('Motion and Animation', () => {
+    it('respects reduced motion preferences', () => {
+      const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      mediaQuery.matches = true;
+      
+      render(<MetricsCards />);
+      
+      // Check that no animations are running when reduced motion is preferred
+      const animatedElements = document.querySelectorAll('[class*="animate-"]');
+      animatedElements.forEach(element => {
+        const styles = window.getComputedStyle(element);
+        expect(styles.animation).toBe('none');
+      });
+    });
+  });
+
+  describe('Keyboard Focus Styles', () => {
+    it('maintains visible focus indicators', async () => {
+      render(<ClientsTable clients={[]} selectedClientIds={[]} onSelectClient={() => {}} onSelectAll={() => {}} onViewDetails={() => {}} onEditMetrics={() => {}} onUpdateNPS={() => {}} />);
+      
+      // Get all interactive elements
+      const interactiveElements = screen.getAllByRole('button');
+      
+      for (const element of interactiveElements) {
+        // Focus each element
+        element.focus();
+        
+        const styles = window.getComputedStyle(element);
+        // Check for visible focus styles (outline, ring, etc.)
+        expect(
+          styles.outline !== 'none' ||
+          styles.boxShadow !== 'none' ||
+          styles.border !== 'none'
+        ).toBe(true);
+      }
+    });
+  });
+
+  describe('Form Labels and ARIA', () => {
+    it('ensures all form controls have associated labels', async () => {
+      const { container } = render(<DataSyncMonitor />);
+      const results = await axe(container, {
+        rules: {
+          'label': { enabled: true },
+          'aria-label': { enabled: true },
+          'aria-labelledby': { enabled: true }
+        }
+      });
+      expect(results).toHaveNoViolations();
+    });
+  });
+
+  describe('Images and Media', () => {
+    it('verifies all images have alt text', async () => {
+      const { container } = render(<MetricsCards />);
+      const results = await axe(container, {
+        rules: {
+          'image-alt': { enabled: true }
+        }
+      });
+      expect(results).toHaveNoViolations();
+    });
+  });
+
+  describe('Document Structure', () => {
+    it('validates heading hierarchy', async () => {
+      const { container } = render(<MetricsCards />);
+      const results = await axe(container, {
+        rules: {
+          'heading-order': { enabled: true }
+        }
+      });
+      expect(results).toHaveNoViolations();
     });
   });
 });
