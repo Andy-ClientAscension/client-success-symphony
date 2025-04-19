@@ -3,7 +3,12 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 import { focusRingClasses } from "@/lib/accessibility"
 
-const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
+// Define and export InputProps
+export interface InputProps extends React.ComponentProps<"input"> {
+  className?: string;
+}
+
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, "aria-describedby": ariaDescribedBy, ...props }, ref) => {
     const hasError = props["aria-invalid"] === true;
     
