@@ -22,10 +22,8 @@ export function useAuth() {
 
   useEffect(() => {
     console.log("useAuth effect running");
-    // Check if user is logged in
     const checkAuth = async () => {
       try {
-        // This is a placeholder - replace with your actual auth logic
         const user = localStorage.getItem('user') 
           ? JSON.parse(localStorage.getItem('user') || '{}') 
           : null;
@@ -50,14 +48,11 @@ export function useAuth() {
     checkAuth();
   }, []);
 
-  // Add login/logout functionality
   const login = async (email: string, password: string): Promise<boolean> => {
     console.log("Login attempt with email:", email);
     setAuthState(prev => ({ ...prev, isLoading: true }));
     
     try {
-      // This is a placeholder - replace with actual authentication logic
-      // For demo purposes, accept any credentials
       const user = { email, id: '1', name: 'Demo User' };
       localStorage.setItem('user', JSON.stringify(user));
       
@@ -92,13 +87,11 @@ export function useAuth() {
     });
   };
 
-  // Add register functionality
   const register = async (email: string, password: string, inviteCode: string): Promise<{ success: boolean; message: string }> => {
     console.log("Register attempt with email:", email);
     setAuthState(prev => ({ ...prev, isLoading: true }));
     
     try {
-      // Validate invite code first
       const isValidCode = await validateInviteCode(inviteCode);
       
       if (!isValidCode) {
@@ -109,7 +102,6 @@ export function useAuth() {
         };
       }
       
-      // Password validation
       if (password.length < 6) {
         setAuthState(prev => ({ ...prev, isLoading: false }));
         return { 
@@ -118,8 +110,6 @@ export function useAuth() {
         };
       }
 
-      // In a real implementation, we would register the user with a backend
-      // For this mock implementation, we'll just create the user
       const user = { email, id: '1', name: 'Demo User' };
       localStorage.setItem('user', JSON.stringify(user));
       
@@ -149,10 +139,8 @@ export function useAuth() {
     }
   };
 
-  // Add validate invite code functionality
   const validateInviteCode = async (code: string): Promise<boolean> => {
     console.log("Validating invite code:", code);
-    // In a real app, this would verify the code against a database
     return VALID_INVITE_CODES.includes(code);
   };
 
