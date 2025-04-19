@@ -1,4 +1,3 @@
-
 /**
  * Utility functions for error handling
  */
@@ -149,4 +148,32 @@ export async function handleFormSubmission<T>(
     
     onError?.(errorResponse);
   }
+}
+
+// New debug-focused utility for startup errors
+export function logStartupPhase(phase: string, context?: any) {
+  console.log(`[Startup] ${phase}`, context || '');
+}
+
+// Enhanced error logger with more context
+export function logDetailedError(error: unknown, context?: string) {
+  console.group('Detailed Error Log:');
+  console.error(`Context: ${context || 'Unknown'}`);
+  
+  if (error instanceof Error) {
+    console.error(`Name: ${error.name}`);
+    console.error(`Message: ${error.message}`);
+    console.error(`Stack: ${error.stack}`);
+    
+    // Handle nested errors
+    if ('cause' in error && error.cause instanceof Error) {
+      console.error('Caused by:', error.cause);
+    }
+  } else {
+    console.error('Unknown Error Type:', error);
+  }
+  
+  console.groupEnd();
+  
+  return error instanceof Error ? error.message : String(error);
 }

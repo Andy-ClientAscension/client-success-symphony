@@ -27,6 +27,7 @@ try {
   const rootElement = document.getElementById("root");
   
   if (!rootElement) {
+    console.error("Root element not found in DOM");
     throw new Error("Root element not found");
   }
   
@@ -34,6 +35,13 @@ try {
   const root = createRoot(rootElement);
   
   console.log("About to render App component...");
+  // Add visibility check for root element
+  console.log("Root element:", {
+    exists: !!rootElement,
+    id: rootElement?.id,
+    display: rootElement?.style?.display
+  });
+  
   root.render(
     <React.StrictMode>
       <App />
@@ -51,4 +59,3 @@ try {
     </div>
   `;
 }
-
