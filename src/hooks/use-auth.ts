@@ -1,7 +1,8 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { AuthContext } from "@/contexts/AuthContext";
 
-// Valid invitation codes (in a real app, these would be stored in a database)
+// Valid invitation codes
 const VALID_INVITE_CODES = ["SSC2024", "AGENT007", "WELCOME1"];
 
 export interface AuthState {
@@ -11,7 +12,27 @@ export interface AuthState {
   error: Error | null;
 }
 
+// Main auth hook with context
 export function useAuth() {
+  console.log("Using auth hook");
+  const context = useContext(AuthContext);
+  
+  if (context === undefined) {
+    console.error("useAuth must be used within an AuthProvider");
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  
+  console.log("Auth context:", {
+    isAuthenticated: context.isAuthenticated,
+    isLoading: context.isLoading,
+    userExists: !!context.user
+  });
+  
+  return context;
+}
+
+// Direct auth hook without context
+export function useDirectAuth() {
   console.log("useAuth hook called");
   const [authState, setAuthState] = useState<AuthState>({
     isAuthenticated: false,
