@@ -102,6 +102,7 @@ export function useAuth() {
       const isValidCode = await validateInviteCode(inviteCode);
       
       if (!isValidCode) {
+        setAuthState(prev => ({ ...prev, isLoading: false }));
         return { 
           success: false, 
           message: "Invalid invitation code. Please check your code and try again." 
@@ -110,6 +111,7 @@ export function useAuth() {
       
       // Password validation
       if (password.length < 6) {
+        setAuthState(prev => ({ ...prev, isLoading: false }));
         return { 
           success: false, 
           message: "Password must be at least 6 characters." 
@@ -144,8 +146,6 @@ export function useAuth() {
         success: false, 
         message: "An error occurred during registration. Please try again." 
       };
-    } finally {
-      setAuthState(prev => ({ ...prev, isLoading: false }));
     }
   };
 
