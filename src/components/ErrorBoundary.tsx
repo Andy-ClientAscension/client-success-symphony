@@ -1,9 +1,14 @@
-
 import React, { ErrorInfo, Component, ReactNode } from 'react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { logError } from '@/utils/errorLogger';
+import { setupErrorTesting } from '@/utils/errorTesting';
+
+// Initialize error testing utilities in development
+if (process.env.NODE_ENV === 'development') {
+  setupErrorTesting();
+}
 
 interface ErrorBoundaryProps {
   children: ReactNode;
