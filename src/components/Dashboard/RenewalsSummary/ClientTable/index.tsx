@@ -84,3 +84,4 @@ export function ClientTable({ filteredSales, formatTeamName }: ClientTableProps)
     </ClientTableContext.Provider>
   );
 }
+

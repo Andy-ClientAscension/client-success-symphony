@@ -1,11 +1,12 @@
 
-import React from 'react';
-import { Layout } from '@/components/Layout/Layout';
+import { Layout } from "@/components/Layout/Layout";
+import type { ReactNode } from "react";
 
 interface DashboardLayoutProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   return <Layout>{children}</Layout>;
 }
+

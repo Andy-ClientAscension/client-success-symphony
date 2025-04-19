@@ -55,3 +55,4 @@ export function ClientRow({ sale, style, index }: ClientRowProps) {
     </tr>
   );
 }
+
