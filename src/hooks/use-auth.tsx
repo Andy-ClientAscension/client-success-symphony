@@ -2,8 +2,11 @@
 import { useContext } from "react";
 import { AuthContext } from "@/contexts/AuthContext";
 
+// Re-export the hook from use-auth.ts
+export { useAuth as useDirectAuth } from "./use-auth";
+
 export function useAuth() {
-  console.log("useAuth hook called");
+  console.log("useAuth wrapper hook called");
   const context = useContext(AuthContext);
   
   if (context === undefined) {
