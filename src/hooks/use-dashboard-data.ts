@@ -136,11 +136,9 @@ export function useDashboardData() {
   // Process metrics to add missing required properties
   const metrics = metricsData ? {
     ...metricsData,
-    // Add performanceTrends if it doesn't exist, ensuring it's always an array
     performanceTrends: 'performanceTrends' in metricsData && Array.isArray(metricsData.performanceTrends)
       ? metricsData.performanceTrends 
       : (clients ? calculatePerformanceTrends(clients) : []),
-    // Add trends if it doesn't exist
     trends: 'trends' in metricsData
       ? metricsData.trends 
       : { 
@@ -149,6 +147,16 @@ export function useDashboardData() {
           churnTrend: 0 
         }
   } : undefined;
+
+  const dataUpdatedAt = Math.max(
+    ...[
+      clients?.dataUpdatedAt,
+      clientCounts?.dataUpdatedAt,
+      npsData?.dataUpdatedAt,
+      churnData?.dataUpdatedAt,
+      metricsData?.dataUpdatedAt
+    ].filter(Boolean).map(date => date instanceof Date ? date.getTime() : 0)
+  );
 
   // Combined refetch function for all queries
   const refetch = async () => {
@@ -181,6 +189,7 @@ export function useDashboardData() {
     metrics,
     isLoading: isClientsLoading || isCountsLoading || isNPSLoading || isChurnLoading || isMetricsLoading,
     error,
-    refetch
+    refetch,
+    dataUpdatedAt: dataUpdatedAt || undefined
   };
 }

@@ -1,9 +1,9 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
-import { FilterBar } from "../Shared/FilterBar";
-import { getAllTeams } from "@/lib/data";
+import { RefreshCw, Clock } from "lucide-react";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { formatDistanceToNow } from "date-fns";
 
 interface DashboardHeaderProps {
   isRefreshing: boolean;
@@ -11,51 +11,26 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ isRefreshing, handleRefreshData }: DashboardHeaderProps) {
-  const [selectedTeam, setSelectedTeam] = useState("all");
-  const [selectedDateRange, setSelectedDateRange] = useState("Last 30 days");
-  const teams = ["all", ...getAllTeams()];
+  const { dataUpdatedAt } = useDashboardData();
+  
+  const lastUpdated = dataUpdatedAt ? formatDistanceToNow(new Date(dataUpdatedAt), { addSuffix: true }) : 'never';
 
   return (
-    <header 
-      className="space-y-4" 
-      role="banner" 
-      aria-label="Dashboard Header"
-    >
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 
-          className="text-2xl font-bold" 
-          tabIndex={0}
-          aria-label="Unified Dashboard"
-        >
-          Unified Dashboard
-        </h1>
-        <Button
-          onClick={handleRefreshData}
-          disabled={isRefreshing}
-          variant="outline"
-          size="sm"
-          className="h-9"
-          aria-label={isRefreshing ? "Refreshing data..." : "Refresh dashboard data"}
-        >
-          <RefreshCw 
-            className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} 
-            aria-hidden="true"
-          />
-          <span className="sr-only">{isRefreshing ? "Refreshing..." : "Refresh Data"}</span>
-          <span aria-hidden="true">{isRefreshing ? "Refreshing..." : "Refresh Data"}</span>
-        </Button>
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+        <Clock className="h-4 w-4" />
+        <span>Last updated: {lastUpdated}</span>
       </div>
-      
-      <FilterBar
-        selectedTeam={selectedTeam}
-        teams={teams}
-        onTeamChange={setSelectedTeam}
-        selectedDateRange={selectedDateRange}
-        onDateRangeChange={setSelectedDateRange}
-        selectedSortOrder="desc"
-        onSortOrderChange={(order) => console.log(`Sort order changed to ${order}`)}
-        aria-label="Dashboard filters"
-      />
-    </header>
+      <Button 
+        variant="outline" 
+        size="sm"
+        onClick={handleRefreshData}
+        disabled={isRefreshing}
+        className="h-8"
+      >
+        <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+        {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+      </Button>
+    </div>
   );
 }
