@@ -1,3 +1,4 @@
+
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, within, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -154,9 +155,30 @@ describe('Dashboard Screen Reader Accessibility', () => {
     });
 
     it('ClientsTable has no accessibility violations', async () => {
+      const mockClients = [
+        { 
+          id: '1', 
+          name: 'Test Client', 
+          status: 'active' as const,
+          startDate: '2023-01-01',
+          endDate: '2024-01-01',
+          contractValue: 10000,
+          progress: 65
+        },
+        { 
+          id: '2', 
+          name: 'Another Client', 
+          status: 'at-risk' as const,
+          startDate: '2023-02-01',
+          endDate: '2024-02-01',
+          contractValue: 15000,
+          progress: 40
+        }
+      ];
+    
       const { container } = render(
         <ClientsTable
-          clients={[]}
+          clients={mockClients}
           selectedClientIds={[]}
           onSelectClient={() => {}}
           onSelectAll={() => {}}
@@ -211,6 +233,27 @@ describe('Dashboard Keyboard Navigation', () => {
     });
     
     it('ClientsTable respects tab order for all interactive elements', async () => {
+      const mockClients = [
+        { 
+          id: '1', 
+          name: 'Test Client', 
+          status: 'active' as const,
+          startDate: '2023-01-01',
+          endDate: '2024-01-01',
+          contractValue: 10000,
+          progress: 65
+        },
+        { 
+          id: '2', 
+          name: 'Another Client', 
+          status: 'at-risk' as const,
+          startDate: '2023-02-01',
+          endDate: '2024-02-01',
+          contractValue: 15000,
+          progress: 40
+        }
+      ];
+      
       render(
         <ClientsTable
           clients={mockClients}
@@ -286,6 +329,27 @@ describe('Dashboard Keyboard Navigation', () => {
     });
     
     it('Dropdowns in tables can be operated with keyboard', async () => {
+      const mockClients = [
+        { 
+          id: '1', 
+          name: 'Test Client', 
+          status: 'active' as const,
+          startDate: '2023-01-01',
+          endDate: '2024-01-01',
+          contractValue: 10000,
+          progress: 65
+        },
+        { 
+          id: '2', 
+          name: 'Another Client', 
+          status: 'at-risk' as const,
+          startDate: '2023-02-01',
+          endDate: '2024-02-01',
+          contractValue: 15000,
+          progress: 40
+        }
+      ];
+      
       render(
         <ClientsTable
           clients={mockClients}
