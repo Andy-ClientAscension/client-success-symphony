@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout/Layout";
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -214,6 +213,7 @@ export default function Index() {
                   error={new Error("Failed to load metrics")} 
                   resetErrorBoundary={() => {}} 
                 />}
+                customMessage="Unable to load metrics data. Please try again."
               >
                 <MetricsCards />
               </ErrorBoundary>
@@ -225,6 +225,7 @@ export default function Index() {
                   error={new Error("Failed to load NPS chart")} 
                   resetErrorBoundary={() => {}} 
                 />}
+                customMessage="Unable to load NPS chart data. Please try again."
               >
                 <NPSMetricChart />
               </ErrorBoundary>
@@ -233,6 +234,7 @@ export default function Index() {
                   error={new Error("Failed to load Churn chart")} 
                   resetErrorBoundary={() => {}} 
                 />}
+                customMessage="Unable to load Churn chart data. Please try again."
               >
                 <ChurnMetricChart />
               </ErrorBoundary>
