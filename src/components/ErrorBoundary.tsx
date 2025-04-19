@@ -1,8 +1,8 @@
-
 import React, { ErrorInfo, Component, ReactNode } from 'react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
+import { logError } from '@/utils/errorLogger';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -28,9 +28,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    console.error("Error caught by ErrorBoundary:", error, errorInfo);
-    // We can implement external error logging here
-    // logToService(error, errorInfo.componentStack);
+    logError(error, errorInfo);
   }
 
   handleReset = (): void => {
