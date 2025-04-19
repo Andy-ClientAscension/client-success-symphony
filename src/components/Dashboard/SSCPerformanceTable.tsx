@@ -1,9 +1,8 @@
-
 import React, { useState } from "react";
 import { TableCell, TableBody, TableHead, TableHeader, TableRow, Table } from "@/components/ui/table";
 import { SSCPerformanceRow } from "./SSCPerformanceRow";
 import { Client } from "@/lib/data";
-import { HelpCircle, PlusCircle } from "lucide-react";
+import { HelpCircle, PlusCircle, Trash2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +18,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, VirtualizedTable } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
 interface SSCPerformanceTableProps {
   csmList: string[];
@@ -26,7 +27,6 @@ interface SSCPerformanceTableProps {
   selectedTeam: string;
 }
 
-// List of SSCs to exclude from the display
 const excludedSSCs = [
   "John Smith",
   "Sarah Johnson",
@@ -50,29 +50,24 @@ export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerfo
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newSSCName, setNewSSCName] = useState("");
-  
+
   const handleDeleteCSM = (csm: string) => {
     setCsmToDelete(csm);
     setShowDeleteDialog(true);
   };
-  
+
   const confirmDelete = () => {
     if (csmToDelete) {
-      // Remove the CSM from the filtered list
       setFilteredCsmList(prev => prev.filter(csm => csm !== csmToDelete));
-      
-      // Show success toast
       toast({
         title: "Account deleted",
         description: `${csmToDelete} has been removed from the list.`,
       });
-      
-      // Reset the state
       setCsmToDelete(null);
     }
     setShowDeleteDialog(false);
   };
-  
+
   const cancelDelete = () => {
     setCsmToDelete(null);
     setShowDeleteDialog(false);
@@ -84,7 +79,6 @@ export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerfo
 
   const confirmAddSSC = () => {
     if (newSSCName.trim()) {
-      // Check if the name already exists
       if (filteredCsmList.includes(newSSCName.trim())) {
         toast({
           title: "Duplicate Name",
@@ -93,17 +87,11 @@ export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerfo
         });
         return;
       }
-
-      // Add the new SSC to the list
       setFilteredCsmList(prev => [...prev, newSSCName.trim()]);
-      
-      // Show success toast
       toast({
         title: "SSC Added",
         description: `${newSSCName.trim()} has been added to the list.`,
       });
-      
-      // Reset the state
       setNewSSCName("");
       setShowAddDialog(false);
     } else {
@@ -114,12 +102,88 @@ export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerfo
       });
     }
   };
-  
+
   const cancelAddSSC = () => {
     setNewSSCName("");
     setShowAddDialog(false);
   };
-  
+
+  const columns: Column<string>[] = [
+    {
+      key: 'name',
+      header: 'SSC',
+      cell: (csm) => <span className="font-medium">{csm}</span>,
+      className: isMobile ? 'w-[120px]' : 'w-[180px]'
+    },
+    {
+      key: 'clients',
+      header: 'Clients',
+      cell: (csm) => {
+        const csmClients = clients.filter(client => client.csm === csm);
+        return <div className="text-center">{csmClients.length}</div>;
+      },
+      className: isMobile ? 'w-[70px]' : 'w-[100px]'
+    },
+    {
+      key: 'backendStudents',
+      header: 'Backend Students',
+      cell: (csm) => {
+        const backendCount = clients.filter(
+          client => client.csm === csm && client.team?.toLowerCase().includes('backend')
+        ).length;
+        return <div className="text-center">{backendCount}</div>;
+      },
+      className: isMobile ? 'hidden' : 'w-[180px]',
+      hideOnMobile: true
+    },
+    {
+      key: 'metrics',
+      header: (
+        <div className="flex justify-between">
+          <div className="min-w-[80px]">Team Health</div>
+          <div className="flex-1 text-right">Metrics</div>
+        </div>
+      ),
+      cell: (csm) => {
+        const csmClients = clients.filter(client => client.csm === csm);
+        const healthScore = Math.round(
+          (csmClients.filter(c => c.status === 'active').length / csmClients.length) * 100
+        );
+        return (
+          <div className="flex items-center justify-between">
+            <div className="min-w-[80px]">
+              {healthScore >= 80 ? 'A' : 
+               healthScore >= 60 ? 'B' :
+               healthScore >= 40 ? 'C' :
+               healthScore >= 20 ? 'D' : 'F'}
+            </div>
+            <Progress value={healthScore} className="w-24" />
+          </div>
+        );
+      }
+    },
+    {
+      key: 'actions',
+      header: 'Action',
+      cell: (csm) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => handleDeleteCSM(csm)}
+          className="w-full justify-center"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      ),
+      className: 'w-[60px] text-center'
+    }
+  ];
+
+  const filteredCSMs = filteredCsmList.filter(csm => {
+    if (selectedTeam === "all") return true;
+    return clients.some(client => client.csm === csm && client.team === selectedTeam);
+  });
+
   return (
     <div className="mt-6">
       <div className="flex items-center justify-between mb-3">
@@ -153,49 +217,20 @@ export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerfo
         </Button>
       </div>
       <div className="border rounded-lg overflow-hidden bg-card text-card-foreground dark:border-gray-700">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50 dark:bg-gray-800/50">
-              <TableHead className={`py-4 text-sm ${isMobile ? 'w-[120px]' : 'w-[180px]'}`}>SSC</TableHead>
-              <TableHead className={`text-center text-sm ${isMobile ? 'w-[70px]' : 'w-[100px]'}`}>Clients</TableHead>
-              <TableHead className={`text-center text-sm ${isMobile ? 'hidden' : 'w-[180px]'}`}>Backend Students</TableHead>
-              <TableHead>
-                <div className="flex justify-between text-sm">
-                  <div className="min-w-[80px]">Team Health</div>
-                  <div className="flex-1 text-right">Metrics</div>
-                </div>
-              </TableHead>
-              <TableHead className="text-center text-sm w-[60px]">Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredCsmList.filter(csm => {
-              if (selectedTeam === "all") return true;
-              return clients.some(client => client.csm === csm && client.team === selectedTeam);
-            }).map((csm) => (
-              <SSCPerformanceRow 
-                key={csm} 
-                csm={csm} 
-                clients={clients} 
-                isMobile={isMobile}
-                onDelete={handleDeleteCSM}
-              />
-            ))}
-            {filteredCsmList.filter(csm => {
-              if (selectedTeam === "all") return true;
-              return clients.some(client => client.csm === csm && client.team === selectedTeam);
-            }).length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
-                  No SSCs found for the selected team.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+        <Card>
+          <VirtualizedTable
+            data={filteredCSMs}
+            columns={columns}
+            keyExtractor={(csm) => csm}
+            emptyMessage="No SSCs found for the selected team."
+            className="border rounded-lg"
+            stripedRows={true}
+            hoverable={true}
+            itemHeight={56}
+          />
+        </Card>
       </div>
-      
-      {/* Delete Confirmation Dialog */}
+
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -216,7 +251,6 @@ export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerfo
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Add SSC Dialog */}
       <AlertDialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>

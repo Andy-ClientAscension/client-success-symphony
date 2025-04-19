@@ -1,7 +1,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ResponsiveTable, Column } from "@/components/Dashboard/Shared/ResponsiveTable";
+import { VirtualizedTable, Column } from "@/components/Dashboard/Shared/VirtualizedTable";
 
 interface BackEndSale {
   id: string;
@@ -69,12 +69,14 @@ export function ClientTable({ filteredSales, formatTeamName }: ClientTableProps)
   ];
 
   return (
-    <ResponsiveTable
+    <VirtualizedTable
       data={filteredSales}
       columns={columns}
       keyExtractor={(sale) => sale.id}
       emptyMessage="No clients found for the selected filter."
       stripedRows={true}
+      hoverable={true}
+      itemHeight={56}
     />
   );
 }
