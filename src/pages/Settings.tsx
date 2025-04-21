@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -11,20 +10,20 @@ import { Badge } from "@/components/ui/badge";
 import { User, Bell, Shield, Key, Globe, Users, FileText, RefreshCw, Link, AlertTriangle } from "lucide-react";
 import { availableApiServices, isApiConnected } from "@/lib/api";
 import { APIConnectionDialog } from "@/components/Dashboard/APIConnectionDialog";
+import { InviteCodeManager } from "@/components/Dashboard/InviteCodeManager";
 
 export default function Settings() {
   const [apiStatus, setApiStatus] = useState("disconnected");
   const [activeConnections, setActiveConnections] = useState<Record<string, boolean>>({});
   const [apiDialogOpen, setApiDialogOpen] = useState(false);
   
-  // Load saved API connections
   useEffect(() => {
     const connections: Record<string, boolean> = {};
     availableApiServices.forEach(service => {
       connections[service.id] = isApiConnected(service.id);
     });
     setActiveConnections(connections);
-  }, [apiDialogOpen]); // Refresh when dialog closes
+  }, [apiDialogOpen]);
   
   return (
     <Layout>
@@ -52,9 +51,12 @@ export default function Settings() {
               <Key className="h-4 w-4 mr-2" />
               API
             </TabsTrigger>
+            <TabsTrigger value="invites">
+              <Key className="h-4 w-4 mr-2" />
+              Invite Codes
+            </TabsTrigger>
           </TabsList>
           
-          {/* Account Settings */}
           <TabsContent value="account">
             <div className="grid gap-6">
               <Card>
@@ -127,7 +129,6 @@ export default function Settings() {
             </div>
           </TabsContent>
           
-          {/* Notifications Settings */}
           <TabsContent value="notifications">
             <Card>
               <CardHeader>
@@ -176,7 +177,6 @@ export default function Settings() {
             </Card>
           </TabsContent>
           
-          {/* Security Settings */}
           <TabsContent value="security">
             <div className="grid gap-6">
               <Card>
@@ -265,7 +265,6 @@ export default function Settings() {
             </div>
           </TabsContent>
           
-          {/* API Settings */}
           <TabsContent value="api">
             <Card>
               <CardHeader>
@@ -296,12 +295,10 @@ export default function Settings() {
                         variant="outline"
                         onClick={() => {
                           if (activeConnections[service.id]) {
-                            // Disconnect logic would go here
                             const connections = {...activeConnections};
                             connections[service.id] = false;
                             setActiveConnections(connections);
                             
-                            // Remove from localStorage
                             const apiSettings = JSON.parse(localStorage.getItem('apiSettings') || '{}');
                             if (apiSettings[service.id]) {
                               apiSettings[service.id].connected = false;
@@ -341,6 +338,10 @@ export default function Settings() {
               open={apiDialogOpen}
               onOpenChange={setApiDialogOpen}
             />
+          </TabsContent>
+          
+          <TabsContent value="invites" className="space-y-6">
+            <InviteCodeManager />
           </TabsContent>
         </Tabs>
       </div>

@@ -161,7 +161,16 @@ export function useDirectAuth() {
 
   const validateInviteCode = async (code: string): Promise<boolean> => {
     console.log("Validating invite code:", code);
-    return VALID_INVITE_CODES.includes(code);
+    const validCodes = JSON.parse(localStorage.getItem('validInviteCodes') || '[]');
+    const isValid = validCodes.includes(code);
+    
+    if (isValid) {
+      // Remove the code after successful use
+      const remainingCodes = validCodes.filter((c: string) => c !== code);
+      localStorage.setItem('validInviteCodes', JSON.stringify(remainingCodes));
+    }
+    
+    return isValid;
   };
 
   return {

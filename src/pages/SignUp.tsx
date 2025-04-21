@@ -137,7 +137,7 @@ export default function SignUp() {
           </div>
           <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
           <CardDescription className="text-center">
-            Register with an invitation code to access the SSC Dashboard
+            Enter your details to register
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -232,9 +232,6 @@ export default function SignUp() {
               Log in
             </Link>
           </div>
-          <p className="text-xs text-center text-muted-foreground">
-            <span className="font-medium">Demo Note:</span> Use invite codes: SSC2024, AGENT007, or WELCOME1
-          </p>
         </CardFooter>
       </Card>
     </div>
