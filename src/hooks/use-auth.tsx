@@ -1,8 +1,6 @@
+
 import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from "@/contexts/AuthContext";
-
-// Valid invitation codes
-const VALID_INVITE_CODES = ["SSC2024", "AGENT007", "WELCOME1"];
 
 export interface AuthState {
   isAuthenticated: boolean;
@@ -11,7 +9,7 @@ export interface AuthState {
   error: Error | null;
 }
 
-// Main auth hook with context
+// Main auth hook to be used across the application
 export function useAuth() {
   console.log("Using auth hook");
   const context = useContext(AuthContext);
@@ -30,154 +28,5 @@ export function useAuth() {
   return context;
 }
 
-// Direct auth hook without context
-export function useDirectAuth() {
-  console.log("useAuth hook called");
-  const [authState, setAuthState] = useState<AuthState>({
-    isAuthenticated: false,
-    user: null,
-    isLoading: true,
-    error: null
-  });
-
-  useEffect(() => {
-    console.log("useAuth effect running");
-    const checkAuth = async () => {
-      try {
-        const user = localStorage.getItem('user') 
-          ? JSON.parse(localStorage.getItem('user') || '{}') 
-          : null;
-        
-        setAuthState({
-          isAuthenticated: !!user,
-          user,
-          isLoading: false,
-          error: null
-        });
-      } catch (error) {
-        console.error("Auth check error:", error);
-        setAuthState({
-          isAuthenticated: false,
-          user: null,
-          isLoading: false,
-          error: error as Error
-        });
-      }
-    };
-
-    checkAuth();
-  }, []);
-
-  const login = async (email: string, password: string): Promise<boolean> => {
-    console.log("Login attempt with email:", email);
-    setAuthState(prev => ({ ...prev, isLoading: true }));
-    
-    try {
-      const user = { email, id: '1', name: 'Demo User' };
-      localStorage.setItem('user', JSON.stringify(user));
-      
-      setAuthState({
-        isAuthenticated: true,
-        user,
-        isLoading: false,
-        error: null
-      });
-      
-      return true;
-    } catch (error) {
-      console.error("Login error:", error);
-      setAuthState({
-        isAuthenticated: false,
-        user: null,
-        isLoading: false,
-        error: error as Error
-      });
-      return false;
-    }
-  };
-  
-  const logout = () => {
-    console.log("Logout called");
-    localStorage.removeItem('user');
-    setAuthState({
-      isAuthenticated: false,
-      user: null,
-      isLoading: false,
-      error: null
-    });
-  };
-
-  const register = async (email: string, password: string, inviteCode: string): Promise<{ success: boolean; message: string }> => {
-    console.log("Register attempt with email:", email);
-    setAuthState(prev => ({ ...prev, isLoading: true }));
-    
-    try {
-      const isValidCode = await validateInviteCode(inviteCode);
-      
-      if (!isValidCode) {
-        setAuthState(prev => ({ ...prev, isLoading: false }));
-        return { 
-          success: false, 
-          message: "Invalid invitation code. Please check your code and try again." 
-        };
-      }
-      
-      if (password.length < 6) {
-        setAuthState(prev => ({ ...prev, isLoading: false }));
-        return { 
-          success: false, 
-          message: "Password must be at least 6 characters." 
-        };
-      }
-
-      const user = { email, id: '1', name: 'Demo User' };
-      localStorage.setItem('user', JSON.stringify(user));
-      
-      setAuthState({
-        isAuthenticated: true,
-        user,
-        isLoading: false,
-        error: null
-      });
-      
-      return { 
-        success: true, 
-        message: "Registration successful!" 
-      };
-    } catch (error) {
-      console.error("Registration error:", error);
-      setAuthState({
-        isAuthenticated: false,
-        user: null,
-        isLoading: false,
-        error: error as Error
-      });
-      return { 
-        success: false, 
-        message: "An error occurred during registration. Please try again." 
-      };
-    }
-  };
-
-  const validateInviteCode = async (code: string): Promise<boolean> => {
-    console.log("Validating invite code:", code);
-    const validCodes = JSON.parse(localStorage.getItem('validInviteCodes') || '[]');
-    const isValid = validCodes.includes(code);
-    
-    if (isValid) {
-      // Remove the code after successful use
-      const remainingCodes = validCodes.filter((c: string) => c !== code);
-      localStorage.setItem('validInviteCodes', JSON.stringify(remainingCodes));
-    }
-    
-    return isValid;
-  };
-
-  return {
-    ...authState,
-    login,
-    logout,
-    register,
-    validateInviteCode
-  };
-}
+// Only using the context-based authentication approach
+// Removing direct auth hook implementation to avoid confusion
