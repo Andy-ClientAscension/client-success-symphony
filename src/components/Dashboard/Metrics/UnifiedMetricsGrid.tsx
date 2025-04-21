@@ -116,11 +116,13 @@ function MetricCard({ title, value, description, icon, trend, isLoading }: Metri
 export function UnifiedMetricsGrid({ 
   metrics,
   isLoading = false,
-  error = null
+  error = null,
+  columns = 4 // Add the columns prop with a default value of 4
 }: { 
   metrics: ReturnType<typeof generateClientMetrics>;
   isLoading?: boolean;
   error?: Error | null;
+  columns?: number; // Add the columns prop to the interface
 }) {
   const { toast } = useToast();
   
@@ -133,7 +135,7 @@ export function UnifiedMetricsGrid({
   }
 
   return (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+    <div className={`grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-${columns}`}>
       {metrics.map((metric, index) => (
         <MetricCard key={index} {...metric} isLoading={isLoading} />
       ))}

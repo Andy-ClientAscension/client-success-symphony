@@ -41,6 +41,11 @@ export function DashboardOverview() {
     churnRate: statusCounts.total > 0 ? Math.round((statusCounts.churned / statusCounts.total) * 100) : 0
   };
 
+  // Properly check if npsData is an array before accessing length property
+  const lastNpsScore = Array.isArray(npsData?.trend) && npsData.trend.length > 0 
+    ? npsData.trend[npsData.trend.length - 1].score 
+    : (npsData?.current || 0);
+
   const consolidatedMetrics = {
     total: statusCounts.total,
     active: statusCounts.active,
@@ -49,7 +54,7 @@ export function DashboardOverview() {
     churn: rates.churnRate,
     success: rates.retentionRate,
     mrr: metrics?.totalMRR || 0,
-    nps: npsData && npsData.length > 0 ? npsData[npsData.length - 1].score : undefined,
+    nps: lastNpsScore,
     growthRate: metrics?.performanceTrends?.[0]?.percentChange
   };
 
