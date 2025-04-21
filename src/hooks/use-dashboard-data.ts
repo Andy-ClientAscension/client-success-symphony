@@ -1,62 +1,25 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { 
-  getAllClients, 
-  getClientsCountByStatus, 
-  getAverageNPS, 
-  getNPSMonthlyTrend, 
-  getChurnData,
-  getClientMetricsByTeam
-} from '@/lib/data';
+import { getAllClients, getClientsCountByStatus, getAverageNPS, getNPSMonthlyTrend, getChurnData } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
-import { calculatePerformanceTrends } from '@/utils/aiDataAnalyzer';
-import { formatAPIError } from '@/utils/errorHandling';
 
 export function useDashboardData() {
   const { toast } = useToast();
 
-  const { 
-    data: clients,
+  const {
+    data: clients = [],
     isLoading: isClientsLoading,
-    error: clientsError,
-    refetch: refetchClients,
-    dataUpdatedAt: clientsUpdatedAt
+    error: clientsError
   } = useQuery({
     queryKey: ['clients'],
     queryFn: getAllClients,
-    refetchInterval: 30000, // Refetch every 30 seconds
-    refetchOnWindowFocus: true, // Refetch when window regains focus
-    retry: 3, // Retry failed requests 3 times
-    staleTime: 10000, // Consider data stale after 10 seconds
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 3,
     meta: {
       onError: (error: Error) => {
         toast({
           title: "Error loading clients",
-          description: formatAPIError(error),
-          variant: "destructive",
-        });
-      },
-    },
-  });
-
-  const { 
-    data: clientCounts,
-    isLoading: isCountsLoading,
-    error: countsError,
-    refetch: refetchCounts,
-    dataUpdatedAt: countsUpdatedAt
-  } = useQuery({
-    queryKey: ['client-counts'],
-    queryFn: getClientsCountByStatus,
-    refetchInterval: 30000,
-    refetchOnWindowFocus: true,
-    retry: 3,
-    staleTime: 10000,
-    meta: {
-      onError: (error: Error) => {
-        toast({
-          title: "Error loading client counts",
-          description: formatAPIError(error),
+          description: error.message,
           variant: "destructive",
         });
       },
@@ -64,137 +27,115 @@ export function useDashboardData() {
   });
 
   const {
-    data: npsData,
-    isLoading: isNPSLoading,
-    error: npsError,
-    refetch: refetchNPS,
-    dataUpdatedAt: npsUpdatedAt
+    data: clientCounts = { active: 0, "at-risk": 0, churned: 0, new: 0 },
+    isLoading: isClientCountsLoading,
+    error: clientCountsError
   } = useQuery({
-    queryKey: ['nps-trend'],
-    queryFn: getNPSMonthlyTrend,
-    refetchInterval: 30000,
-    refetchOnWindowFocus: true,
+    queryKey: ['client-counts'],
+    queryFn: getClientsCountByStatus,
+    staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 3,
-    staleTime: 10000,
+    meta: {
+      onError: (error: Error) => {
+        toast({
+          title: "Error loading client counts",
+          description: error.message,
+          variant: "destructive",
+        });
+      },
+    },
+  });
+
+  const {
+    data: npsData = { current: 0, previous: 0, trend: [] },
+    isLoading: isNpsLoading,
+    error: npsError
+  } = useQuery({
+    queryKey: ['nps-data'],
+    queryFn: getAverageNPS,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 3,
     meta: {
       onError: (error: Error) => {
         toast({
           title: "Error loading NPS data",
-          description: formatAPIError(error),
+          description: error.message,
           variant: "destructive",
         });
       },
     },
   });
 
-  const { 
-    data: churnData,
+  const {
+    data: npsTrend = [],
+    isLoading: isNpsTrendLoading,
+    error: npsTrendError
+  } = useQuery({
+    queryKey: ['nps-trend'],
+    queryFn: getNPSMonthlyTrend,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 3,
+    meta: {
+      onError: (error: Error) => {
+        toast({
+          title: "Error loading NPS trend",
+          description: error.message,
+          variant: "destructive",
+        });
+      },
+    },
+  });
+
+  const {
+    data: churnData = [],
     isLoading: isChurnLoading,
-    error: churnError,
-    refetch: refetchChurn,
-    dataUpdatedAt: churnUpdatedAt
+    error: churnError
   } = useQuery({
     queryKey: ['churn-data'],
     queryFn: getChurnData,
-    refetchInterval: 30000,
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 3,
-    staleTime: 10000,
     meta: {
       onError: (error: Error) => {
         toast({
           title: "Error loading churn data",
-          description: formatAPIError(error),
+          description: error.message,
           variant: "destructive",
         });
       },
     },
   });
 
-  const { 
-    data: metricsData,
-    isLoading: isMetricsLoading,
-    error: metricsError,
-    refetch: refetchMetrics,
-    dataUpdatedAt: metricsUpdatedAt
-  } = useQuery({
-    queryKey: ['client-metrics'],
-    queryFn: () => getClientMetricsByTeam(),
-    refetchInterval: 30000,
-    refetchOnWindowFocus: true,
-    retry: 3,
-    staleTime: 10000,
-    meta: {
-      onError: (error: Error) => {
-        toast({
-          title: "Error loading client metrics",
-          description: formatAPIError(error),
-          variant: "destructive",
-        });
-      },
-    },
-  });
-
-  // Combine all errors, prioritizing the first one found
-  const error = clientsError || countsError || npsError || churnError || metricsError;
-
-  // Process metrics to add missing required properties
-  const metrics = metricsData ? {
-    ...metricsData,
-    performanceTrends: 'performanceTrends' in metricsData && Array.isArray(metricsData.performanceTrends)
-      ? metricsData.performanceTrends 
-      : (clients ? calculatePerformanceTrends(clients) : []),
-    trends: 'trends' in metricsData
-      ? metricsData.trends 
-      : { 
-          retentionTrend: 0, 
-          atRiskTrend: 0, 
-          churnTrend: 0 
-        }
-  } : undefined;
-
-  const dataUpdatedAt = Math.max(
-    ...[
-      clientsUpdatedAt,
-      countsUpdatedAt,
-      npsUpdatedAt,
-      churnUpdatedAt,
-      metricsUpdatedAt
-    ].filter(Boolean).map(timestamp => timestamp || 0)
-  );
-
-  // Combined refetch function for all queries
-  const refetch = async () => {
-    const results = await Promise.allSettled([
-      refetchClients(),
-      refetchCounts(),
-      refetchNPS(),
-      refetchChurn(),
-      refetchMetrics()
-    ]);
-    
-    // Check for any rejected promises and handle accordingly
-    const errors = results
-      .filter((result): result is PromiseRejectedResult => result.status === 'rejected')
-      .map(result => result.reason);
-      
-    if (errors.length > 0) {
-      console.error('Errors during data refetch:', errors);
-      throw new Error('Some data could not be refreshed. Please try again.');
-    }
-    
-    return results;
+  // Calculate metrics based on fetched data
+  const metrics = {
+    totalClients: Object.values(clientCounts).reduce((a, b) => a + b, 0),
+    totalMRR: clients.reduce((sum, client) => sum + (client.mrr || 0), 0),
+    totalCallsBooked: clients.reduce((sum, client) => sum + (client.callsBooked || 0), 0),
+    totalDealsClosed: clients.reduce((sum, client) => sum + (client.dealsClosed || 0), 0),
+    performanceTrends: [
+      {
+        metric: "Growth",
+        value: 12,
+        previousValue: 10,
+        percentChange: 20
+      }
+    ]
   };
+
+  // Combine all loading states
+  const isLoading = isClientsLoading || isClientCountsLoading || isNpsLoading || isNpsTrendLoading || isChurnLoading;
+  
+  // Combine all errors
+  const error = clientsError || clientCountsError || npsError || npsTrendError || churnError;
 
   return {
     clients,
     clientCounts,
     npsData,
+    npsTrend,
     churnData,
     metrics,
-    isLoading: isClientsLoading || isCountsLoading || isNPSLoading || isChurnLoading || isMetricsLoading,
-    error,
-    refetch,
-    dataUpdatedAt: dataUpdatedAt || undefined
+    isLoading,
+    error: error as Error | null
   };
 }

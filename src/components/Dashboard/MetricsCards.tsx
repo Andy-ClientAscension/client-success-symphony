@@ -1,184 +1,124 @@
-import React, { useState } from "react";
-import { AlertTriangle, Users, DollarSign, PhoneCall, Calendar, TrendingUp, BarChart, Plus, ChevronDown, ChevronUp } from "lucide-react";
-import { useDashboardData } from "@/hooks/use-dashboard-data";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { MetricsErrorFallback } from "./Shared/ErrorFallbacks";
-import { Button } from "@/components/ui/button";
+
+import { useQuery } from "@tanstack/react-query";
+import { getAllClients, getClientsCountByStatus, getAverageNPS, getChurnData } from "@/lib/data";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import { ClientMetrics, UnifiedMetricsGrid, generateClientMetrics } from "./Metrics/UnifiedMetricsGrid";
 import { EmptyState } from "@/components/EmptyState";
-import { ResponsiveGrid } from "./Shared/ResponsiveGrid";
-import { HeroMetric } from "./Metrics/HeroMetric";
 
-function MetricsError({ error, resetErrorBoundary }: { error: Error, resetErrorBoundary: () => void }) {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <Card className="col-span-full bg-red-50 dark:bg-red-900/20">
-        <CardContent className="p-6">
-          <div className="flex items-start">
-            <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mr-3 mt-0.5" />
-            <div>
-              <h3 className="font-medium text-red-800 dark:text-red-300">Error loading metrics</h3>
-              <p className="text-sm text-red-700 dark:text-red-400 mt-1">{error.message}</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={resetErrorBoundary}
-                className="mt-3 text-red-700 hover:text-red-800 border-red-300 hover:border-red-400"
-              >
-                Retry
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+export function MetricsCards() {
+  // Use React Query for data fetching with proper caching
+  const { 
+    data: clients = [],
+    isLoading: isClientsLoading, 
+    error: clientsError 
+  } = useQuery({
+    queryKey: ['dashboard-clients'],
+    queryFn: getAllClients,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2
+  });
 
-export function MetricsCardsContent() {
-  const { metrics, clientCounts, error } = useDashboardData();
-  const [isExpanded, setIsExpanded] = useState(true);
+  const { 
+    data: clientCounts = { active: 0, "at-risk": 0, new: 0, churned: 0 },
+    isLoading: isCountsLoading, 
+    error: countsError 
+  } = useQuery({
+    queryKey: ['dashboard-client-counts'],
+    queryFn: getClientsCountByStatus,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2
+  });
 
-  if (error) {
-    throw error;
+  const { 
+    data: churnData = [],
+    isLoading: isChurnLoading, 
+    error: churnError 
+  } = useQuery({
+    queryKey: ['dashboard-churn'],
+    queryFn: getChurnData,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2
+  });
+
+  // Combine loading states
+  const isLoading = isClientsLoading || isCountsLoading || isChurnLoading;
+  
+  // Combine errors
+  const error = clientsError || countsError || churnError;
+
+  // Check if we have actual data or just empty defaults
+  const hasData = clients.length > 0 || 
+    Object.values(clientCounts).some(count => count > 0) || 
+    churnData.length > 0;
+  
+  if (isLoading) {
+    return <MetricsLoadingSkeleton />;
   }
-
-  const totalClients = clientCounts 
-    ? Object.values(clientCounts).reduce((sum, count) => sum + count, 0) 
-    : 0;
-
-  const successRate = 85;
-  const retentionRate = 92;
-
-  const primaryMetrics = [
-    {
-      title: "Monthly Revenue",
-      value: `$${metrics?.totalMRR || 0}`,
-      trend: { value: 8, direction: "up" as const, label: "from last month" },
-      icon: <DollarSign className="h-8 w-8 text-brand-500" />,
-      ariaLabel: "Monthly recurring revenue"
-    },
-    {
-      title: "Total Clients",
-      value: totalClients,
-      trend: { value: 5, direction: "up" as const, label: "from last month" },
-      icon: <Users className="h-8 w-8 text-brand-500" />,
-      ariaLabel: "Total number of clients"
-    }
-  ];
-
-  const secondaryMetrics = [
-    {
-      title: "Success Rate",
-      value: `${successRate}%`,
-      trend: { value: 3, direction: "up" as const },
-      icon: <TrendingUp className="h-6 w-6 text-brand-500/70" />
-    },
-    {
-      title: "Calls Booked",
-      value: metrics?.totalCallsBooked || 0,
-      trend: { value: 12, direction: "up" as const },
-      icon: <PhoneCall className="h-6 w-6 text-brand-500/70" />
-    },
-    {
-      title: "Deals Closed",
-      value: metrics?.totalDealsClosed || 0,
-      trend: { value: 3, direction: "down" as const },
-      icon: <Calendar className="h-6 w-6 text-brand-500/70" />
-    },
-    {
-      title: "Retention Rate",
-      value: `${retentionRate}%`,
-      trend: { value: 2, direction: "up" as const },
-      icon: <BarChart className="h-6 w-6 text-brand-500/70" />
-    }
-  ];
-
-  if (!metrics && !clientCounts) {
+  
+  if (error) {
     return (
-      <Collapsible open={isExpanded} onOpenChange={setIsExpanded} className="w-full">
-        <CollapsibleTrigger asChild>
-          <Button variant="outline" className="w-full justify-between">
-            <span>Metrics Overview</span>
-            <Plus className="h-4 w-4 shrink-0 transition-transform duration-200" />
-          </Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="mt-4">
+      <Card>
+        <CardContent className="p-6">
           <EmptyState
-            title="No Metrics Available"
-            message="Start tracking your performance by adding client data and metrics."
-            icon={<BarChart className="h-8 w-8 text-muted-foreground" />}
+            title="Error Loading Metrics"
+            message={error.message || "Failed to load dashboard metrics. Please try again."}
             action={{
-              label: "Add Data",
-              onClick: () => window.location.href = "/clients/add"
+              label: "Retry",
+              onClick: () => {
+                window.location.reload();
+              }
             }}
           />
-        </CollapsibleContent>
-      </Collapsible>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  if (!hasData) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <EmptyState
+            title="No Metrics Available"
+            message="There is no client data to display. Try adding some clients to see metrics."
+          />
+        </CardContent>
+      </Card>
     );
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold">Key Performance Indicators</h2>
-        <CollapsibleTrigger asChild>
-          <Button variant="ghost" size="sm" onClick={() => setIsExpanded(!isExpanded)}>
-            {isExpanded ? (
-              <><ChevronUp className="h-4 w-4 mr-1" /> Collapse</>
-            ) : (
-              <><ChevronDown className="h-4 w-4 mr-1" /> Expand</>
-            )}
-          </Button>
-        </CollapsibleTrigger>
-      </div>
-      
-      <CollapsibleContent forceMount>
-        <ResponsiveGrid 
-          cols={{ xs: 1, sm: 2 }} 
-          gap="md" 
-          className="w-full mb-6" 
-          role="region"
-          aria-label="Primary performance metrics"
-        >
-          {primaryMetrics.map((metric, index) => (
-            <HeroMetric
-              key={`primary-${index}`}
-              size="lg"
-              {...metric}
-            />
-          ))}
-        </ResponsiveGrid>
+  // Calculate the last churn rate from churn data
+  const lastChurnRate = churnData.length > 0 ? churnData[churnData.length - 1].rate : 0;
+  
+  // Generate metrics data
+  const metricsData: ClientMetrics = {
+    total: clients.length,
+    active: clientCounts.active,
+    atRisk: clientCounts["at-risk"],
+    newClients: clientCounts.new,
+    churn: lastChurnRate,
+    success: 100 - lastChurnRate,
+    growthRate: 12 // Mock value for demo
+  };
+  
+  const metrics = generateClientMetrics(metricsData);
 
-        <ResponsiveGrid 
-          cols={{ xs: 2, sm: 2, md: 4 }} 
-          gap="md" 
-          className="w-full" 
-          role="region"
-          aria-label="Secondary performance metrics"
-        >
-          {secondaryMetrics.map((metric, index) => (
-            <HeroMetric
-              key={`secondary-${index}`}
-              size="sm"
-              {...metric}
-            />
-          ))}
-        </ResponsiveGrid>
-      </CollapsibleContent>
-    </div>
-  );
+  return <UnifiedMetricsGrid metrics={metrics} />;
 }
 
-export function MetricsCards() {
+function MetricsLoadingSkeleton() {
   return (
-    <Collapsible defaultOpen={true} className="w-full">
-      <ErrorBoundary
-        fallback={<MetricsErrorFallback error={new Error("Failed to load metrics")} resetErrorBoundary={() => window.location.reload()} />}
-      >
-        <MetricsCardsContent />
-      </ErrorBoundary>
-    </Collapsible>
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      {[1, 2, 3, 4].map((i) => (
+        <Card key={i}>
+          <CardContent className="pt-6">
+            <Skeleton className="h-5 w-[120px] mb-4" />
+            <Skeleton className="h-8 w-[80px] mb-2" />
+            <Skeleton className="h-4 w-[100px]" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 }

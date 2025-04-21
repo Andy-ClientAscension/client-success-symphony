@@ -1,157 +1,142 @@
 
-import React from "react";
-import { MetricCard } from "./MetricCard";
-import { 
-  ArrowUp, 
-  ArrowDown,
-  Users,
-  AlertTriangle,
-  CheckCircle,
-  TrendingUp
-} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
+import { ArrowUp, ArrowDown, Users, DollarSign, TrendingUp, Activity } from "lucide-react";
 
-export interface MetricItem {
+interface MetricCardProps {
   title: string;
-  value: number | string;
+  value: string | number;
+  description?: string;
+  icon: React.ReactNode;
   trend?: {
-    value: string;
-    direction: "up" | "down" | "neutral";
+    value: number;
+    isPositive: boolean;
   };
-  badge?: {
-    value: string;
-    variant: "default" | "outline" | "green" | "amber" | "blue" | "red";
-  };
-  icon?: React.ReactNode;
+  isLoading?: boolean;
 }
 
-interface UnifiedMetricsGridProps {
-  metrics: MetricItem[];
-  columns?: 2 | 3 | 4 | 6 | 7;
-  className?: string;
-}
-
-export function UnifiedMetricsGrid({
-  metrics,
-  columns = 4,
-  className = ""
-}: UnifiedMetricsGridProps) {
-  // Determine grid columns class based on prop
-  const gridClass = {
-    2: "grid-cols-1 sm:grid-cols-2",
-    3: "grid-cols-1 sm:grid-cols-3",
-    4: "grid-cols-2 sm:grid-cols-2 md:grid-cols-4",
-    6: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6",
-    7: "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7"
-  }[columns];
-  
-  return (
-    <div className={`grid ${gridClass} gap-3 ${className}`}>
-      {metrics.map((metric, index) => (
-        <MetricCard 
-          key={`metric-${index}`}
-          title={metric.title}
-          value={metric.value}
-          trend={metric.trend}
-          badge={metric.badge}
-        />
-      ))}
-    </div>
-  );
-}
-
-// Helper function to generate metrics array from common dashboard data
-export function generateClientMetrics({
-  total,
-  active,
-  atRisk,
-  newClients,
-  churn,
-  success,
-  nps,
-  growthRate
-}: {
+export interface ClientMetrics {
   total: number;
   active: number;
   atRisk: number;
   newClients: number;
   churn: number;
   success: number;
+  mrr?: number;
   nps?: number;
   growthRate?: number;
-}) {
-  // Calculate percentages
-  const totalClients = total || 1; // Prevent division by zero
-  const activePercent = Math.round((active / totalClients) * 100);
-  const atRiskPercent = Math.round((atRisk / totalClients) * 100);
-  const newPercent = Math.round((newClients / totalClients) * 100);
-  
-  const metrics: MetricItem[] = [
+}
+
+export function generateClientMetrics(data: ClientMetrics) {
+  return [
     {
       title: "Total Clients",
-      value: total,
-      trend: growthRate ? {
-        value: `+${growthRate}% growth`,
-        direction: "up"
-      } : undefined,
-      icon: <Users className="h-4 w-4" />
+      value: data.total,
+      icon: <Users className="h-4 w-4 text-muted-foreground" />,
+      description: "All active accounts"
     },
     {
       title: "Active Clients",
-      value: active,
-      badge: {
-        value: `${activePercent}%`,
-        variant: "green"
-      },
-      icon: <CheckCircle className="h-4 w-4" />
-    },
-    {
-      title: "At Risk",
-      value: atRisk,
-      badge: {
-        value: `${atRiskPercent}%`,
-        variant: "amber"
-      },
-      icon: <AlertTriangle className="h-4 w-4" />
-    },
-    {
-      title: "New Clients",
-      value: newClients,
-      badge: {
-        value: `${newPercent}%`,
-        variant: "blue"
-      },
-      icon: <Users className="h-4 w-4" />
-    },
-    {
-      title: "Success Rate",
-      value: `${success}%`,
+      value: data.active,
+      icon: <Activity className="h-4 w-4 text-emerald-500" />,
       trend: {
-        value: "+2.5% this quarter",
-        direction: "up"
-      }
+        value: data.success,
+        isPositive: true
+      },
+      description: "Success rate"
     },
     {
-      title: "Churn Rate",
-      value: `${churn}%`,
+      title: "At-Risk Clients",
+      value: data.atRisk,
+      icon: <TrendingUp className="h-4 w-4 text-amber-500" />,
       trend: {
-        value: "-0.2% this month",
-        direction: "down"
-      }
+        value: data.churn,
+        isPositive: false
+      },
+      description: "Churn rate"
+    },
+    {
+      title: "Monthly Growth",
+      value: `${data.growthRate || 0}%`,
+      icon: <DollarSign className="h-4 w-4 text-blue-500" />,
+      trend: {
+        value: data.newClients,
+        isPositive: true
+      },
+      description: "New clients this month"
     }
   ];
+}
+
+function MetricCard({ title, value, description, icon, trend, isLoading }: MetricCardProps) {
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Skeleton className="h-5 w-[120px]" />
+          <Skeleton className="h-5 w-5 rounded-full" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-8 w-[80px] mb-2" />
+          <Skeleton className="h-4 w-[100px]" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        {icon}
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+        {trend ? (
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            {trend.isPositive ? (
+              <ArrowUp className="h-3 w-3 text-emerald-500" />
+            ) : (
+              <ArrowDown className="h-3 w-3 text-red-500" />
+            )}
+            <span className={trend.isPositive ? "text-emerald-500" : "text-red-500"}>
+              {trend.value}%
+            </span>{" "}
+            {description}
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground">{description}</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+export function UnifiedMetricsGrid({ 
+  metrics,
+  isLoading = false,
+  error = null
+}: { 
+  metrics: ReturnType<typeof generateClientMetrics>;
+  isLoading?: boolean;
+  error?: Error | null;
+}) {
+  const { toast } = useToast();
   
-  // Add NPS if provided
-  if (nps !== undefined) {
-    metrics.push({
-      title: "NPS Score",
-      value: nps,
-      trend: {
-        value: "+0.3 points",
-        direction: "up"
-      },
-      icon: <TrendingUp className="h-4 w-4" />
+  if (error) {
+    toast({
+      title: "Error loading metrics",
+      description: error.message,
+      variant: "destructive",
     });
   }
-  
-  return metrics;
+
+  return (
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      {metrics.map((metric, index) => (
+        <MetricCard key={index} {...metric} isLoading={isLoading} />
+      ))}
+    </div>
+  );
 }

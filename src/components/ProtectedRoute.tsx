@@ -12,7 +12,7 @@ interface ProtectedRouteProps {
 
 function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   const location = useLocation();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, error } = useAuth();
   
   useEffect(() => {
     console.log("ProtectedRoute: Mount effect at path", location.pathname);
@@ -23,6 +23,17 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   
   if (isLoading) {
     return <LoadingState message="Checking authentication..." />;
+  }
+  
+  if (error) {
+    return (
+      <ValidationError
+        type="error"
+        title="Authentication Error"
+        message={error.message || "Failed to verify authentication status"}
+        showIcon
+      />
+    );
   }
   
   if (!isAuthenticated) {
