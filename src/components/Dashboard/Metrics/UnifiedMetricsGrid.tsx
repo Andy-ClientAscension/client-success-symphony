@@ -34,7 +34,8 @@ export function generateClientMetrics(data: ClientMetrics) {
       title: "Total Clients",
       value: data.total,
       icon: <Users className="h-4 w-4 text-muted-foreground" />,
-      description: "All active accounts"
+      description: "All active accounts",
+      "aria-label": `Total client count: ${data.total}`
     },
     {
       title: "Active Clients",
@@ -44,7 +45,8 @@ export function generateClientMetrics(data: ClientMetrics) {
         value: data.success,
         isPositive: true
       },
-      description: "Success rate"
+      description: "Success rate",
+      "aria-label": `Active clients: ${data.active}, Success rate: ${data.success}%`
     },
     {
       title: "At-Risk Clients",
@@ -54,7 +56,8 @@ export function generateClientMetrics(data: ClientMetrics) {
         value: data.churn,
         isPositive: false
       },
-      description: "Churn rate"
+      description: "Churn rate",
+      "aria-label": `At-risk clients: ${data.atRisk}, Churn rate: ${data.churn}%`
     },
     {
       title: "Monthly Growth",
@@ -64,7 +67,8 @@ export function generateClientMetrics(data: ClientMetrics) {
         value: data.newClients,
         isPositive: true
       },
-      description: "New clients this month"
+      description: "New clients this month",
+      "aria-label": `Monthly growth: ${data.growthRate || 0}%, New clients: ${data.newClients}`
     }
   ];
 }
@@ -86,7 +90,7 @@ function MetricCard({ title, value, description, icon, trend, isLoading }: Metri
   }
 
   return (
-    <Card>
+    <Card role="article" aria-label={title}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         {icon}
@@ -96,9 +100,9 @@ function MetricCard({ title, value, description, icon, trend, isLoading }: Metri
         {trend ? (
           <p className="text-xs text-muted-foreground flex items-center gap-1">
             {trend.isPositive ? (
-              <ArrowUp className="h-3 w-3 text-emerald-500" />
+              <ArrowUp className="h-3 w-3 text-emerald-500" aria-label="Increasing" />
             ) : (
-              <ArrowDown className="h-3 w-3 text-red-500" />
+              <ArrowDown className="h-3 w-3 text-red-500" aria-label="Decreasing" />
             )}
             <span className={trend.isPositive ? "text-emerald-500" : "text-red-500"}>
               {trend.value}%
@@ -117,12 +121,12 @@ export function UnifiedMetricsGrid({
   metrics,
   isLoading = false,
   error = null,
-  columns = 4 // Add the columns prop with a default value of 4
+  columns = 4
 }: { 
   metrics: ReturnType<typeof generateClientMetrics>;
   isLoading?: boolean;
   error?: Error | null;
-  columns?: number; // Add the columns prop to the interface
+  columns?: number;
 }) {
   const { toast } = useToast();
   
@@ -135,7 +139,11 @@ export function UnifiedMetricsGrid({
   }
 
   return (
-    <div className={`grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-${columns}`}>
+    <div 
+      className={`grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-${columns}`}
+      role="region" 
+      aria-label="Key metrics overview"
+    >
       {metrics.map((metric, index) => (
         <MetricCard key={index} {...metric} isLoading={isLoading} />
       ))}

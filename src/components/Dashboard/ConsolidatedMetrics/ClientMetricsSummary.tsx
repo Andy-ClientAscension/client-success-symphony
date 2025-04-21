@@ -3,8 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusDistribution } from "../Shared";
 import { PerformanceMetrics } from "../Shared";
-import { UnifiedMetricsGrid } from "../Metrics/UnifiedMetricsGrid";
-import { generateClientMetrics } from "../Metrics/UnifiedMetricsGrid";
+import { UnifiedMetricsGrid, generateClientMetrics } from "../Metrics/UnifiedMetricsGrid";
 
 interface ClientMetricsSummaryProps {
   metrics: {
@@ -63,7 +62,12 @@ export function ClientMetricsSummary({
         <CardTitle className="text-lg font-semibold">Client Overview</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <UnifiedMetricsGrid metrics={gridMetrics} columns={4} />
+        <UnifiedMetricsGrid 
+          metrics={gridMetrics} 
+          columns={4} 
+          role="region"
+          aria-label="Client metrics overview"
+        />
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">

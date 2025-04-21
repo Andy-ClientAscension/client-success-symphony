@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { UnifiedDashboardMetrics } from "../Metrics/UnifiedDashboardMetrics";
 import { AIInsightsPanel } from "../AIInsights";
@@ -58,13 +57,6 @@ export function DashboardOverview() {
     growthRate: metrics?.performanceTrends?.[0]?.percentChange
   };
 
-  const performanceData = {
-    totalMRR: metrics?.totalMRR || 0,
-    totalCallsBooked: metrics?.totalCallsBooked || 0,
-    totalDealsClosed: metrics?.totalDealsClosed || 0,
-    totalClients: statusCounts.total
-  };
-
   return (
     <div className="space-y-8">
       {/* Key Metrics Section */}
@@ -72,7 +64,12 @@ export function DashboardOverview() {
         metrics={consolidatedMetrics}
         statusCounts={statusCounts}
         rates={rates}
-        performanceData={performanceData}
+        performanceData={{
+          totalMRR: metrics?.totalMRR || 0,
+          totalCallsBooked: metrics?.totalCallsBooked || 0,
+          totalDealsClosed: metrics?.totalDealsClosed || 0,
+          totalClients: statusCounts.total
+        }}
       />
       
       {/* AI Insights Panel */}
