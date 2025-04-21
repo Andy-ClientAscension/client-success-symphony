@@ -1,11 +1,12 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 interface User {
+  id: string;
   email: string;
-  firstName?: string;
-  lastName?: string;
-  image?: string;
+  name?: string;
 }
 
 interface AuthContextType {
@@ -22,7 +23,6 @@ interface AuthContextType {
 // Valid invitation codes (in a real app, these would be stored in a database)
 const VALID_INVITE_CODES = ["SSC2024", "AGENT007", "WELCOME1"];
 
-// Export the context so it can be imported by the hook
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -32,63 +32,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Check for existing session on mount
     const initAuth = async () => {
-      setIsLoading(true);
-      setError(null);
       try {
-        // Check if user is already logged in
-        const savedUser = localStorage.getItem("user");
-        
-        if (savedUser) {
-          // User is already logged in, set the user state
-          setUser(JSON.parse(savedUser));
-          setIsLoading(false);
-          return;
-        }
-        
-        // No saved user, check for saved credentials with remember me
-        const savedCredentials = localStorage.getItem("savedCredentials");
-        
-        if (savedCredentials) {
-          const credentials = JSON.parse(savedCredentials);
-          
-          // Check if credentials have expired
-          if (credentials.expiry && new Date().getTime() > credentials.expiry) {
-            // Expired, remove the saved credentials
-            localStorage.removeItem("savedCredentials");
-            setIsLoading(false);
-          } else {
-            // Auto-login if credentials are valid and not expired
-            await login(credentials.email, credentials.password)
-              .then(success => {
-                if (!success) {
-                  localStorage.removeItem("savedCredentials");
-                }
-              })
-              .catch((error) => {
-                localStorage.removeItem("savedCredentials");
-                setError(error instanceof Error ? error : new Error("Unknown login error"));
-              })
-              .finally(() => {
-                setIsLoading(false);
-              });
-          }
-        } else {
-          // No saved credentials either
-          setIsLoading(false);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setUser({
+            id: session.user.id,
+            email: session.user.email!,
+            name: session.user.user_metadata?.name
+          });
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
         setError(error instanceof Error ? error : new Error("Auth initialization failed"));
+      } finally {
         setIsLoading(false);
       }
     };
-    
+
     initAuth();
+
+    // Subscribe to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email!,
+          name: session.user.user_metadata?.name
+        });
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const validateInviteCode = async (code: string): Promise<boolean> => {
-    // In a real app, this would verify the code against a database
+    // In a real app, this would verify against a database
     return VALID_INVITE_CODES.includes(code);
   };
 
@@ -96,16 +81,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       setError(null);
-      // This is a simple mock authentication
-      // In a real app, you would validate credentials against a backend
-      if (password.length < 6) {
-        return false;
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        setUser({
+          id: data.user.id,
+          email: data.user.email!,
+          name: data.user.user_metadata?.name
+        });
+        return true;
       }
 
-      const user = { email };
-      setUser(user);
-      localStorage.setItem("user", JSON.stringify(user));
-      return true;
+      return false;
     } catch (error) {
       console.error("Login error:", error);
       setError(error instanceof Error ? error : new Error("Login failed"));
@@ -115,56 +108,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const register = async (email: string, password: string, inviteCode: string): Promise<{ success: boolean; message: string }> => {
+  const register = async (
+    email: string, 
+    password: string, 
+    inviteCode: string
+  ): Promise<{ success: boolean; message: string }> => {
     try {
       setIsLoading(true);
       setError(null);
+
       // Validate invite code first
       const isValidCode = await validateInviteCode(inviteCode);
-      
       if (!isValidCode) {
-        return { 
-          success: false, 
-          message: "Invalid invitation code. Please check your code and try again." 
-        };
-      }
-      
-      // Password validation
-      if (password.length < 6) {
-        return { 
-          success: false, 
-          message: "Password must be at least 6 characters." 
+        return {
+          success: false,
+          message: "Invalid invitation code"
         };
       }
 
-      // In a real implementation, we would register the user with a backend
-      // For this mock implementation, we'll just create the user
-      const user = { email };
-      setUser(user);
-      localStorage.setItem("user", JSON.stringify(user));
-      
-      return { 
-        success: true, 
-        message: "Registration successful!" 
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        setUser({
+          id: data.user.id,
+          email: data.user.email!,
+          name: data.user.user_metadata?.name
+        });
+        
+        return {
+          success: true,
+          message: "Registration successful!"
+        };
+      }
+
+      return {
+        success: false,
+        message: "Registration failed"
       };
     } catch (error) {
       console.error("Registration error:", error);
       setError(error instanceof Error ? error : new Error("Registration failed"));
-      return { 
-        success: false, 
-        message: "An error occurred during registration. Please try again." 
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : "Registration failed"
       };
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    setError(null);
-    localStorage.removeItem("user");
-    // Don't remove savedCredentials on logout if using remember me
-    navigate("/login");
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setError(null);
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      setError(error instanceof Error ? error : new Error("Logout failed"));
+    }
   };
 
   return (

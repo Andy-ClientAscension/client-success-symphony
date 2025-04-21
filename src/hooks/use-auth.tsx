@@ -34,3 +34,4 @@ export function useAuth() {
 
 // Only using the context-based authentication approach
 // Removing direct auth hook implementation to avoid confusion
+
