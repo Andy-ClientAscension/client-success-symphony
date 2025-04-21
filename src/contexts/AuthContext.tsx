@@ -12,6 +12,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  error: Error | null;
   login: (email: string, password: string) => Promise<boolean>;
   register: (email: string, password: string, inviteCode: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
@@ -27,11 +28,13 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const initAuth = async () => {
       setIsLoading(true);
+      setError(null);
       try {
         // Check if user is already logged in
         const savedUser = localStorage.getItem("user");
@@ -62,8 +65,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   localStorage.removeItem("savedCredentials");
                 }
               })
-              .catch(() => {
+              .catch((error) => {
                 localStorage.removeItem("savedCredentials");
+                setError(error instanceof Error ? error : new Error("Unknown login error"));
               })
               .finally(() => {
                 setIsLoading(false);
@@ -75,6 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
+        setError(error instanceof Error ? error : new Error("Auth initialization failed"));
         setIsLoading(false);
       }
     };
@@ -90,6 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
+      setError(null);
       // This is a simple mock authentication
       // In a real app, you would validate credentials against a backend
       if (password.length < 6) {
@@ -102,6 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return true;
     } catch (error) {
       console.error("Login error:", error);
+      setError(error instanceof Error ? error : new Error("Login failed"));
       return false;
     } finally {
       setIsLoading(false);
@@ -111,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (email: string, password: string, inviteCode: string): Promise<{ success: boolean; message: string }> => {
     try {
       setIsLoading(true);
+      setError(null);
       // Validate invite code first
       const isValidCode = await validateInviteCode(inviteCode);
       
@@ -141,6 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
     } catch (error) {
       console.error("Registration error:", error);
+      setError(error instanceof Error ? error : new Error("Registration failed"));
       return { 
         success: false, 
         message: "An error occurred during registration. Please try again." 
@@ -152,6 +161,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     setUser(null);
+    setError(null);
     localStorage.removeItem("user");
     // Don't remove savedCredentials on logout if using remember me
     navigate("/login");
@@ -163,6 +173,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         isAuthenticated: !!user,
         isLoading,
+        error,
         login,
         register,
         logout,
@@ -173,5 +184,3 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     </AuthContext.Provider>
   );
 }
-
-// We'll keep the useAuth hook in the hooks directory, so we'll remove this export

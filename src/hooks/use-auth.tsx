@@ -20,13 +20,13 @@ export function useAuth() {
     throw error;
   }
   
-  const { isAuthenticated, isLoading, user } = context;
+  const { isAuthenticated, isLoading, user, error } = context;
 
   console.log("Auth context:", {
     isAuthenticated,
     isLoading,
     userExists: !!user,
-    error: context.error?.message
+    error: error?.message
   });
   
   return context;
