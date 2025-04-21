@@ -3,12 +3,14 @@ import { ReactNode, useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { LoadingState } from "@/components/LoadingState";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ValidationError } from "@/components/ValidationError";
 
 interface ProtectedRouteProps {
   children: ReactNode;
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
+function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   const location = useLocation();
   const { isAuthenticated, isLoading } = useAuth();
   
@@ -29,4 +31,23 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   return <>{children}</>;
+}
+
+export function ProtectedRoute({ children }: ProtectedRouteProps) {
+  return (
+    <ErrorBoundary
+      fallback={
+        <div className="p-4">
+          <ValidationError
+            type="error"
+            title="Authentication Error"
+            message="Unable to verify authentication status. Please try refreshing the page."
+            showIcon
+          />
+        </div>
+      }
+    >
+      <ProtectedRouteContent>{children}</ProtectedRouteContent>
+    </ErrorBoundary>
+  );
 }

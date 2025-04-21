@@ -15,14 +15,18 @@ export function useAuth() {
   const context = useContext(AuthContext);
   
   if (context === undefined) {
-    console.error("useAuth must be used within an AuthProvider");
-    throw new Error("useAuth must be used within an AuthProvider");
+    const error = new Error("useAuth must be used within an AuthProvider");
+    console.error(error);
+    throw error;
   }
   
+  const { isAuthenticated, isLoading, user } = context;
+
   console.log("Auth context:", {
-    isAuthenticated: context.isAuthenticated,
-    isLoading: context.isLoading,
-    userExists: !!context.user
+    isAuthenticated,
+    isLoading,
+    userExists: !!user,
+    error: context.error?.message
   });
   
   return context;
