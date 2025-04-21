@@ -48,8 +48,15 @@ export function Sidebar({ isMobile, closeSidebar, collapsed, toggleCollapse }: S
   const location = useLocation();
   const navigate = useNavigate();
   
-  const avatarName = user?.firstName ? `${user.firstName} ${user.lastName}` : user?.email || 'User';
-  const avatarFallbackInitials = user?.firstName ? `${user.firstName[0]}${user.lastName ? user.lastName[0] : ''}` : 'U';
+  // Use the user's name if available (from metadata) or fallback to email
+  const avatarName = user?.name || user?.email || 'User';
+  // Create initials for the avatar fallback
+  const avatarFallbackInitials = avatarName
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .substring(0, 2);
 
   const handleSignOut = async () => {
     try {
@@ -121,7 +128,7 @@ export function Sidebar({ isMobile, closeSidebar, collapsed, toggleCollapse }: S
       <div className="py-4">
         <div className="px-4 pb-3">
           <Avatar className="h-9 w-9">
-            <AvatarImage src={user?.image} alt={avatarName} />
+            <AvatarImage alt={avatarName} />
             <AvatarFallback>{avatarFallbackInitials}</AvatarFallback>
           </Avatar>
           {!collapsed && (

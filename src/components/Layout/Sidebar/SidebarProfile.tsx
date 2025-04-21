@@ -15,7 +15,7 @@ export function SidebarProfile({ collapsed, user, avatarName, avatarFallbackInit
       <div className="py-4">
         <div className="px-4 pb-3">
           <Avatar className="h-9 w-9">
-            <AvatarImage src={user?.image} alt={avatarName} />
+            <AvatarImage alt={avatarName} />
             <AvatarFallback>{avatarFallbackInitials}</AvatarFallback>
           </Avatar>
           {!collapsed && (
