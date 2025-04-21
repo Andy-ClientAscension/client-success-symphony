@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { UnifiedDashboardMetrics } from "../Metrics/UnifiedDashboardMetrics";
 import { AIInsightsPanel } from "../AIInsights";
@@ -40,8 +41,8 @@ export function DashboardOverview() {
     churnRate: statusCounts.total > 0 ? Math.round((statusCounts.churned / statusCounts.total) * 100) : 0
   };
 
-  // Properly check if npsData is an array before accessing length property
-  const lastNpsScore = Array.isArray(npsData?.trend) && npsData.trend.length > 0 
+  // Safely check if npsData.trend is an array before accessing length property
+  const lastNpsScore = npsData?.trend && Array.isArray(npsData.trend) && npsData.trend.length > 0 
     ? npsData.trend[npsData.trend.length - 1].score 
     : (npsData?.current || 0);
 

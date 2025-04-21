@@ -117,17 +117,23 @@ function MetricCard({ title, value, description, icon, trend, isLoading }: Metri
   );
 }
 
-export function UnifiedMetricsGrid({ 
-  metrics,
-  isLoading = false,
-  error = null,
-  columns = 4
-}: { 
+interface UnifiedMetricsGridProps {
   metrics: ReturnType<typeof generateClientMetrics>;
   isLoading?: boolean;
   error?: Error | null;
   columns?: number;
-}) {
+  role?: string;
+  "aria-label"?: string;
+}
+
+export function UnifiedMetricsGrid({ 
+  metrics,
+  isLoading = false,
+  error = null,
+  columns = 4,
+  role,
+  "aria-label": ariaLabel
+}: UnifiedMetricsGridProps) {
   const { toast } = useToast();
   
   if (error) {
@@ -141,8 +147,8 @@ export function UnifiedMetricsGrid({
   return (
     <div 
       className={`grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-${columns}`}
-      role="region" 
-      aria-label="Key metrics overview"
+      role={role || "region"} 
+      aria-label={ariaLabel || "Key metrics overview"}
     >
       {metrics.map((metric, index) => (
         <MetricCard key={index} {...metric} isLoading={isLoading} />
