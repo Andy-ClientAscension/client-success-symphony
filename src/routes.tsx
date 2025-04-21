@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import DiagnosticIndex from './pages/DiagnosticIndex';
@@ -6,16 +7,13 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 
-// This file provides alternative routes for diagnostic purposes
 export const routes = [
   {
     path: '/',
-    // Change back to the main dashboard
     element: <ProtectedRoute><Index /></ProtectedRoute>,
   },
   {
     path: '/diagnostic',
-    // Keep diagnostic index available at a separate route
     element: <DiagnosticIndex />,
   },
   {
@@ -30,5 +28,5 @@ export const routes = [
     path: '/signup',
     element: <SignUp />,
   },
-  // Other routes can be defined here
 ];
+
