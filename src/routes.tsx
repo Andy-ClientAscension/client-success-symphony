@@ -10,7 +10,12 @@ import SignUp from './pages/SignUp';
 export const routes = [
   {
     path: '/',
-    // Use the diagnostic index to test basic rendering
+    // Change back to the main dashboard
+    element: <ProtectedRoute><Index /></ProtectedRoute>,
+  },
+  {
+    path: '/diagnostic',
+    // Keep diagnostic index available at a separate route
     element: <DiagnosticIndex />,
   },
   {
