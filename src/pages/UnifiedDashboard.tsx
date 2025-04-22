@@ -10,7 +10,7 @@ import { AlertCircle } from "lucide-react";
 import { MetricsCards } from "@/components/Dashboard/MetricsCards";
 import { LoadingState } from "@/components/LoadingState";
 import { ValidationError } from "@/components/ValidationError";
-import { useDashboardQuery } from "@/hooks/useDashboardQuery";
+import { useDashboardData } from "@/hooks/useDashboardData";
 
 export default function UnifiedDashboard() {
   const { toast } = useToast();
@@ -22,7 +22,7 @@ export default function UnifiedDashboard() {
     refetch: refetchDashboardData,
     dataUpdatedAt,
     isRefetching
-  } = useDashboardQuery();
+  } = useDashboardData();
 
   const handleErrorReset = useCallback(() => {
     refetchDashboardData();

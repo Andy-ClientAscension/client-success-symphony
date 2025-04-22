@@ -3,6 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface DashboardHeaderProps {
   isRefreshing: boolean;
@@ -15,13 +16,19 @@ export function DashboardHeader({
   handleRefreshData,
   lastUpdated 
 }: DashboardHeaderProps) {
-  const lastUpdatedText = lastUpdated ? formatDistanceToNow(new Date(lastUpdated), { addSuffix: true }) : 'never';
+  const lastUpdatedText = lastUpdated 
+    ? formatDistanceToNow(new Date(lastUpdated), { addSuffix: true }) 
+    : 'never';
 
   return (
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center space-x-2 text-sm text-muted-foreground">
         <Clock className="h-4 w-4" />
-        <span>Last updated: {lastUpdatedText}</span>
+        {isRefreshing ? (
+          <Skeleton className="h-4 w-32" />
+        ) : (
+          <span>Last updated: {lastUpdatedText}</span>
+        )}
       </div>
       <Button 
         variant="outline" 

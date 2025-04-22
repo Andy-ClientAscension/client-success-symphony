@@ -47,11 +47,6 @@ export function MetricsCards() {
   // Combine errors
   const error = clientsError || countsError || churnError;
 
-  // Check if we have actual data or just empty defaults
-  const hasData = clients.length > 0 || 
-    Object.values(clientCounts).some(count => count > 0) || 
-    churnData.length > 0;
-  
   if (isLoading) {
     return <MetricsLoadingSkeleton />;
   }
@@ -74,6 +69,11 @@ export function MetricsCards() {
       </Card>
     );
   }
+  
+  // Check if we have actual data or just empty defaults
+  const hasData = clients.length > 0 || 
+    Object.values(clientCounts).some(count => count > 0) || 
+    churnData.length > 0;
   
   if (!hasData) {
     return (
