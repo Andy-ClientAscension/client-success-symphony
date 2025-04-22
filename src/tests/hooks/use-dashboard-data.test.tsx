@@ -1,3 +1,4 @@
+
 import { describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
