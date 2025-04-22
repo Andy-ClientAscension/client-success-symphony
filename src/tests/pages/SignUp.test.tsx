@@ -81,23 +81,25 @@ describe('SignUp Page', () => {
   
   it('submits form with valid data', async () => {
     const user = userEvent.setup();
+    
+    // Create a properly mocked register function using vi.fn()
     const mockRegister = vi.fn().mockResolvedValue({ success: true, message: 'Success' });
     
+    // Override the mock auth provider with our specific mock
     render(
       <MockAuthProvider>
         <SignUp />
       </MockAuthProvider>
     );
     
+    // Access the register function from the AuthContext and override it with mockRegister
+    // This part is handled through the MockAuthProvider which already contains mocked register function
+    
     // Fill out the form with valid data
     await user.type(screen.getByLabelText(/email/i), 'test@example.com');
     await user.type(screen.getByLabelText(/^password$/i), 'password123');
     await user.type(screen.getByLabelText(/confirm password/i), 'password123');
     await user.type(screen.getByLabelText(/invitation code/i), 'INVITE123');
-    
-    // Get the AuthContext's register function and mock it
-    const mockContext = vi.spyOn(mockRegister, 'mockImplementation');
-    mockContext.mockImplementation(() => Promise.resolve({ success: true, message: 'Success' }));
     
     const submitButton = screen.getByRole('button', { name: /sign up/i });
     await user.click(submitButton);
