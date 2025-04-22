@@ -9,6 +9,8 @@ import { useKanbanStore } from "@/utils/kanbanStore";
 import { STORAGE_KEYS, loadData, saveData } from "@/utils/persistence";
 import { LoadingState } from "@/components/LoadingState";
 import { getAllClients, Client } from "@/lib/data";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export default function Clients() {
   const [activeTab, setActiveTab] = useState("all");
@@ -112,11 +114,37 @@ export default function Clients() {
   // Optimize tab change handling
   const handleTabChange = useCallback((value: string) => {
     setActiveTab(value);
-    // Use requestAnimationFrame instead of setTimeout for smoother transitions
     requestAnimationFrame(() => {
       setForceReload(prev => prev + 1);
     });
   }, []);
+
+  const getStatusSummary = () => {
+    if (!clients.length) return null;
+    
+    const summary = clients.reduce((acc, client) => {
+      acc[client.status] = (acc[client.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return (
+      <div className="flex gap-2 mb-4 flex-wrap">
+        {Object.entries(summary).map(([status, count]) => (
+          <Badge
+            key={status}
+            variant={
+              status === 'active' ? 'default' :
+              status === 'at-risk' ? 'destructive' :
+              status === 'churned' ? 'secondary' : 'outline'
+            }
+            className="px-3 py-1"
+          >
+            {status}: {count}
+          </Badge>
+        ))}
+      </div>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -128,18 +156,21 @@ export default function Clients() {
 
   return (
     <Layout>
-      <div className="space-y-4 pb-12 w-full">
+      <Card className="p-6">
         <ClientsHeader 
           clientCount={clients.length} 
           onAddNewClient={handleAddNewClient} 
         />
+        
+        {getStatusSummary()}
         
         <ClientsTabs 
           activeTab={activeTab} 
           onTabChange={handleTabChange} 
           forceReload={forceReload}
         />
-      </div>
+      </Card>
     </Layout>
   );
 }
+

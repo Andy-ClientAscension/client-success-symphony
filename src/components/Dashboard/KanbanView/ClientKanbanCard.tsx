@@ -53,9 +53,10 @@ export function ClientKanbanCard({
                 {getStatusLabel(client.status)}
               </Badge>
             </div>
-            <CardContent className="p-2 text-xs space-y-1.5">
+            <CardContent className="p-2 space-y-2">
+              {/* Enhanced client information */}
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span className="truncate max-w-[60%]">{client.csm || 'Unassigned'}</span>
+                <span className="truncate max-w-[60%]">CSM: {client.csm || 'Unassigned'}</span>
                 <span>{getDaysRemaining(client.endDate)}</span>
               </div>
               
@@ -73,6 +74,38 @@ export function ClientKanbanCard({
                   <span className="text-xs">${client.mrr}</span>
                 </div>
               </div>
+              
+              {/* Progress indicator */}
+              <div className="space-y-1">
+                <div className="flex justify-between items-center text-xs">
+                  <span>Progress</span>
+                  <span>{client.progress}%</span>
+                </div>
+                <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full ${
+                      client.progress >= 70 ? 'bg-success-500' :
+                      client.progress >= 40 ? 'bg-warning-500' :
+                      'bg-danger-500'
+                    }`}
+                    style={{ width: `${client.progress}%` }}
+                  />
+                </div>
+              </div>
+              
+              {/* NPS Score if available */}
+              {client.npsScore !== null && (
+                <div className="flex items-center justify-between text-xs">
+                  <span>NPS Score:</span>
+                  <Badge variant={
+                    client.npsScore >= 8 ? 'default' :
+                    client.npsScore >= 6 ? 'secondary' :
+                    'destructive'
+                  }>
+                    {client.npsScore}
+                  </Badge>
+                </div>
+              )}
               
               <div className="flex gap-1 justify-end mt-1">
                 <Button 
