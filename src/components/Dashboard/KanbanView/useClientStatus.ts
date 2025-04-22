@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Client, getAllClients } from "@/lib/data";
 import { StatusGroup, getDefaultColumnOrder } from "./ClientStatusHelper";
@@ -10,7 +11,7 @@ export function useClientStatus(initialClients: Client[]) {
   const [isInitialized, setIsInitialized] = useState(false);
   const { toast } = useToast();
   
-  // Initialize local state with clients - optimized with memoization
+  // Initialize local state with clients
   const initializeClients = useCallback((clientsToUse: Client[]) => {
     if (Array.isArray(clientsToUse) && clientsToUse.length > 0) {
       // Validate clients and avoid unnecessary state updates if data is the same
@@ -24,20 +25,17 @@ export function useClientStatus(initialClients: Client[]) {
         return validatedClients;
       });
       setIsInitialized(true);
-    } else {
-      console.warn("Attempted to initialize with invalid clients:", clientsToUse);
     }
   }, []);
   
-  // Update local state when clients prop changes - with checks to avoid unnecessary updates
+  // Update local state when clients prop changes
   useEffect(() => {
     if (!isInitialized && initialClients && initialClients.length > 0) {
-      console.log(`useClientStatus: Received ${initialClients.length} initial clients`);
       initializeClients(initialClients);
     }
   }, [initialClients, initializeClients, isInitialized]);
   
-  // Refresh data function that can be called externally - optimized with change detection
+  // Refresh data function that can be called externally
   const refreshData = useCallback((updatedClients: Client[]) => {
     if (Array.isArray(updatedClients) && updatedClients.length > 0) {
       // Validate clients
@@ -48,16 +46,13 @@ export function useClientStatus(initialClients: Client[]) {
         JSON.stringify(localClients) !== JSON.stringify(validatedClients);
       
       if (needsUpdate) {
-        console.log(`refreshData processing ${validatedClients.length} clients`);
         setLocalClients(validatedClients);
         setIsInitialized(true);
-      } else {
-        console.log("No change detected in client data, skipping update");
       }
     }
   }, [localClients]);
   
-  // Group clients by status - with memoization to prevent recalculation on every render
+  // Group clients by status
   const clientsByStatus = useMemo(() => {
     if (!isInitialized) {
       // Return empty structure until initialized
@@ -92,7 +87,7 @@ export function useClientStatus(initialClients: Client[]) {
     return groups;
   }, [localClients, isInitialized]);
   
-  // Handle drag end event - optimized
+  // Handle drag end event
   const handleDragEnd = useCallback((result: any) => {
     const { destination, source, draggableId } = result;
     
@@ -103,7 +98,6 @@ export function useClientStatus(initialClients: Client[]) {
     }
     
     // Get the client that was dragged
-    const sourceColumn = source.droppableId;
     const destColumn = destination.droppableId;
     const clientId = draggableId;
     

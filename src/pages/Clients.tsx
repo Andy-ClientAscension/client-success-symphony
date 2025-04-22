@@ -21,7 +21,6 @@ export default function Clients() {
 
   // Optimize client data initialization
   const initializeClientData = useCallback(async () => {
-    console.log("Initializing client data in Clients.tsx");
     setIsLoading(true);
     
     try {
@@ -36,15 +35,11 @@ export default function Clients() {
         const defaultClients = getAllClients();
         
         if (defaultClients && defaultClients.length > 0) {
-          console.log(`Loading ${defaultClients.length} default clients in Clients.tsx`);
           saveData(STORAGE_KEYS.CLIENTS, defaultClients);
           saveData(STORAGE_KEYS.CLIENT_STATUS, defaultClients);
           setClients(defaultClients);
-        } else {
-          console.warn("No default clients available");
         }
       } else {
-        console.log(`Loaded ${storedClients.length} clients from storage in Clients.tsx`);
         setClients(storedClients);
         
         // Ensure client data is saved to client status as well for new users
@@ -73,26 +68,11 @@ export default function Clients() {
 
   // Initialize data only once on component mount
   useEffect(() => {
-    // Check if data was already loaded in this session
-    const dataLoaded = sessionStorage.getItem('clientsPageDataLoaded');
-    
-    if (!dataLoaded) {
-      initializeClientData();
-      sessionStorage.setItem('clientsPageDataLoaded', 'true');
-    } else {
-      // Still load from storage but don't show loading screen
-      const storedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
-      if (storedClients && storedClients.length > 0) {
-        setClients(storedClients);
-      }
-      setIsLoading(false);
-    }
+    initializeClientData();
   }, [initializeClientData]);
 
-  // Optimize storage event handling with debouncing
+  // Optimize storage event handling
   useEffect(() => {
-    let debounceTimer: ReturnType<typeof setTimeout>;
-    
     const handleStorageChange = (event: StorageEvent | CustomEvent) => {
       const key = event instanceof StorageEvent ? event.key : (event as CustomEvent).detail?.key;
       
@@ -100,20 +80,16 @@ export default function Clients() {
       if (key === STORAGE_KEYS.CLIENTS || key === STORAGE_KEYS.CLIENT_STATUS || 
           key === STORAGE_KEYS.KANBAN || key === null) {
         
-        // Debounce to prevent multiple rapid updates
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-          console.log("Storage change detected in Clients.tsx:", key);
-          
-          // Reload clients from storage
-          const updatedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
-          if (updatedClients && updatedClients.length > 0) {
-            setClients(updatedClients);
-          }
-          
-          // Increment force reload counter to refresh child components
-          setForceReload(prev => prev + 1);
-        }, 300);
+        console.log("Storage change detected in Clients.tsx:", key);
+        
+        // Reload clients from storage
+        const updatedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
+        if (updatedClients && updatedClients.length > 0) {
+          setClients(updatedClients);
+        }
+        
+        // Increment force reload counter to refresh child components
+        setForceReload(prev => prev + 1);
       }
     };
     
@@ -126,7 +102,6 @@ export default function Clients() {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('storageUpdated', handleStorageChange as EventListener);
       window.removeEventListener('storageRestored', handleStorageChange as EventListener);
-      clearTimeout(debounceTimer);
     };
   }, []);
 
