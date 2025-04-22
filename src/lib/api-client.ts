@@ -66,8 +66,28 @@ export const apiClient = {
         ]
       };
 
+      // To ensure type safety, we need to explicitly map the data from our source to our API types
+      const apiClients: API.Client[] = clients.map(client => ({
+        id: client.id,
+        name: client.name,
+        startDate: client.startDate,
+        endDate: client.endDate,
+        contractValue: client.contractValue,
+        status: client.status as API.ClientStatus,
+        team: client.team,
+        csm: client.csm,
+        notes: client.notes,
+        progress: client.progress,
+        npsScore: client.npsScore,
+        callsBooked: client.callsBooked,
+        dealsClosed: client.dealsClosed,
+        mrr: client.mrr,
+        backendStudents: client.backendStudents,
+        growth: client.growth
+      }));
+
       return {
-        clients,
+        clients: apiClients,
         clientCounts,
         npsData,
         churnData

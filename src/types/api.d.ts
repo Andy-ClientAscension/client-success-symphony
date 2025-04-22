@@ -34,12 +34,12 @@ declare namespace API {
     csm?: string;
     notes?: string;
     progress?: number; // Changed from required to optional to match data.ts
-    npsScore: number | null;
-    callsBooked: number;
-    dealsClosed: number;
-    mrr: number;
-    backendStudents: number;
-    growth: number;
+    npsScore?: number | null; // Changed from required to optional to match data.ts
+    callsBooked?: number; // Changed from required to optional to match data.ts
+    dealsClosed?: number; // Changed from required to optional to match data.ts
+    mrr?: number; // Changed from required to optional to match data.ts
+    backendStudents?: number;
+    growth?: number;
   }
   
   type ClientStatus = 'active' | 'at-risk' | 'churned' | 'new' | 'paused' | 'graduated' | 'backend' | 'olympia';
