@@ -1,32 +1,37 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { Layout } from "@/components/Layout/Layout";
 import { useToast } from "@/hooks/use-toast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { DashboardHeader } from "@/components/Dashboard/UnifiedDashboard/DashboardHeader";
 import { DashboardTabs } from "@/components/Dashboard/UnifiedDashboard/DashboardTabs";
-import { Card } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 import { MetricsCards } from "@/components/Dashboard/MetricsCards";
 import { LoadingState } from "@/components/LoadingState";
 import { ValidationError } from "@/components/ValidationError";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 export default function UnifiedDashboard() {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = React.useState("overview");
+  
   const { 
     data: dashboardData,
     isLoading,
     error,
-    refetch: refetchDashboardData,
-    dataUpdatedAt,
-    isRefetching
+    refetchData,
+    lastUpdated,
+    isRefreshing
   } = useDashboardData();
 
   const handleErrorReset = useCallback(() => {
-    refetchDashboardData();
-  }, [refetchDashboardData]);
+    refetchData();
+    toast({
+      title: "Retrying...",
+      description: "Attempting to fetch dashboard data again.",
+    });
+  }, [refetchData, toast]);
 
   if (isLoading) {
     return (
@@ -47,6 +52,13 @@ export default function UnifiedDashboard() {
             message={error.message}
             title="Error Loading Dashboard"
           />
+          <Button 
+            onClick={handleErrorReset}
+            variant="outline"
+            className="mt-4"
+          >
+            Retry
+          </Button>
         </div>
       </Layout>
     );
@@ -60,11 +72,21 @@ export default function UnifiedDashboard() {
           onReset={handleErrorReset}
         >
           <DashboardHeader 
-            isRefreshing={isRefetching}
-            handleRefreshData={refetchDashboardData}
-            lastUpdated={dataUpdatedAt}
+            isRefreshing={isRefreshing}
+            handleRefreshData={refetchData}
+            lastUpdated={lastUpdated}
           />
         </ErrorBoundary>
+
+        {error && dashboardData && (
+          <Alert variant="warning" className="mb-4">
+            <AlertCircle className="h-4 w-4 mr-2" />
+            <AlertTitle>Data Refresh Failed</AlertTitle>
+            <AlertDescription>
+              {error.message}. Using previously cached data. Click refresh to try again.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <ErrorBoundary
           customMessage="Unable to load metrics data. You can still view other dashboard sections."
@@ -87,7 +109,7 @@ export default function UnifiedDashboard() {
             isAnalyzing={false}
             error={null}
             comparisons={[]}
-            handleRefreshData={refetchDashboardData}
+            handleRefreshData={refetchData}
             trendData={[]}
           />
         </ErrorBoundary>

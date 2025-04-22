@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface DashboardHeaderProps {
   isRefreshing: boolean;
   handleRefreshData: () => void;
-  lastUpdated?: number;
+  lastUpdated?: Date | number | null;
 }
 
 export function DashboardHeader({ 
