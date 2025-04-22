@@ -1,16 +1,15 @@
+
 import { Layout } from "@/components/Layout/Layout";
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useDashboardPersistence } from "@/hooks/use-dashboard-persistence";
 import { DashboardSettingsBar } from "@/components/Dashboard/DashboardSettingsBar";
-import { DashboardTabs } from "@/components/Dashboard/UnifiedDashboard/DashboardTabs";
 import { DashboardHeader } from "@/components/Dashboard/UnifiedDashboard/DashboardHeader";
 import { PerformanceAlert } from "@/components/Dashboard/PerformanceAlert";
 import { useRealtimeData } from "@/utils/dataSyncService";
 import { STORAGE_KEYS } from "@/utils/persistence";
 import { DataSyncMonitor } from "@/components/Dashboard/DataSyncMonitor";
 import { getAllClients, getClientsCountByStatus } from "@/lib/data";
-import { UnifiedMetricsGrid, generateClientMetrics } from "@/components/Dashboard/Metrics/UnifiedMetricsGrid";
 import { ChurnMetricChart, NPSMetricChart } from "@/components/Dashboard/Charts/UnifiedMetricChart";
 import { useAIInsights } from "@/hooks/use-ai-insights";
 import { BackgroundProcessingIndicator, BackgroundTaskStatus } from "@/components/Dashboard/BackgroundProcessingIndicator";
@@ -20,16 +19,19 @@ import { MetricsCards } from "@/components/Dashboard/MetricsCards";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { MetricErrorFallback } from "@/components/Dashboard/Shared/MetricErrorFallback";
 import { TableErrorFallback } from "@/components/Dashboard/Shared/TableErrorFallback";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { DashboardOverviewTab } from "@/components/Dashboard/UnifiedDashboard/DashboardOverviewTab";
+import { CompanyMetricsTab } from "@/components/Dashboard/CompanyMetrics/CompanyMetricsTab";
+import { TeamAnalyticsTab } from "@/components/Dashboard/TeamAnalytics/TeamAnalyticsTab";
+import { AIInsightsTab } from "@/components/Dashboard/UnifiedDashboard/AIInsightsTab";
 
 export default function Index() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
-  const [focusMode, setFocusMode] = useState(false);
   const { persistDashboard, togglePersistDashboard } = useDashboardPersistence();
   const [performanceMode, setPerformanceMode] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [clients, setClients] = useState([]);
-
   const [insights, isInsightsLoading] = useRealtimeData(STORAGE_KEYS.AI_INSIGHTS, []);
   const [comparisons, isComparisonsLoading] = useRealtimeData('clientComparisons', []);
   const [trendData, isTrendDataLoading] = useRealtimeData('trendData', [
@@ -40,7 +42,6 @@ export default function Index() {
     { month: 'May', mrr: 4200, churn: 2, growth: 12 },
     { month: 'Jun', mrr: 5000, churn: 4, growth: 18 },
   ]);
-
   const [clientCounts] = useRealtimeData('clientCounts', getClientsCountByStatus());
 
   const { 
@@ -110,26 +111,12 @@ export default function Index() {
 
   const handleRefreshData = useCallback(() => {
     setIsRefreshing(true);
-    
     analyzeClients(true).finally(() => {
       setIsRefreshing(false);
     });
   }, [analyzeClients]);
 
-  const handleViewBackgroundTasks = () => {
-    toast({
-      title: "Background Tasks Status",
-      description: isAnalyzing 
-        ? "AI analysis is currently running in the background" 
-        : aiError 
-          ? `Last analysis encountered an error: ${aiError.message}` 
-          : lastAnalyzed 
-            ? `Last analyzed at ${lastAnalyzed.toLocaleString()}` 
-            : "No recent analysis data",
-    });
-  };
-
-  const clientMetrics = generateClientMetrics({
+  const clientMetrics = {
     total: clientCounts.active + clientCounts["at-risk"] + clientCounts.new + clientCounts.churned,
     active: clientCounts.active,
     atRisk: clientCounts["at-risk"],
@@ -137,7 +124,7 @@ export default function Index() {
     churn: clientCounts.churned || 0,
     success: 85,
     growthRate: 12
-  });
+  };
 
   const [syncStats] = useRealtimeData('syncStats', { lastSync: null, totalSyncs: 0 });
 
@@ -152,15 +139,26 @@ export default function Index() {
                 <div className="flex items-center gap-2">
                   <BackgroundProcessingIndicator 
                     tasks={backgroundTasks}
-                    onClick={handleViewBackgroundTasks}
+                    onClick={() => {
+                      toast({
+                        title: "Background Tasks Status",
+                        description: isAnalyzing 
+                          ? "AI analysis is currently running in the background" 
+                          : aiError 
+                            ? `Last analysis encountered an error: ${aiError.message}` 
+                            : lastAnalyzed 
+                              ? `Last analyzed at ${lastAnalyzed.toLocaleString()}` 
+                              : "No recent analysis data",
+                      });
+                    }}
                   />
                   <DashboardSettingsBar
                     persistDashboard={persistDashboard}
                     togglePersistDashboard={togglePersistDashboard}
                     performanceMode={performanceMode}
                     setPerformanceMode={setPerformanceMode}
-                    focusMode={focusMode}
-                    onFocusModeChange={setFocusMode}
+                    focusMode={false}
+                    onFocusModeChange={() => {}}
                   />
                 </div>
               </div>
@@ -186,51 +184,46 @@ export default function Index() {
           )}
 
           <div className="grid gap-6">
-            <ErrorBoundary
-              fallback={<MetricErrorFallback 
-                error={new Error("Failed to load metrics")} 
-                resetErrorBoundary={() => {}} 
-              />}
-            >
-              <div className="grid gap-4">
-                <MetricsCards />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <ErrorBoundary
-                    fallback={<TableErrorFallback 
-                      error={new Error("Failed to load NPS chart")} 
-                      resetErrorBoundary={() => {}} 
-                    />}
-                  >
-                    <NPSMetricChart />
-                  </ErrorBoundary>
-                  <ErrorBoundary
-                    fallback={<TableErrorFallback 
-                      error={new Error("Failed to load Churn chart")} 
-                      resetErrorBoundary={() => {}} 
-                    />}
-                  >
-                    <ChurnMetricChart />
-                  </ErrorBoundary>
-                </div>
+            <div className="grid gap-4">
+              <MetricsCards />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <ErrorBoundary
+                  fallback={<TableErrorFallback 
+                    error={new Error("Failed to load NPS chart")} 
+                    resetErrorBoundary={() => {}} 
+                  />}
+                >
+                  <NPSMetricChart />
+                </ErrorBoundary>
+                <ErrorBoundary
+                  fallback={<TableErrorFallback 
+                    error={new Error("Failed to load Churn chart")} 
+                    resetErrorBoundary={() => {}} 
+                  />}
+                >
+                  <ChurnMetricChart />
+                </ErrorBoundary>
               </div>
-            </ErrorBoundary>
+            </div>
+
+            {/* Dashboard Tab Container - Modular */}
+            <DashboardTabContainer 
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              predictions={predictions}
+              aiInsights={aiInsights}
+              isAnalyzing={isAnalyzing}
+              aiError={aiError}
+              comparisons={comparisons}
+              handleRefreshData={handleRefreshData}
+              cancelAnalysis={cancelAnalysis}
+              trendData={trendData}
+              lastAnalyzed={lastAnalyzed}
+              clients={clients}
+              clientMetrics={clientMetrics}
+            />
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              <div className="lg:col-span-9">
-                <DashboardTabs
-                  activeTab={activeTab}
-                  setActiveTab={setActiveTab}
-                  predictions={predictions}
-                  insights={aiInsights}
-                  isAnalyzing={isAnalyzing}
-                  error={aiError}
-                  comparisons={comparisons}
-                  handleRefreshData={handleRefreshData}
-                  cancelAnalysis={cancelAnalysis}
-                  trendData={trendData}
-                  lastAnalyzed={lastAnalyzed}
-                />
-              </div>
               <aside className="lg:col-span-3">
                 <DataSyncMonitor />
               </aside>
