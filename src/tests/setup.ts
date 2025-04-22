@@ -2,9 +2,13 @@
 import '@testing-library/jest-dom';
 import { vi, afterEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
+import { toHaveNoViolations } from 'jest-axe';
 
 // Add vi to the global scope
 global.vi = vi;
+
+// Add jest-axe matcher
+expect.extend(toHaveNoViolations);
 
 // Explicitly declare vi as a global type
 declare global {

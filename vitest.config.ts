@@ -25,6 +25,9 @@ export default defineConfig({
       tsconfig: './tsconfig.json',
       include: ['src/**/*.{test,spec}.{ts,tsx}']
     },
+    deps: {
+      inline: ['jest-axe']
+    }
   },
   resolve: {
     alias: {
