@@ -120,7 +120,8 @@ export function DashboardOverview() {
               </div>
             </Card>
             
-            <AIInsightsWidget insights={getStoredAIInsights()} />
+            {/* Hide the AIInsightsWidget since we already have the main panel above */}
+            {/* <AIInsightsWidget insights={getStoredAIInsights()} /> */}
           </div>
         </CollapsibleContent>
       </Collapsible>
