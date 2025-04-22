@@ -1,5 +1,6 @@
 
 import { toast } from "@/components/ui/use-toast";
+import { getAllClients, getClientsCountByStatus, getAverageNPS, getChurnData } from "@/lib/data";
 
 interface FetcherOptions {
   retries?: number;
@@ -70,4 +71,3 @@ export const apiClient = {
     });
   }
 };
-
