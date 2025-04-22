@@ -1,4 +1,5 @@
-import { ReactNode, useEffect } from "react";
+
+import { ReactNode, useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { LoadingState } from "@/components/LoadingState";
@@ -11,7 +12,23 @@ interface ProtectedRouteProps {
 
 function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   const location = useLocation();
-  const { isAuthenticated, isLoading, error } = useAuth();
+  const [authError, setAuthError] = useState<Error | null>(null);
+  
+  // Try to use the auth context with error handling
+  let isAuthenticated = false;
+  let isLoading = true;
+  let error = null;
+  
+  try {
+    const auth = useAuth();
+    isAuthenticated = auth.isAuthenticated;
+    isLoading = auth.isLoading;
+    error = auth.error;
+  } catch (e) {
+    console.error("Failed to initialize auth in ProtectedRoute:", e);
+    setAuthError(e instanceof Error ? e : new Error("Authentication system unavailable"));
+    isLoading = false;
+  }
   
   useEffect(() => {
     console.log("ProtectedRoute: Mount effect at path", location.pathname);
@@ -19,6 +36,17 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
       console.log("ProtectedRoute: Unmount effect from path", location.pathname);
     };
   }, [location.pathname]);
+  
+  if (authError) {
+    return (
+      <ValidationError
+        type="error"
+        title="Authentication System Error"
+        message={authError.message || "Failed to initialize authentication system"}
+        showIcon
+      />
+    );
+  }
   
   if (isLoading) {
     return <LoadingState message="Checking authentication..." />;

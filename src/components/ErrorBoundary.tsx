@@ -23,11 +23,14 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
+    console.error('ErrorBoundary caught an error:', error.message);
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // Log to error service
+    console.error('Component stack trace:', errorInfo.componentStack);
+    
     errorService.captureError(error, {
       severity: 'high',
       context: {
@@ -35,6 +38,8 @@ export class ErrorBoundary extends Component<Props, State> {
         errorInfo
       }
     });
+    
+    this.setState({ errorInfo });
   }
 
   handleReset = (): void => {

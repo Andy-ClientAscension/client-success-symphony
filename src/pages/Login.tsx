@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -14,13 +13,26 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export default function Login() {
   console.log("Login component rendering");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, isAuthenticated, isLoading } = useAuth();
+  
+  // Add error handling for auth context
+  let login, isAuthenticated, isLoading;
+  try {
+    const auth = useAuth();
+    login = auth.login;
+    isAuthenticated = auth.isAuthenticated;
+    isLoading = auth.isLoading;
+  } catch (error) {
+    console.error("Failed to initialize auth:", error);
+    throw new Error("Authentication is unavailable. Please refresh the page or try again later.");
+  }
+  
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -96,77 +108,79 @@ export default function Login() {
 
   console.log("Login - Rendering login form");
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>
-            Enter your credentials to access your account
-          </CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="youremail@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
+    <ErrorBoundary customMessage="There was a problem loading the login form. Please try refreshing the page.">
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-2xl">Login</CardTitle>
+            <CardDescription>
+              Enter your credentials to access your account
+            </CardDescription>
+          </CardHeader>
+          <form onSubmit={handleSubmit}>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="youremail@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  <a 
+                    href="#" 
+                    className="text-sm text-blue-500 hover:text-blue-700"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      toast({
+                        title: "Password Reset",
+                        description: "Password reset functionality is not implemented in this demo.",
+                      });
+                    }}
+                  >
+                    Forgot password?
+                  </a>
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="flex flex-col space-y-4">
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isSubmitting || isLoading}
+              >
+                {isSubmitting ? "Logging in..." : "Login"}
+              </Button>
+              <p className="text-center text-sm">
+                Don't have an account?{" "}
                 <a 
-                  href="#" 
-                  className="text-sm text-blue-500 hover:text-blue-700"
+                  href="/signup" 
+                  className="text-blue-500 hover:text-blue-700"
                   onClick={(e) => {
                     e.preventDefault();
-                    toast({
-                      title: "Password Reset",
-                      description: "Password reset functionality is not implemented in this demo.",
-                    });
+                    navigate("/signup");
                   }}
                 >
-                  Forgot password?
+                  Sign up
                 </a>
-              </div>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={isSubmitting || isLoading}
-            >
-              {isSubmitting ? "Logging in..." : "Login"}
-            </Button>
-            <p className="text-center text-sm">
-              Don't have an account?{" "}
-              <a 
-                href="/signup" 
-                className="text-blue-500 hover:text-blue-700"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate("/signup");
-                }}
-              >
-                Sign up
-              </a>
-            </p>
-          </CardFooter>
-        </form>
-      </Card>
-    </div>
+              </p>
+            </CardFooter>
+          </form>
+        </Card>
+      </div>
+    </ErrorBoundary>
   );
 }

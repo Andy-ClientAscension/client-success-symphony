@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { BarChart2, Lock, Mail, Key, ArrowLeft } from "lucide-react";
 import { LoadingState } from "@/components/LoadingState";
 import { ValidationError } from "@/components/ValidationError";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export default function SignUp() {
   const [email, setEmail] = useState("");
@@ -20,7 +21,18 @@ export default function SignUp() {
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [inviteCodeError, setInviteCodeError] = useState("");
-  const { register, validateInviteCode } = useAuth();
+  
+  // Try to use the auth context, but with error handling
+  let register, validateInviteCode;
+  try {
+    const auth = useAuth();
+    register = auth.register;
+    validateInviteCode = auth.validateInviteCode;
+  } catch (error) {
+    console.error("Failed to initialize auth:", error);
+    throw new Error("Authentication is unavailable. Please refresh the page or try again later.");
+  }
+  
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -127,113 +139,115 @@ export default function SignUp() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <div className="flex justify-center mb-4">
-            <div className="rounded-full bg-black p-3 flex items-center justify-center">
-              <BarChart2 className="h-10 w-10 text-red-600" />
+    <ErrorBoundary customMessage="There was a problem loading the sign up form. Please try refreshing the page.">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1">
+            <div className="flex justify-center mb-4">
+              <div className="rounded-full bg-black p-3 flex items-center justify-center">
+                <BarChart2 className="h-10 w-10 text-red-600" />
+              </div>
             </div>
-          </div>
-          <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
-          <CardDescription className="text-center">
-            Enter your details to register
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="py-8">
-              <LoadingState 
-                message="Creating your account..." 
-                size="md" 
-                showProgress={true}
-              />
+            <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
+            <CardDescription className="text-center">
+              Enter your details to register
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="py-8">
+                <LoadingState 
+                  message="Creating your account..." 
+                  size="md" 
+                  showProgress={true}
+                />
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="name@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className={`pl-10 ${emailError ? "border-destructive" : ""}`}
+                      required
+                    />
+                  </div>
+                  {emailError && <ValidationError message={emailError} />}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className={`pl-10 ${passwordError ? "border-destructive" : ""}`}
+                      required
+                    />
+                  </div>
+                  {passwordError && <ValidationError message={passwordError} />}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className={`pl-10 ${confirmPasswordError ? "border-destructive" : ""}`}
+                      required
+                    />
+                  </div>
+                  {confirmPasswordError && <ValidationError message={confirmPasswordError} />}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="inviteCode">Invitation Code</Label>
+                  <div className="relative">
+                    <Key className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="inviteCode"
+                      type="text"
+                      placeholder="Enter your invitation code"
+                      value={inviteCode}
+                      onChange={(e) => setInviteCode(e.target.value)}
+                      className={`pl-10 ${inviteCodeError ? "border-destructive" : ""}`}
+                      required
+                    />
+                  </div>
+                  {inviteCodeError && <ValidationError message={inviteCodeError} />}
+                </div>
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Creating account..." : "Sign Up"}
+                </Button>
+              </form>
+            )}
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4">
+            <div className="text-sm text-center">
+              Already have an account?{" "}
+              <Link to="/login" className="text-primary hover:underline">
+                Log in
+              </Link>
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="name@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className={`pl-10 ${emailError ? "border-destructive" : ""}`}
-                    required
-                  />
-                </div>
-                {emailError && <ValidationError message={emailError} />}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className={`pl-10 ${passwordError ? "border-destructive" : ""}`}
-                    required
-                  />
-                </div>
-                {passwordError && <ValidationError message={passwordError} />}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className={`pl-10 ${confirmPasswordError ? "border-destructive" : ""}`}
-                    required
-                  />
-                </div>
-                {confirmPasswordError && <ValidationError message={confirmPasswordError} />}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="inviteCode">Invitation Code</Label>
-                <div className="relative">
-                  <Key className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="inviteCode"
-                    type="text"
-                    placeholder="Enter your invitation code"
-                    value={inviteCode}
-                    onChange={(e) => setInviteCode(e.target.value)}
-                    className={`pl-10 ${inviteCodeError ? "border-destructive" : ""}`}
-                    required
-                  />
-                </div>
-                {inviteCodeError && <ValidationError message={inviteCodeError} />}
-              </div>
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isLoading}
-              >
-                {isLoading ? "Creating account..." : "Sign Up"}
-              </Button>
-            </form>
-          )}
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
-          <div className="text-sm text-center">
-            Already have an account?{" "}
-            <Link to="/login" className="text-primary hover:underline">
-              Log in
-            </Link>
-          </div>
-        </CardFooter>
-      </Card>
-    </div>
+          </CardFooter>
+        </Card>
+      </div>
+    </ErrorBoundary>
   );
 }
