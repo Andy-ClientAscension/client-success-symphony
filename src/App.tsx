@@ -10,7 +10,26 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { logStartupPhase } from "@/utils/errorHandling";
-import { routes } from "./routes";
+
+// Import pages
+import DiagnosticIndex from "@/pages/DiagnosticIndex";
+import Login from "@/pages/Login";
+import SignUp from "@/pages/SignUp";
+import UnifiedDashboard from "@/pages/UnifiedDashboard";
+import Index from "@/pages/Index";
+import NotFound from "@/pages/NotFound";
+import Clients from "@/pages/Clients";
+import ClientDetails from "@/pages/ClientDetails";
+import AddClient from "@/pages/AddClient";
+import Renewals from "@/pages/Renewals";
+
+// Lazy load less frequently accessed pages
+const Communications = lazy(() => import("@/pages/Communications"));
+const Payments = lazy(() => import("@/pages/Payments"));
+const HealthScoreDashboard = lazy(() => import("@/pages/HealthScoreDashboard"));
+const Automations = lazy(() => import("@/pages/Automations"));
+const Settings = lazy(() => import("@/pages/Settings"));
+const Help = lazy(() => import("@/pages/Help"));
 
 logStartupPhase("App.tsx: Module loading started");
 
