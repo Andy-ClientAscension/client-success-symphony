@@ -11,6 +11,7 @@ import { LoadingState } from "@/components/LoadingState";
 import { ValidationError } from "@/components/ValidationError";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button"; // Added missing Button import
 
 export default function UnifiedDashboard() {
   const { toast } = useToast();
@@ -79,7 +80,7 @@ export default function UnifiedDashboard() {
         </ErrorBoundary>
 
         {error && dashboardData && (
-          <Alert variant="warning" className="mb-4">
+          <Alert variant="destructive" className="mb-4"> {/* Changed "warning" to "destructive" to match available variants */}
             <AlertCircle className="h-4 w-4 mr-2" />
             <AlertTitle>Data Refresh Failed</AlertTitle>
             <AlertDescription>
