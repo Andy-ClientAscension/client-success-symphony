@@ -1,9 +1,10 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TimeSeriesChart } from "./TimeSeriesChart";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, Plus } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 
 export interface MetricChartProps {
@@ -49,13 +50,20 @@ export function UnifiedMetricChart({
             </div>
             <CollapsibleTrigger asChild>
               <Button variant="ghost" size="sm">
-                <Plus className="h-4 w-4 shrink-0 transition-transform duration-200" />
+                {isExpanded ? (
+                  <ChevronUp className="h-4 w-4 shrink-0" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 shrink-0" />
+                )}
               </Button>
             </CollapsibleTrigger>
           </div>
         </CardHeader>
-        <CollapsibleContent>
-          <CardContent>
+        <CardContent className={!isExpanded ? "pb-0" : ""}>
+          {!isExpanded && (
+            <div className="h-2"></div>
+          )}
+          <CollapsibleContent>
             {hasData ? (
               <TimeSeriesChart
                 title={title}
@@ -76,8 +84,8 @@ export function UnifiedMetricChart({
                 icon={<ChevronDown className="h-8 w-8 text-muted-foreground" />}
               />
             )}
-          </CardContent>
-        </CollapsibleContent>
+          </CollapsibleContent>
+        </CardContent>
       </Collapsible>
     </Card>
   );
