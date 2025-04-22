@@ -34,6 +34,21 @@ export function ClientKanbanCard({
     return `${days} days`;
   };
 
+  const handleUpdateNPS = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onUpdateNPS(client);
+  };
+
+  const handleEditMetrics = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onEditMetrics(client);
+  };
+
+  const handleViewDetails = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onViewDetails(client);
+  };
+
   return (
     <Draggable key={client.id} draggableId={client.id} index={index}>
       {(provided) => (
@@ -42,8 +57,9 @@ export function ClientKanbanCard({
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           className="mb-2 overflow-hidden"
+          onClick={handleViewDetails}
         >
-          <Card className="shadow-sm hover:shadow transition-shadow">
+          <Card className="shadow-sm hover:shadow transition-shadow cursor-pointer">
             <div className="p-2 border-b flex items-center justify-between">
               <div className="font-medium flex items-center text-sm truncate max-w-[75%]">
                 <Move className="h-3 w-3 mr-1 text-muted-foreground flex-shrink-0" />
@@ -112,8 +128,9 @@ export function ClientKanbanCard({
                   variant="ghost" 
                   size="sm"
                   className="h-6 w-6 p-0"
-                  onClick={() => onUpdateNPS(client)}
+                  onClick={handleUpdateNPS}
                   title="Update NPS"
+                  aria-label="Update NPS score"
                 >
                   <TrendingUp className="h-3 w-3" />
                 </Button>
@@ -121,8 +138,9 @@ export function ClientKanbanCard({
                   variant="ghost" 
                   size="sm"
                   className="h-6 w-6 p-0"
-                  onClick={() => onEditMetrics(client)}
+                  onClick={handleEditMetrics}
                   title="Edit metrics"
+                  aria-label="Edit client metrics"
                 >
                   <Edit className="h-3 w-3" />
                 </Button>
@@ -130,7 +148,8 @@ export function ClientKanbanCard({
                   variant="ghost" 
                   size="sm"
                   className="h-6 w-6 p-0"
-                  onClick={() => onViewDetails(client)}
+                  onClick={handleViewDetails}
+                  aria-label="View client details"
                 >
                   <ChevronRight className="h-3 w-3" />
                 </Button>

@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { ClientKanbanView } from "./KanbanView/ClientKanbanView";
 import { Client } from "@/lib/data";
 import { ClientMetricsForm } from "./ClientMetricsForm";
@@ -12,6 +12,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Users } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { STORAGE_KEYS, saveData } from "@/utils/persistence";
 
 interface EnhancedKanbanBoardProps {
   fullScreen?: boolean;
@@ -23,6 +25,7 @@ export function EnhancedKanbanBoard({ fullScreen = false, clients = [] }: Enhanc
   const [isMetricsModalOpen, setIsMetricsModalOpen] = useState(false);
   const [isNPSModalOpen, setIsNPSModalOpen] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState("all");
+  const { toast } = useToast();
   
   // Filter clients based on selected team
   const filteredClients = useMemo(() => {
@@ -32,22 +35,82 @@ export function EnhancedKanbanBoard({ fullScreen = false, clients = [] }: Enhanc
     );
   }, [clients, selectedTeam]);
   
-  // Memoize these handlers to prevent unnecessary re-renders
-  const handleEditMetrics = useMemo(() => (client: Client) => {
+  // Improved handlers for button actions
+  const handleEditMetrics = useCallback((client: Client) => {
+    console.log("Opening metrics modal for:", client.name);
     setSelectedClient(client);
     setIsMetricsModalOpen(true);
   }, []);
   
-  const handleUpdateNPS = useMemo(() => (client: Client) => {
+  const handleUpdateNPS = useCallback((client: Client) => {
+    console.log("Opening NPS modal for:", client.name);
     setSelectedClient(client);
     setIsNPSModalOpen(true);
   }, []);
   
-  // Memoize the metrics submission handler
-  const handleMetricsSubmit = useMemo(() => (data: any) => {
-    console.log("Metrics updated:", data);
+  // Metrics submission handler with data persistence
+  const handleMetricsSubmit = useCallback((data: any) => {
+    if (!selectedClient) return;
+    
+    // Update client with new metrics
+    const updatedClients = clients.map(client => {
+      if (client.id === selectedClient.id) {
+        return {
+          ...client,
+          callsBooked: data.callsBooked || client.callsBooked,
+          dealsClosed: data.dealsClosed || client.dealsClosed,
+          mrr: data.mrr || client.mrr
+        };
+      }
+      return client;
+    });
+    
+    // Persist changes
+    saveData(STORAGE_KEYS.CLIENTS, updatedClients);
+    
+    // Notify other components about the update
+    window.dispatchEvent(new CustomEvent('storageUpdated', { 
+      detail: { key: STORAGE_KEYS.CLIENTS }
+    }));
+    
+    toast({
+      title: "Metrics Updated",
+      description: `Updated metrics for ${selectedClient.name}`,
+    });
+    
     setIsMetricsModalOpen(false);
-  }, []);
+  }, [selectedClient, clients, toast]);
+
+  // NPS submission handler with data persistence
+  const handleNPSSubmit = useCallback((score: number) => {
+    if (!selectedClient) return;
+    
+    // Update client with new NPS score
+    const updatedClients = clients.map(client => {
+      if (client.id === selectedClient.id) {
+        return {
+          ...client,
+          npsScore: score
+        };
+      }
+      return client;
+    });
+    
+    // Persist changes
+    saveData(STORAGE_KEYS.CLIENTS, updatedClients);
+    
+    // Notify other components about the update
+    window.dispatchEvent(new CustomEvent('storageUpdated', { 
+      detail: { key: STORAGE_KEYS.CLIENTS }
+    }));
+    
+    toast({
+      title: "NPS Updated",
+      description: `Updated NPS score for ${selectedClient.name} to ${score}`,
+    });
+    
+    setIsNPSModalOpen(false);
+  }, [selectedClient, clients, toast]);
 
   // Team options for the select dropdown
   const TEAMS = [
@@ -108,6 +171,7 @@ export function EnhancedKanbanBoard({ fullScreen = false, clients = [] }: Enhanc
           clientId={selectedClient.id}
           clientName={selectedClient.name}
           currentScore={selectedClient.npsScore || 0}
+          onSubmit={handleNPSSubmit}
         />
       )}
     </div>

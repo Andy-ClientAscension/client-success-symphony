@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useState, useCallback, memo } from "react";
 import { STORAGE_KEYS, loadData, saveData } from "@/utils/persistence";
 import { LoadingState } from "@/components/LoadingState";
+import { useToast } from "@/hooks/use-toast";
 
 interface ClientKanbanViewProps {
   clients: Client[];
@@ -25,10 +26,22 @@ export const ClientKanbanView = memo(function ClientKanbanView({
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const { clientsByStatus, handleDragEnd, refreshData, isInitialized } = useClientStatus(clients);
+  const { toast } = useToast();
   
   const handleViewDetails = useCallback((client: Client) => {
+    console.log("Navigating to client details:", client.id);
     navigate(`/clients/${client.id}`);
   }, [navigate]);
+
+  const handleEditMetricsWrapper = useCallback((client: Client) => {
+    console.log("Edit metrics for client:", client.name);
+    onEditMetrics(client);
+  }, [onEditMetrics]);
+
+  const handleUpdateNPSWrapper = useCallback((client: Client) => {
+    console.log("Update NPS for client:", client.name);
+    onUpdateNPS(client);
+  }, [onUpdateNPS]);
   
   // Use the predefined column order
   const columnOrder = getDefaultColumnOrder();
@@ -139,8 +152,8 @@ export const ClientKanbanView = memo(function ClientKanbanView({
               clients={clientsByStatus[status] || []}
               getStatusColor={getStatusColor}
               getStatusLabel={getStatusLabel}
-              onUpdateNPS={onUpdateNPS}
-              onEditMetrics={onEditMetrics}
+              onUpdateNPS={handleUpdateNPSWrapper}
+              onEditMetrics={handleEditMetricsWrapper}
               onViewDetails={handleViewDetails}
             />
           ))}

@@ -1,9 +1,8 @@
 
 import React from "react";
 import { Client } from "@/lib/data";
-import { Badge } from "@/components/ui/badge";
-import { Droppable } from "@hello-pangea/dnd";
 import { ClientKanbanCard } from "./ClientKanbanCard";
+import { Droppable } from "@hello-pangea/dnd";
 
 interface KanbanColumnProps {
   status: string;
@@ -25,36 +24,36 @@ export function KanbanColumn({
   onViewDetails
 }: KanbanColumnProps) {
   return (
-    <div className="bg-card rounded-lg p-2 border shadow-sm">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="font-semibold text-sm">{getStatusLabel(status)}</h3>
-        <Badge className={`${getStatusColor(status)} text-xs`}>{clients.length}</Badge>
+    <div className="flex flex-col h-full">
+      <div className={`px-3 py-2 ${getStatusColor(status)} rounded-t-md`}>
+        <h3 className="font-medium text-sm flex items-center justify-between">
+          <span>{getStatusLabel(status)}</span>
+          <span className="bg-white bg-opacity-30 px-2 rounded-full text-xs">
+            {clients.length}
+          </span>
+        </h3>
       </div>
+      
       <Droppable droppableId={status}>
         {(provided) => (
-          <div 
-            className="space-y-2 max-h-[calc(100vh-220px)] overflow-y-auto overflow-x-hidden pr-1"
-            ref={provided.innerRef}
+          <div
             {...provided.droppableProps}
+            ref={provided.innerRef}
+            className="flex-1 p-2 bg-muted/30 min-h-[200px] rounded-b-md"
           >
             {clients.map((client, index) => (
               <ClientKanbanCard
                 key={client.id}
                 client={client}
                 index={index}
+                getStatusColor={getStatusColor}
+                getStatusLabel={getStatusLabel}
                 onUpdateNPS={onUpdateNPS}
                 onEditMetrics={onEditMetrics}
                 onViewDetails={onViewDetails}
-                getStatusColor={getStatusColor}
-                getStatusLabel={getStatusLabel}
               />
             ))}
             {provided.placeholder}
-            {clients.length === 0 && (
-              <div className="text-center py-4 text-muted-foreground text-xs italic">
-                No clients in this column
-              </div>
-            )}
           </div>
         )}
       </Droppable>
