@@ -9,12 +9,14 @@ interface FallbackErrorProps {
   error: Error;
   resetErrorBoundary: () => void;
   errorInfo?: React.ErrorInfo;
+  customMessage?: string;
 }
 
 export function FallbackErrorComponent({
   error,
   resetErrorBoundary,
   errorInfo,
+  customMessage,
 }: FallbackErrorProps) {
   const handleReport = () => {
     errorService.captureError(error, {
@@ -32,7 +34,7 @@ export function FallbackErrorComponent({
         <AlertTriangle className="h-5 w-5" />
         <AlertTitle className="mb-2">Something went wrong</AlertTitle>
         <AlertDescription className="space-y-4">
-          <p className="text-sm">{error.message}</p>
+          <p className="text-sm">{customMessage || error.message}</p>
           
           {process.env.NODE_ENV !== 'production' && errorInfo && (
             <details className="mt-2 text-xs">

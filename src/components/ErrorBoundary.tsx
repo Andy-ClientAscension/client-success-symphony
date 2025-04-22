@@ -58,6 +58,7 @@ export class ErrorBoundary extends Component<Props, State> {
           error={this.state.error!}
           resetErrorBoundary={this.handleReset}
           errorInfo={this.state.errorInfo}
+          customMessage={this.props.customMessage}
         />
       );
     }

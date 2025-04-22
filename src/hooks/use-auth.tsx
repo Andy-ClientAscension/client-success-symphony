@@ -20,18 +20,11 @@ export function useAuth() {
     throw error;
   }
   
-  const { isAuthenticated, isLoading, user, error } = context;
-
-  console.log("Auth context:", {
-    isAuthenticated,
-    isLoading,
-    userExists: !!user,
-    error: error?.message
-  });
-  
   return context;
 }
 
-// Only using the context-based authentication approach
-// Removing direct auth hook implementation to avoid confusion
-
+// Export everything from the auth context for type safety
+export type {
+  User,
+  AuthContextType
+} from '@/contexts/AuthContext';
