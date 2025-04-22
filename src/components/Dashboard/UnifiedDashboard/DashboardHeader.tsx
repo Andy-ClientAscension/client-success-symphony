@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { refresh-cw, Clock, loader } from "lucide-react";
+import { RefreshCw, Clock, Loader } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -29,7 +29,7 @@ export function DashboardHeader({
         <Clock className="h-4 w-4" aria-hidden />
         {isRefreshing ? (
           <span className="flex items-center gap-1">
-            <loader className="h-4 w-4 animate-spin text-primary" aria-label="Loading" />
+            <Loader className="h-4 w-4 animate-spin text-primary" aria-label="Loading" />
             <span>Refreshing…</span>
           </span>
         ) : (
@@ -47,13 +47,12 @@ export function DashboardHeader({
         aria-label="Refresh dashboard data"
       >
         {isRefreshing ? (
-          <loader className="h-4 w-4 mr-2 animate-spin text-primary" aria-hidden />
+          <Loader className="h-4 w-4 mr-2 animate-spin text-primary" aria-hidden />
         ) : (
-          <refresh-cw className="h-4 w-4 mr-2 group-hover:text-primary group-focus-visible:text-primary transition-colors" aria-hidden />
+          <RefreshCw className="h-4 w-4 mr-2 group-hover:text-primary group-focus-visible:text-primary transition-colors" aria-hidden />
         )}
         <span>{isRefreshing ? "Refreshing…" : "Refresh Data"}</span>
       </Button>
     </header>
   );
 }
-
