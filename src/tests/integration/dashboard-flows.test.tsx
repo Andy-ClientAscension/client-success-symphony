@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import UnifiedDashboard from '@/pages/UnifiedDashboard';
 import Index from '@/pages/Index';
 import * as dataService from '@/lib/data';
+import { PerformanceAlert } from '@/components/Dashboard/PerformanceAlert';
 
 // Mock the data service
 vi.mock('@/lib/data', () => ({
@@ -43,25 +44,30 @@ describe('Dashboard User Flows', () => {
   beforeEach(() => {
     // Setup mock return values
     vi.mocked(dataService.getAllClients).mockReturnValue([
-      { id: '1', name: 'Client A', status: 'active', team: 'Team 1', nps: 8 },
-      { id: '2', name: 'Client B', status: 'at-risk', team: 'Team 2', nps: 5 }
+      { id: '1', name: 'Client A', status: 'active', team: 'Team 1', npsScore: 8, startDate: '2023-01-01', endDate: '2024-01-01', contractValue: 10000 },
+      { id: '2', name: 'Client B', status: 'at-risk', team: 'Team 2', npsScore: 5, startDate: '2023-01-01', endDate: '2024-01-01', contractValue: 10000 }
     ]);
     
     vi.mocked(dataService.getClientsCountByStatus).mockReturnValue({
-      active: 5, 'at-risk': 2, churned: 1, new: 3
+      active: 5, 'at-risk': 2, churned: 1, new: 3, paused: 0, graduated: 0
     });
     
-    vi.mocked(dataService.getAverageNPS).mockReturnValue(7.5);
+    vi.mocked(dataService.getAverageNPS).mockReturnValue({
+      current: 7.5,
+      previous: 7.2,
+      change: 0.3,
+      trend: 'up'
+    });
     
     vi.mocked(dataService.getNPSMonthlyTrend).mockReturnValue([
-      { month: 'Jan', value: 7.2 },
-      { month: 'Feb', value: 7.5 },
-      { month: 'Mar', value: 7.8 }
+      { month: 'Jan', score: 7.2, count: 10 },
+      { month: 'Feb', score: 7.5, count: 12 },
+      { month: 'Mar', score: 7.8, count: 15 }
     ]);
     
     vi.mocked(dataService.getChurnData).mockReturnValue([
-      { period: 'Q1', rate: 5 },
-      { period: 'Q2', rate: 4 }
+      { month: 'Q1', rate: 5 },
+      { month: 'Q2', rate: 4 }
     ]);
     
     vi.mocked(dataService.updateClientNPSScore).mockReturnValue(true);
