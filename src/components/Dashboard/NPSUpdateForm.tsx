@@ -30,6 +30,7 @@ interface NPSUpdateFormProps {
   clientId: string;
   clientName: string;
   currentScore: number | null;
+  onSubmit?: (score: number) => void;  // Add this optional prop
 }
 
 export function NPSUpdateForm({
@@ -38,6 +39,7 @@ export function NPSUpdateForm({
   clientId,
   clientName,
   currentScore,
+  onSubmit,  // Include in destructuring
 }: NPSUpdateFormProps) {
   const { toast } = useToast();
   
@@ -56,6 +58,12 @@ export function NPSUpdateForm({
         title: "NPS Score Updated",
         description: `${clientName}'s NPS score has been updated to ${data.npsScore}.`,
       });
+      
+      // Call the onSubmit prop if provided
+      if (onSubmit) {
+        onSubmit(data.npsScore);
+      }
+      
       onClose();
     } else {
       toast({
