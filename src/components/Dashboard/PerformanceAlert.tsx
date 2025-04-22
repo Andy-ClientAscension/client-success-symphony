@@ -64,11 +64,11 @@ export function PerformanceAlert({
   dismissable = true,
   "data-testid": dataTestId,
 }: PerformanceAlertProps) {
-  // ARIA
+  // Fix the ARIA attributes to use specific TypeScript valid values
   const ariaSeverity =
     severity === "error"
-      ? { role: "alert", "aria-live": "assertive" }
-      : { role: "status", "aria-live": "polite" };
+      ? { role: "alert", "aria-live": "assertive" as const }
+      : { role: "status", "aria-live": "polite" as const };
 
   return (
     <Alert
