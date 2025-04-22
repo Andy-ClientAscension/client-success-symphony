@@ -1,6 +1,6 @@
 
 import React from "react";
-import { pyramid } from "lucide-react";
+import { Pyramid } from "lucide-react";
 
 interface LogoProps {
   className?: string;
@@ -10,7 +10,7 @@ interface LogoProps {
 export function Logo({ className = "", showText = true }: LogoProps) {
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <pyramid className="h-8 w-8 text-primary" />
+      <Pyramid className="h-8 w-8 text-primary" />
       {showText && (
         <div className="flex flex-col">
           <span className="text-lg font-bold leading-none">CLIENT</span>
