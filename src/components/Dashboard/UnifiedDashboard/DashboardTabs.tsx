@@ -1,3 +1,4 @@
+
 import React, { lazy, Suspense } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bot, LineChart, PieChart, BarChart2 } from "lucide-react";
@@ -6,6 +7,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ChartErrorFallback } from "../Shared/ErrorFallbacks";
+import { focusRingClasses } from "@/lib/accessibility";
+import { reducedMotionConfig } from "@/lib/accessibility";
 
 // Lazy-loaded components
 const TeamAnalytics = lazy(() => import("../TeamAnalytics").then(mod => ({ default: mod.TeamAnalytics })));
@@ -22,7 +25,7 @@ const TabSkeleton = () => (
       <Skeleton className="h-[100px] rounded-md" />
       <Skeleton className="h-[100px] rounded-md" />
     </div>
-    <span className="sr-only">Loading...</span>
+    <span className="sr-only">Loading tab content, please wait</span>
   </div>
 );
 
@@ -59,6 +62,10 @@ export function DashboardTabs({
     return isMobile ? iconName : `${iconName} Icon`;
   };
 
+  // Apply reduced motion settings
+  const animationsEnabled = reducedMotionConfig.enableAnimation();
+  const animationClass = animationsEnabled ? "transition-opacity duration-200" : "transition-none";
+
   return (
     <Tabs 
       value={activeTab} 
@@ -67,13 +74,14 @@ export function DashboardTabs({
       aria-label="Dashboard Sections"
     >
       <TabsList 
-        className="mb-4 flex-wrap gap-2 justify-start overflow-x-auto max-w-full"
+        className={`mb-4 flex-wrap gap-2 justify-start overflow-x-auto max-w-full ${focusRingClasses}`}
         aria-label="Dashboard navigation"
       >
         <TabsTrigger 
           value="overview" 
           aria-label="Overview Section"
           role="tab"
+          className={focusRingClasses}
         >
           <LineChart 
             className="h-4 w-4 mr-2" 
@@ -87,6 +95,7 @@ export function DashboardTabs({
           value="team-analytics" 
           aria-label="Team Analytics Section"
           role="tab"
+          className={focusRingClasses}
         >
           <PieChart 
             className="h-4 w-4 mr-2" 
@@ -100,6 +109,7 @@ export function DashboardTabs({
           value="client-analytics" 
           aria-label="Client Analytics Section"
           role="tab"
+          className={focusRingClasses}
         >
           <BarChart2 
             className="h-4 w-4 mr-2" 
@@ -113,6 +123,7 @@ export function DashboardTabs({
           value="ai-insights" 
           aria-label="AI Insights Section"
           role="tab"
+          className={focusRingClasses}
         >
           <Bot 
             className="h-4 w-4 mr-2" 
@@ -125,7 +136,7 @@ export function DashboardTabs({
       </TabsList>
 
       <div 
-        className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
+        className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md ${animationClass}`}
         role="tabpanel"
       >
         <TabsContent 
@@ -133,6 +144,7 @@ export function DashboardTabs({
           role="tabpanel" 
           tabIndex={0}
           aria-label="Overview Content"
+          className={animationClass}
         >
           <ErrorBoundary fallback={<ChartErrorFallback error={new Error("Failed to load overview")} resetErrorBoundary={() => window.location.reload()} />}>
             <DashboardOverview />
@@ -144,6 +156,7 @@ export function DashboardTabs({
           role="tabpanel" 
           tabIndex={0}
           aria-label="Team Analytics Content"
+          className={animationClass}
         >
           <ErrorBoundary fallback={<ChartErrorFallback error={new Error("Failed to load team analytics")} resetErrorBoundary={() => window.location.reload()} />}>
             <Suspense fallback={<TabSkeleton />}>
@@ -157,6 +170,7 @@ export function DashboardTabs({
           role="tabpanel" 
           tabIndex={0}
           aria-label="Client Analytics Content"
+          className={animationClass}
         >
           <ErrorBoundary fallback={<ChartErrorFallback error={new Error("Failed to load client analytics")} resetErrorBoundary={() => window.location.reload()} />}>
             <Suspense fallback={<TabSkeleton />}>
@@ -170,6 +184,7 @@ export function DashboardTabs({
           role="tabpanel" 
           tabIndex={0}
           aria-label="AI Insights Content"
+          className={animationClass}
         >
           <ErrorBoundary fallback={<ChartErrorFallback error={new Error("Failed to load AI insights")} resetErrorBoundary={() => window.location.reload()} />}>
             <Suspense fallback={<TabSkeleton />}>

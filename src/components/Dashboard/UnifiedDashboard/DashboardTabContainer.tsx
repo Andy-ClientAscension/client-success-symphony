@@ -6,6 +6,10 @@ import { CompanyMetricsTab } from "../CompanyMetrics/CompanyMetricsTab";
 import { TeamAnalyticsTab } from "../TeamAnalytics/TeamAnalyticsTab";
 import { AIInsightsTab } from "./AIInsightsTab";
 import { BarChart2, PieChart, LineChart, Bot } from "lucide-react";
+import { KeyboardNavigationGuide } from "../Accessibility/KeyboardNavigationGuide";
+import { SkipLink } from "../Accessibility/SkipLink";
+import { focusRingClasses } from "@/lib/accessibility";
+import { reducedMotionConfig } from "@/lib/accessibility";
 
 export function DashboardTabContainer({
   activeTab,
@@ -22,62 +26,115 @@ export function DashboardTabContainer({
   clients,
   clientMetrics,
 }: any) {
-  // Improve accessibility, color, and keyboard focus for tab triggers
+  // Apply reduced motion settings
+  const animationsEnabled = reducedMotionConfig.enableAnimation();
+  const animationClass = animationsEnabled ? "transition-all duration-300" : "transition-none";
+  
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="mb-4 flex-wrap gap-2 justify-start overflow-x-auto max-w-full border-b border-border/40 bg-background shadow-none">
-        <TabsTrigger
-          value="overview"
-          className="p-3 font-medium text-foreground rounded-t focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-colors data-[state=active]:bg-accent/40 data-[state=active]:text-primary data-[state=active]:shadow-md hover:bg-accent/20"
+    <div>
+      <SkipLink targetId="dashboard-content" label="Skip to dashboard content" />
+      
+      <div className="flex justify-end mb-2">
+        <KeyboardNavigationGuide />
+      </div>
+      
+      <Tabs 
+        value={activeTab} 
+        onValueChange={setActiveTab} 
+        className="w-full"
+        aria-label="Dashboard Sections"
+      >
+        <TabsList 
+          className="mb-4 flex-wrap gap-2 justify-start overflow-x-auto max-w-full border-b border-border/40 bg-background shadow-none"
+          aria-label="Dashboard navigation"
         >
-          <LineChart className="h-4 w-4 mr-2" />
-          Overview
-        </TabsTrigger>
-        <TabsTrigger
-          value="company-metrics"
-          className="p-3 font-medium text-foreground rounded-t focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-colors data-[state=active]:bg-accent/40 data-[state=active]:text-primary data-[state=active]:shadow-md hover:bg-accent/20"
-        >
-          <PieChart className="h-4 w-4 mr-2" />
-          Company Metrics
-        </TabsTrigger>
-        <TabsTrigger
-          value="team-analytics"
-          className="p-3 font-medium text-foreground rounded-t focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-colors data-[state=active]:bg-accent/40 data-[state=active]:text-primary data-[state=active]:shadow-md hover:bg-accent/20"
-        >
-          <BarChart2 className="h-4 w-4 mr-2" />
-          Team Analytics
-        </TabsTrigger>
-        <TabsTrigger
-          value="ai-insights"
-          className="p-3 font-medium text-foreground rounded-t focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-colors data-[state=active]:bg-accent/40 data-[state=active]:text-primary data-[state=active]:shadow-md hover:bg-accent/20"
-        >
-          <Bot className="h-4 w-4 mr-2" />
-          AI Insights
-        </TabsTrigger>
-      </TabsList>
+          <TabsTrigger
+            value="overview"
+            className={`p-3 font-medium text-foreground rounded-t 
+              data-[state=active]:bg-accent/40 data-[state=active]:text-primary 
+              data-[state=active]:shadow-md hover:bg-accent/20 ${focusRingClasses} transition-colors`}
+            aria-label="Overview Tab"
+          >
+            <LineChart className="h-4 w-4 mr-2" aria-hidden="true" />
+            <span>Overview</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="company-metrics"
+            className={`p-3 font-medium text-foreground rounded-t 
+              data-[state=active]:bg-accent/40 data-[state=active]:text-primary 
+              data-[state=active]:shadow-md hover:bg-accent/20 ${focusRingClasses} transition-colors`}
+            aria-label="Company Metrics Tab"
+          >
+            <PieChart className="h-4 w-4 mr-2" aria-hidden="true" />
+            <span>Company Metrics</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="team-analytics"
+            className={`p-3 font-medium text-foreground rounded-t 
+              data-[state=active]:bg-accent/40 data-[state=active]:text-primary 
+              data-[state=active]:shadow-md hover:bg-accent/20 ${focusRingClasses} transition-colors`}
+            aria-label="Team Analytics Tab"
+          >
+            <BarChart2 className="h-4 w-4 mr-2" aria-hidden="true" />
+            <span>Team Analytics</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="ai-insights"
+            className={`p-3 font-medium text-foreground rounded-t 
+              data-[state=active]:bg-accent/40 data-[state=active]:text-primary 
+              data-[state=active]:shadow-md hover:bg-accent/20 ${focusRingClasses} transition-colors`}
+            aria-label="AI Insights Tab"
+          >
+            <Bot className="h-4 w-4 mr-2" aria-hidden="true" />
+            <span>AI Insights</span>
+          </TabsTrigger>
+        </TabsList>
 
-      <TabsContent value="overview">
-        <DashboardOverviewTab clients={clients} clientMetrics={clientMetrics} />
-      </TabsContent>
-      <TabsContent value="company-metrics">
-        <CompanyMetricsTab clients={clients} />
-      </TabsContent>
-      <TabsContent value="team-analytics">
-        <TeamAnalyticsTab clients={clients} />
-      </TabsContent>
-      <TabsContent value="ai-insights">
-        <AIInsightsTab
-          predictions={predictions}
-          insights={aiInsights}
-          isAnalyzing={isAnalyzing}
-          error={aiError}
-          comparisons={comparisons}
-          handleRefreshData={handleRefreshData}
-          cancelAnalysis={cancelAnalysis}
-          trendData={trendData}
-          lastAnalyzed={lastAnalyzed}
-        />
-      </TabsContent>
-    </Tabs>
+        <div id="dashboard-content" className={`${animationClass}`} role="region" aria-label="Dashboard Content">
+          <TabsContent 
+            value="overview"
+            tabIndex={0}
+            aria-label="Overview Content"
+            className={animationClass}
+          >
+            <DashboardOverviewTab clients={clients} clientMetrics={clientMetrics} />
+          </TabsContent>
+          <TabsContent 
+            value="company-metrics" 
+            tabIndex={0}
+            aria-label="Company Metrics Content"
+            className={animationClass}
+          >
+            <CompanyMetricsTab clients={clients} />
+          </TabsContent>
+          <TabsContent 
+            value="team-analytics" 
+            tabIndex={0}
+            aria-label="Team Analytics Content"
+            className={animationClass}
+          >
+            <TeamAnalyticsTab clients={clients} />
+          </TabsContent>
+          <TabsContent 
+            value="ai-insights" 
+            tabIndex={0}
+            aria-label="AI Insights Content"
+            className={animationClass}
+          >
+            <AIInsightsTab
+              predictions={predictions}
+              insights={aiInsights}
+              isAnalyzing={isAnalyzing}
+              error={aiError}
+              comparisons={comparisons}
+              handleRefreshData={handleRefreshData}
+              cancelAnalysis={cancelAnalysis}
+              trendData={trendData}
+              lastAnalyzed={lastAnalyzed}
+            />
+          </TabsContent>
+        </div>
+      </Tabs>
+    </div>
   );
 }

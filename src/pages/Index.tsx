@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/Layout/Layout";
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +20,10 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { MetricErrorFallback } from "@/components/Dashboard/Shared/MetricErrorFallback";
 import { TableErrorFallback } from "@/components/Dashboard/Shared/TableErrorFallback";
 import { DashboardTabContainer } from "@/components/Dashboard/UnifiedDashboard/DashboardTabContainer";
+import { KeyboardNavigationGuide } from "@/components/Dashboard/Accessibility/KeyboardNavigationGuide";
+import { SkipLink } from "@/components/Dashboard/Accessibility/SkipLink";
+import { AccessibilityHelp } from "@/components/Dashboard/Accessibility/AccessibilityHelp";
+import { announceToScreenReader } from "@/lib/accessibility";
 
 export default function Index() {
   const { toast } = useToast();
@@ -75,26 +80,35 @@ export default function Index() {
     }
   ]);
 
+  // Update background task states for screen reader announcements
   useEffect(() => {
+    const prevStatus = backgroundTasks.find(task => task.id === 'ai-analysis')?.status;
+    const newStatus = isAnalyzing ? 'running' : aiError ? 'error' : aiInsights.length > 0 ? 'success' : 'idle';
+    
+    if (prevStatus !== newStatus) {
+      // Announce status change to screen readers
+      if (newStatus === 'running') {
+        announceToScreenReader('AI analysis has started', 'polite');
+      } else if (newStatus === 'error') {
+        announceToScreenReader('AI analysis failed: ' + aiError?.message, 'assertive');
+      } else if (newStatus === 'success' && prevStatus === 'running') {
+        announceToScreenReader('AI analysis completed successfully', 'polite');
+      }
+    }
+    
     setBackgroundTasks(prev => 
       prev.map(task => 
         task.id === 'ai-analysis' 
           ? { 
               ...task, 
-              status: isAnalyzing 
-                ? 'running' 
-                : aiError 
-                  ? 'error' 
-                  : aiInsights.length > 0 
-                    ? 'success'
-                    : 'idle',
+              status: newStatus,
               lastRun: isAnalyzing ? undefined : lastAnalyzed || undefined,
               message: aiError ? aiError.message : undefined
             }
           : task
       )
     );
-  }, [isAnalyzing, aiError, aiInsights, lastAnalyzed]);
+  }, [isAnalyzing, aiError, aiInsights, lastAnalyzed, backgroundTasks]);
 
   const isLoading = isInsightsLoading || isComparisonsLoading || isTrendDataLoading || isAnalyzing;
 
@@ -110,8 +124,11 @@ export default function Index() {
 
   const handleRefreshData = useCallback(() => {
     setIsRefreshing(true);
+    announceToScreenReader('Refreshing dashboard data', 'polite');
+    
     analyzeClients(true).finally(() => {
       setIsRefreshing(false);
+      announceToScreenReader('Dashboard data refresh complete', 'polite');
     });
   }, [analyzeClients]);
 
@@ -131,6 +148,10 @@ export default function Index() {
     if (performanceMode) {
       const alertDismissed = localStorage.getItem("hidePerformanceAlert") === "true";
       setShowPerformanceAlert(!alertDismissed);
+      
+      if (!alertDismissed) {
+        announceToScreenReader('Performance mode activated. Some heavy components have been moved to improve dashboard speed.', 'polite');
+      }
     } else {
       setShowPerformanceAlert(false);
     }
@@ -139,17 +160,28 @@ export default function Index() {
   const handleDismissAlert = () => {
     setShowPerformanceAlert(false);
     localStorage.setItem("hidePerformanceAlert", "true");
+    announceToScreenReader('Performance alert dismissed', 'polite');
+  };
+
+  // Handle tab changes for screen reader announcements
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    announceToScreenReader(`${value} tab activated`, 'polite');
   };
 
   return (
     <Layout>
+      <SkipLink targetId="main-content" />
+      <AccessibilityHelp />
+      
       <div className="w-full min-h-screen bg-background">
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40 transition-colors duration-200">
           <div className="container py-4">
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">Performance Report</h1>
+                <h1 className="text-2xl font-bold tracking-tight text-foreground" id="page-title">Performance Report</h1>
                 <div className="flex items-center gap-2">
+                  <KeyboardNavigationGuide />
                   <BackgroundProcessingIndicator 
                     tasks={backgroundTasks}
                     onClick={() => {
@@ -184,12 +216,13 @@ export default function Index() {
           </div>
         </div>
 
-        <div className="container py-6 md:py-8 space-y-8 md:space-y-10">
+        <main id="main-content" className="container py-6 md:py-8 space-y-8 md:space-y-10" tabIndex={-1}>
           {showPerformanceAlert && performanceMode && (
             <PerformanceAlert
               severity="success"
               onDismiss={handleDismissAlert}
               dismissable={true}
+              data-testid="performance-alert"
             />
           )}
 
@@ -198,48 +231,53 @@ export default function Index() {
               title="AI Analysis Error"
               message={aiError.message}
               severity="error"
-              icon={<AlertTriangle />}
+              icon={<AlertTriangle aria-hidden="true" />}
               dismissable={false}
+              data-testid="error-alert"
             />
           )}
 
           <div className="grid gap-8 mb-8 animate-fade-in">
             <div className="grid gap-8 md:gap-10 mb-8 animate-fade-in">
-              <div className="p-4 md:p-6 rounded-lg border border-border/30 bg-card shadow-sm">
+              <section aria-labelledby="metrics-heading" className="p-4 md:p-6 rounded-lg border border-border/30 bg-card shadow-sm">
+                <h2 id="metrics-heading" className="sr-only">Key Performance Metrics</h2>
                 <MetricsCards />
-              </div>
+              </section>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 space-y-0 mb-8">
                 <ErrorBoundary
-                  fallback={<TableErrorFallback 
+                  fallback={<MetricErrorFallback 
                     error={new Error("Failed to load NPS chart")} 
                     resetErrorBoundary={() => {}} 
                   />}
                 >
-                  <div className="bg-background rounded-lg border border-border/30 p-4 focus-visible:outline-none hover:shadow transition-shadow duration-150">
+                  <section aria-labelledby="nps-chart-heading" className="bg-background rounded-lg border border-border/30 p-4 focus-visible:outline-none hover:shadow transition-shadow duration-150">
+                    <h2 id="nps-chart-heading" className="text-lg font-medium mb-4">NPS Metrics</h2>
                     <NPSMetricChart />
-                  </div>
+                  </section>
                 </ErrorBoundary>
                 <ErrorBoundary
-                  fallback={<TableErrorFallback 
+                  fallback={<MetricErrorFallback 
                     error={new Error("Failed to load Churn chart")} 
                     resetErrorBoundary={() => {}} 
                   />}
                 >
-                  <div className="bg-background rounded-lg border border-border/30 p-4 focus-visible:outline-none hover:shadow transition-shadow duration-150">
+                  <section aria-labelledby="churn-chart-heading" className="bg-background rounded-lg border border-border/30 p-4 focus-visible:outline-none hover:shadow transition-shadow duration-150">
+                    <h2 id="churn-chart-heading" className="text-lg font-medium mb-4">Churn Metrics</h2>
                     <ChurnMetricChart />
-                  </div>
+                  </section>
                 </ErrorBoundary>
               </div>
             </div>
 
             <section
-              aria-label="Tabs section"
+              aria-labelledby="tabs-section-heading"
               className="w-full animate-fade-in transition-all duration-300"
-              tabIndex={0}
             >
+              <h2 id="tabs-section-heading" className="sr-only">Dashboard Detail Sections</h2>
               <DashboardTabContainer 
                 activeTab={activeTab}
-                setActiveTab={setActiveTab}
+                setActiveTab={handleTabChange}
                 predictions={predictions}
                 aiInsights={aiInsights}
                 isAnalyzing={isAnalyzing}
@@ -255,7 +293,12 @@ export default function Index() {
             </section>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-8">
-              <aside className="lg:col-span-3 mb-8 animate-fade-in" tabIndex={0} aria-label="Data Sync Monitor Sidebar">
+              <aside 
+                className="lg:col-span-3 mb-8 animate-fade-in" 
+                tabIndex={0} 
+                aria-labelledby="data-sync-heading"
+              >
+                <h2 id="data-sync-heading" className="sr-only">Data Synchronization Status</h2>
                 <div className="bg-card border border-border/30 p-4 rounded-lg focus-visible:ring-2 focus-visible:ring-primary transition-shadow duration-150">
                   <DataSyncMonitor />
                 </div>
@@ -263,7 +306,7 @@ export default function Index() {
               {/* <main className="lg:col-span-9"></main> */}
             </div>
           </div>
-        </div>
+        </main>
       </div>
     </Layout>
   );

@@ -6,6 +6,7 @@ import { Cpu, X } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { cva } from "class-variance-authority";
+import { focusRingClasses } from "@/lib/accessibility";
 
 const alertVariants = cva(
   "transition-all duration-200 animate-in fade-in-50 slide-in-from-top-5",
@@ -78,7 +79,7 @@ export function PerformanceAlert({
       tabIndex={0}
     >
       <div className="flex items-start w-full">
-        <div className={`shrink-0 h-5 w-5 mt-0.5 mr-2 ${alertVariants({ iconColor: severity })}`}>
+        <div className={`shrink-0 h-5 w-5 mt-0.5 mr-2 ${alertVariants({ iconColor: severity })}`} aria-hidden="true">
           {icon}
         </div>
         <div className="flex-1 min-w-0">
@@ -97,12 +98,12 @@ export function PerformanceAlert({
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 w-7 p-0 rounded-full -mr-1 focus-visible:ring-2 focus-visible:ring-primary"
+            className={`h-7 w-7 p-0 rounded-full -mr-1 ${focusRingClasses}`}
             onClick={onDismiss}
             aria-label="Dismiss alert"
             tabIndex={0}
           >
-            <X className="h-4 w-4 text-muted-foreground" aria-hidden />
+            <X className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             <span className="sr-only">Dismiss alert</span>
           </Button>
         )}

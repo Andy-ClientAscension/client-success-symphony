@@ -5,6 +5,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Clock, Loader } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { focusRingClasses } from "@/lib/accessibility";
 
 interface DashboardHeaderProps {
   isRefreshing: boolean;
@@ -33,10 +34,10 @@ export function DashboardHeader({
       aria-label="Dashboard header"
     >
       <div className="flex items-center space-x-3 text-sm text-muted-foreground">
-        <Clock className="h-4 w-4" aria-hidden />
+        <Clock className="h-4 w-4" aria-hidden="true" />
         {isRefreshing ? (
-          <span className="flex items-center gap-1" aria-live="polite">
-            <Loader className="h-4 w-4 animate-spin text-primary" aria-label="Loading" />
+          <span className="flex items-center gap-1" aria-live="polite" role="status">
+            <Loader className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
             <span>{loadingText || "Refreshing…"} </span>
           </span>
         ) : (
@@ -63,13 +64,13 @@ export function DashboardHeader({
           size="sm"
           onClick={handleRefreshData}
           disabled={isRefreshing}
-          className="h-8 px-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-colors"
+          className={`h-8 px-3 group transition-colors ${focusRingClasses}`}
           aria-label={isRefreshing ? "Refreshing…" : "Refresh dashboard data"}
         >
           {isRefreshing ? (
-            <Loader className="h-4 w-4 mr-2 animate-spin text-primary" aria-hidden />
+            <Loader className="h-4 w-4 mr-2 animate-spin text-primary" aria-hidden="true" />
           ) : (
-            <RefreshCw className="h-4 w-4 mr-2 group-hover:text-primary group-focus-visible:text-primary transition-colors" aria-hidden />
+            <RefreshCw className="h-4 w-4 mr-2 group-hover:text-primary group-focus-visible:text-primary transition-colors" aria-hidden="true" />
           )}
           <span>{isRefreshing ? "Refreshing…" : "Refresh Data"}</span>
         </Button>
