@@ -23,8 +23,22 @@ export function useAuth() {
   return context;
 }
 
-// Export everything from the auth context for type safety
-export type {
-  User,
-  AuthContextType
-} from '@/contexts/AuthContext';
+// Instead of trying to re-export types from AuthContext,
+// we'll directly reference the interface from the context file
+// and export our own types that match the context structure
+export interface User {
+  id: string;
+  email: string;
+  name?: string;
+}
+
+export interface AuthContextType {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: Error | null;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (email: string, password: string, inviteCode: string) => Promise<{ success: boolean; message: string }>;
+  logout: () => void;
+  validateInviteCode: (code: string) => Promise<boolean>;
+}
