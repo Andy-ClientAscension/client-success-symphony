@@ -33,7 +33,7 @@ declare namespace API {
     team?: string;
     csm?: string;
     notes?: string;
-    progress: number;
+    progress?: number; // Changed from required to optional to match data.ts
     npsScore: number | null;
     callsBooked: number;
     dealsClosed: number;

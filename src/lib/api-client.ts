@@ -50,8 +50,12 @@ export const apiClient = {
     return fetcher("dashboard", async () => {
       const clients = await getAllClients();
       const clientCounts = await getClientsCountByStatus();
-      const npsData = {
-        current: await getAverageNPS(),
+      const npsAvg = await getAverageNPS();
+      const churnData = await getChurnData();
+
+      // Map data to match the expected API response format
+      const npsData: API.NPSData = {
+        current: typeof npsAvg === 'object' ? npsAvg.current : npsAvg,
         trend: [
           { month: 'Jan', score: 7.5 },
           { month: 'Feb', score: 7.8 },
@@ -61,7 +65,6 @@ export const apiClient = {
           { month: 'Jun', score: 8.4 }
         ]
       };
-      const churnData = await getChurnData();
 
       return {
         clients,
