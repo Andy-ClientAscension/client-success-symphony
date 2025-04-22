@@ -38,7 +38,10 @@ export default function Index() {
     { month: 'Jun', mrr: 5000, churn: 4, growth: 18 },
   ]);
   const [clientCounts] = useRealtimeData('clientCounts', getClientsCountByStatus());
-  const [showPerformanceAlert, setShowPerformanceAlert] = useState(true);
+  const [showPerformanceAlert, setShowPerformanceAlert] = useState<boolean>(() => {
+    const alertDismissed = localStorage.getItem("hidePerformanceAlert") === "true";
+    return !alertDismissed;
+  });
 
   const { 
     insights: aiInsights,
@@ -124,16 +127,6 @@ export default function Index() {
 
   const [syncStats] = useRealtimeData('syncStats', { lastSync: null, totalSyncs: 0 });
 
-  const handleDismissAlert = () => {
-    setShowPerformanceAlert(false);
-    localStorage.setItem("hidePerformanceAlert", "true");
-  };
-
-  useEffect(() => {
-    const alertDismissed = localStorage.getItem("hidePerformanceAlert") === "true";
-    setShowPerformanceAlert(!alertDismissed && performanceMode);
-  }, [performanceMode]);
-
   useEffect(() => {
     if (performanceMode) {
       const alertDismissed = localStorage.getItem("hidePerformanceAlert") === "true";
@@ -142,6 +135,11 @@ export default function Index() {
       setShowPerformanceAlert(false);
     }
   }, [performanceMode]);
+
+  const handleDismissAlert = () => {
+    setShowPerformanceAlert(false);
+    localStorage.setItem("hidePerformanceAlert", "true");
+  };
 
   return (
     <Layout>

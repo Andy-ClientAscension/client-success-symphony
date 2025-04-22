@@ -1,20 +1,27 @@
 
+// Fixed and optimized DashboardHeader with ARIA support and proper prop typing
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Clock, Loader } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface DashboardHeaderProps {
   isRefreshing: boolean;
   handleRefreshData: () => void;
   lastUpdated?: Date | number | null;
+  error?: Error | null;
+  loadingText?: string;
+  children?: React.ReactNode;
 }
 
 export function DashboardHeader({
   isRefreshing,
   handleRefreshData,
   lastUpdated,
+  error,
+  loadingText,
+  children
 }: DashboardHeaderProps) {
   const lastUpdatedText = lastUpdated
     ? formatDistanceToNow(new Date(lastUpdated), { addSuffix: true })
@@ -22,37 +29,52 @@ export function DashboardHeader({
 
   return (
     <header
-      className="flex items-center justify-between mb-6 py-1 px-0 sm:px-0 transition-colors bg-background border-b border-border/40"
+      className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-6 py-1 px-0 transition-colors bg-background border-b border-border/40"
       aria-label="Dashboard header"
     >
       <div className="flex items-center space-x-3 text-sm text-muted-foreground">
         <Clock className="h-4 w-4" aria-hidden />
         {isRefreshing ? (
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1" aria-live="polite">
             <Loader className="h-4 w-4 animate-spin text-primary" aria-label="Loading" />
-            <span>Refreshing…</span>
+            <span>{loadingText || "Refreshing…"} </span>
           </span>
         ) : (
           <span>
-            Last updated: <span className="font-semibold text-foreground">{lastUpdatedText}</span>
+            Last updated:{" "}
+            <span className="font-semibold text-foreground" aria-live="polite">
+              {lastUpdatedText}
+            </span>
+          </span>
+        )}
+        {error && (
+          <span
+            className="ml-4 text-sm text-red-600 font-semibold"
+            role="alert"
+            aria-live="assertive"
+          >
+            {error.message}
           </span>
         )}
       </div>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleRefreshData}
-        disabled={isRefreshing}
-        className="h-8 px-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-colors"
-        aria-label="Refresh dashboard data"
-      >
-        {isRefreshing ? (
-          <Loader className="h-4 w-4 mr-2 animate-spin text-primary" aria-hidden />
-        ) : (
-          <RefreshCw className="h-4 w-4 mr-2 group-hover:text-primary group-focus-visible:text-primary transition-colors" aria-hidden />
-        )}
-        <span>{isRefreshing ? "Refreshing…" : "Refresh Data"}</span>
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefreshData}
+          disabled={isRefreshing}
+          className="h-8 px-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-colors"
+          aria-label={isRefreshing ? "Refreshing…" : "Refresh dashboard data"}
+        >
+          {isRefreshing ? (
+            <Loader className="h-4 w-4 mr-2 animate-spin text-primary" aria-hidden />
+          ) : (
+            <RefreshCw className="h-4 w-4 mr-2 group-hover:text-primary group-focus-visible:text-primary transition-colors" aria-hidden />
+          )}
+          <span>{isRefreshing ? "Refreshing…" : "Refresh Data"}</span>
+        </Button>
+        {children}
+      </div>
     </header>
   );
 }
