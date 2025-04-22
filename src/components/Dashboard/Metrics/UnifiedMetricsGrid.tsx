@@ -1,20 +1,9 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
-import { ArrowUp, ArrowDown, Users, DollarSign, TrendingUp, Activity } from "lucide-react";
-
-interface MetricCardProps {
-  title: string;
-  value: string | number;
-  description?: string;
-  icon: React.ReactNode;
-  trend?: {
-    value: number;
-    isPositive: boolean;
-  };
-  isLoading?: boolean;
-}
+import React from "react";
+import { Grid } from "@/components/ui/grid";
+import { HeroMetric } from "./HeroMetric";
+import { Users, ArrowUp, DollarSign, Ban, UserPlus, CheckCircle2, XCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface ClientMetrics {
   total: number;
@@ -23,136 +12,157 @@ export interface ClientMetrics {
   newClients: number;
   churn: number;
   success: number;
+  growthRate: number;
   mrr?: number;
   nps?: number;
-  growthRate?: number;
 }
 
-export function generateClientMetrics(data: ClientMetrics) {
-  return [
-    {
-      title: "Total Clients",
-      value: data.total,
-      icon: <Users className="h-4 w-4 text-muted-foreground" />,
-      description: "All active accounts",
-      "aria-label": `Total client count: ${data.total}`
-    },
-    {
-      title: "Active Clients",
-      value: data.active,
-      icon: <Activity className="h-4 w-4 text-emerald-500" />,
-      trend: {
-        value: data.success,
-        isPositive: true
-      },
-      description: "Success rate",
-      "aria-label": `Active clients: ${data.active}, Success rate: ${data.success}%`
-    },
-    {
-      title: "At-Risk Clients",
-      value: data.atRisk,
-      icon: <TrendingUp className="h-4 w-4 text-amber-500" />,
-      trend: {
-        value: data.churn,
-        isPositive: false
-      },
-      description: "Churn rate",
-      "aria-label": `At-risk clients: ${data.atRisk}, Churn rate: ${data.churn}%`
-    },
-    {
-      title: "Monthly Growth",
-      value: `${data.growthRate || 0}%`,
-      icon: <DollarSign className="h-4 w-4 text-blue-500" />,
-      trend: {
-        value: data.newClients,
-        isPositive: true
-      },
-      description: "New clients this month",
-      "aria-label": `Monthly growth: ${data.growthRate || 0}%, New clients: ${data.newClients}`
-    }
-  ];
-}
-
-function MetricCard({ title, value, description, icon, trend, isLoading }: MetricCardProps) {
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <Skeleton className="h-5 w-[120px]" />
-          <Skeleton className="h-5 w-5 rounded-full" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-8 w-[80px] mb-2" />
-          <Skeleton className="h-4 w-[100px]" />
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card role="article" aria-label={title}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {icon}
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        {trend ? (
-          <p className="text-xs text-muted-foreground flex items-center gap-1">
-            {trend.isPositive ? (
-              <ArrowUp className="h-3 w-3 text-emerald-500" aria-label="Increasing" />
-            ) : (
-              <ArrowDown className="h-3 w-3 text-red-500" aria-label="Decreasing" />
-            )}
-            <span className={trend.isPositive ? "text-emerald-500" : "text-red-500"}>
-              {trend.value}%
-            </span>{" "}
-            {description}
-          </p>
-        ) : (
-          <p className="text-xs text-muted-foreground">{description}</p>
-        )}
-      </CardContent>
-    </Card>
-  );
+interface MetricItem {
+  id: string;
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  trend?: {
+    value: number;
+    direction: 'up' | 'down';
+    label?: string;
+  } | null;
+  size?: 'sm' | 'md' | 'lg';
+  variant?: 'primary' | 'secondary' | 'tertiary';
+  className?: string;
 }
 
 interface UnifiedMetricsGridProps {
-  metrics: ReturnType<typeof generateClientMetrics>;
-  isLoading?: boolean;
-  error?: Error | null;
-  columns?: number;
-  role?: string;
-  "aria-label"?: string;
+  metrics: MetricItem[];
+  className?: string;
 }
 
-export function UnifiedMetricsGrid({ 
-  metrics,
-  isLoading = false,
-  error = null,
-  columns = 4,
-  role,
-  "aria-label": ariaLabel
-}: UnifiedMetricsGridProps) {
-  const { toast } = useToast();
-  
-  if (error) {
-    toast({
-      title: "Error loading metrics",
-      description: error.message,
-      variant: "destructive",
-    });
-  }
+export function UnifiedMetricsGrid({ metrics, className }: UnifiedMetricsGridProps) {
+  // Group metrics by size for visual hierarchy
+  const largeMetrics = metrics.filter(m => m.size === 'lg');
+  const mediumMetrics = metrics.filter(m => m.size === 'md');
+  const smallMetrics = metrics.filter(m => m.size === 'sm' || !m.size);
 
   return (
-    <div 
-      className={`grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-${columns}`}
-      role={role || "region"} 
-      aria-label={ariaLabel || "Key metrics overview"}
-    >
-      {metrics.map((metric, index) => (
-        <MetricCard key={index} {...metric} isLoading={isLoading} />
-      ))}
+    <div className={cn("space-y-6", className)} role="region" aria-label="Dashboard metrics">
+      {largeMetrics.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {largeMetrics.map((metric) => (
+            <HeroMetric
+              key={metric.id}
+              title={metric.title}
+              value={metric.value}
+              icon={metric.icon}
+              trend={metric.trend || undefined}
+              size="lg"
+              variant={metric.variant || "primary"}
+              className={metric.className}
+              aria-label={`${metric.title}: ${metric.value}`}
+            />
+          ))}
+        </div>
+      )}
+      
+      {mediumMetrics.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {mediumMetrics.map((metric) => (
+            <HeroMetric
+              key={metric.id}
+              title={metric.title}
+              value={metric.value}
+              icon={metric.icon}
+              trend={metric.trend || undefined}
+              size="md"
+              variant={metric.variant || "secondary"}
+              className={metric.className}
+              aria-label={`${metric.title}: ${metric.value}`}
+            />
+          ))}
+        </div>
+      )}
+      
+      {smallMetrics.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          {smallMetrics.map((metric) => (
+            <HeroMetric
+              key={metric.id}
+              title={metric.title}
+              value={metric.value}
+              icon={metric.icon}
+              trend={metric.trend || undefined}
+              size="sm"
+              variant={metric.variant || "tertiary"}
+              className={metric.className}
+              aria-label={`${metric.title}: ${metric.value}`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
+}
+
+// Utility function to generate metrics from client data
+export function generateClientMetrics(data: ClientMetrics): MetricItem[] {
+  return [
+    {
+      id: "total-clients",
+      title: "Total Clients",
+      value: data.total,
+      icon: <Users className="h-5 w-5" />,
+      trend: {
+        value: data.growthRate,
+        direction: 'up',
+        label: "vs last month"
+      },
+      size: 'lg'
+    },
+    {
+      id: "active-clients",
+      title: "Active Clients",
+      value: data.active,
+      icon: <CheckCircle2 className="h-5 w-5" />,
+      trend: {
+        value: Math.round((data.active / data.total) * 100),
+        direction: 'up'
+      },
+      size: 'md'
+    },
+    {
+      id: "at-risk-clients",
+      title: "At Risk",
+      value: data.atRisk,
+      icon: <Ban className="h-5 w-5" />,
+      trend: {
+        value: Math.round((data.atRisk / data.total) * 100),
+        direction: 'down'
+      },
+      size: 'md'
+    },
+    {
+      id: "new-clients",
+      title: "New Clients",
+      value: data.newClients,
+      icon: <UserPlus className="h-5 w-5" />,
+      trend: {
+        value: Math.round((data.newClients / data.total) * 100),
+        direction: 'up'
+      },
+      size: 'md'
+    },
+    {
+      id: "churn-rate",
+      title: "Churn Rate",
+      value: `${data.churn}%`,
+      icon: <XCircle className="h-5 w-5" />,
+      size: 'sm'
+    },
+    {
+      id: "success-rate",
+      title: "Success Rate",
+      value: `${data.success}%`,
+      icon: <ArrowUp className="h-5 w-5" />,
+      size: 'sm'
+    }
+  ];
 }

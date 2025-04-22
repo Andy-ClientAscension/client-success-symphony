@@ -1,116 +1,71 @@
-import { Client, getAllClients } from '@/lib/data';
-import { calculatePerformanceTrends, generateClientComparisons } from './aiDataAnalyzer';
 
-/**
- * Get complete metrics data for a set of clients
- */
-export function getComprehensiveMetrics(clients: Client[] = getAllClients()) {
-  // Get status counts
-  const statusCounts = calculateStatusCounts(clients);
-  
-  // Calculate rates
-  const rates = calculateRates(statusCounts);
-  
-  // Calculate trends
-  const trends = generateTrendData(rates);
-  
-  // Calculate other metrics
-  const totalMRR = clients.reduce((sum, client) => sum + (client.mrr || 0), 0);
-  const totalCallsBooked = clients.reduce((sum, client) => sum + (client.callsBooked || 0), 0);
-  const totalDealsClosed = clients.reduce((sum, client) => sum + (client.dealsClosed || 0), 0);
-  
-  return {
-    statusCounts,
-    rates,
-    trends,
-    totalMRR,
-    totalCallsBooked,
-    totalDealsClosed,
-    clientCount: clients.length,
-    performanceTrends: calculatePerformanceTrends(clients),
-    clientComparisons: generateClientComparisons(clients)
-  };
+export interface StatusCounts {
+  active: number;
+  atRisk: number;
+  churned: number;
+  new?: number;
+  total: number;
 }
 
-/**
- * Calculate status counts based on client statuses
- */
-export function calculateStatusCounts(clients: Client[]) {
-  return {
-    active: clients.filter(client => client.status === 'active').length,
-    atRisk: clients.filter(client => client.status === 'at-risk').length,
-    churned: clients.filter(client => client.status === 'churned').length,
-    new: clients.filter(client => client.status === 'new').length,
+export interface StatusRates {
+  retentionRate: number;
+  atRiskRate: number;
+  churnRate: number;
+  retentionTrend?: number;
+  atRiskTrend?: number;
+  churnTrend?: number;
+}
+
+export function calculateStatusCounts(clients: any[]): StatusCounts {
+  const counts = {
+    active: 0,
+    atRisk: 0,
+    churned: 0,
+    new: 0,
     total: clients.length
   };
-}
-
-/**
- * Calculate retention, at-risk, and churn rates from status counts
- */
-export function calculateRates(statusCounts: ReturnType<typeof calculateStatusCounts>) {
-  return {
-    retentionRate: statusCounts.total > 0 
-      ? Math.round((statusCounts.active / statusCounts.total) * 100) 
-      : 0,
-    atRiskRate: statusCounts.total > 0 
-      ? Math.round((statusCounts.atRisk / statusCounts.total) * 100) 
-      : 0,
-    churnRate: statusCounts.total > 0 
-      ? Math.round((statusCounts.churned / statusCounts.total) * 100) 
-      : 0
-  };
-}
-
-/**
- * Generate trend data comparing current rates with previous period rates
- */
-export function generateTrendData(rates: ReturnType<typeof calculateRates>) {
-  // Simulate previous period data (would come from actual historical data in production)
-  const prevPeriodRetention = Math.max(0, Math.round(rates.retentionRate - (Math.random() * 10 - 5)));
-  const prevPeriodAtRisk = Math.max(0, Math.round(rates.atRiskRate - (Math.random() * 10 - 3)));
-  const prevPeriodChurn = Math.max(0, Math.round(rates.churnRate - (Math.random() * 10 - 2)));
-
-  return {
-    retentionTrend: rates.retentionRate - prevPeriodRetention,
-    atRiskTrend: rates.atRiskRate - prevPeriodAtRisk,
-    churnTrend: rates.churnRate - prevPeriodChurn
-  };
-}
-
-/**
- * Get complete team performance data for analytics
- * This consolidates multiple functions into a single comprehensive function
- */
-export function getTeamPerformanceData(selectedTeam: string, clients: Client[] = getAllClients()) {
-  const teamClients = selectedTeam === "all" 
-    ? clients 
-    : clients.filter(client => client.team === selectedTeam);
   
-  return getComprehensiveMetrics(teamClients);
+  clients.forEach(client => {
+    if (client.status === 'active') counts.active++;
+    else if (client.status === 'at-risk') counts.atRisk++;
+    else if (client.status === 'churned') counts.churned++;
+    else if (client.status === 'new') counts.new++;
+  });
+  
+  return counts;
 }
 
-// Keep backwards compatibility for legacy code
-export function getCompanyMetrics(clients: Client[] = getAllClients()) {
-  const metrics = getComprehensiveMetrics(clients);
+export function calculateRates(counts: StatusCounts): StatusRates {
   return {
-    totalMRR: metrics.totalMRR,
-    totalCallsBooked: metrics.totalCallsBooked,
-    totalDealsClosed: metrics.totalDealsClosed,
-    clientCount: metrics.clientCount,
-    performanceTrends: metrics.performanceTrends,
-    clientComparisons: metrics.clientComparisons
+    retentionRate: counts.total > 0 ? Math.round((counts.active / counts.total) * 100) : 0,
+    atRiskRate: counts.total > 0 ? Math.round((counts.atRisk / counts.total) * 100) : 0,
+    churnRate: counts.total > 0 ? Math.round((counts.churned / counts.total) * 100) : 0
   };
 }
 
-// Maintain backwards compatibility for existing components
-export function calculateTeamMetrics(team?: string, clients: Client[] = getAllClients()) {
-  const teamClients = team && team !== 'all' 
-    ? clients.filter(client => client.team === team)
-    : clients;
+export function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(value);
+}
 
-  return {
-    ...getCompanyMetrics(teamClients),
-    teamClients
-  };
+export function calculateGrowthRate(current: number, previous: number): number {
+  if (previous === 0) return 0;
+  return Math.round(((current - previous) / previous) * 100);
+}
+
+export function generateMonthLabels(months = 6): string[] {
+  const labels: string[] = [];
+  const now = new Date();
+  
+  for (let i = months - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setMonth(d.getMonth() - i);
+    labels.push(d.toLocaleString('default', { month: 'short' }));
+  }
+  
+  return labels;
 }

@@ -1,32 +1,37 @@
 
-import { AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface MetricErrorFallbackProps {
   error: Error;
   resetErrorBoundary: () => void;
+  className?: string;
 }
 
-export function MetricErrorFallback({ error, resetErrorBoundary }: MetricErrorFallbackProps) {
+export function MetricErrorFallback({
+  error,
+  resetErrorBoundary,
+  className
+}: MetricErrorFallbackProps) {
   return (
-    <Card className="bg-red-50 dark:bg-red-900/20">
-      <CardContent className="p-6">
-        <div className="flex items-start">
-          <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mr-3 mt-0.5" />
-          <div>
-            <h3 className="font-medium text-red-800 dark:text-red-300">Error loading metrics</h3>
-            <p className="text-sm text-red-700 dark:text-red-400 mt-1">{error.message}</p>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={resetErrorBoundary}
-              className="mt-3 text-red-700 hover:text-red-800 border-red-300 hover:border-red-400"
-            >
-              Retry Loading Metrics
-            </Button>
-          </div>
-        </div>
+    <Card className={cn("bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800", className)}>
+      <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+        <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mb-2" />
+        <p className="text-sm font-medium text-red-800 dark:text-red-200">Metric Unavailable</p>
+        <p className="text-xs text-red-600 dark:text-red-300 mt-1">
+          {error.message || "Failed to load metric data"}
+        </p>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={resetErrorBoundary}
+          className="mt-2 text-xs h-7 px-2"
+        >
+          Retry
+        </Button>
       </CardContent>
     </Card>
   );

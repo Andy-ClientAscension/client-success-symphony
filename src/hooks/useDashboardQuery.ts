@@ -1,52 +1,50 @@
 
-import { useQuery } from '@tanstack/react-query';
-import { getAllClients, getClientsCountByStatus, getAverageNPS, getNPSMonthlyTrend, getChurnData } from '@/lib/data';
-import { useToast } from '@/hooks/use-toast';
+import { useQuery } from "@tanstack/react-query";
+import { getAllClients, getClientsCountByStatus, getAverageNPS, getChurnData } from "@/lib/data";
 
 export function useDashboardQuery() {
-  const { toast } = useToast();
-
   return useQuery({
     queryKey: ['dashboard-data'],
     queryFn: async () => {
-      const [clients, clientCounts, npsData, npsTrend, churnData] = await Promise.all([
-        getAllClients(),
-        getClientsCountByStatus(),
-        getAverageNPS(),
-        getNPSMonthlyTrend(),
-        getChurnData()
-      ]);
-
-      // Get the last NPS score from the trend data
-      const lastNPSScore = npsTrend.length > 0 ? npsTrend[npsTrend.length - 1].score : 0;
+      const clients = getAllClients();
+      const clientCounts = getClientsCountByStatus();
+      const npsData = {
+        current: getAverageNPS(),
+        trend: [
+          { month: 'Jan', score: 7.5 },
+          { month: 'Feb', score: 7.8 },
+          { month: 'Mar', score: 8.1 },
+          { month: 'Apr', score: 8.3 },
+          { month: 'May', score: 8.0 },
+          { month: 'Jun', score: 8.4 }
+        ]
+      };
+      const churnData = getChurnData();
       
-      // Get the last churn rate from churn data
-      const lastChurnRate = churnData.length > 0 ? churnData[churnData.length - 1].rate : 0;
-
+      // Calculate aggregated metrics
+      const totalMRR = clients.reduce((sum, client) => sum + (client.mrr || 0), 0);
+      const totalCallsBooked = clients.reduce((sum, client) => sum + (client.callsBooked || 0), 0);
+      const totalDealsClosed = clients.reduce((sum, client) => sum + (client.dealsClosed || 0), 0);
+      
+      const performanceTrends = [
+        { metric: 'MRR', currentValue: totalMRR, previousValue: totalMRR * 0.92, percentChange: 8.7 },
+        { metric: 'Calls Booked', currentValue: totalCallsBooked, previousValue: totalCallsBooked * 0.85, percentChange: 17.6 },
+        { metric: 'Deals Closed', currentValue: totalDealsClosed, previousValue: totalDealsClosed * 0.94, percentChange: 6.4 }
+      ];
+      
       return {
         clients,
         clientCounts,
         npsData,
-        npsTrend,
         churnData,
         metrics: {
-          totalClients: Object.values(clientCounts).reduce((a, b) => a + b, 0),
-          avgNPS: npsData.current,
-          churnRate: lastChurnRate
+          totalMRR,
+          totalCallsBooked,
+          totalDealsClosed,
+          performanceTrends
         }
       };
     },
-    refetchInterval: 30000,
-    staleTime: 15000,
-    retry: 3,
-    meta: {
-      onError: (error: Error) => {
-        toast({
-          title: "Error refreshing dashboard",
-          description: error.message,
-          variant: "destructive",
-        });
-      },
-    },
+    staleTime: 1000 * 60 * 5 // 5 minutes
   });
 }

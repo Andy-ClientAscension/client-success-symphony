@@ -1,12 +1,9 @@
 
-export { StatusDistribution } from "./StatusDistribution";
-export { PerformanceMetrics } from "./PerformanceMetrics";
-export { FilterBar } from "./FilterBar";
-export { StyledCard, MetricItem } from "./CardStyle";
-export type { CardVariant, CardSize, MetricItemProps } from "./CardStyle";
-export { ResponsiveTable } from "./ResponsiveTable";
-export type { Column } from "./ResponsiveTable";
-export { ResponsiveGrid } from "./ResponsiveGrid";
-export type { GridColumns } from "./ResponsiveGrid";
-export { VirtualizedTable } from "./VirtualizedTable";
-export type { Column as VirtualTableColumn } from "./VirtualizedTable";
+// Export shared components for easy imports
+export * from './CardStyle';
+export * from './ErrorFallbacks';
+export * from './MetricErrorFallback';
+export * from './PerformanceMetrics';
+export * from './ResponsiveGrid';
+export * from './StatusDistribution';
+export * from './TableErrorFallback';

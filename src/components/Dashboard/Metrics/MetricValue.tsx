@@ -1,11 +1,23 @@
 
 import React from "react";
+import { cn } from "@/lib/utils";
 
 interface MetricValueProps {
-  value: number | string;
+  value: string | number;
+  size?: "sm" | "md" | "lg";
   className?: string;
 }
 
-export function MetricValue({ value, className = "text-lg font-bold" }: MetricValueProps) {
-  return <h3 className={className}>{value}</h3>;
+export function MetricValue({ value, size = "md", className }: MetricValueProps) {
+  const sizeClasses = {
+    sm: "text-lg",
+    md: "text-xl",
+    lg: "text-2xl"
+  };
+
+  return (
+    <div className={cn("font-bold", sizeClasses[size], className)}>
+      {value}
+    </div>
+  );
 }

@@ -1,7 +1,5 @@
 
 import React from "react";
-import { Progress } from "@/components/ui/progress";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface TeamStatusMetricProps {
   title: string;
@@ -16,62 +14,39 @@ interface TeamStatusMetricProps {
   };
 }
 
-export function TeamStatusMetric({ 
-  title, 
-  value, 
-  color, 
-  icon, 
-  count, 
-  label, 
-  trend 
+export function TeamStatusMetric({
+  title,
+  value,
+  color,
+  icon,
+  count,
+  label,
+  trend
 }: TeamStatusMetricProps) {
-  // Determine progress color based on value
-  let progressColor = "bg-green-500";
-  if (title.includes("Churn") || title.includes("Risk")) {
-    progressColor = value > 20 ? "bg-red-500" : value > 10 ? "bg-amber-500" : "bg-green-500";
-  } else {
-    progressColor = value < 60 ? "bg-red-500" : value < 80 ? "bg-amber-500" : "bg-green-500";
-  }
-
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className="flex flex-col p-3 bg-card/50 border rounded-lg hover:bg-card/80 transition-colors cursor-default">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium">{title}</span>
-              <span className={`text-sm font-semibold ${color}`}>{value}%</span>
-            </div>
-            <Progress 
-              value={value} 
-              className="h-2" 
-              indicatorClassName={progressColor} 
-            />
-            <div className="flex items-center justify-between mt-2">
-              <div className="flex items-center text-xs text-muted-foreground">
-                {icon}
-                <span>{count} {label}</span>
-              </div>
-              {trend && (
-                <div className="flex items-center text-xs">
-                  <span className={trend.value > 0 ? "text-green-600" : trend.value < 0 ? "text-red-600" : "text-amber-600"}>
-                    {trend.value > 0 ? "+" : ""}{trend.value}%
-                  </span>
-                  {trend.indicator}
-                </div>
-              )}
-            </div>
+    <div className="p-3 bg-card/50 border rounded-lg">
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center">
+          {icon}
+          <span className="text-xs font-medium ml-1">{title}</span>
+        </div>
+        {trend && (
+          <div className={`text-xs flex items-center ${
+            trend.value > 0
+              ? "text-green-600 dark:text-green-400"
+              : trend.value < 0
+                ? "text-red-600 dark:text-red-400"
+                : "text-amber-600 dark:text-amber-400"
+          }`}>
+            {trend.indicator}
+            <span>{Math.abs(trend.value)}%</span>
           </div>
-        </TooltipTrigger>
-        <TooltipContent side="bottom">
-          <p className="text-xs">{title}: {value}% ({count} {label})</p>
-          {trend && (
-            <p className="text-xs mt-1">
-              {trend.value > 0 ? "Increased" : trend.value < 0 ? "Decreased" : "No change"} by {Math.abs(trend.value)}% from last period
-            </p>
-          )}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+        )}
+      </div>
+      <div className="flex items-baseline">
+        <span className={`text-xl font-bold ${color}`}>{value}%</span>
+        <span className="text-xs text-muted-foreground ml-2">{count} {label}</span>
+      </div>
+    </div>
   );
 }
