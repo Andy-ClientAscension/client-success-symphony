@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/Layout/Layout";
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -126,7 +127,7 @@ export default function Index() {
   return (
     <Layout>
       <div className="w-full min-h-screen bg-background">
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40 transition-colors duration-200">
           <div className="container py-4">
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
@@ -166,11 +167,13 @@ export default function Index() {
           </div>
         </div>
 
-        <div className="container py-6 space-y-6">
+        <div className="container py-6 md:py-8 space-y-8 md:space-y-10">
           {aiError && (
             <Alert 
               variant="destructive"
-              className="bg-destructive/5 border-destructive/20"
+              className="bg-destructive/5 border-destructive/20 mb-8 animate-fade-in"
+              role="alert"
+              tabIndex={0}
             >
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>AI Analysis Error</AlertTitle>
@@ -178,10 +181,10 @@ export default function Index() {
             </Alert>
           )}
 
-          <div className="grid gap-6">
-            <div className="grid gap-4">
+          <div className="grid gap-8 mb-8 animate-fade-in">
+            <div className="grid gap-8 md:gap-10 mb-8 animate-fade-in">
               <MetricsCards />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 space-y-0 md:space-y-0 mb-8">
                 <ErrorBoundary
                   fallback={<TableErrorFallback 
                     error={new Error("Failed to load NPS chart")} 
@@ -201,26 +204,33 @@ export default function Index() {
               </div>
             </div>
 
-            <DashboardTabContainer 
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              predictions={predictions}
-              aiInsights={aiInsights}
-              isAnalyzing={isAnalyzing}
-              aiError={aiError}
-              comparisons={comparisons}
-              handleRefreshData={handleRefreshData}
-              cancelAnalysis={cancelAnalysis}
-              trendData={trendData}
-              lastAnalyzed={lastAnalyzed}
-              clients={clients}
-              clientMetrics={clientMetrics}
-            />
+            <section
+              aria-label="Tabs section"
+              className="w-full animate-fade-in transition-all duration-300"
+              tabIndex={0}
+            >
+              <DashboardTabContainer 
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                predictions={predictions}
+                aiInsights={aiInsights}
+                isAnalyzing={isAnalyzing}
+                aiError={aiError}
+                comparisons={comparisons}
+                handleRefreshData={handleRefreshData}
+                cancelAnalysis={cancelAnalysis}
+                trendData={trendData}
+                lastAnalyzed={lastAnalyzed}
+                clients={clients}
+                clientMetrics={clientMetrics}
+              />
+            </section>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              <aside className="lg:col-span-3">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-8">
+              <aside className="lg:col-span-3 mb-8 animate-fade-in" tabIndex={0} aria-label="Data Sync Monitor Sidebar">
                 <DataSyncMonitor />
               </aside>
+              {/* <main className="lg:col-span-9"></main> */}
             </div>
           </div>
         </div>
@@ -228,3 +238,4 @@ export default function Index() {
     </Layout>
   );
 }
+
