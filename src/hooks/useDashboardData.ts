@@ -2,6 +2,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useState, useEffect } from "react";
+import type Dashboard from "@/types/dashboard";
+import type API from "@/types/api";
+
+interface DashboardDataResult {
+  data: API.DashboardResponse | undefined;
+  isLoading: boolean;
+  error: Error | null;
+  refetchData: () => Promise<void>;
+  lastUpdated: Date | null;
+  isRefreshing: boolean;
+}
 
 /**
  * Hook for fetching and synchronizing dashboard data
@@ -10,7 +21,7 @@ import { useState, useEffect } from "react";
  * - Handles errors with retries
  * - Provides loading states and timestamps
  */
-export function useDashboardData() {
+export function useDashboardData(): DashboardDataResult {
   const [lastLocalUpdate, setLastLocalUpdate] = useState<Date | null>(null);
 
   const result = useQuery({
@@ -31,15 +42,17 @@ export function useDashboardData() {
   }, [result.dataUpdatedAt, result.isError]);
 
   // Force refetch method with lastUpdate timestamp update
-  const refetchData = async () => {
+  const refetchData = async (): Promise<void> => {
     await result.refetch();
     setLastLocalUpdate(new Date());
   };
 
   return {
-    ...result,
-    lastUpdated: lastLocalUpdate,
+    data: result.data,
+    isLoading: result.isLoading,
+    error: result.error instanceof Error ? result.error : null,
     refetchData,
+    lastUpdated: lastLocalUpdate,
     isRefreshing: result.isFetching && !result.isLoading
   };
 }

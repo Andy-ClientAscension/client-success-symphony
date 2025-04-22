@@ -1,6 +1,7 @@
 
 import { toast } from "@/components/ui/use-toast";
 import { getAllClients, getClientsCountByStatus, getAverageNPS, getChurnData } from "@/lib/data";
+import type API from "@/types/api";
 
 interface FetcherOptions {
   retries?: number;
@@ -45,12 +46,12 @@ export async function fetcher<T>(
  * Type-safe API client with default error handling
  */
 export const apiClient = {
-  async getDashboardData() {
+  async getDashboardData(): Promise<API.DashboardResponse> {
     return fetcher("dashboard", async () => {
-      const clients = getAllClients();
-      const clientCounts = getClientsCountByStatus();
+      const clients = await getAllClients();
+      const clientCounts = await getClientsCountByStatus();
       const npsData = {
-        current: getAverageNPS(),
+        current: await getAverageNPS(),
         trend: [
           { month: 'Jan', score: 7.5 },
           { month: 'Feb', score: 7.8 },
@@ -60,7 +61,7 @@ export const apiClient = {
           { month: 'Jun', score: 8.4 }
         ]
       };
-      const churnData = getChurnData();
+      const churnData = await getChurnData();
 
       return {
         clients,

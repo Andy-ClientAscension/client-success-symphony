@@ -11,11 +11,12 @@ import { LoadingState } from "@/components/LoadingState";
 import { ValidationError } from "@/components/ValidationError";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button"; // Added missing Button import
+import { Button } from "@/components/ui/button";
+import type API from "@/types/api";
 
-export default function UnifiedDashboard() {
+export default function UnifiedDashboard(): JSX.Element {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = React.useState("overview");
+  const [activeTab, setActiveTab] = React.useState<string>("overview");
   
   const { 
     data: dashboardData,
@@ -26,7 +27,7 @@ export default function UnifiedDashboard() {
     isRefreshing
   } = useDashboardData();
 
-  const handleErrorReset = useCallback(() => {
+  const handleErrorReset = useCallback((): void => {
     refetchData();
     toast({
       title: "Retrying...",
@@ -80,7 +81,7 @@ export default function UnifiedDashboard() {
         </ErrorBoundary>
 
         {error && dashboardData && (
-          <Alert variant="destructive" className="mb-4"> {/* Changed "warning" to "destructive" to match available variants */}
+          <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4 mr-2" />
             <AlertTitle>Data Refresh Failed</AlertTitle>
             <AlertDescription>
