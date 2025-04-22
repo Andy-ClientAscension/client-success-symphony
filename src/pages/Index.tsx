@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout/Layout";
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -39,6 +38,7 @@ export default function Index() {
     { month: 'Jun', mrr: 5000, churn: 4, growth: 18 },
   ]);
   const [clientCounts] = useRealtimeData('clientCounts', getClientsCountByStatus());
+  const [showPerformanceAlert, setShowPerformanceAlert] = useState(true);
 
   const { 
     insights: aiInsights,
@@ -124,6 +124,25 @@ export default function Index() {
 
   const [syncStats] = useRealtimeData('syncStats', { lastSync: null, totalSyncs: 0 });
 
+  const handleDismissAlert = () => {
+    setShowPerformanceAlert(false);
+    localStorage.setItem("hidePerformanceAlert", "true");
+  };
+
+  useEffect(() => {
+    const alertDismissed = localStorage.getItem("hidePerformanceAlert") === "true";
+    setShowPerformanceAlert(!alertDismissed && performanceMode);
+  }, [performanceMode]);
+
+  useEffect(() => {
+    if (performanceMode) {
+      const alertDismissed = localStorage.getItem("hidePerformanceAlert") === "true";
+      setShowPerformanceAlert(!alertDismissed);
+    } else {
+      setShowPerformanceAlert(false);
+    }
+  }, [performanceMode]);
+
   return (
     <Layout>
       <div className="w-full min-h-screen bg-background">
@@ -168,17 +187,22 @@ export default function Index() {
         </div>
 
         <div className="container py-6 md:py-8 space-y-8 md:space-y-10">
+          {showPerformanceAlert && performanceMode && (
+            <PerformanceAlert
+              severity="success"
+              onDismiss={handleDismissAlert}
+              dismissable={true}
+            />
+          )}
+
           {aiError && (
-            <Alert 
-              variant="destructive"
-              className="bg-destructive/5 border border-destructive/30 mb-8 animate-fade-in"
-              role="alert"
-              tabIndex={0}
-            >
-              <AlertTriangle className="h-4 w-4 text-destructive mr-2" />
-              <AlertTitle className="font-bold text-destructive-foreground">AI Analysis Error</AlertTitle>
-              <AlertDescription className="text-destructive-foreground">{aiError.message}</AlertDescription>
-            </Alert>
+            <PerformanceAlert
+              title="AI Analysis Error"
+              message={aiError.message}
+              severity="error"
+              icon={<AlertTriangle />}
+              dismissable={false}
+            />
           )}
 
           <div className="grid gap-8 mb-8 animate-fade-in">
@@ -246,4 +270,3 @@ export default function Index() {
     </Layout>
   );
 }
-
