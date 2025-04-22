@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout/Layout";
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -19,11 +18,7 @@ import { MetricsCards } from "@/components/Dashboard/MetricsCards";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { MetricErrorFallback } from "@/components/Dashboard/Shared/MetricErrorFallback";
 import { TableErrorFallback } from "@/components/Dashboard/Shared/TableErrorFallback";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { DashboardOverviewTab } from "@/components/Dashboard/UnifiedDashboard/DashboardOverviewTab";
-import { CompanyMetricsTab } from "@/components/Dashboard/CompanyMetrics/CompanyMetricsTab";
-import { TeamAnalyticsTab } from "@/components/Dashboard/TeamAnalytics/TeamAnalyticsTab";
-import { AIInsightsTab } from "@/components/Dashboard/UnifiedDashboard/AIInsightsTab";
+import { DashboardTabContainer } from "@/components/Dashboard/UnifiedDashboard/DashboardTabContainer";
 
 export default function Index() {
   const { toast } = useToast();
@@ -206,7 +201,6 @@ export default function Index() {
               </div>
             </div>
 
-            {/* Dashboard Tab Container - Modular */}
             <DashboardTabContainer 
               activeTab={activeTab}
               setActiveTab={setActiveTab}

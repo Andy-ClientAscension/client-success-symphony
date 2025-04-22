@@ -2,8 +2,8 @@
 import React from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DashboardOverviewTab } from "./DashboardOverviewTab";
-import { CompanyMetricsTab } from "../../CompanyMetrics/CompanyMetricsTab";
-import { TeamAnalyticsTab } from "../../TeamAnalytics/TeamAnalyticsTab";
+import { CompanyMetricsTab } from "../CompanyMetrics/CompanyMetricsTab";
+import { TeamAnalyticsTab } from "../TeamAnalytics/TeamAnalyticsTab";
 import { AIInsightsTab } from "./AIInsightsTab";
 import { BarChart2, PieChart, LineChart, Bot } from "lucide-react";
 
