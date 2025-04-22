@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout/Layout";
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -18,20 +17,10 @@ import { BackgroundProcessingIndicator } from "@/components/Dashboard/Background
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { MetricsCards } from "@/components/Dashboard/MetricsCards";
-import { Separator } from "@/components/ui/separator";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { MetricErrorFallback } from "@/components/Dashboard/Shared/MetricErrorFallback";
 import { TableErrorFallback } from "@/components/Dashboard/Shared/TableErrorFallback";
 
-interface BackgroundTaskStatus {
-  id: string;
-  name: string;
-  status: 'idle' | 'running' | 'success' | 'error';
-  lastRun?: Date;
-  message?: string;
-}
-
-// Make sure this is a default export
 export default function Index() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
@@ -40,7 +29,7 @@ export default function Index() {
   const [performanceMode, setPerformanceMode] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [clients, setClients] = useState([]);
-  
+
   const [insights, isInsightsLoading] = useRealtimeData(STORAGE_KEYS.AI_INSIGHTS, []);
   const [comparisons, isComparisonsLoading] = useRealtimeData('clientComparisons', []);
   const [trendData, isTrendDataLoading] = useRealtimeData('trendData', [
@@ -51,7 +40,7 @@ export default function Index() {
     { month: 'May', mrr: 4200, churn: 2, growth: 12 },
     { month: 'Jun', mrr: 5000, churn: 4, growth: 18 },
   ]);
-  
+
   const [clientCounts] = useRealtimeData('clientCounts', getClientsCountByStatus());
 
   const { 
@@ -68,7 +57,7 @@ export default function Index() {
     refreshInterval: 3600000,
     silentMode: true
   });
-  
+
   useEffect(() => {
     setClients(getAllClients());
   }, []);
@@ -85,7 +74,7 @@ export default function Index() {
       status: 'idle'
     }
   ]);
-  
+
   useEffect(() => {
     setBackgroundTasks(prev => 
       prev.map(task => 
@@ -126,7 +115,7 @@ export default function Index() {
       setIsRefreshing(false);
     });
   }, [analyzeClients]);
-  
+
   const handleViewBackgroundTasks = () => {
     toast({
       title: "Background Tasks Status",
@@ -139,7 +128,7 @@ export default function Index() {
             : "No recent analysis data",
     });
   };
-  
+
   const clientMetrics = generateClientMetrics({
     total: clientCounts.active + clientCounts["at-risk"] + clientCounts.new + clientCounts.churned,
     active: clientCounts.active,
@@ -152,101 +141,78 @@ export default function Index() {
 
   return (
     <Layout>
-      <div 
-        className="w-full space-y-12 bg-gray-100 dark:bg-gray-900/50 min-h-screen" 
-        role="region" 
-        aria-label="Performance Dashboard"
-      >
-        <div className="p-6 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold tracking-tight" tabIndex={0}>
-              Performance Report
-            </h1>
-            <p className="text-muted-foreground">
-              Monitor your team's performance and track key metrics
-            </p>
+      <div className="w-full min-h-screen bg-background">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40">
+          <div className="container py-4">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-bold tracking-tight">Performance Report</h1>
+                <div className="flex items-center gap-2">
+                  <BackgroundProcessingIndicator 
+                    tasks={backgroundTasks}
+                    onClick={handleViewBackgroundTasks}
+                  />
+                  <DashboardSettingsBar
+                    persistDashboard={persistDashboard}
+                    togglePersistDashboard={togglePersistDashboard}
+                    performanceMode={performanceMode}
+                    setPerformanceMode={setPerformanceMode}
+                    focusMode={focusMode}
+                    onFocusModeChange={setFocusMode}
+                  />
+                </div>
+              </div>
+              <DashboardHeader
+                isRefreshing={isRefreshing}
+                handleRefreshData={handleRefreshData}
+              />
+            </div>
           </div>
         </div>
 
-        <div className="px-6 space-y-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <DashboardHeader
-              isRefreshing={isRefreshing}
-              handleRefreshData={handleRefreshData}
-            />
-            <div className="flex items-center gap-2">
-              <BackgroundProcessingIndicator 
-                tasks={backgroundTasks}
-                onClick={handleViewBackgroundTasks}
-              />
-              <DashboardSettingsBar
-                persistDashboard={persistDashboard}
-                togglePersistDashboard={togglePersistDashboard}
-                performanceMode={performanceMode}
-                setPerformanceMode={setPerformanceMode}
-                focusMode={focusMode}
-                onFocusModeChange={setFocusMode}
-              />
-            </div>
-          </div>
-
+        <div className="container py-6 space-y-6">
           {aiError && (
             <Alert 
               variant="destructive"
-              className="mb-8 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
-              role="alert"
-              aria-live="assertive"
+              className="bg-destructive/5 border-destructive/20"
             >
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>AI Analysis Error</AlertTitle>
-              <AlertDescription>
-                {aiError.message}
-                <p className="text-sm mt-1">
-                  AI insights may be outdated or unavailable. The system will retry automatically.
-                </p>
-              </AlertDescription>
+              <AlertDescription>{aiError.message}</AlertDescription>
             </Alert>
           )}
 
-          <section className="space-y-8">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-              <ErrorBoundary
-                fallback={<MetricErrorFallback 
-                  error={new Error("Failed to load metrics")} 
-                  resetErrorBoundary={() => {}} 
-                />}
-                customMessage="Unable to load metrics data. Please try again."
-              >
+          <div className="grid gap-6">
+            <ErrorBoundary
+              fallback={<MetricErrorFallback 
+                error={new Error("Failed to load metrics")} 
+                resetErrorBoundary={() => {}} 
+              />}
+            >
+              <div className="grid gap-4">
                 <MetricsCards />
-              </ErrorBoundary>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <ErrorBoundary
-                fallback={<TableErrorFallback 
-                  error={new Error("Failed to load NPS chart")} 
-                  resetErrorBoundary={() => {}} 
-                />}
-                customMessage="Unable to load NPS chart data. Please try again."
-              >
-                <NPSMetricChart />
-              </ErrorBoundary>
-              <ErrorBoundary
-                fallback={<TableErrorFallback 
-                  error={new Error("Failed to load Churn chart")} 
-                  resetErrorBoundary={() => {}} 
-                />}
-                customMessage="Unable to load Churn chart data. Please try again."
-              >
-                <ChurnMetricChart />
-              </ErrorBoundary>
-            </div>
-          </section>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <ErrorBoundary
+                    fallback={<TableErrorFallback 
+                      error={new Error("Failed to load NPS chart")} 
+                      resetErrorBoundary={() => {}} 
+                    />}
+                  >
+                    <NPSMetricChart />
+                  </ErrorBoundary>
+                  <ErrorBoundary
+                    fallback={<TableErrorFallback 
+                      error={new Error("Failed to load Churn chart")} 
+                      resetErrorBoundary={() => {}} 
+                    />}
+                  >
+                    <ChurnMetricChart />
+                  </ErrorBoundary>
+                </div>
+              </div>
+            </ErrorBoundary>
 
-          <div className="space-y-8">
-            {performanceMode && <PerformanceAlert />}
-            
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               <div className="lg:col-span-9">
                 <DashboardTabs
                   activeTab={activeTab}
@@ -262,10 +228,8 @@ export default function Index() {
                   lastAnalyzed={lastAnalyzed}
                 />
               </div>
-              <aside className="lg:col-span-3 space-y-4">
-                <div className="bg-white/50 dark:bg-gray-800/50 rounded-lg shadow-sm">
-                  <DataSyncMonitor />
-                </div>
+              <aside className="lg:col-span-3">
+                <DataSyncMonitor />
               </aside>
             </div>
           </div>
