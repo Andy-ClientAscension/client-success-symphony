@@ -84,7 +84,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
+        options: {
+          // Set session expiry to 30 days
+          expiresIn: 60 * 60 * 24 * 30 // 30 days in seconds
+        }
       });
 
       if (error) throw error;
