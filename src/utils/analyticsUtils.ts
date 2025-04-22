@@ -69,3 +69,39 @@ export function generateMonthLabels(months = 6): string[] {
   
   return labels;
 }
+
+// Add the missing functions
+export function getComprehensiveMetrics(clients: any[]) {
+  return {
+    totalMRR: clients.reduce((sum, client) => sum + (client.mrr || 0), 0),
+    totalCallsBooked: clients.reduce((sum, client) => sum + (client.callsBooked || 0), 0),
+    totalDealsClosed: clients.reduce((sum, client) => sum + (client.dealsClosed || 0), 0),
+    clientCount: clients.length
+  };
+}
+
+export function getTeamPerformanceData(teamId: string, clients: any[]) {
+  const teamClients = teamId === "all" 
+    ? clients 
+    : clients.filter(client => client.team === teamId);
+  
+  const statusCounts = calculateStatusCounts(teamClients);
+  const rates = calculateRates(statusCounts);
+  
+  // Generate some random trends for demo purposes
+  const trends = {
+    mrr: Math.floor(Math.random() * 15),
+    retention: Math.floor(Math.random() * 10),
+    churn: -Math.floor(Math.random() * 5)
+  };
+  
+  return {
+    statusCounts,
+    rates,
+    trends,
+    totalMRR: teamClients.reduce((sum, client) => sum + (client.mrr || 0), 0),
+    totalCallsBooked: teamClients.reduce((sum, client) => sum + (client.callsBooked || 0), 0),
+    totalDealsClosed: teamClients.reduce((sum, client) => sum + (client.dealsClosed || 0), 0),
+    clientCount: teamClients.length
+  };
+}

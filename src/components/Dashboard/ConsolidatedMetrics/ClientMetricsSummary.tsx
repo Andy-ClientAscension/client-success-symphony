@@ -53,7 +53,7 @@ export function ClientMetricsSummary({
     churn: metrics.churn,
     success: metrics.success,
     nps: metrics.nps,
-    growthRate: metrics.growthRate
+    growthRate: metrics.growthRate || 0
   });
 
   return (
@@ -64,7 +64,6 @@ export function ClientMetricsSummary({
       <CardContent className="space-y-6">
         <UnifiedMetricsGrid 
           metrics={gridMetrics} 
-          columns={4} 
           role="region"
           aria-label="Client metrics overview"
         />

@@ -1,6 +1,4 @@
-
 import React from "react";
-import { Grid } from "@/components/ui/grid";
 import { HeroMetric } from "./HeroMetric";
 import { Users, ArrowUp, DollarSign, Ban, UserPlus, CheckCircle2, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";

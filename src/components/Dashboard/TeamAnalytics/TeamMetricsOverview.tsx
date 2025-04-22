@@ -53,7 +53,7 @@ export function TeamMetricsOverview({
       </StyledCard>
       
       <StyledCard 
-        variant="success"
+        variant="tertiary" 
         title="Performance Metrics"
         contentClassName="pt-4"
       >
