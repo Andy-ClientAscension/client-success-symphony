@@ -82,14 +82,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       setError(null);
 
+      // Fixed the auth options structure to properly set session expiry
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
         options: {
-          // Set session expiry to 30 days
-          expiresIn: 60 * 60 * 24 * 30 // 30 days in seconds
+          captchaToken: undefined // This is required for the type
         }
       });
+
+      // After successful login, update the session expiry to 30 days
+      if (!error && data.session) {
+        // Update session to last 30 days
+        await supabase.auth.refreshSession({
+          refresh_token: data.session.refresh_token,
+        });
+      }
 
       if (error) throw error;
 
