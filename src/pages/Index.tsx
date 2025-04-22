@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout/Layout";
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -140,6 +139,8 @@ export default function Index() {
     growthRate: 12
   });
 
+  const [syncStats] = useRealtimeData('syncStats', { lastSync: null, totalSyncs: 0 });
+
   return (
     <Layout>
       <div className="w-full min-h-screen bg-background">
@@ -166,6 +167,7 @@ export default function Index() {
               <DashboardHeader
                 isRefreshing={isRefreshing}
                 handleRefreshData={handleRefreshData}
+                lastUpdated={syncStats?.lastSync}
               />
             </div>
           </div>
