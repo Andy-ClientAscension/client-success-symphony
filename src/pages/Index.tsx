@@ -131,7 +131,7 @@ export default function Index() {
           <div className="container py-4">
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold tracking-tight">Performance Report</h1>
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">Performance Report</h1>
                 <div className="flex items-center gap-2">
                   <BackgroundProcessingIndicator 
                     tasks={backgroundTasks}
@@ -171,27 +171,31 @@ export default function Index() {
           {aiError && (
             <Alert 
               variant="destructive"
-              className="bg-destructive/5 border-destructive/20 mb-8 animate-fade-in"
+              className="bg-destructive/5 border border-destructive/30 mb-8 animate-fade-in"
               role="alert"
               tabIndex={0}
             >
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>AI Analysis Error</AlertTitle>
-              <AlertDescription>{aiError.message}</AlertDescription>
+              <AlertTriangle className="h-4 w-4 text-destructive mr-2" />
+              <AlertTitle className="font-bold text-destructive-foreground">AI Analysis Error</AlertTitle>
+              <AlertDescription className="text-destructive-foreground">{aiError.message}</AlertDescription>
             </Alert>
           )}
 
           <div className="grid gap-8 mb-8 animate-fade-in">
             <div className="grid gap-8 md:gap-10 mb-8 animate-fade-in">
-              <MetricsCards />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 space-y-0 md:space-y-0 mb-8">
+              <div className="p-4 md:p-6 rounded-lg border border-border/30 bg-card shadow-sm">
+                <MetricsCards />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 space-y-0 mb-8">
                 <ErrorBoundary
                   fallback={<TableErrorFallback 
                     error={new Error("Failed to load NPS chart")} 
                     resetErrorBoundary={() => {}} 
                   />}
                 >
-                  <NPSMetricChart />
+                  <div className="bg-background rounded-lg border border-border/30 p-4 focus-visible:outline-none hover:shadow transition-shadow duration-150">
+                    <NPSMetricChart />
+                  </div>
                 </ErrorBoundary>
                 <ErrorBoundary
                   fallback={<TableErrorFallback 
@@ -199,7 +203,9 @@ export default function Index() {
                     resetErrorBoundary={() => {}} 
                   />}
                 >
-                  <ChurnMetricChart />
+                  <div className="bg-background rounded-lg border border-border/30 p-4 focus-visible:outline-none hover:shadow transition-shadow duration-150">
+                    <ChurnMetricChart />
+                  </div>
                 </ErrorBoundary>
               </div>
             </div>
@@ -228,7 +234,9 @@ export default function Index() {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-8">
               <aside className="lg:col-span-3 mb-8 animate-fade-in" tabIndex={0} aria-label="Data Sync Monitor Sidebar">
-                <DataSyncMonitor />
+                <div className="bg-card border border-border/30 p-4 rounded-lg focus-visible:ring-2 focus-visible:ring-primary transition-shadow duration-150">
+                  <DataSyncMonitor />
+                </div>
               </aside>
               {/* <main className="lg:col-span-9"></main> */}
             </div>
