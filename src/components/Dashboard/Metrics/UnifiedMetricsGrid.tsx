@@ -1,3 +1,4 @@
+
 import React from "react";
 import { HeroMetric } from "./HeroMetric";
 import { Users, ArrowUp, DollarSign, Ban, UserPlus, CheckCircle2, XCircle } from "lucide-react";
@@ -33,16 +34,23 @@ interface MetricItem {
 interface UnifiedMetricsGridProps {
   metrics: MetricItem[];
   className?: string;
+  // Add accessibility props
+  role?: string;
+  "aria-label"?: string;
 }
 
-export function UnifiedMetricsGrid({ metrics, className }: UnifiedMetricsGridProps) {
+export function UnifiedMetricsGrid({ metrics, className, role, "aria-label": ariaLabel }: UnifiedMetricsGridProps) {
   // Group metrics by size for visual hierarchy
   const largeMetrics = metrics.filter(m => m.size === 'lg');
   const mediumMetrics = metrics.filter(m => m.size === 'md');
   const smallMetrics = metrics.filter(m => m.size === 'sm' || !m.size);
 
   return (
-    <div className={cn("space-y-6", className)} role="region" aria-label="Dashboard metrics">
+    <div 
+      className={cn("space-y-6", className)} 
+      role={role || "region"} 
+      aria-label={ariaLabel || "Dashboard metrics"}
+    >
       {largeMetrics.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {largeMetrics.map((metric) => (

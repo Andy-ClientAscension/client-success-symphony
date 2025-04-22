@@ -88,11 +88,11 @@ export function getTeamPerformanceData(teamId: string, clients: any[]) {
   const statusCounts = calculateStatusCounts(teamClients);
   const rates = calculateRates(statusCounts);
   
-  // Generate some random trends for demo purposes
+  // Generate trends with the correct property names
   const trends = {
-    mrr: Math.floor(Math.random() * 15),
-    retention: Math.floor(Math.random() * 10),
-    churn: -Math.floor(Math.random() * 5)
+    retentionTrend: Math.floor(Math.random() * 10) - 3,  // Random number between -3 and 7
+    atRiskTrend: Math.floor(Math.random() * 6) - 4,      // Random number between -4 and 2
+    churnTrend: Math.floor(Math.random() * 5) - 3,       // Random number between -3 and 2
   };
   
   return {
