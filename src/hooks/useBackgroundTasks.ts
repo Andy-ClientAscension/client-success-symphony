@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef, useCallback } from "react";
 
 export interface BackgroundTask {
@@ -16,6 +17,12 @@ export interface UseBackgroundTasksOptions {
   keepCompleted?: number; // How many completed tasks to keep in history
 }
 
+// Adding an interface for queued tasks to track their IDs
+interface QueuedTask {
+  id: string;
+  taskFn: () => Promise<any>;
+}
+
 /**
  * Custom hook for managing background tasks with status tracking
  */
@@ -27,7 +34,8 @@ export function useBackgroundTasks(options: UseBackgroundTasksOptions = {}) {
   
   const [tasks, setTasks] = useState<BackgroundTask[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const taskQueue = useRef<Array<() => Promise<any>>>([]);
+  // Update the queue to store task objects with IDs instead of just functions
+  const taskQueue = useRef<QueuedTask[]>([]);
   
   // Process the next task in the queue
   const processQueue = useCallback(async () => {
@@ -46,7 +54,7 @@ export function useBackgroundTasks(options: UseBackgroundTasksOptions = {}) {
       const nextTask = taskQueue.current.shift();
       if (nextTask) {
         try {
-          await nextTask();
+          await nextTask.taskFn(); // Execute the taskFn from the QueuedTask object
         } catch (error) {
           console.error("Background task error:", error);
         }
@@ -130,8 +138,8 @@ export function useBackgroundTasks(options: UseBackgroundTasksOptions = {}) {
       }
     };
     
-    // Add to queue and start processing if not already
-    taskQueue.current.push(wrappedTaskFn);
+    // Add to queue as a QueuedTask object with ID and function
+    taskQueue.current.push({ id: taskId, taskFn: wrappedTaskFn });
     if (!isProcessing) {
       processQueue();
     }
@@ -151,7 +159,7 @@ export function useBackgroundTasks(options: UseBackgroundTasksOptions = {}) {
   // Cancel a task by ID
   const cancelTask = useCallback((taskId: string) => {
     // Remove from queue if still queued
-    taskQueue.current = taskQueue.current.filter(t => t.id !== taskId);
+    taskQueue.current = taskQueue.current.filter(task => task.id !== taskId);
     
     // Update status if already running
     setTasks(prev => prev.map(t => 
