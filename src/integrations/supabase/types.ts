@@ -9,7 +9,84 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      backend_offers: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          offer_amount: number
+          offer_type: string
+          response_at: string | null
+          response_notes: string | null
+          sent_at: string | null
+          status: string
+          updated_at: string
+          viewed_at: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          offer_amount: number
+          offer_type: string
+          response_at?: string | null
+          response_notes?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+          viewed_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          offer_amount?: number
+          offer_type?: string
+          response_at?: string | null
+          response_notes?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+          viewed_at?: string | null
+        }
+        Relationships: []
+      }
+      renewal_forecasts: {
+        Row: {
+          client_id: string
+          created_at: string
+          current_contract_value: number
+          forecast_date: string
+          forecast_notes: string | null
+          id: string
+          likelihood_status: string
+          potential_upsell_value: number | null
+          renewal_date: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          current_contract_value: number
+          forecast_date?: string
+          forecast_notes?: string | null
+          id?: string
+          likelihood_status: string
+          potential_upsell_value?: number | null
+          renewal_date: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          current_contract_value?: number
+          forecast_date?: string
+          forecast_notes?: string | null
+          id?: string
+          likelihood_status?: string
+          potential_upsell_value?: number | null
+          renewal_date?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
