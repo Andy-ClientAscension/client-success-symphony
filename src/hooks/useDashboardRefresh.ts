@@ -3,11 +3,13 @@ import { useState, useCallback } from "react";
 
 /**
  * Custom hook for refreshing dashboard data with accessibility and error handling.
- * @param analyzeClientsFn - function that triggers AI/dashboard analysis
+ * 
+ * @param refreshFunction - function that triggers data refresh and returns a Promise
  * @param announceToScreenReader - function to announce status to a screen reader
+ * @returns Object containing isRefreshing state and handleRefreshData function
  */
 export function useDashboardRefresh(
-  analyzeClientsFn: (refresh?: boolean) => Promise<any>,
+  refreshFunction: (refresh?: boolean) => Promise<any>,
   announceToScreenReader: (message: string, mode: "polite" | "assertive") => void
 ) {
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -16,10 +18,10 @@ export function useDashboardRefresh(
     setIsRefreshing(true);
     announceToScreenReader('Refreshing dashboard data', 'polite');
     
-    return analyzeClientsFn(true)
-      .then(() => {
+    return refreshFunction(true)
+      .then((result) => {
         announceToScreenReader('Dashboard data refresh complete', 'polite');
-        return true; // Signal success for chaining
+        return result || true; // Ensure we return a value for chaining
       })
       .catch(error => {
         announceToScreenReader(`Refresh failed: ${error.message}`, 'assertive');
@@ -29,7 +31,10 @@ export function useDashboardRefresh(
       .finally(() => {
         setIsRefreshing(false);
       });
-  }, [analyzeClientsFn, announceToScreenReader]);
+  }, [refreshFunction, announceToScreenReader]);
 
-  return { isRefreshing, handleRefreshData };
+  return { 
+    isRefreshing, 
+    handleRefreshData 
+  };
 }

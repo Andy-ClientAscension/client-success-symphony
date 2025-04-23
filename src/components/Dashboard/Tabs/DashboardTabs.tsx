@@ -1,46 +1,51 @@
 
 import React from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useTabNavigation } from "@/hooks/useTabNavigation";
 
-interface DashboardTabsProps {
-  activeTab: string;
-  setActiveTab: (value: string) => void;
-  tabs: {
-    id: string;
-    label: string;
-    content: React.ReactNode;
-    icon?: React.ReactNode;
-  }[];
+interface TabItem {
+  id: string;
+  label: string;
+  icon?: React.ReactNode;
+  content: React.ReactNode;
 }
 
-export function DashboardTabs({ activeTab, setActiveTab, tabs }: DashboardTabsProps) {
+interface DashboardTabsProps {
+  tabs: TabItem[];
+  defaultTab?: string;
+  className?: string;
+}
+
+export function DashboardTabs({ 
+  tabs, 
+  defaultTab = tabs[0]?.id || "",
+  className = "" 
+}: DashboardTabsProps) {
+  const { activeTab, handleTabChange } = useTabNavigation(defaultTab);
+
   return (
-    <Tabs
-      value={activeTab}
-      onValueChange={setActiveTab}
-      className="w-full"
+    <Tabs 
+      value={activeTab} 
+      onValueChange={handleTabChange} 
+      className={`w-full ${className}`}
     >
-      <TabsList className="flex flex-wrap w-full mb-6">
-        {tabs.map(tab => (
-          <TabsTrigger
-            key={tab.id}
+      <TabsList className="mb-4 flex-wrap">
+        {tabs.map((tab) => (
+          <TabsTrigger 
+            key={tab.id} 
             value={tab.id}
-            className="flex items-center gap-2"
-            data-testid={`tab-${tab.id}`}
+            className="flex items-center space-x-1"
           >
-            {tab.icon && <span className="h-4 w-4">{tab.icon}</span>}
-            {tab.label}
+            {tab.icon && <span className="w-4 h-4">{tab.icon}</span>}
+            <span>{tab.label}</span>
           </TabsTrigger>
         ))}
       </TabsList>
-      
-      {tabs.map(tab => (
-        <TabsContent
-          key={tab.id}
+      {tabs.map((tab) => (
+        <TabsContent 
+          key={tab.id} 
           value={tab.id}
-          tabIndex={0}
-          className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          data-testid={`tab-content-${tab.id}`}
+          className="transition-all duration-200"
         >
           {tab.content}
         </TabsContent>
