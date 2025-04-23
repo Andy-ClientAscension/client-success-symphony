@@ -1,3 +1,4 @@
+
 /**
  * Utility for persisting dashboard data in localStorage
  */
@@ -19,14 +20,14 @@ const STORAGE_KEYS = {
   DASHBOARD: "dashboardLayout",
   THEME: "theme",
   KANBAN: "kanbanBoard",
-  CLIENT_NOTES: "clientNotes",
+  // Removed duplicate CLIENT_NOTES key
   CLIENT_STATUS: "clientStatus",
   CHURN: "churnData",
   USER_PREFERENCES: "userPreferences",
   CUSTOM_FIELDS: "customFields",
   CLIENT_CUSTOM_FIELDS: "clientCustomFields",
   TASKS: "tasksList",
-  HEALTH_SCORES: "clientHealthScores",
+  // Removed duplicate HEALTH_SCORES key
   IMPORTED_DATA: "importedData",
   DASHBOARD_SETTINGS: "dashboardSettings",
   EXPORT_HISTORY: "exportHistory",

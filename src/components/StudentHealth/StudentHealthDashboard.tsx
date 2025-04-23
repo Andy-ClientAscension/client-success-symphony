@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -11,6 +10,7 @@ import { HealthScoreTrendChart } from './HealthScoreTrendChart';
 import { HealthScoreFactors } from './HealthScoreFactors';
 import { RiskAlerts } from './RiskAlerts';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { cn } from '@/lib/utils';
 
 interface StudentHealthDashboardProps {
   studentId: string;
