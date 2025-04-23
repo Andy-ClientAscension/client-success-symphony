@@ -12,8 +12,8 @@ import {
   PlusCircle, 
   Trash2, 
   Minus,
-  ArrowUp,   // Add this import
-  ArrowDown  // Add this import
+  ArrowUp,
+  ArrowDown
 } from "lucide-react";
 import { TeamMetricCard } from "./TeamMetricCard";
 import { TeamStatusMetric } from "./TeamStatusMetric";
