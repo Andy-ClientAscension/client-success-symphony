@@ -13,6 +13,19 @@ const dashboardTabs = [
   { id: "team", label: "Team Analytics" }
 ];
 
+// Define proper interfaces for child component props
+interface DashboardOverviewProps {
+  data?: any;
+}
+
+interface CompanyMetricsProps {
+  metrics?: any;
+}
+
+interface TeamAnalyticsProps {
+  teamData?: any;
+}
+
 interface DashboardTabsContainerProps {
   data?: any;
   metrics?: any;
@@ -34,4 +47,3 @@ export function DashboardTabsContainer({ data, metrics, teamData }: DashboardTab
     </UnifiedTabNavigation>
   );
 }
-
