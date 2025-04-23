@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { TeamManagementDialog } from "./TeamManagementDialog";
 import { useToast } from "@/hooks/use-toast";
 import { STORAGE_KEYS, loadData } from "@/utils/persistence";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Plus, Minus } from "lucide-react";
 
 const ADDITIONAL_TEAMS = [
   { id: "Enterprise", name: "Enterprise" },
@@ -236,7 +238,7 @@ export function TeamAnalytics({
         </div>
       </CardHeader>
       
-      <CardContent className="pb-4">
+      <CardContent className="pb-4 space-y-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -246,88 +248,123 @@ export function TeamAnalytics({
           </TabsList>
           
           <TabsContent value="overview">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-              <TeamMetricCard 
-                title="Total MRR" 
-                value={`$${teamMetrics.totalMRR}`}
-                trend={8}
-              />
-              
-              <TeamMetricCard 
-                title="Calls Booked" 
-                value={teamMetrics.totalCallsBooked}
-                trend={12}
-              />
-              
-              <TeamMetricCard 
-                title="Deals Closed" 
-                value={teamMetrics.totalDealsClosed}
-                trend={5}
-              />
-              
-              <TeamMetricCard 
-                title="Client Count" 
-                value={statusCounts.total}
-                trend={3}
-              />
+            <div className="rounded-xl p-2 md:p-6 bg-background/60 mb-6 shadow-inner">
+              <Collapsible defaultOpen={false}>
+                <div className="flex items-center justify-between">
+                  <span className="text-base font-semibold">
+                    Key Metrics Overview
+                  </span>
+                  <CollapsibleTrigger asChild>
+                    <button className="flex items-center text-xs font-medium space-x-1 rounded px-2 py-1 hover:bg-muted transition">
+                      <span>Show Details</span>
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </CollapsibleTrigger>
+                </div>
+                <CollapsibleContent>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 mt-4">
+                    <TeamMetricCard 
+                      title="Total MRR" 
+                      value={`$${teamMetrics.totalMRR}`}
+                      trend={8}
+                    />
+                    <TeamMetricCard 
+                      title="Calls Booked" 
+                      value={teamMetrics.totalCallsBooked}
+                      trend={12}
+                    />
+                    <TeamMetricCard 
+                      title="Deals Closed" 
+                      value={teamMetrics.totalDealsClosed}
+                      trend={5}
+                    />
+                    <TeamMetricCard 
+                      title="Client Count" 
+                      value={statusCounts.total}
+                      trend={3}
+                    />
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <TeamStatusMetric 
-                title="Retention Rate"
-                value={retentionRate}
-                color="text-green-600"
-                icon={<CheckCircle2 className="h-3 w-3 mr-1 text-green-500" />}
-                count={statusCounts.active}
-                label="active clients"
-                trend={{
-                  value: retentionTrend,
-                  indicator: getTrendIndicator(retentionTrend)
-                }}
-              />
-              
-              <TeamStatusMetric 
-                title="At Risk Rate"
-                value={atRiskRate}
-                color="text-amber-600"
-                icon={<AlertTriangle className="h-3 w-3 mr-1 text-amber-500" />}
-                count={statusCounts.atRisk}
-                label="at-risk clients"
-                trend={{
-                  value: -atRiskTrend,
-                  indicator: getTrendIndicator(-atRiskTrend)
-                }}
-              />
-              
-              <TeamStatusMetric 
-                title="Churn Rate"
-                value={churnRate}
-                color="text-red-600"
-                icon={<ArrowDownRight className="h-3 w-3 mr-1 text-red-500" />}
-                count={statusCounts.churned}
-                label="churned clients"
-                trend={{
-                  value: -churnTrend,
-                  indicator: getTrendIndicator(-churnTrend)
-                }}
-              />
+            
+            <div className="rounded-xl p-2 md:p-6 bg-background/50 shadow-inner">
+              <Collapsible defaultOpen={false}>
+                <div className="flex items-center justify-between">
+                  <span className="text-base font-semibold">
+                    Client Status Metrics
+                  </span>
+                  <CollapsibleTrigger asChild>
+                    <button className="flex items-center text-xs font-medium space-x-1 rounded px-2 py-1 hover:bg-muted transition">
+                      <span>Show Details</span>
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </CollapsibleTrigger>
+                </div>
+                <CollapsibleContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-2 mt-4">
+                    <TeamStatusMetric 
+                      title="Retention Rate"
+                      value={retentionRate}
+                      color="text-green-600"
+                      icon={<CheckCircle2 className="h-3 w-3 mr-1 text-green-500" />}
+                      count={statusCounts.active}
+                      label="active clients"
+                      trend={{
+                        value: retentionTrend,
+                        indicator: getTrendIndicator(retentionTrend)
+                      }}
+                    />
+                    <TeamStatusMetric 
+                      title="At Risk Rate"
+                      value={atRiskRate}
+                      color="text-amber-600"
+                      icon={<AlertTriangle className="h-3 w-3 mr-1 text-amber-500" />}
+                      count={statusCounts.atRisk}
+                      label="at-risk clients"
+                      trend={{
+                        value: -atRiskTrend,
+                        indicator: getTrendIndicator(-atRiskTrend)
+                      }}
+                    />
+                    <TeamStatusMetric 
+                      title="Churn Rate"
+                      value={churnRate}
+                      color="text-red-600"
+                      icon={<ArrowDownRight className="h-3 w-3 mr-1 text-red-500" />}
+                      count={statusCounts.churned}
+                      label="churned clients"
+                      trend={{
+                        value: -churnTrend,
+                        indicator: getTrendIndicator(-churnTrend)
+                      }}
+                    />
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
             </div>
           </TabsContent>
           
           <TabsContent value="performance">
-            <SSCPerformanceTable 
-              csmList={csmList}
-              clients={clients}
-              selectedTeam={selectedTeam}
-            />
+            <div className="rounded-xl p-2 md:p-6 bg-background/60 shadow-inner space-y-6">
+              <SSCPerformanceTable 
+                csmList={csmList}
+                clients={clients}
+                selectedTeam={selectedTeam}
+              />
+            </div>
           </TabsContent>
           
           <TabsContent value="health-scores">
-            <HealthScoreSheet clients={teamClients} />
+            <div className="rounded-xl p-2 md:p-6 bg-background/60 shadow-inner space-y-6">
+              <HealthScoreSheet clients={teamClients} />
+            </div>
           </TabsContent>
           
           <TabsContent value="health-trends">
-            <HealthScoreHistory />
+            <div className="rounded-xl p-2 md:p-6 bg-background/60 shadow-inner space-y-6">
+              <HealthScoreHistory />
+            </div>
           </TabsContent>
         </Tabs>
       </CardContent>
