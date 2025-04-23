@@ -1,6 +1,6 @@
 
 import React from "react";
-import { MetricsGrid } from "@/components/Dashboard/Metrics";
+import { MetricsGrid } from "@/components/Dashboard/Metrics/MetricsGrid";
 
 interface CompanySummaryProps {
   totalClients: number;
