@@ -5,6 +5,7 @@ import { DashboardKPIHeader } from "@/components/Dashboard/Metrics/DashboardKPIH
 import { SSCPerformanceOverview } from "@/components/Dashboard/Performance/SSCPerformanceOverview";
 import { HealthJourneyTracker } from "@/components/Dashboard/Health/HealthJourneyTracker";
 import { ClientList } from "@/components/Dashboard/ClientList";
+import { CompanyMetrics } from "@/components/Dashboard/CompanyMetrics/CompanyMetrics";
 import { Card } from "@/components/ui/card";
 
 export default function Dashboard() {
@@ -15,6 +16,9 @@ export default function Dashboard() {
         
         {/* Top stroke - KPIs */}
         <DashboardKPIHeader />
+        
+        {/* Company wide metrics */}
+        <CompanyMetrics />
         
         {/* Middle section with F-pattern layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
