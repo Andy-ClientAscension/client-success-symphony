@@ -1,55 +1,85 @@
 
-import { useState, useMemo, useEffect } from "react";
-import { getAllClients, getCSMList, getClientMetricsByTeam } from "@/lib/data";
-import { ADDITIONAL_TEAMS } from "../constants";
+import { useState, useEffect } from 'react';
+import { getAllClients, getClientMetricsByTeam } from '@/lib/data';
 
-export function useTeamData(externalSelectedTeam?: string) {
-  const [selectedTeam, setSelectedTeam] = useState<string>(externalSelectedTeam || "all");
-  const [teams, setTeams] = useState<string[]>([]);
-  
-  const clients = useMemo(() => getAllClients(), []);
-  const csmList = useMemo(() => getCSMList(), []);
-  
-  const teamSet = useMemo(() => {
-    const set = new Set<string>();
-    clients.forEach(client => {
-      if (client.team) {
-        set.add(client.team);
-      }
-    });
-    ADDITIONAL_TEAMS.forEach(team => set.add(team.id));
-    return set;
-  }, [clients]);
-  
-  useEffect(() => {
-    setTeams(Array.from(teamSet));
-  }, [teamSet]);
-  
-  useEffect(() => {
-    if (externalSelectedTeam) {
-      setSelectedTeam(externalSelectedTeam);
+export function useTeamData(selectedTeam: string = 'all') {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [teamData, setTeamData] = useState<any>({
+    metrics: {
+      totalMRR: 0,
+      totalCallsBooked: 0,
+      totalDealsClosed: 0
+    },
+    statusCounts: {
+      active: 0,
+      atRisk: 0,
+      churned: 0,
+      total: 0
+    },
+    averageHealth: 0,
+    trends: {
+      retentionTrend: 0,
+      atRiskTrend: 0,
+      churnTrend: 0
     }
-  }, [externalSelectedTeam]);
-  
-  const teamClients = useMemo(() => {
-    return selectedTeam === "all" 
-      ? clients 
-      : clients.filter(client => client.team === selectedTeam);
-  }, [clients, selectedTeam]);
-  
-  const metrics = useMemo(() => getClientMetricsByTeam(), []);
-  const teamMetrics = useMemo(() => {
-    return selectedTeam === "all" ? metrics : getClientMetricsByTeam(selectedTeam);
-  }, [metrics, selectedTeam]);
+  });
+
+  useEffect(() => {
+    const fetchTeamData = async () => {
+      setLoading(true);
+      try {
+        const clients = getAllClients();
+        const filteredClients = selectedTeam === 'all' 
+          ? clients 
+          : clients.filter(client => client.team === selectedTeam);
+          
+        const teamMetrics = getClientMetricsByTeam(selectedTeam);
+        
+        // Calculate status counts
+        const statusCounts = {
+          active: filteredClients.filter(c => c.status === 'active').length,
+          atRisk: filteredClients.filter(c => c.status === 'at-risk').length,
+          churned: filteredClients.filter(c => c.status === 'churned').length,
+          total: filteredClients.length
+        };
+        
+        // Calculate average health score
+        const totalHealth = filteredClients.reduce((sum, client) => {
+          return sum + (client.healthScore || 0);
+        }, 0);
+        const averageHealth = statusCounts.total > 0 
+          ? totalHealth / statusCounts.total 
+          : 0;
+        
+        setTeamData({
+          metrics: teamMetrics,
+          statusCounts,
+          averageHealth,
+          trends: teamMetrics.trends || {
+            retentionTrend: 0,
+            atRiskTrend: 0,
+            churnTrend: 0
+          }
+        });
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to fetch team data'));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTeamData();
+  }, [selectedTeam]);
 
   return {
-    selectedTeam,
-    setSelectedTeam,
-    teams,
-    setTeams,
-    clients,
-    csmList,
-    teamClients,
-    teamMetrics
+    loading,
+    error,
+    teamData,
+    refetch: () => {
+      setLoading(true);
+      // This will trigger the useEffect again
+      setTeamData({...teamData});
+    }
   };
 }

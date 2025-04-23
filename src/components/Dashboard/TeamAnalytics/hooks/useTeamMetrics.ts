@@ -1,61 +1,39 @@
 
-import { useMemo } from "react";
-import { Client } from "@/lib/data";
+import { useState, useEffect } from 'react';
+import { useTeamData } from './useTeamData';
 
-export function useTeamMetrics(teamClients: Client[]) {
-  const statusCounts = useMemo(() => ({
-    active: teamClients.filter(client => client.status === 'active').length,
-    atRisk: teamClients.filter(client => client.status === 'at-risk').length,
-    churned: teamClients.filter(client => client.status === 'churned').length,
-    new: teamClients.filter(client => client.status === 'new').length,
-    total: teamClients.length
-  }), [teamClients]);
-  
-  const retentionRate = useMemo(() => {
-    return statusCounts.total > 0 
-      ? Math.round((statusCounts.active / statusCounts.total) * 100) 
-      : 0;
-  }, [statusCounts]);
-    
-  const atRiskRate = useMemo(() => {
-    return statusCounts.total > 0 
-      ? Math.round((statusCounts.atRisk / statusCounts.total) * 100) 
-      : 0;
-  }, [statusCounts]);
-    
-  const churnRate = useMemo(() => {
-    return statusCounts.total > 0 
-      ? Math.round((statusCounts.churned / statusCounts.total) * 100) 
-      : 0;
-  }, [statusCounts]);
-  
-  const prevPeriodRetention = useMemo(() => {
-    return Math.max(0, Math.round(retentionRate - (Math.random() * 10 - 5)));
-  }, [retentionRate]);
-  
-  const prevPeriodAtRisk = useMemo(() => {
-    return Math.max(0, Math.round(atRiskRate - (Math.random() * 10 - 3)));
-  }, [atRiskRate]);
-  
-  const prevPeriodChurn = useMemo(() => {
-    return Math.max(0, Math.round(churnRate - (Math.random() * 10 - 2)));
-  }, [churnRate]);
-  
-  const retentionTrend = useMemo(() => retentionRate - prevPeriodRetention, [retentionRate, prevPeriodRetention]);
-  const atRiskTrend = useMemo(() => atRiskRate - prevPeriodAtRisk, [atRiskRate, prevPeriodAtRisk]);
-  const churnTrend = useMemo(() => churnRate - prevPeriodChurn, [churnRate, prevPeriodChurn]);
+export function useTeamMetrics(teamId: string) {
+  const { teamData, loading, error, refetch } = useTeamData(teamId);
+  const [metrics, setMetrics] = useState({
+    retentionRate: 0,
+    atRiskRate: 0,
+    churnRate: 0,
+    averageHealth: 0,
+    totalMRR: 0,
+    totalClients: 0
+  });
+
+  useEffect(() => {
+    if (!loading && !error) {
+      const { statusCounts, averageHealth, metrics: teamMetrics } = teamData;
+      const total = statusCounts.total || 1; // Avoid division by zero
+      
+      setMetrics({
+        retentionRate: (statusCounts.active / total) * 100,
+        atRiskRate: (statusCounts.atRisk / total) * 100,
+        churnRate: (statusCounts.churned / total) * 100,
+        averageHealth,
+        totalMRR: teamMetrics.totalMRR || 0,
+        totalClients: statusCounts.total
+      });
+    }
+  }, [teamData, loading, error]);
 
   return {
-    statusCounts,
-    rates: {
-      retentionRate,
-      atRiskRate,
-      churnRate
-    },
-    trends: {
-      retentionTrend,
-      atRiskTrend,
-      churnTrend
-    }
+    metrics,
+    loading,
+    error,
+    refetch,
+    rawData: teamData
   };
 }
