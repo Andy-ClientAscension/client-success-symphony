@@ -179,6 +179,16 @@ export function TeamAnalytics({
   const handleShowOnboarding = () => setShowOnboarding(true);
   const handleHideOnboarding = () => setShowOnboarding(false);
 
+  const retentionContext = retentionTrend < 0
+    ? "Retention is declining this period. Investigate client experiences."
+    : "Retention is stable or rising.";
+  const atRiskContext = atRiskRate > 20
+    ? "High at-risk rate can indicate onboarding friction or lower satisfaction."
+    : undefined;
+  const churnContext = churnTrend > 0
+    ? "Churn is increasing. Consider outreach to prevent further loss."
+    : undefined;
+
   const SectionComponents = {
     metrics: (
       <Card className="rounded-xl bg-background/60 p-2 md:p-8 mb-8 shadow-inner whitespace-pre-line">
@@ -226,8 +236,18 @@ export function TeamAnalytics({
                 label="active clients"
                 trend={{
                   value: retentionTrend,
-                  indicator: getTrendIndicator(retentionTrend)
+                  indicator: (
+                    <>
+                      {retentionTrend > 0 ? (
+                        <ArrowUp className="h-3 w-3 text-green-600 inline-block" />
+                      ) : retentionTrend < 0 ? (
+                        <ArrowDown className="h-3 w-3 text-red-600 inline-block" />
+                      ) : null}
+                      <span>{retentionTrend > 0 ? "+" : ""}{retentionTrend}%</span>
+                    </>
+                  )
                 }}
+                contextNote={retentionContext}
               />
               <TeamStatusMetric 
                 title="At Risk Rate"
@@ -238,8 +258,18 @@ export function TeamAnalytics({
                 label="at-risk clients"
                 trend={{
                   value: -atRiskTrend,
-                  indicator: getTrendIndicator(-atRiskTrend)
+                  indicator: (
+                    <>
+                      {atRiskTrend < 0 ? (
+                        <ArrowDown className="h-3 w-3 text-green-600 inline-block" />
+                      ) : atRiskTrend > 0 ? (
+                        <ArrowUp className="h-3 w-3 text-red-600 inline-block" />
+                      ) : null}
+                      <span>{atRiskTrend > 0 ? "+" : ""}{-atRiskTrend}%</span>
+                    </>
+                  )
                 }}
+                contextNote={atRiskContext}
               />
               <TeamStatusMetric 
                 title="Churn Rate"
@@ -250,8 +280,18 @@ export function TeamAnalytics({
                 label="churned clients"
                 trend={{
                   value: -churnTrend,
-                  indicator: getTrendIndicator(-churnTrend)
+                  indicator: (
+                    <>
+                      {churnTrend < 0 ? (
+                        <ArrowDown className="h-3 w-3 text-green-600 inline-block" />
+                      ) : churnTrend > 0 ? (
+                        <ArrowUp className="h-3 w-3 text-red-600 inline-block" />
+                      ) : null}
+                      <span>{churnTrend > 0 ? "+" : ""}{-churnTrend}%</span>
+                    </>
+                  )
                 }}
+                contextNote={churnContext}
               />
             </div>
           </CollapsibleContent>
