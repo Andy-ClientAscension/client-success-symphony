@@ -1,8 +1,7 @@
-
 import React, { useState, lazy, Suspense, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bot, RefreshCw, AlertTriangle, TrendingUp, BarChart2, Info } from "lucide-react";
+import { Bot, RefreshCw, AlertTriangle, TrendingUp, BarChart2, Info, Brain } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSystemHealth } from "@/hooks/use-system-health";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,6 +21,12 @@ const ComparativeTrends = lazy(() =>
 );
 const RecommendationsEngine = lazy(() => 
   import("../Recommendations").then(mod => ({ default: mod.RecommendationsEngine }))
+);
+const AIInsightsEngine = lazy(() => 
+  import("../AIInsights/AIInsightsEngine").then(mod => ({ default: mod.AIInsightsEngine }))
+);
+const AIRecommendations = lazy(() => 
+  import("../AIInsights/AIRecommendations").then(mod => ({ default: mod.AIRecommendations }))
 );
 
 // Loading component for lazy-loaded content
@@ -55,7 +60,7 @@ export function AIInsightsTab({
   trendData,
   lastAnalyzed
 }: AIInsightsTabProps) {
-  const [aiActiveTab, setAiActiveTab] = useState("health");
+  const [activeTab, setActiveTab] = useState("insights");
   const { healthChecks } = useSystemHealth();
   const { toast } = useToast();
   
@@ -161,8 +166,16 @@ export function AIInsightsTab({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <Tabs value={aiActiveTab} onValueChange={setAiActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="mb-4">
+            <TabsTrigger value="insights">
+              <Brain className="h-4 w-4 mr-2" />
+              AI Insights
+            </TabsTrigger>
+            <TabsTrigger value="recommendations">
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Recommendations
+            </TabsTrigger>
             <TabsTrigger value="health">
               <AlertTriangle className="h-4 w-4 mr-2" />
               Client Health
@@ -170,10 +183,6 @@ export function AIInsightsTab({
             <TabsTrigger value="trends">
               <BarChart2 className="h-4 w-4 mr-2" />
               Performance
-            </TabsTrigger>
-            <TabsTrigger value="recommendations">
-              <TrendingUp className="h-4 w-4 mr-2" />
-              Recommendations
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -244,6 +253,47 @@ export function AIInsightsTab({
         </Alert>
       )}
       
+      <TabsContent value="insights" className="mt-0">
+        <Suspense fallback={<ChartSkeleton />}>
+          <AIInsightsEngine />
+        </Suspense>
+      </TabsContent>
+      
+      <TabsContent value="recommendations" className="mt-0">
+        <Suspense fallback={<ChartSkeleton />}>
+          <AIRecommendations 
+            recommendations={[
+              {
+                id: '1',
+                title: 'Increase Engagement',
+                description: 'Based on similar successful students',
+                impact: 85,
+                confidence: 92,
+                type: 'engagement',
+                actions: [
+                  'Schedule bi-weekly check-in calls',
+                  'Share success stories from peer group',
+                  'Provide additional learning resources'
+                ]
+              },
+              {
+                id: '2',
+                title: 'Progress Optimization',
+                description: 'Tailored to current progress markers',
+                impact: 75,
+                confidence: 88,
+                type: 'progress',
+                actions: [
+                  'Review completion of key milestones',
+                  'Set specific goals for next month',
+                  'Identify potential roadblocks'
+                ]
+              }
+            ]}
+          />
+        </Suspense>
+      </TabsContent>
+      
       <TabsContent value="health" className="space-y-6 mt-0">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {isAnalyzing ? (
@@ -300,20 +350,6 @@ export function AIInsightsTab({
               <ComparativeTrends comparisons={comparisons} />
             </Suspense>
           </>
-        )}
-      </TabsContent>
-      
-      <TabsContent value="recommendations" className="space-y-6 mt-0">
-        {isAnalyzing ? (
-          <Card>
-            <CardContent className="p-6">
-              <LoadingState message="Generating recommendations..." />
-            </CardContent>
-          </Card>
-        ) : (
-          <Suspense fallback={<ChartSkeleton />}>
-            <RecommendationsEngine insights={insights} />
-          </Suspense>
         )}
       </TabsContent>
       
