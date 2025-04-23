@@ -15,8 +15,24 @@ export function useCompanyMetrics() {
       try {
         setIsLoading(true);
         const clients = getAllClients();
-        const statusCounts = getClientsCountByStatus();
+        const clientCounts = getClientsCountByStatus();
+        
+        // Transform client counts to match StatusCounts interface
+        const statusCounts: Metrics.StatusCounts = {
+          active: clientCounts.active || 0,
+          atRisk: clientCounts["at-risk"] || 0,
+          churned: clientCounts.churned || 0,
+          new: clientCounts.new || 0,
+          total: Object.values(clientCounts).reduce((sum, count) => sum + count, 0)
+        };
+        
         const rates = calculateRates(statusCounts);
+        
+        // Add growthRate to meet the Rates interface requirements
+        const enhancedRates: Metrics.Rates = {
+          ...rates,
+          growthRate: rates.retentionRate - rates.churnRate // Simple calculation for growth rate
+        };
         
         // Calculate base metrics
         const baseMetrics = {
@@ -29,7 +45,7 @@ export function useCompanyMetrics() {
         setMetrics({
           ...baseMetrics,
           statusCounts,
-          rates,
+          rates: enhancedRates,
           trends: [] // Would be populated from actual trend data
         });
       } catch (err) {
