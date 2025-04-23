@@ -2,7 +2,19 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getClientMetricsByTeam, getAllClients, getCSMList } from "@/lib/data";
-import { CheckCircle2, AlertTriangle, ArrowDownRight, Users, TrendingUp, TrendingDown, PlusCircle, Trash2, Minus } from "lucide-react";
+import { 
+  CheckCircle2, 
+  AlertTriangle, 
+  ArrowDownRight, 
+  Users, 
+  TrendingUp, 
+  TrendingDown, 
+  PlusCircle, 
+  Trash2, 
+  Minus,
+  ArrowUp,   // Add this import
+  ArrowDown  // Add this import
+} from "lucide-react";
 import { TeamMetricCard } from "./TeamMetricCard";
 import { TeamStatusMetric } from "./TeamStatusMetric";
 import { SSCPerformanceTable } from "./SSCPerformanceTable";
