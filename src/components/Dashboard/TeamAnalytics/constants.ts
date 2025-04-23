@@ -1,5 +1,5 @@
 
-import { DashboardSectionKey } from "./types";
+import { DashboardSectionKey as DashboardSectionKeyType } from "./types";
 
 export const ADDITIONAL_TEAMS = [
   { id: 'Enterprise', name: 'Enterprise' },
@@ -10,11 +10,11 @@ export const ADDITIONAL_TEAMS = [
 ];
 
 export const defaultSections = [
-  { key: 'metrics' as DashboardSectionKey, label: 'Metrics Overview' },
-  { key: 'clients' as DashboardSectionKey, label: 'Client Distribution' },
-  { key: 'performance' as DashboardSectionKey, label: 'Performance' },
-  { key: 'health' as DashboardSectionKey, label: 'Health Scores' },
+  { key: 'metrics' as DashboardSectionKeyType, label: 'Metrics Overview' },
+  { key: 'clients' as DashboardSectionKeyType, label: 'Client Distribution' },
+  { key: 'performance' as DashboardSectionKeyType, label: 'Performance' },
+  { key: 'health' as DashboardSectionKeyType, label: 'Health Scores' },
 ];
 
-// Re-export the DashboardSectionKey type so it can be imported directly from constants
-export { DashboardSectionKey } from './types';
+// Use export type to resolve the TypeScript error
+export type { DashboardSectionKey } from './types';
