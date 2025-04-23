@@ -51,6 +51,39 @@ export type Database = {
         }
         Relationships: []
       }
+      communications: {
+        Row: {
+          client_id: string
+          content: string
+          created_at: string
+          date: string
+          id: string
+          sent_by: string
+          subject: string
+          type: string
+        }
+        Insert: {
+          client_id: string
+          content: string
+          created_at?: string
+          date?: string
+          id?: string
+          sent_by: string
+          subject: string
+          type: string
+        }
+        Update: {
+          client_id?: string
+          content?: string
+          created_at?: string
+          date?: string
+          id?: string
+          sent_by?: string
+          subject?: string
+          type?: string
+        }
+        Relationships: []
+      }
       renewal_forecasts: {
         Row: {
           client_id: string
@@ -84,6 +117,48 @@ export type Database = {
           likelihood_status?: string
           potential_upsell_value?: number | null
           renewal_date?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          assigned_by: string
+          assigned_to: string
+          completion_date: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          priority: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_by: string
+          assigned_to: string
+          completion_date?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_by?: string
+          assigned_to?: string
+          completion_date?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string
+          status?: string
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }

@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RenewalForecastPanel } from "@/components/Dashboard/RenewalForecastPanel";
 import { BackendOffersTracker } from "@/components/Dashboard/BackendOffersTracker";
 import { RenewalsSummary } from "@/components/Dashboard/RenewalsSummary";
+import { TaskManager } from "@/components/Dashboard/TaskManager";
+import { CommunicationCenter } from "@/components/Dashboard/CommunicationCenter";
 
 export default function Renewals() {
   const [activeSection, setActiveSection] = React.useState("forecasts");
@@ -19,6 +21,8 @@ export default function Renewals() {
               <TabsTrigger value="forecasts">Renewal Forecasts</TabsTrigger>
               <TabsTrigger value="offers">Backend Offers</TabsTrigger>
               <TabsTrigger value="summary">Renewals Summary</TabsTrigger>
+              <TabsTrigger value="tasks">Task Manager</TabsTrigger>
+              <TabsTrigger value="communications">Communications</TabsTrigger>
             </TabsList>
             
             <TabsContent value="forecasts" className="mt-0">
@@ -31,6 +35,14 @@ export default function Renewals() {
             
             <TabsContent value="summary" className="mt-0">
               <RenewalsSummary />
+            </TabsContent>
+
+            <TabsContent value="tasks" className="mt-0">
+              <TaskManager />
+            </TabsContent>
+
+            <TabsContent value="communications" className="mt-0">
+              <CommunicationCenter />
             </TabsContent>
           </Tabs>
         </div>
