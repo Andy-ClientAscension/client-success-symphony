@@ -45,13 +45,15 @@ export function useSyncedData(): SyncedDataResult {
     refetchOnWindowFocus: true, // Refetch when window regains focus
     refetchOnReconnect: true, // Refetch on network reconnection
     retry: 3, // Retry failed requests 3 times
-    onError: (error) => {
-      if (failureCount === 3) { // Show toast only after all retries fail
-        toast({
-          title: "Sync Error",
-          description: "Failed to refresh data. Will retry automatically.",
-          variant: "destructive",
-        });
+    meta: {
+      onError: () => {
+        if (failureCount === 3) { // Show toast only after all retries fail
+          toast({
+            title: "Sync Error",
+            description: "Failed to refresh data. Will retry automatically.",
+            variant: "destructive",
+          });
+        }
       }
     },
   });
