@@ -1,4 +1,3 @@
-
 import React from "react";
 import { UnifiedTabNavigation } from "@/components/Dashboard/Tabs/UnifiedTabNavigation";
 import { useTabNavigation } from "@/hooks/useTabNavigation";
@@ -46,9 +45,9 @@ export function DashboardTabsContainer({ data, metrics, teamData }: DashboardTab
       activeTab={activeTab}
       onTabChange={handleTabChange}
     >
-      {activeTab === "overview" && <TypedDashboardOverview data={data} />}
-      {activeTab === "company" && <TypedCompanyMetrics metrics={metrics} />}
-      {activeTab === "team" && <TypedTeamAnalytics teamData={teamData} />}
+      {activeTab === "overview" && <DashboardOverview data={data} />}
+      {activeTab === "company" && <CompanyMetrics metrics={metrics} />}
+      {activeTab === "team" && <TeamAnalytics teamData={teamData} />}
     </UnifiedTabNavigation>
   );
 }
