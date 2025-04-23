@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getClientMetricsByTeam, getAllClients, getCSMList } from "@/lib/data";
-import { CheckCircle2, AlertTriangle, ArrowDownRight, Users, TrendingUp, TrendingDown, Minus, PlusCircle, Trash2 } from "lucide-react";
+import { CheckCircle2, AlertTriangle, ArrowDownRight, Users, TrendingUp, TrendingDown, PlusCircle, Trash2 } from "lucide-react";
 import { TeamMetricCard } from "./TeamMetricCard";
 import { TeamStatusMetric } from "./TeamStatusMetric";
 import { SSCPerformanceTable } from "./SSCPerformanceTable";
@@ -56,10 +56,8 @@ export function TeamAnalytics({
   
   const clients = useMemo(() => getAllClients(), []);
   
-  // Build-your-own dashboard state (onboarding modal)
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  // Progressive disclosure: section toggles & order
   const [sectionStates, setSectionStates] = useState<{ key: DashboardSectionKey; visible: boolean }[]>(
     defaultSections.map(s => ({ key: s.key, visible: true }))
   );
@@ -162,8 +160,6 @@ export function TeamAnalytics({
     return <Minus className="h-3 w-3 ml-1" />;
   };
 
-  // --- Progressive Disclosure Functionality ---
-
   const handleToggleSection = (key: DashboardSectionKey) => {
     setSectionStates(prev =>
       prev.map(s =>
@@ -180,11 +176,9 @@ export function TeamAnalytics({
     setSectionOrder(reordered);
   };
 
-  // --- Onboarding Modal Functionality (show modal UI only) ---
   const handleShowOnboarding = () => setShowOnboarding(true);
   const handleHideOnboarding = () => setShowOnboarding(false);
 
-  // --- UI Section Renders ---
   const SectionComponents = {
     metrics: (
       <Card className="rounded-xl bg-background/60 p-2 md:p-8 mb-8 shadow-inner whitespace-pre-line">
@@ -340,7 +334,6 @@ export function TeamAnalytics({
 
   return (
     <div className="relative">
-      {/* "Build Your Dashboard" onboarding */}
       {showOnboarding && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-60">
           <div className="bg-white dark:bg-gray-900 max-w-lg w-full rounded-2xl shadow-xl px-8 py-12 flex flex-col items-center space-y-6 animate-fade-in">
@@ -350,7 +343,6 @@ export function TeamAnalytics({
               Use drag-and-drop to arrange them, and hide ones you don't want.<br/>
               You can always customize later!
             </p>
-            {/* Show switches for each section */}
             {sectionOrder.map((sectionKey, index) => {
               const secLabel = defaultSections.find(s => s.key === sectionKey)?.label || sectionKey;
               const isVisible = sectionStates.find(s => s.key === sectionKey)?.visible ?? true;
@@ -412,7 +404,6 @@ export function TeamAnalytics({
         </CardHeader>
 
         <CardContent className="pb-4 pt-2 space-y-6">
-          {/* Drag-and-drop and toggling for sections */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <span className="font-medium text-base">Sections</span>
@@ -435,7 +426,6 @@ export function TeamAnalytics({
                                 snapshot.isDragging ? "shadow-lg border-primary" : ""
                               }`}
                             >
-                              {/* Header row: drag handle, label, switch */}
                               <div className="flex items-center justify-between gap-4 px-4 py-2 bg-muted/60 border-b">
                                 <div {...dragProvided.dragHandleProps} className="cursor-move flex items-center">
                                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="1.5" fill="#999"/><circle cx="7" cy="12" r="1.5" fill="#999"/><circle cx="7" cy="17" r="1.5" fill="#999"/><circle cx="12" cy="7" r="1.5" fill="#999"/><circle cx="12" cy="12" r="1.5" fill="#999"/><circle cx="12" cy="17" r="1.5" fill="#999"/><circle cx="17" cy="7" r="1.5" fill="#999"/><circle cx="17" cy="12" r="1.5" fill="#999"/><circle cx="17" cy="17" r="1.5" fill="#999"/></svg>
@@ -450,7 +440,6 @@ export function TeamAnalytics({
                               </div>
                               {isVisible && (
                                 <div className="bg-background px-2 py-4 md:px-8">
-                                  {/* Render corresponding section */}
                                   {SectionComponents[sectionKey]}
                                 </div>
                               )}
