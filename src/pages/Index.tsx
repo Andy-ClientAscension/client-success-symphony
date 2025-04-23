@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout/Layout";
 import { useEffect, useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -19,13 +18,13 @@ import { BackgroundTasksPanel } from "@/components/Dashboard/BackgroundTasksPane
 import { MetricsSummary } from "@/components/Dashboard/MetricsSummary";
 import { DashboardErrorAlert } from "@/components/Dashboard/DashboardErrorAlert";
 import { DataSyncPanel } from "@/components/Dashboard/DataSyncPanel";
+import { useDashboardRefresh } from "@/hooks/useDashboardRefresh";
 
 export default function Index() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
   const { persistDashboard, togglePersistDashboard } = useDashboardPersistence();
   const [performanceMode, setPerformanceMode] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [clients, setClients] = useState([]);
   const [insights, isInsightsLoading] = useRealtimeData(STORAGE_KEYS.AI_INSIGHTS, []);
   const [comparisons, isComparisonsLoading] = useRealtimeData('clientComparisons', []);
@@ -70,21 +69,7 @@ export default function Index() {
     }
   }, [toast]);
 
-  const handleRefreshData = useCallback(() => {
-    setIsRefreshing(true);
-    announceToScreenReader('Refreshing dashboard data', 'polite');
-    
-    analyzeClients(true)
-      .then(() => {
-        announceToScreenReader('Dashboard data refresh complete', 'polite');
-      })
-      .catch(error => {
-        announceToScreenReader(`Refresh failed: ${error.message}`, 'assertive');
-      })
-      .finally(() => {
-        setIsRefreshing(false);
-      });
-  }, [analyzeClients]);
+  const { isRefreshing, handleRefreshData } = useDashboardRefresh(analyzeClients, announceToScreenReader);
 
   const clientMetrics = {
     total: clientCounts.active + clientCounts["at-risk"] + clientCounts.new + clientCounts.churned,
@@ -96,7 +81,6 @@ export default function Index() {
     growthRate: 12
   };
 
-  // Handle tab changes for screen reader announcements
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     announceToScreenReader(`${value} tab activated`, 'polite');
