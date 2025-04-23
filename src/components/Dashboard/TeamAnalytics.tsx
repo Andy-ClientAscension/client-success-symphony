@@ -14,7 +14,7 @@ import { TeamManagementDialog } from "./TeamManagementDialog";
 import { useToast } from "@/hooks/use-toast";
 import { STORAGE_KEYS, loadData } from "@/utils/persistence";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Plus, Minus } from "lucide-react";
+import { Plus } from "lucide-react";
 
 const ADDITIONAL_TEAMS = [
   { id: "Enterprise", name: "Enterprise" },

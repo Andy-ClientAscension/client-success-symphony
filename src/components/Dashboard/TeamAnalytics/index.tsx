@@ -1,2 +1,4 @@
 
-export { TeamAnalytics } from "./TeamAnalytics";
+import { TeamAnalytics } from "../TeamAnalytics";
+
+export { TeamAnalytics };
