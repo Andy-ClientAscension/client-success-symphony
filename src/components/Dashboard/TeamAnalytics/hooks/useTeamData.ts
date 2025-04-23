@@ -47,24 +47,26 @@ export function useTeamData(selectedTeam: string = 'all') {
           total: filteredClients.length
         };
         
-        // Calculate average health score - using optional chaining for healthScore
+        // Calculate average health score
+        // Use optional chaining and nullish coalescing
+        // Change from client.healthScore to client.npsScore as per the Client interface
         const totalHealth = filteredClients.reduce((sum, client) => {
-          // Use optional chaining and nullish coalescing
-          return sum + (client?.healthScore ?? 0);
+          // Use npsScore instead of healthScore and handle nullish values
+          return sum + (client?.npsScore ?? 0);
         }, 0);
         
         const averageHealth = statusCounts.total > 0 
           ? totalHealth / statusCounts.total 
           : 0;
         
-        // Extract trends from teamMetrics if available, otherwise use defaults
-        const trends = teamMetrics.trends || defaultTrends;
+        // Since teamMetrics doesn't have a trends property, we'll use our default trends
+        // or any mock data we want to provide
         
         setTeamData({
           metrics: teamMetrics,
           statusCounts,
           averageHealth,
-          trends
+          trends: defaultTrends // Use the default trends since it doesn't exist in teamMetrics
         });
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Failed to fetch team data'));
