@@ -32,6 +32,11 @@ interface DashboardTabsContainerProps {
   teamData?: any;
 }
 
+// Declare the components with their prop types
+const TypedDashboardOverview: React.FC<DashboardOverviewProps> = DashboardOverview;
+const TypedCompanyMetrics: React.FC<CompanyMetricsProps> = CompanyMetrics;
+const TypedTeamAnalytics: React.FC<TeamAnalyticsProps> = TeamAnalytics;
+
 export function DashboardTabsContainer({ data, metrics, teamData }: DashboardTabsContainerProps) {
   const { activeTab, handleTabChange } = useTabNavigation<"overview" | "company" | "team">("overview");
 
@@ -41,9 +46,9 @@ export function DashboardTabsContainer({ data, metrics, teamData }: DashboardTab
       activeTab={activeTab}
       onTabChange={handleTabChange}
     >
-      {activeTab === "overview" && <DashboardOverview data={data} />}
-      {activeTab === "company" && <CompanyMetrics metrics={metrics} />}
-      {activeTab === "team" && <TeamAnalytics teamData={teamData} />}
+      {activeTab === "overview" && <TypedDashboardOverview data={data} />}
+      {activeTab === "company" && <TypedCompanyMetrics metrics={metrics} />}
+      {activeTab === "team" && <TypedTeamAnalytics teamData={teamData} />}
     </UnifiedTabNavigation>
   );
 }
