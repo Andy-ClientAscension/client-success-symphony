@@ -14,8 +14,17 @@ import { DashboardSection } from './TeamAnalytics/components/DashboardSection';
 import { useTeamMetrics } from './TeamAnalytics/hooks/useTeamMetrics';
 import { useDashboardConfig } from './TeamAnalytics/hooks/useDashboardConfig';
 import { Skeleton } from "@/components/ui/skeleton";
+import { defaultSections, DashboardSectionKey } from './TeamAnalytics/constants';
 
-export function TeamAnalytics() {
+export function TeamAnalytics({ 
+  selectedTeam,
+  dateRange,
+  searchQuery
+}: {
+  selectedTeam?: string;
+  dateRange?: string;
+  searchQuery?: string;
+}) {
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const { copy } = useCopyToClipboard();
@@ -26,7 +35,9 @@ export function TeamAnalytics() {
   const { config, toggleSectionExpansion, removeSection, addSection, changeTeam, 
           resetToDefaults, getShareableConfigUrl, availableSections, availableTeams } = dashboardConfig;
 
-  const { metrics, loading, error, rawData, refetch } = useTeamMetrics(config.selectedTeam);
+  // If props were provided, use them (from parent components), otherwise use from config
+  const effectiveTeam = selectedTeam || config.selectedTeam;
+  const { metrics, loading, error, rawData, refetch } = useTeamMetrics(effectiveTeam);
 
   const handleShare = () => {
     const shareableUrl = getShareableConfigUrl();

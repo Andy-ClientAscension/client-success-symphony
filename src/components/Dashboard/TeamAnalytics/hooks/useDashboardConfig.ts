@@ -23,7 +23,7 @@ export function useDashboardConfig(userId: string = 'default') {
     // Default configuration
     return {
       visibleSections: defaultSections.map(section => section.key),
-      expandedSections: ['metrics'], // Only expand metrics by default
+      expandedSections: ['metrics'] as DashboardSectionKey[], // Only expand metrics by default
       selectedTeam: 'Enterprise', // Default team
     };
   });
@@ -66,9 +66,9 @@ export function useDashboardConfig(userId: string = 'default') {
   };
 
   const resetToDefaults = () => {
-    const defaultConfig = {
+    const defaultConfig: DashboardConfig = {
       visibleSections: defaultSections.map(section => section.key),
-      expandedSections: ['metrics'],
+      expandedSections: ['metrics'] as DashboardSectionKey[],
       selectedTeam: 'Enterprise',
     };
     

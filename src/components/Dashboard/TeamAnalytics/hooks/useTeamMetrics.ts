@@ -14,7 +14,7 @@ export function useTeamMetrics(teamId: string) {
   });
 
   useEffect(() => {
-    if (!loading && !error) {
+    if (!loading && !error && teamData) {
       const { statusCounts, averageHealth, metrics: teamMetrics } = teamData;
       const total = statusCounts.total || 1; // Avoid division by zero
       
@@ -23,7 +23,7 @@ export function useTeamMetrics(teamId: string) {
         atRiskRate: (statusCounts.atRisk / total) * 100,
         churnRate: (statusCounts.churned / total) * 100,
         averageHealth,
-        totalMRR: teamMetrics.totalMRR || 0,
+        totalMRR: teamMetrics?.totalMRR || 0,
         totalClients: statusCounts.total
       });
     }
