@@ -14,18 +14,6 @@ const dashboardTabs = [
 ];
 
 // Define proper interfaces for component props
-interface DashboardOverviewProps {
-  data?: any;
-}
-
-interface CompanyMetricsProps {
-  metrics?: any;
-}
-
-interface TeamAnalyticsProps {
-  teamData?: any;
-}
-
 interface DashboardTabsContainerProps {
   data?: any;
   metrics?: any;
@@ -35,20 +23,15 @@ interface DashboardTabsContainerProps {
 export function DashboardTabsContainer({ data, metrics, teamData }: DashboardTabsContainerProps) {
   const { activeTab, handleTabChange } = useTabNavigation<"overview" | "company" | "team">("overview");
 
-  // We need to cast the components to React.FC types with the right props
-  const DashboardOverviewWithProps = DashboardOverview as React.FC<DashboardOverviewProps>;
-  const CompanyMetricsWithProps = CompanyMetrics as React.FC<CompanyMetricsProps>;
-  const TeamAnalyticsWithProps = TeamAnalytics as React.FC<TeamAnalyticsProps>;
-
   return (
     <UnifiedTabNavigation
       tabs={dashboardTabs}
       activeTab={activeTab}
       onTabChange={handleTabChange}
     >
-      {activeTab === "overview" && <DashboardOverviewWithProps data={data} />}
-      {activeTab === "company" && <CompanyMetricsWithProps metrics={metrics} />}
-      {activeTab === "team" && <TeamAnalyticsWithProps teamData={teamData} />}
+      {activeTab === "overview" && <DashboardOverview data={data} />}
+      {activeTab === "company" && <CompanyMetrics metrics={metrics} />}
+      {activeTab === "team" && <TeamAnalytics teamData={teamData} />}
     </UnifiedTabNavigation>
   );
 }
