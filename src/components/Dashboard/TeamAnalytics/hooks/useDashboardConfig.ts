@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
-import { DashboardSectionKey, defaultSections, ADDITIONAL_TEAMS } from '../constants';
+import { DashboardSectionKey } from '../types';
+import { defaultSections, ADDITIONAL_TEAMS } from '../constants';
 
 interface DashboardConfig {
   visibleSections: DashboardSectionKey[];

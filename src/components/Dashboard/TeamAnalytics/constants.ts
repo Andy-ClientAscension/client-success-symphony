@@ -15,3 +15,6 @@ export const defaultSections = [
   { key: 'performance' as DashboardSectionKey, label: 'Performance' },
   { key: 'health' as DashboardSectionKey, label: 'Health Scores' },
 ];
+
+// Re-export the DashboardSectionKey type so it can be imported directly from constants
+export { DashboardSectionKey } from './types';

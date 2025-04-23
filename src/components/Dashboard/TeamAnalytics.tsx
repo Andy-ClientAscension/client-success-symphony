@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,8 @@ import { DashboardSection } from './TeamAnalytics/components/DashboardSection';
 import { useTeamMetrics } from './TeamAnalytics/hooks/useTeamMetrics';
 import { useDashboardConfig } from './TeamAnalytics/hooks/useDashboardConfig';
 import { Skeleton } from "@/components/ui/skeleton";
-import { defaultSections, DashboardSectionKey } from './TeamAnalytics/constants';
+import { defaultSections } from './TeamAnalytics/constants';
+import { DashboardSectionKey } from './TeamAnalytics/types';
 
 export function TeamAnalytics({ 
   selectedTeam,
@@ -30,12 +30,10 @@ export function TeamAnalytics({
   const { copy } = useCopyToClipboard();
   const { toast } = useToast();
 
-  // Use our custom hooks
   const dashboardConfig = useDashboardConfig();
   const { config, toggleSectionExpansion, removeSection, addSection, changeTeam, 
           resetToDefaults, getShareableConfigUrl, availableSections, availableTeams } = dashboardConfig;
 
-  // If props were provided, use them (from parent components), otherwise use from config
   const effectiveTeam = selectedTeam || config.selectedTeam;
   const { metrics, loading, error, rawData, refetch } = useTeamMetrics(effectiveTeam);
 
@@ -49,7 +47,6 @@ export function TeamAnalytics({
     setShareDialogOpen(false);
   };
 
-  // Render loading state
   if (loading) {
     return (
       <div className="space-y-6 p-4">
@@ -62,7 +59,6 @@ export function TeamAnalytics({
     );
   }
 
-  // Render error state
   if (error) {
     return (
       <Card className="bg-red-50 dark:bg-red-900/10">
@@ -80,7 +76,6 @@ export function TeamAnalytics({
     );
   }
 
-  // Calculate indicator trends with appropriate display components
   const renderTrendIndicator = (value: number) => {
     if (value > 0) {
       return <ArrowUp className="h-4 w-4 text-green-500" />;
@@ -90,12 +85,10 @@ export function TeamAnalytics({
     return null;
   };
 
-  // Format percentages
   const formatPercent = (value: number) => {
     return `${value.toFixed(1)}%`;
   };
 
-  // Render content based on visible sections
   const renderSection = (sectionKey: string) => {
     switch (sectionKey) {
       case 'metrics':
@@ -225,7 +218,6 @@ export function TeamAnalytics({
 
   return (
     <div className="space-y-6 p-4">
-      {/* Header with Team selector and Action buttons */}
       <div className="flex flex-wrap gap-4 justify-between items-center mb-6">
         <div className="flex items-center gap-2 flex-grow">
           <Select 
@@ -274,7 +266,6 @@ export function TeamAnalytics({
         </div>
       </div>
 
-      {/* Dashboard Sections */}
       <div className="space-y-6">
         {config.visibleSections.map((sectionKey) => {
           const sectionConfig = defaultSections.find(s => s.key === sectionKey);
@@ -296,7 +287,6 @@ export function TeamAnalytics({
         })}
       </div>
 
-      {/* Customize Dashboard Dialog */}
       <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -317,7 +307,6 @@ export function TeamAnalytics({
                       if (checked) {
                         addSection(section.key);
                       } else if (config.visibleSections.length > 1) {
-                        // Prevent removing all sections
                         removeSection(section.key);
                       } else {
                         toast({
@@ -348,7 +337,6 @@ export function TeamAnalytics({
         </DialogContent>
       </Dialog>
 
-      {/* Share Dashboard Dialog */}
       <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
