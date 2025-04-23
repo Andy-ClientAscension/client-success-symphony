@@ -8,9 +8,9 @@ import { useDashboardData } from '@/hooks/use-dashboard-data';
 export function HealthJourneyTracker() {
   const { clients } = useDashboardData();
   
-  // Calculate average health score
+  // Calculate average health score using npsScore instead of healthScore
   const avgHealthScore = Math.round(
-    clients.reduce((acc, client) => acc + (client.healthScore || 0), 0) / clients.length
+    clients.reduce((acc, client) => acc + (client.npsScore || 0), 0) / clients.length
   );
 
   return (
@@ -43,11 +43,11 @@ export function HealthJourneyTracker() {
                 >
                   <div className="flex justify-between text-sm">
                     <span>{client.name}</span>
-                    <span className="font-medium">{client.healthScore}%</span>
+                    <span className="font-medium">{client.npsScore || 0}%</span>
                   </div>
                   <Progress 
-                    value={client.healthScore} 
-                    aria-label={`${client.name}'s health score is ${client.healthScore}%`}
+                    value={client.npsScore || 0} 
+                    aria-label={`${client.name}'s health score is ${client.npsScore || 0}%`}
                   />
                 </div>
               ))}

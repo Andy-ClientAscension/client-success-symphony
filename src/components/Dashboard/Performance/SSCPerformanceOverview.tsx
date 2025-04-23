@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { ResponsiveGrid } from '../Shared/ResponsiveGrid';
-import { SSCPerformanceMetrics } from '../Dashboard/Metrics/SSCPerformanceMetrics';
+import { SSCPerformanceMetrics } from '../Metrics/SSCPerformanceMetrics';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 
 export function SSCPerformanceOverview() {
