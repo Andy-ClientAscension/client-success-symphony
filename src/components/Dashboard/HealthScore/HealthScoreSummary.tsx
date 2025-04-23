@@ -81,57 +81,68 @@ export function HealthScoreSummary({ clients }: HealthScoreSummaryProps) {
     };
   }, [clients.length, healthScores]);
 
+  const hasData = metrics.clientsWithScores > 0;
+
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-semibold">Health Score Summary</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-gray-50 p-4 rounded-lg border">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-medium text-gray-600">Average Score</div>
-              <Activity className="h-4 w-4 text-blue-500" />
+        {hasData ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-gray-50 p-4 rounded-lg border">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm font-medium text-gray-600">Average Score</div>
+                <Activity className="h-4 w-4 text-blue-500" />
+              </div>
+              <div className="text-2xl font-bold">{metrics.averageScore}</div>
+              <div className="text-xs text-gray-500 mt-1">
+                Based on {metrics.clientsWithScores} clients
+              </div>
             </div>
-            <div className="text-2xl font-bold">{metrics.averageScore}</div>
-            <div className="text-xs text-gray-500 mt-1">
-              Based on {metrics.clientsWithScores} clients
+            
+            <div className="bg-gray-50 p-4 rounded-lg border">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm font-medium text-gray-600">Score Coverage</div>
+                <HelpCircle className="h-4 w-4 text-blue-500" />
+              </div>
+              <div className="text-2xl font-bold">{metrics.coveragePercent}%</div>
+              <div className="text-xs text-gray-500 mt-1">
+                {metrics.missingScores} clients without scores
+              </div>
+            </div>
+            
+            <div className="bg-gray-50 p-4 rounded-lg border">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm font-medium text-gray-600">Healthy Clients</div>
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+              </div>
+              <div className="text-2xl font-bold text-green-600">{metrics.highPercent}%</div>
+              <div className="text-xs text-gray-500 mt-1">
+                {metrics.highScores} clients with 8-10 score
+              </div>
+            </div>
+            
+            <div className="bg-gray-50 p-4 rounded-lg border">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm font-medium text-gray-600">At Risk Clients</div>
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+              </div>
+              <div className="text-2xl font-bold text-amber-600">{metrics.lowPercent}%</div>
+              <div className="text-xs text-gray-500 mt-1">
+                {metrics.lowScores} clients with 1-4 score
+              </div>
             </div>
           </div>
-          
-          <div className="bg-gray-50 p-4 rounded-lg border">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-medium text-gray-600">Score Coverage</div>
-              <HelpCircle className="h-4 w-4 text-blue-500" />
-            </div>
-            <div className="text-2xl font-bold">{metrics.coveragePercent}%</div>
-            <div className="text-xs text-gray-500 mt-1">
-              {metrics.missingScores} clients without scores
-            </div>
+        ) : (
+          <div className="text-center py-6 px-4">
+            <p className="text-muted-foreground">No health score data available.</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Add health scores to clients to see summary metrics.
+            </p>
           </div>
-          
-          <div className="bg-gray-50 p-4 rounded-lg border">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-medium text-gray-600">Healthy Clients</div>
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
-            </div>
-            <div className="text-2xl font-bold text-green-600">{metrics.highPercent}%</div>
-            <div className="text-xs text-gray-500 mt-1">
-              {metrics.highScores} clients with 8-10 score
-            </div>
-          </div>
-          
-          <div className="bg-gray-50 p-4 rounded-lg border">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-medium text-gray-600">At Risk Clients</div>
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
-            </div>
-            <div className="text-2xl font-bold text-amber-600">{metrics.lowPercent}%</div>
-            <div className="text-xs text-gray-500 mt-1">
-              {metrics.lowScores} clients with 1-4 score
-            </div>
-          </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

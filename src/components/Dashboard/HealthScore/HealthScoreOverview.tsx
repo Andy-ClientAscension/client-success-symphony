@@ -61,6 +61,9 @@ export function HealthScoreOverview({ clients }: HealthScoreOverviewProps) {
     });
   }, [healthScores]);
   
+  // Check if we have any real data
+  const hasDistributionData = distributionData.some(item => item.value > 0);
+  
   // Prepare data for team comparison
   const teamComparisonData = useMemo(() => {
     const teamScores = new Map<string, number[]>();
@@ -84,6 +87,9 @@ export function HealthScoreOverview({ clients }: HealthScoreOverviewProps) {
     }).sort((a, b) => b.avgScore - a.avgScore);
   }, [healthScores]);
   
+  // Check if we have any team data
+  const hasTeamData = teamComparisonData.length > 0;
+  
   const handleChartClick = () => {
     toast({
       title: "Chart Interaction",
@@ -101,71 +107,83 @@ export function HealthScoreOverview({ clients }: HealthScoreOverviewProps) {
           <div>
             <h3 className="text-sm font-medium mb-4">Score Distribution</h3>
             <div className="h-[300px]" onClick={handleChartClick}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={distributionData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                    nameKey="name"
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                  >
-                    {distributionData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Legend />
-                  <Tooltip 
-                    formatter={(value) => [`${value} clients`, 'Count']}
-                    labelFormatter={(label) => `Score ${label}`}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+              {hasDistributionData ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={distributionData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                      nameKey="name"
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {distributionData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Legend />
+                    <Tooltip 
+                      formatter={(value) => [`${value} clients`, 'Count']}
+                      labelFormatter={(label) => `Score ${label}`}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-muted-foreground text-sm">No health score data available</p>
+                </div>
+              )}
             </div>
           </div>
           
           <div>
             <h3 className="text-sm font-medium mb-4">Team Comparison</h3>
             <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={teamComparisonData}
-                  margin={{
-                    top: 5,
-                    right: 30,
-                    left: 20,
-                    bottom: 5,
-                  }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="team" />
-                  <YAxis domain={[0, 10]} />
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        return (
-                          <div className="bg-white p-2 border rounded shadow-sm">
-                            <p className="font-medium">{payload[0].payload.team}</p>
-                            <p>Avg Score: {payload[0].payload.avgScore}</p>
-                            <p>Clients: {payload[0].payload.count}</p>
-                          </div>
-                        );
-                      }
-                      return null;
+              {hasTeamData ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={teamComparisonData}
+                    margin={{
+                      top: 5,
+                      right: 30,
+                      left: 20,
+                      bottom: 5,
                     }}
-                  />
-                  <Bar 
-                    dataKey="avgScore" 
-                    fill="#8884d8" 
-                    name="Average Score"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="team" />
+                    <YAxis domain={[0, 10]} />
+                    <Tooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="bg-white p-2 border rounded shadow-sm">
+                              <p className="font-medium">{payload[0].payload.team}</p>
+                              <p>Avg Score: {payload[0].payload.avgScore}</p>
+                              <p>Clients: {payload[0].payload.count}</p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Bar 
+                      dataKey="avgScore" 
+                      fill="#8884d8" 
+                      name="Average Score"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-muted-foreground text-sm">No team data available</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

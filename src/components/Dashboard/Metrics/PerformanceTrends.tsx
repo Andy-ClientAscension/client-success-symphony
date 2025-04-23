@@ -16,6 +16,27 @@ interface PerformanceTrendsProps {
 }
 
 export function PerformanceTrends({ npsMonthlyData, churnData }: PerformanceTrendsProps) {
+  // Default data in case the props are empty
+  const hasNpsData = Array.isArray(npsMonthlyData) && npsMonthlyData.length > 0;
+  const hasChurnData = Array.isArray(churnData) && churnData.length > 0;
+  
+  // Fallback data if needed
+  const defaultNpsData = [
+    { month: "Jan", score: 0 },
+    { month: "Feb", score: 0 },
+    { month: "Mar", score: 0 }
+  ];
+  
+  const defaultChurnData = [
+    { month: "Jan", rate: 0 },
+    { month: "Feb", rate: 0 },
+    { month: "Mar", rate: 0 }
+  ];
+  
+  // Use actual data or fallback
+  const npsData = hasNpsData ? npsMonthlyData : defaultNpsData;
+  const churningData = hasChurnData ? churnData : defaultChurnData;
+
   return (
     <Card className="border shadow-sm">
       <CardHeader className="p-3 pb-0">
@@ -31,7 +52,7 @@ export function PerformanceTrends({ npsMonthlyData, churnData }: PerformanceTren
             <div className="h-[150px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
-                  data={npsMonthlyData}
+                  data={npsData}
                   margin={{ top: 5, right: 5, left: 0, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
@@ -46,13 +67,18 @@ export function PerformanceTrends({ npsMonthlyData, churnData }: PerformanceTren
                   />
                 </LineChart>
               </ResponsiveContainer>
+              {!hasNpsData && (
+                <div className="text-center text-xs text-muted-foreground mt-2">
+                  No NPS data available
+                </div>
+              )}
             </div>
           </TabsContent>
           <TabsContent value="churn" className="pt-2">
             <div className="h-[150px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
-                  data={churnData}
+                  data={churningData}
                   margin={{ top: 5, right: 5, left: 0, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
@@ -67,6 +93,11 @@ export function PerformanceTrends({ npsMonthlyData, churnData }: PerformanceTren
                   />
                 </LineChart>
               </ResponsiveContainer>
+              {!hasChurnData && (
+                <div className="text-center text-xs text-muted-foreground mt-2">
+                  No churn data available
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>

@@ -13,9 +13,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { HealthScoreOverview } from "@/components/Dashboard/HealthScore/HealthScoreOverview";
 import { HealthScoreSummary } from "@/components/Dashboard/HealthScore/HealthScoreSummary";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
 
 export default function Dashboard() {
   const { data, error, isLoading, lastUpdated, isRefreshing } = useSyncedData();
+  const { npsData, churnData } = useDashboardData();
 
   return (
     <Layout>
@@ -45,22 +47,8 @@ export default function Dashboard() {
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <PerformanceTrends 
-                npsMonthlyData={[
-                  { month: "Jan", score: 8.2 },
-                  { month: "Feb", score: 7.9 },
-                  { month: "Mar", score: 8.5 },
-                  { month: "Apr", score: 8.1 },
-                  { month: "May", score: 8.4 },
-                  { month: "Jun", score: 8.7 }
-                ]}
-                churnData={[
-                  { month: "Jan", rate: 2.1 },
-                  { month: "Feb", rate: 1.8 },
-                  { month: "Mar", rate: 2.3 },
-                  { month: "Apr", rate: 1.9 },
-                  { month: "May", rate: 2.2 },
-                  { month: "Jun", rate: 1.7 }
-                ]}
+                npsMonthlyData={npsData?.trend || []}
+                churnData={churnData || []}
               />
               <HealthScoreOverview clients={data?.clients || []} />
             </div>
