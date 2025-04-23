@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -7,6 +6,7 @@ import Index from './pages/Index';
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
+import { createBrowserRouter } from "react-router-dom";
 
 // Wrapper component for route error handling
 const RouteErrorBoundary = ({ children }: { children: React.ReactNode }) => (
@@ -17,33 +17,31 @@ const RouteErrorBoundary = ({ children }: { children: React.ReactNode }) => (
   </ErrorBoundary>
 );
 
-export const routes = [
+const router = createBrowserRouter([
   {
-    path: '/',
-    element: (
-      <RouteErrorBoundary>
-        <ProtectedRoute><Index /></ProtectedRoute>
-      </RouteErrorBoundary>
-    ),
+    path: "/",
+    element: <RouteErrorBoundary>
+      <ProtectedRoute><Index /></ProtectedRoute>
+    </RouteErrorBoundary>
   },
   {
-    path: '/diagnostic',
+    path: "/diagnostic",
     element: <RouteErrorBoundary><DiagnosticIndex /></RouteErrorBoundary>,
   },
   {
-    path: '/dashboard',
-    element: (
-      <RouteErrorBoundary>
-        <ProtectedRoute><Index /></ProtectedRoute>
-      </RouteErrorBoundary>
-    ),
+    path: "/dashboard",
+    element: <RouteErrorBoundary>
+      <ProtectedRoute><Index /></ProtectedRoute>
+    </RouteErrorBoundary>
   },
   {
-    path: '/login',
+    path: "/login",
     element: <RouteErrorBoundary><Login /></RouteErrorBoundary>,
   },
   {
-    path: '/signup',
+    path: "/signup",
     element: <RouteErrorBoundary><SignUp /></RouteErrorBoundary>,
   },
-];
+]);
+
+export default router;
