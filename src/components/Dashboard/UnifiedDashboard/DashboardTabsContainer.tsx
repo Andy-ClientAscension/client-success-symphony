@@ -29,9 +29,9 @@ export function DashboardTabsContainer({ data, metrics, teamData }: DashboardTab
       activeTab={activeTab}
       onTabChange={handleTabChange}
     >
-      {activeTab === "overview" && <DashboardOverview data={data} />}
-      {activeTab === "company" && <CompanyMetrics metrics={metrics} />}
-      {activeTab === "team" && <TeamAnalytics teamData={teamData} />}
+      {activeTab === "overview" && <DashboardOverview />}
+      {activeTab === "company" && <CompanyMetrics />}
+      {activeTab === "team" && <TeamAnalytics />}
     </UnifiedTabNavigation>
   );
 }
