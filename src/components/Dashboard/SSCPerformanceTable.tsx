@@ -1,6 +1,7 @@
+
 import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { HelpCircle, PlusCircle } from "lucide-react";
+import { HelpCircle, PlusCircle, Trash2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
@@ -8,10 +9,22 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { VirtualizedTable, Column } from "./Shared/VirtualizedTable";
 import { SSCPerformanceMetrics } from "./Metrics/SSCPerformanceMetrics";
+import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog";
+import type API from "@/types/api";
 
 interface SSCPerformanceTableProps {
   csmList: string[];
-  clients: Client[];
+  clients: API.Client[];
   selectedTeam: string;
 }
 

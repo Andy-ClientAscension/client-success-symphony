@@ -3,10 +3,10 @@ import React from 'react';
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ResponsiveGrid } from "../Shared/ResponsiveGrid";
-import { MetricCard } from "@/components/molecules/MetricCard";
+import { MetricCard } from "@/components/Dashboard/Metrics/MetricCard";
 import { Users, Heart, DollarSign, Gauge } from "lucide-react";
-import { Client } from "@/lib/data";
 import { formatCurrency } from "@/utils/analyticsUtils";
+import type API from "@/types/api";
 
 interface SSCMetrics {
   studentCount: number;
@@ -17,7 +17,7 @@ interface SSCMetrics {
 
 interface SSCPerformanceMetricsProps {
   csm: string;
-  clients: Client[];
+  clients: API.Client[];
 }
 
 export function SSCPerformanceMetrics({ csm, clients }: SSCPerformanceMetricsProps) {
@@ -43,43 +43,47 @@ export function SSCPerformanceMetrics({ csm, clients }: SSCPerformanceMetricsPro
           <MetricCard
             title="Active Students"
             value={metrics.studentCount}
-            icon={<Users className="h-4 w-4" />}
             trend={{
               value: "10",
               direction: "up",
               text: "vs last month"
             }}
-          />
+          >
+            <Users className="h-4 w-4" />
+          </MetricCard>
           <MetricCard
             title="Retention Rate"
             value={`${metrics.retentionRate}%`}
-            icon={<Heart className="h-4 w-4" />}
             trend={{
               value: "5",
               direction: "up",
               text: "vs last month"
             }}
-          />
+          >
+            <Heart className="h-4 w-4" />
+          </MetricCard>
           <MetricCard
             title="Revenue Managed"
             value={formatCurrency(metrics.revenue)}
-            icon={<DollarSign className="h-4 w-4" />}
             trend={{
               value: "8",
               direction: "up",
               text: "vs last month"
             }}
-          />
+          >
+            <DollarSign className="h-4 w-4" />
+          </MetricCard>
           <MetricCard
             title="Health Score"
             value={`${metrics.healthScore}%`}
-            icon={<Gauge className="h-4 w-4" />}
             trend={{
               value: "3",
               direction: "up",
               text: "vs last month"
             }}
-          />
+          >
+            <Gauge className="h-4 w-4" />
+          </MetricCard>
         </ResponsiveGrid>
       </ScrollArea>
     </Card>

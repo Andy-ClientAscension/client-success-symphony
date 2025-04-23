@@ -9,6 +9,7 @@ import { withMetricErrorBoundary } from "./withMetricErrorBoundary";
 interface MetricCardProps {
   title: string;
   value: number | string;
+  children?: React.ReactNode;
   trend?: {
     value: string;
     direction: "up" | "down" | "neutral";
@@ -20,10 +21,13 @@ interface MetricCardProps {
   };
 }
 
-function MetricCardComponent({ title, value, trend, badge }: MetricCardProps) {
+function MetricCardComponent({ title, value, children, trend, badge }: MetricCardProps) {
   return (
     <BaseMetricCard title={title}>
-      <MetricValue value={value} />
+      <div className="flex items-center gap-2">
+        {children && <div className="text-primary">{children}</div>}
+        <MetricValue value={value} />
+      </div>
       {trend && <MetricTrend {...trend} />}
       {badge && (
         <div className="flex items-center text-xs">
