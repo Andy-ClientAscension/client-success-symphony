@@ -22,7 +22,11 @@ export function useCommunications() {
 
       if (error) throw error;
 
-      setCommunications(data || []);
+      // Type-cast the communications data
+      setCommunications((data || []).map(comm => ({
+        ...comm,
+        type: comm.type as Tasks.Communication['type']
+      })));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch communications');
     } finally {
@@ -45,8 +49,14 @@ export function useCommunications() {
 
       if (error) throw error;
 
-      setCommunications(prev => [data, ...prev]);
-      return data;
+      // Type-cast the new communication
+      const typedComm: Tasks.Communication = {
+        ...data,
+        type: data.type as Tasks.Communication['type']
+      };
+
+      setCommunications(prev => [typedComm, ...prev]);
+      return typedComm;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create communication');
       return null;

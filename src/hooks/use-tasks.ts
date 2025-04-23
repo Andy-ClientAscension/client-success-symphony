@@ -22,7 +22,12 @@ export function useTasks() {
 
       if (error) throw error;
 
-      setTasks(data || []);
+      // Type-cast the data to ensure it matches our Task interface
+      setTasks((data || []).map(task => ({
+        ...task,
+        priority: task.priority as Tasks.Priority,
+        status: task.status as Tasks.Status
+      })));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch tasks');
     } finally {
@@ -45,8 +50,15 @@ export function useTasks() {
 
       if (error) throw error;
 
-      setTasks(prev => [...prev, data]);
-      return data;
+      // Type-cast the new task
+      const typedTask: Tasks.Task = {
+        ...data,
+        priority: data.priority as Tasks.Priority,
+        status: data.status as Tasks.Status
+      };
+
+      setTasks(prev => [...prev, typedTask]);
+      return typedTask;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create task');
       return null;
@@ -64,10 +76,17 @@ export function useTasks() {
 
       if (error) throw error;
 
+      // Type-cast the updated task
+      const typedTask: Tasks.Task = {
+        ...data,
+        priority: data.priority as Tasks.Priority,
+        status: data.status as Tasks.Status
+      };
+
       setTasks(prev => 
-        prev.map(task => task.id === taskId ? data : task)
+        prev.map(task => task.id === taskId ? typedTask : task)
       );
-      return data;
+      return typedTask;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update task');
       return null;

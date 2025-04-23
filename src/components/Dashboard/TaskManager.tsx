@@ -11,26 +11,30 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { Tasks } from '@/types/tasks';
+import { useAuth } from '@/hooks/use-auth';
 
 export function TaskManager() {
   const { tasks, createTask, updateTask } = useTasks();
+  const { user } = useAuth();
   const [newTask, setNewTask] = useState<Partial<Tasks.Task>>({
     title: '',
     description: '',
     priority: 'medium',
-    status: 'pending'
+    status: 'pending',
+    assigned_to: ''
   });
 
   const handleCreateTask = async () => {
-    if (!newTask.title) return;
+    if (!newTask.title || !user) return;
 
     await createTask({
       title: newTask.title,
-      description: newTask.description,
-      priority: newTask.priority || 'medium',
-      status: newTask.status || 'pending',
+      description: newTask.description || '',
+      priority: newTask.priority as Tasks.Priority || 'medium',
+      status: newTask.status as Tasks.Status || 'pending',
       due_date: newTask.due_date,
-      assigned_to: newTask.assigned_to || ''
+      assigned_to: newTask.assigned_to || '',
+      assigned_by: user.id  // Add the missing assigned_by field
     });
 
     // Reset form
@@ -56,7 +60,7 @@ export function TaskManager() {
               onChange={(e) => setNewTask(prev => ({ ...prev, title: e.target.value }))}
             />
             <Select
-              value={newTask.priority}
+              value={newTask.priority as string}
               onValueChange={(value) => setNewTask(prev => ({ ...prev, priority: value as Tasks.Task['priority'] }))}
             >
               <SelectTrigger>
@@ -94,8 +98,13 @@ export function TaskManager() {
                 />
               </PopoverContent>
             </Popover>
-            <Button onClick={handleCreateTask}>Create Task</Button>
+            <Input
+              placeholder="Assign To (User ID)"
+              value={newTask.assigned_to}
+              onChange={(e) => setNewTask(prev => ({ ...prev, assigned_to: e.target.value }))}
+            />
           </div>
+          <Button onClick={handleCreateTask}>Create Task</Button>
 
           <div className="space-y-2">
             <h3 className="font-semibold">Current Tasks</h3>

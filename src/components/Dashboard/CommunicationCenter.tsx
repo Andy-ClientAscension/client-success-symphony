@@ -8,9 +8,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tasks } from '@/types/tasks';
 import { format } from 'date-fns';
+import { useAuth } from '@/hooks/use-auth';
 
 export function CommunicationCenter() {
   const { communications, createCommunication } = useCommunications();
+  const { user } = useAuth();
   const [newCommunication, setNewCommunication] = useState<Partial<Tasks.Communication>>({
     type: 'note',
     subject: '',
@@ -19,13 +21,14 @@ export function CommunicationCenter() {
   });
 
   const handleCreateCommunication = async () => {
-    if (!newCommunication.subject) return;
+    if (!newCommunication.subject || !user) return;
 
     await createCommunication({
-      type: newCommunication.type || 'note',
+      type: newCommunication.type as Tasks.Communication['type'] || 'note',
       subject: newCommunication.subject,
       content: newCommunication.content || '',
       client_id: newCommunication.client_id || '',
+      sent_by: user.id, // Add the missing sent_by field
       date: new Date().toISOString()
     });
 
@@ -47,7 +50,7 @@ export function CommunicationCenter() {
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <Select
-              value={newCommunication.type}
+              value={newCommunication.type as string}
               onValueChange={(value) => setNewCommunication(prev => ({ ...prev, type: value as Tasks.Communication['type'] }))}
             >
               <SelectTrigger>
