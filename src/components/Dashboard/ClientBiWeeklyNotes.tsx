@@ -17,7 +17,7 @@ import {
 import { format } from "date-fns";
 import { saveData, loadData, STORAGE_KEYS } from "@/utils/persistence";
 import { useToast } from "@/hooks/use-toast";
-import { CalendarIcon, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 
 interface BiWeeklyNote {
   id: string;
@@ -31,33 +31,14 @@ interface BiWeeklyNote {
   healthScore: number;
   notes: string;
   createdBy: string;
-  team?: string;
-}
-
-interface HealthScoreEntry {
-  id: string;
-  clientId: string;
-  clientName: string;
-  team: string;
-  csm: string;
-  score: number;
-  notes: string;
-  date: string;
 }
 
 interface ClientBiWeeklyNotesProps {
   clientId: string;
   clientName: string;
-  team?: string;
-  csm?: string;
 }
 
-export function ClientBiWeeklyNotes({ 
-  clientId, 
-  clientName,
-  team = "",
-  csm = ""
-}: ClientBiWeeklyNotesProps) {
+export function ClientBiWeeklyNotes({ clientId, clientName }: ClientBiWeeklyNotesProps) {
   const [notes, setNotes] = useState<BiWeeklyNote[]>([]);
   const [currentNote, setCurrentNote] = useState<Partial<BiWeeklyNote>>({
     clientId,
@@ -70,12 +51,10 @@ export function ClientBiWeeklyNotes({
     healthScore: 7,
     notes: "",
     createdBy: "Current User", // In a real app, get from auth context
-    team
   });
   
   const { toast } = useToast();
   
-  // Load notes from storage
   useEffect(() => {
     const storedNotes = loadData<BiWeeklyNote[]>(`${STORAGE_KEYS.CLIENT_NOTES}_biweekly_${clientId}`, []);
     if (storedNotes && storedNotes.length > 0) {
@@ -83,7 +62,6 @@ export function ClientBiWeeklyNotes({
     }
   }, [clientId]);
   
-  // Save note to storage
   const saveNote = () => {
     if (!currentNote.updatesInteractions?.trim()) {
       toast({
@@ -98,16 +76,12 @@ export function ClientBiWeeklyNotes({
       ...currentNote as BiWeeklyNote,
       id: Date.now().toString(),
       clientId,
-      date: new Date().toISOString(),
-      team // Make sure team is included
+      date: new Date().toISOString()
     };
     
     const updatedNotes = [...notes, newNote];
     setNotes(updatedNotes);
     saveData(`${STORAGE_KEYS.CLIENT_NOTES}_biweekly_${clientId}`, updatedNotes);
-    
-    // Also save health score to centralized health scores storage
-    saveHealthScore(newNote);
     
     // Reset form
     setCurrentNote({
@@ -120,8 +94,7 @@ export function ClientBiWeeklyNotes({
       bookedCalls: 0,
       healthScore: 7,
       notes: "",
-      createdBy: "Current User",
-      team
+      createdBy: "Current User"
     });
     
     toast({
@@ -130,35 +103,10 @@ export function ClientBiWeeklyNotes({
     });
   };
 
-  // Save health score to centralized storage
-  const saveHealthScore = (note: BiWeeklyNote) => {
-    const healthScores = loadData<HealthScoreEntry[]>(STORAGE_KEYS.HEALTH_SCORES, []);
-    
-    const healthScoreEntry: HealthScoreEntry = {
-      id: `health-${Date.now()}`,
-      clientId: note.clientId,
-      clientName: clientName,
-      team: note.team || team,
-      csm: csm,
-      score: note.healthScore,
-      notes: note.notes,
-      date: note.date
-    };
-    
-    healthScores.push(healthScoreEntry);
-    saveData(STORAGE_KEYS.HEALTH_SCORES, healthScores);
-  };
-  
-  const getHealthScoreColor = (score: number) => {
-    if (score >= 8) return "text-green-600";
-    if (score >= 5) return "text-amber-600";
-    return "text-red-600";
-  };
-
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" className="border-red-200 hover:bg-red-50 hover:text-red-600">
+        <Button variant="outline">
           <CalendarIcon className="mr-2 h-4 w-4" />
           Bi-Weekly Notes
         </Button>
@@ -208,11 +156,10 @@ export function ClientBiWeeklyNotes({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <h4 className="text-sm font-medium mb-1">Outreach Channels</h4>
-                  <Textarea 
+                  <Input 
                     placeholder="Email, LinkedIn, etc."
                     value={currentNote.outreachChannels}
                     onChange={(e) => setCurrentNote({...currentNote, outreachChannels: e.target.value})}
-                    className="min-h-[60px]"
                   />
                 </div>
                 <div>
@@ -264,9 +211,8 @@ export function ClientBiWeeklyNotes({
             
             <Button 
               onClick={saveNote} 
-              className="w-full mt-4 bg-red-600 hover:bg-red-700"
+              className="w-full mt-4"
             >
-              <CheckCircle className="mr-2 h-4 w-4" />
               Save Bi-Weekly Note
             </Button>
           </div>
@@ -276,19 +222,11 @@ export function ClientBiWeeklyNotes({
               <h3 className="text-lg font-medium border-t pt-4">Previous Bi-Weekly Notes</h3>
               <div className="space-y-4">
                 {notes.map((note) => (
-                  <Card key={note.id} className="border-red-100">
+                  <Card key={note.id}>
                     <CardHeader className="pb-2">
-                      <div className="flex justify-between items-center">
-                        <CardTitle className="text-base">
-                          {format(new Date(note.date), 'MMMM dd, yyyy')}
-                        </CardTitle>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-muted-foreground">Health:</span>
-                          <span className={`text-lg font-bold ${getHealthScoreColor(note.healthScore)}`}>
-                            {note.healthScore}/10
-                          </span>
-                        </div>
-                      </div>
+                      <CardTitle className="text-base">
+                        {format(new Date(note.date), 'MMMM dd, yyyy')}
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-0 space-y-3 text-sm">
                       <div>
@@ -298,17 +236,11 @@ export function ClientBiWeeklyNotes({
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                          <div className="font-medium mb-0.5 flex items-center">
-                            <CheckCircle className="h-3.5 w-3.5 mr-1 text-green-600" />
-                            Wins:
-                          </div>
+                          <div className="font-medium mb-0.5">Wins:</div>
                           <p>{note.wins || "None recorded"}</p>
                         </div>
                         <div>
-                          <div className="font-medium mb-0.5 flex items-center">
-                            <XCircle className="h-3.5 w-3.5 mr-1 text-red-600" />
-                            Struggles:
-                          </div>
+                          <div className="font-medium mb-0.5">Struggles:</div>
                           <p>{note.struggles || "None recorded"}</p>
                         </div>
                       </div>
@@ -326,10 +258,7 @@ export function ClientBiWeeklyNotes({
                       
                       {note.notes && (
                         <div>
-                          <div className="font-medium mb-0.5 flex items-center">
-                            <AlertCircle className="h-3.5 w-3.5 mr-1 text-amber-600" />
-                            Notes:
-                          </div>
+                          <div className="font-medium mb-0.5">Notes:</div>
                           <p>{note.notes}</p>
                         </div>
                       )}
