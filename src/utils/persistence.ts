@@ -5,6 +5,15 @@ import { Client } from "@/lib/data";
 
 // Keys for different types of data
 const STORAGE_KEYS = {
+  DASHBOARD_FILTERS: 'dashboard_filters',
+  KPI_SETTINGS: 'kpi_settings',
+  CLIENT_NOTES: 'client_notes',
+  USER_SETTINGS: 'user_settings',
+  HEALTH_SCORES: 'health_scores',
+  AUTOMATION_SETTINGS: 'automation_settings',
+  TASK_LIST: 'task_list',
+  FOCUS_MODE: 'focus_mode',
+  STUDENT_HEALTH: 'student_health',
   CLIENTS: "clientsData",
   SETTINGS: "appSettings",
   DASHBOARD: "dashboardLayout",

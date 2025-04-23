@@ -18,6 +18,8 @@ import { format } from "date-fns";
 import { saveData, loadData, STORAGE_KEYS } from "@/utils/persistence";
 import { useToast } from "@/hooks/use-toast";
 import { CalendarIcon } from "lucide-react";
+import { updateHealthFromNotes } from "@/utils/healthScoreUtils";
+import { HealthScoreIndicator } from "@/components/StudentHealth/HealthScoreIndicator";
 
 interface BiWeeklyNote {
   id: string;
@@ -52,14 +54,35 @@ export function ClientBiWeeklyNotes({ clientId, clientName }: ClientBiWeeklyNote
     notes: "",
     createdBy: "Current User", // In a real app, get from auth context
   });
+  const [studentHealth, setStudentHealth] = useState<StudentHealth.StudentHealthData | null>(null);
   
   const { toast } = useToast();
   
   useEffect(() => {
+    loadNotes();
+  }, [clientId]);
+  
+  const loadNotes = () => {
     const storedNotes = loadData<BiWeeklyNote[]>(`${STORAGE_KEYS.CLIENT_NOTES}_biweekly_${clientId}`, []);
     if (storedNotes && storedNotes.length > 0) {
       setNotes(storedNotes);
     }
+  };
+  
+  const loadStudentHealth = () => {
+    // Load current student health data if available
+    const healthData = loadData<StudentHealth.StudentHealthData>(
+      `${STORAGE_KEYS.STUDENT_HEALTH}_${clientId}`,
+      null
+    );
+    
+    if (healthData) {
+      setStudentHealth(healthData);
+    }
+  };
+  
+  useEffect(() => {
+    loadStudentHealth();
   }, [clientId]);
   
   const saveNote = () => {
@@ -83,6 +106,10 @@ export function ClientBiWeeklyNotes({ clientId, clientName }: ClientBiWeeklyNote
     setNotes(updatedNotes);
     saveData(`${STORAGE_KEYS.CLIENT_NOTES}_biweekly_${clientId}`, updatedNotes);
     
+    // Update the student health score based on the new note
+    const healthData = updateHealthFromNotes(clientId, updatedNotes);
+    setStudentHealth(healthData);
+    
     // Reset form
     setCurrentNote({
       clientId,
@@ -99,7 +126,7 @@ export function ClientBiWeeklyNotes({ clientId, clientName }: ClientBiWeeklyNote
     
     toast({
       title: "Note Saved",
-      description: "Your bi-weekly note has been saved successfully.",
+      description: "Your bi-weekly note has been saved and health score updated.",
     });
   };
 
@@ -120,6 +147,19 @@ export function ClientBiWeeklyNotes({ clientId, clientName }: ClientBiWeeklyNote
         </SheetHeader>
         
         <div className="mt-6 space-y-6">
+          {studentHealth && (
+            <div className="mb-4">
+              <HealthScoreIndicator 
+                score={studentHealth.currentScore}
+                previousScore={notes.length > 0 ? notes[notes.length - 1].healthScore * 10 : undefined}
+                size="sm"
+              />
+              <p className="text-xs text-muted-foreground mt-1 text-center">
+                Health score is calculated automatically from your notes
+              </p>
+            </div>
+          )}
+          
           <div className="space-y-4">
             <h3 className="text-lg font-medium">New Bi-Weekly Check-in</h3>
             <div className="space-y-3">
