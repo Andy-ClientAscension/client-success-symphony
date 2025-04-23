@@ -1,3 +1,4 @@
+
 import React from "react";
 import { UnifiedTabNavigation } from "@/components/Dashboard/Tabs/UnifiedTabNavigation";
 import { useTabNavigation } from "@/hooks/useTabNavigation";
@@ -12,7 +13,7 @@ const dashboardTabs = [
   { id: "team", label: "Team Analytics" }
 ];
 
-// Define proper interfaces for child component props
+// Define proper interfaces for component props
 interface DashboardOverviewProps {
   data?: any;
 }
@@ -31,13 +32,13 @@ interface DashboardTabsContainerProps {
   teamData?: any;
 }
 
-// Declare the components with their prop types
-const TypedDashboardOverview: React.FC<DashboardOverviewProps> = DashboardOverview;
-const TypedCompanyMetrics: React.FC<CompanyMetricsProps> = CompanyMetrics;
-const TypedTeamAnalytics: React.FC<TeamAnalyticsProps> = TeamAnalytics;
-
 export function DashboardTabsContainer({ data, metrics, teamData }: DashboardTabsContainerProps) {
   const { activeTab, handleTabChange } = useTabNavigation<"overview" | "company" | "team">("overview");
+
+  // We need to cast the components to React.FC types with the right props
+  const DashboardOverviewWithProps = DashboardOverview as React.FC<DashboardOverviewProps>;
+  const CompanyMetricsWithProps = CompanyMetrics as React.FC<CompanyMetricsProps>;
+  const TeamAnalyticsWithProps = TeamAnalytics as React.FC<TeamAnalyticsProps>;
 
   return (
     <UnifiedTabNavigation
@@ -45,9 +46,9 @@ export function DashboardTabsContainer({ data, metrics, teamData }: DashboardTab
       activeTab={activeTab}
       onTabChange={handleTabChange}
     >
-      {activeTab === "overview" && <DashboardOverview data={data} />}
-      {activeTab === "company" && <CompanyMetrics metrics={metrics} />}
-      {activeTab === "team" && <TeamAnalytics teamData={teamData} />}
+      {activeTab === "overview" && <DashboardOverviewWithProps data={data} />}
+      {activeTab === "company" && <CompanyMetricsWithProps metrics={metrics} />}
+      {activeTab === "team" && <TeamAnalyticsWithProps teamData={teamData} />}
     </UnifiedTabNavigation>
   );
 }
