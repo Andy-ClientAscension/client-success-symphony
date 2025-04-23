@@ -1,27 +1,13 @@
-
 import React, { useState } from "react";
-import { TableCell, TableBody, TableHead, TableHeader, TableRow, Table } from "@/components/ui/table";
-import { SSCPerformanceRow } from "./SSCPerformanceRow";
-import { Client } from "@/lib/data";
-import { HelpCircle, PlusCircle, Trash2 } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { HelpCircle, PlusCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { VirtualizedTable, Column } from "@/components/Dashboard/Shared/VirtualizedTable";
+import { VirtualizedTable, Column } from "./Shared/VirtualizedTable";
+import { SSCPerformanceMetrics } from "./Metrics/SSCPerformanceMetrics";
 
 interface SSCPerformanceTableProps {
   csmList: string[];
@@ -52,6 +38,7 @@ export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerfo
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newSSCName, setNewSSCName] = useState("");
+  const [selectedCSM, setSelectedCSM] = useState<string | null>(null);
 
   const handleDeleteCSM = (csm: string) => {
     setCsmToDelete(csm);
@@ -114,7 +101,14 @@ export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerfo
     {
       key: 'name',
       header: 'SSC',
-      cell: (csm) => <span className="font-medium">{csm}</span>,
+      cell: (csm) => (
+        <span 
+          className="font-medium cursor-pointer hover:text-primary"
+          onClick={() => setSelectedCSM(csm === selectedCSM ? null : csm)}
+        >
+          {csm}
+        </span>
+      ),
       className: isMobile ? 'w-[120px]' : 'w-[180px]'
     },
     {
@@ -187,7 +181,7 @@ export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerfo
   });
 
   return (
-    <div className="mt-6">
+    <div className="mt-6 space-y-6">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center">
           <h3 className="text-base font-medium">Student Success Coach Performance</h3>
@@ -197,14 +191,13 @@ export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerfo
                 <HelpCircle className="h-4 w-4 ml-2 text-muted-foreground cursor-help" />
               </TooltipTrigger>
               <TooltipContent className="max-w-sm p-3">
-                <p className="text-xs">Team Health Grade is calculated based on multiple factors:</p>
+                <p className="text-xs">SSC Performance metrics include:</p>
                 <ul className="text-xs mt-1 list-disc pl-4">
-                  <li>NPS Score (30%)</li>
-                  <li>Client Retention (30%)</li>
-                  <li>Growth Metrics (20%)</li>
-                  <li>MRR Trends (20%)</li>
+                  <li>Active Students Count</li>
+                  <li>Retention Rate</li>
+                  <li>Revenue Managed</li>
+                  <li>Health Score</li>
                 </ul>
-                <p className="text-xs mt-1">Grades range from F (poor) to A+ (excellent)</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -218,20 +211,26 @@ export function SSCPerformanceTable({ csmList, clients, selectedTeam }: SSCPerfo
           Add SSC
         </Button>
       </div>
-      <div className="border rounded-lg overflow-hidden bg-card text-card-foreground dark:border-gray-700">
-        <Card>
-          <VirtualizedTable
-            data={filteredCSMs}
-            columns={columns}
-            keyExtractor={(csm) => csm}
-            emptyMessage="No SSCs found for the selected team."
-            className="border rounded-lg"
-            stripedRows={true}
-            hoverable={true}
-            itemHeight={56}
-          />
-        </Card>
-      </div>
+
+      {selectedCSM && (
+        <SSCPerformanceMetrics
+          csm={selectedCSM}
+          clients={clients}
+        />
+      )}
+
+      <Card>
+        <VirtualizedTable
+          data={filteredCSMs}
+          columns={columns}
+          keyExtractor={(csm) => csm}
+          emptyMessage="No SSCs found for the selected team."
+          className="border rounded-lg"
+          stripedRows={true}
+          hoverable={true}
+          itemHeight={56}
+        />
+      </Card>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
