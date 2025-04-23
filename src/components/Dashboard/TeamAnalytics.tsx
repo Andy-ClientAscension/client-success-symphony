@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -21,34 +20,49 @@ const ADDITIONAL_TEAMS = [
   { id: "Mid-Market", name: "Mid Market" },
 ];
 
-export function TeamAnalytics() {
-  const [selectedTeam, setSelectedTeam] = useState<string>("all");
+interface TeamAnalyticsProps {
+  selectedTeam?: string;
+  dateRange?: string;
+  searchQuery?: string;
+}
+
+export function TeamAnalytics({ 
+  selectedTeam: externalSelectedTeam, 
+  dateRange: externalDateRange,
+  searchQuery: externalSearchQuery 
+}: TeamAnalyticsProps = {}) {
+  const [selectedTeam, setSelectedTeam] = useState<string>(externalSelectedTeam || "all");
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [teams, setTeams] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogAction, setDialogAction] = useState<'add' | 'delete'>('add');
   const { toast } = useToast();
   
+  const [dateRange] = useState(externalDateRange || "Last 30 days");
+  const [searchQuery] = useState(externalSearchQuery || "");
+  
   const clients = useMemo(() => getAllClients(), []);
   
-  // Check for client deletions in localStorage
   useEffect(() => {
     const checkForClientDeletions = () => {
       const persistEnabled = localStorage.getItem("persistDashboard") === "true";
       if (persistEnabled) {
         const savedClients = loadData(STORAGE_KEYS.CLIENTS, null);
         if (savedClients && Array.isArray(savedClients)) {
-          // This will make the component re-render if the client list has changed
-          // in localStorage, which means deletions in other components will be reflected
           console.log("Client list in storage updated, reflecting changes in TeamAnalytics");
         }
       }
     };
     
-    // Set up an interval to check for client deletions
     const interval = setInterval(checkForClientDeletions, 2000);
     return () => clearInterval(interval);
   }, []);
+  
+  useEffect(() => {
+    if (externalSelectedTeam) {
+      setSelectedTeam(externalSelectedTeam);
+    }
+  }, [externalSelectedTeam]);
   
   const teamSet = useMemo(() => {
     const set = new Set<string>();
