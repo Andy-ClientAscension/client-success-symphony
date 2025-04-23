@@ -20,10 +20,9 @@ export function BackendOffersTracker() {
     }
   };
 
-  const handleOfferStatusUpdate = async (offerId: string, newStatus: Renewals.BackendOffer['status']) => {
+  const handleOfferStatusUpdate = async (offerId: string, newStatus: "draft" | "sent" | "viewed" | "accepted" | "rejected") => {
     await updateBackendOffer(offerId, { 
       status: newStatus,
-      updated_at: new Date().toISOString() 
     });
   };
 

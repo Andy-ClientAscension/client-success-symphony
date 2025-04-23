@@ -23,8 +23,16 @@ export function useRenewals() {
       if (forecastsResponse.error) throw forecastsResponse.error;
       if (offersResponse.error) throw offersResponse.error;
 
-      setForecasts(forecastsResponse.data || []);
-      setOffers(offersResponse.data || []);
+      // Cast the data to ensure it matches our expected types
+      setForecasts(forecastsResponse.data?.map(item => ({
+        ...item,
+        likelihood_status: item.likelihood_status as 'likely' | 'at_risk' | 'unknown'
+      })) || []);
+      
+      setOffers(offersResponse.data?.map(item => ({
+        ...item,
+        status: item.status as 'draft' | 'sent' | 'viewed' | 'accepted' | 'rejected'
+      })) || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
     } finally {
@@ -44,7 +52,14 @@ export function useRenewals() {
         .select();
       
       if (error) throw error;
-      if (data) setForecasts(prev => [...prev, data[0]]);
+      if (data) {
+        // Cast the newly created item to ensure type safety
+        const typedData = {
+          ...data[0],
+          likelihood_status: data[0].likelihood_status as 'likely' | 'at_risk' | 'unknown'
+        };
+        setForecasts(prev => [...prev, typedData]);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create forecast');
     }
@@ -60,8 +75,14 @@ export function useRenewals() {
       
       if (error) throw error;
       if (data) {
+        // Cast the updated data to ensure type safety
+        const typedData = {
+          ...data[0],
+          status: data[0].status as 'draft' | 'sent' | 'viewed' | 'accepted' | 'rejected'
+        };
+        
         setOffers(prev => 
-          prev.map(offer => offer.id === offerId ? { ...offer, ...updates } : offer)
+          prev.map(offer => offer.id === offerId ? typedData : offer)
         );
       }
     } catch (err) {
