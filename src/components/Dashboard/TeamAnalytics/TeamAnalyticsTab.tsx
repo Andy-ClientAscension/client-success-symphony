@@ -1,8 +1,12 @@
 
 import React from "react";
-import { TeamAnalytics } from "../TeamAnalytics";
+import { TeamAnalytics } from "./TeamAnalytics";
 
-export function TeamAnalyticsTab({ clients }: any) {
-  // Could use clients data here or fetch inside TeamAnalytics
-  return <TeamAnalytics />;
+interface TeamAnalyticsTabProps {
+  clients: any[];
+  selectedTeam?: string;
+}
+
+export function TeamAnalyticsTab({ clients, selectedTeam = 'all' }: TeamAnalyticsTabProps) {
+  return <TeamAnalytics selectedTeam={selectedTeam} />;
 }
