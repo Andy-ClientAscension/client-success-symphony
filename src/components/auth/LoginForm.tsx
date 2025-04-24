@@ -1,9 +1,12 @@
+
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { ValidationError } from "@/components/ValidationError";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface LoginFormProps {
   email: string;
@@ -24,6 +27,9 @@ export function LoginForm({
   onSubmit,
   error
 }: LoginFormProps) {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       {error && (
