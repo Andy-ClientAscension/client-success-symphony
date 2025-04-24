@@ -14,7 +14,7 @@ interface UseApiResult<T> {
   data: T | null;
   isLoading: boolean;
   error: ErrorState | null;
-  execute: () => Promise<void>;
+  execute: () => Promise<T | null>;  // Updated return type here
   setData: (data: T | null) => void;
   reset: () => void;
 }
@@ -30,7 +30,7 @@ export function useApi<T>(
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<ErrorState | null>(null);
 
-  const execute = useCallback(async () => {
+  const execute = useCallback(async (): Promise<T | null> => {  // Updated return type here
     setIsLoading(true);
     setError(null);
     
