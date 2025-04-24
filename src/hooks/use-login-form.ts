@@ -45,6 +45,7 @@ export function useLoginForm() {
         });
       }
     } catch (error) {
+      // Pass the error through the error service for consistent handling
       handleError(error);
     } finally {
       setIsSubmitting(false);

@@ -41,6 +41,11 @@ export function LoginForm({
               If this problem persists, please check your internet connection or try using a different browser.
             </div>
           )}
+          {error.type === 'cors' && (
+            <div className="mt-2 text-xs">
+              Network request blocked. This could be due to a CORS policy issue. Please try refreshing the page or try again later.
+            </div>
+          )}
           {error.type === 'auth' && (
             <div className="mt-2 text-xs">
               Make sure you're using the correct credentials and try again.
