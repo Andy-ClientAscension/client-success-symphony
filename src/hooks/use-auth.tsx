@@ -1,16 +1,10 @@
 
-import { useState, useEffect, useContext, useCallback } from 'react';
+import { useContext } from "react";
 import { AuthContext } from "@/contexts/AuthContext";
-
-export interface AuthState {
-  isAuthenticated: boolean;
-  user: any | null;
-  isLoading: boolean;
-  error: Error | null;
-}
+import type Auth from '@/types/auth';
 
 // Main auth hook to be used across the application
-export function useAuth() {
+export function useAuth(): Auth.AuthContextType {
   console.log("Using auth hook");
   const context = useContext(AuthContext);
   
@@ -23,22 +17,7 @@ export function useAuth() {
   return context;
 }
 
-// Instead of trying to re-export types from AuthContext,
-// we'll directly reference the interface from the context file
-// and export our own types that match the context structure
-export interface User {
-  id: string;
-  email: string;
-  name?: string;
-}
-
-export interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: Error | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (email: string, password: string, inviteCode: string) => Promise<{ success: boolean; message: string }>;
-  logout: () => void;
-  validateInviteCode: (code: string) => Promise<boolean>;
-}
+// Export types for backwards compatibility
+export type User = Auth.User;
+export type AuthContextType = Auth.AuthContextType;
+export type AuthState = Auth.AuthState;

@@ -33,6 +33,17 @@ declare namespace Auth {
     message: string;
     user?: User;
   }
+
+  interface AuthContextType {
+    user: User | null;
+    isAuthenticated: boolean;
+    isLoading: boolean;
+    error: Error | null;
+    login: (email: string, password: string) => Promise<boolean>;
+    register: (email: string, password: string, inviteCode: string) => Promise<{ success: boolean; message: string }>;
+    logout: () => void;
+    validateInviteCode: (code: string) => Promise<boolean>;
+  }
 }
 
 export = Auth;
