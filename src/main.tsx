@@ -1,11 +1,16 @@
-
 import React from 'react';
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import { initializeSentry } from '@/utils/sentry/config';
 import { logStartupPhase, logDetailedError } from '@/utils/errorHandling';
 
 logStartupPhase("Application initialization starting");
+
+// Initialize Sentry
+initializeSentry().catch(error => {
+  console.error('Failed to initialize Sentry:', error);
+});
 
 // Global error handler
 window.onerror = function(message, source, lineno, colno, error) {
