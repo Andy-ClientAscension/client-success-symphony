@@ -15,12 +15,15 @@ import {
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Login() {
   console.log("Login component rendering");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   
   // Add error handling for auth context
   let login, isAuthenticated, isLoading;
@@ -49,8 +52,8 @@ export default function Login() {
   React.useEffect(() => {
     console.log("Login - Auth state changed:", { isAuthenticated, isLoading });
     if (isAuthenticated) {
-      console.log("Login - User is authenticated, redirecting to home");
-      navigate("/");
+      console.log("Login - User is authenticated, redirecting to dashboard");
+      navigate("/dashboard");
     }
   }, [isAuthenticated, isLoading, navigate]);
 
@@ -58,13 +61,12 @@ export default function Login() {
     e.preventDefault();
     console.log("Login form submitted");
     
+    // Clear any previous errors
+    setLoginError(null);
+    
     if (!email || !password) {
       console.log("Login validation failed - missing fields");
-      toast({
-        title: "Validation Error",
-        description: "Please enter both email and password",
-        variant: "destructive",
-      });
+      setLoginError("Please enter both email and password");
       return;
     }
     
@@ -76,14 +78,15 @@ export default function Login() {
       console.log("Login attempt result:", success);
       
       if (success) {
-        console.log("Login successful, will navigate to home");
+        console.log("Login successful, will navigate to dashboard");
         toast({
           title: "Login Successful",
           description: "Welcome back!",
         });
-        navigate("/");
+        navigate("/dashboard");
       } else {
         console.log("Login failed");
+        setLoginError("Invalid email or password. Please try again.");
         toast({
           title: "Login Failed",
           description: "Invalid email or password. Please try again.",
@@ -92,6 +95,7 @@ export default function Login() {
       }
     } catch (error) {
       console.error("Login error:", error);
+      setLoginError(error instanceof Error ? error.message : "An unexpected error occurred during login. Please try again.");
       toast({
         title: "Login Error",
         description: "An error occurred during login. Please try again.",
@@ -120,6 +124,13 @@ export default function Login() {
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
+              {loginError && (
+                <Alert variant="destructive" className="text-sm py-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{loginError}</AlertDescription>
+                </Alert>
+              )}
+              
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -129,6 +140,8 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  aria-invalid={!!loginError}
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="space-y-2">
@@ -154,6 +167,8 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  aria-invalid={!!loginError}
+                  disabled={isSubmitting}
                 />
               </div>
             </CardContent>
