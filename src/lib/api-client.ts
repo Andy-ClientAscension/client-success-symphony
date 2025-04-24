@@ -1,3 +1,4 @@
+
 import { toast } from "@/hooks/use-toast";
 import { getAllClients, getClientsCountByStatus, getAverageNPS, getChurnData } from "@/lib/data";
 import type API from "@/types/api";
@@ -37,6 +38,14 @@ export async function fetcher<T>(
       if (errorType === 'cors' || errorType === 'auth') {
         if (process.env.NODE_ENV === "development") {
           console.warn(`${errorType} error detected - skipping additional retries`);
+        }
+        break;
+      }
+      
+      // Skip retries for Sentry configuration errors
+      if (typeof error === 'string' && errorService.isPlaceholderDSN(error)) {
+        if (process.env.NODE_ENV === "development") {
+          console.warn('Error tracking is misconfigured with a placeholder DSN. This is expected in development.');
         }
         break;
       }

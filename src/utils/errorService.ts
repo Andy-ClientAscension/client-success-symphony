@@ -114,9 +114,23 @@ export interface ErrorState {
 
 // Main error service implementation
 export const errorService = {
+  // Check if a value is a placeholder DSN (used to detect improperly configured Sentry)
+  isPlaceholderDSN(dsn: string): boolean {
+    return dsn === 'YOUR_SENTRY_DSN' || 
+           dsn === 'YOUR_DSN_HERE' ||
+           dsn.includes('placeholder') || 
+           dsn.includes('your') || 
+           dsn.includes('SENTRY');
+  },
+
   // Detect the type of error for consistent handling
   detectErrorType(err: unknown): ErrorType {
     if (!err) return 'unknown';
+    
+    // Check for Sentry configuration errors
+    if (typeof err === 'string' && this.isPlaceholderDSN(err)) {
+      return 'unknown';
+    }
     
     // Use the error detection methods
     if (isCorsError(err)) {
@@ -149,6 +163,11 @@ export const errorService = {
 
   // Generate a user-friendly error message based on error type
   getUserFriendlyMessage(error: unknown, fallbackMessage = "An unexpected error occurred"): string {
+    // Handle Sentry configuration errors silently
+    if (typeof error === 'string' && this.isPlaceholderDSN(error)) {
+      return fallbackMessage;
+    }
+    
     const errorType = this.detectErrorType(error);
     
     switch (errorType) {
@@ -178,6 +197,14 @@ export const errorService = {
 
   // Create a structured error state object
   createErrorState(error: unknown, fallbackMessage = "An unexpected error occurred"): ErrorState {
+    // Handle Sentry configuration errors silently
+    if (typeof error === 'string' && this.isPlaceholderDSN(error)) {
+      return {
+        message: fallbackMessage,
+        type: 'unknown'
+      };
+    }
+    
     const errorType = this.detectErrorType(error);
     const message = this.getUserFriendlyMessage(error, fallbackMessage);
     
@@ -202,6 +229,14 @@ export const errorService = {
 
   captureError(error: Error | string, options: ErrorOptions = {}) {
     const { severity = 'medium', context, shouldNotify = true } = options;
+    
+    // Silently ignore Sentry configuration errors
+    if (typeof error === 'string' && this.isPlaceholderDSN(error)) {
+      if (IS_DEV) {
+        console.warn('Error tracking is misconfigured with a placeholder DSN. This is expected in development.');
+      }
+      return;
+    }
     
     // Get user-friendly error message based on error type
     const errorType = typeof error === 'string' ? this.detectErrorType(error) : this.detectErrorType(error);
