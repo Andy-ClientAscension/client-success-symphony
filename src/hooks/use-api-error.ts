@@ -10,6 +10,18 @@ export function useApiError() {
     // Use the unified error service to create a consistent error state
     const errorState = errorService.createErrorState(err, fallbackMessage);
     
+    // Special handling for network failures
+    if (err && typeof err === 'object' && 'message' in err) {
+      const errorMessage = (err as Error).message;
+      if (errorMessage.includes('Failed to fetch') || 
+          errorMessage.includes('NetworkError') || 
+          errorMessage.includes('net::ERR_FAILED')) {
+        // Override the error type for generic network failures
+        errorState.type = 'network';
+        errorState.message = 'Network connection error. Please check your internet connection and try again.';
+      }
+    }
+    
     setError(errorState);
     
     // Use the error service to notify the user, but don't show toast - we'll handle that ourselves

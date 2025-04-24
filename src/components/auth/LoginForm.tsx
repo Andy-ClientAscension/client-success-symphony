@@ -51,6 +51,11 @@ export function LoginForm({
               Make sure you're using the correct credentials and try again.
             </div>
           )}
+          {error.type === 'server' && (
+            <div className="mt-2 text-xs">
+              The server encountered an error. Please try again later.
+            </div>
+          )}
         </Alert>
       )}
       

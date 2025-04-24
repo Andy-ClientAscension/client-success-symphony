@@ -30,6 +30,7 @@ export function useLoginForm() {
     setIsSubmitting(true);
     
     try {
+      console.log("Attempting to login...");
       const success = await login(email, password);
       
       if (success) {
@@ -45,8 +46,22 @@ export function useLoginForm() {
         });
       }
     } catch (error) {
-      // Pass the error through the error service for consistent handling
-      handleError(error);
+      console.error("Login error:", error);
+      // Enhanced error handling
+      if (error instanceof Error) {
+        if (error.message.includes('net::ERR_FAILED') || error.message.includes('Failed to fetch')) {
+          handleError({
+            message: "Unable to connect to the authentication service. Please check your internet connection and try again.",
+            code: "network_error",
+            type: "network"
+          });
+        } else {
+          // Pass the error through the error service for consistent handling
+          handleError(error);
+        }
+      } else {
+        handleError(error);
+      }
     } finally {
       setIsSubmitting(false);
     }
