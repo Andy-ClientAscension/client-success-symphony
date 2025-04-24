@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Layout } from "@/components/Layout/Layout";
 import { DashboardKPIHeader } from "@/components/Dashboard/Metrics/DashboardKPIHeader";
 import { PerformanceTrends } from "@/components/Dashboard/Metrics/PerformanceTrends";
@@ -14,10 +14,20 @@ import { AlertCircle } from "lucide-react";
 import { HealthScoreOverview } from "@/components/Dashboard/HealthScore/HealthScoreOverview";
 import { HealthScoreSummary } from "@/components/Dashboard/HealthScore/HealthScoreSummary";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { useApiError } from "@/hooks/use-api-error";
+import { errorService } from "@/utils/errorService";
 
 export default function Dashboard() {
   const { data, error, isLoading, lastUpdated, isRefreshing } = useSyncedData();
   const { npsData, churnData } = useDashboardData();
+  const { handleError, isNetworkError } = useApiError();
+  
+  // Handle API errors
+  useEffect(() => {
+    if (error) {
+      handleError(error, "Failed to load dashboard data");
+    }
+  }, [error, handleError]);
 
   return (
     <Layout>
@@ -31,7 +41,9 @@ export default function Dashboard() {
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              There was an error loading the dashboard data. Some information might be outdated.
+              {isNetworkError 
+                ? "Network connection error. Dashboard data might be outdated."
+                : "There was an error loading the dashboard data. Some information might be outdated."}
             </AlertDescription>
           </Alert>
         )}

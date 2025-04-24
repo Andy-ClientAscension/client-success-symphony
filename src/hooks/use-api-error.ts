@@ -15,13 +15,15 @@ function detectErrorType(err: unknown): ApiErrorState['type'] {
   
   const errorStr = err instanceof Error ? err.message : String(err);
   
+  // Check for CORS errors first as they're the most critical
   if (errorStr.includes('CORS') || errorStr.includes('cross-origin') || errorStr.includes('blocked by CORS policy')) {
     return 'cors';
   }
   
   if (errorStr.includes('network') || 
       errorStr.includes('Failed to fetch') || 
-      errorStr.includes('NetworkError')) {
+      errorStr.includes('NetworkError') ||
+      errorStr.includes('net::ERR')) {
     return 'network';
   }
   
@@ -43,7 +45,7 @@ function detectErrorType(err: unknown): ApiErrorState['type'] {
 function getErrorMessageFromType(error: unknown, errorType: ApiErrorState['type'], fallbackMessage: string): string {
   switch (errorType) {
     case 'cors':
-      return "Network request blocked due to CORS policy. This may be a temporary issue or require server configuration.";
+      return "Network request was blocked by CORS policy. Please contact the administrator.";
     case 'network':
       return "Network connection error. Please check your internet connection and try again.";
     case 'auth':
@@ -64,10 +66,9 @@ export function useApiError() {
     let errorMessage: string;
     let errorCode: string | undefined;
     let errorDetails: unknown;
-    let errorType: ApiErrorState['type'] = 'unknown';
-
+    
     // Detect error type
-    errorType = detectErrorType(err);
+    const errorType = detectErrorType(err);
     
     // Get user-friendly message based on error type
     errorMessage = getErrorMessageFromType(err, errorType, fallbackMessage);
@@ -91,7 +92,7 @@ export function useApiError() {
 
     setError(errorState);
     
-    // Report to error service
+    // Report to error service but don't show toast - we'll handle that ourselves
     errorService.captureError(new Error(errorMessage), {
       severity: errorType === 'server' ? 'high' : 
                 errorType === 'cors' || errorType === 'network' ? 'medium' : 'low',
@@ -99,7 +100,8 @@ export function useApiError() {
         code: errorCode,
         details: errorDetails,
         errorType
-      }
+      },
+      shouldNotify: false // We'll show our own toast
     });
 
     // Show toast notification for user feedback

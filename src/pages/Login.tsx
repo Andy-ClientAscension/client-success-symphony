@@ -18,14 +18,19 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AlertCircle, Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { errorService } from "@/utils/errorService";
+import { useApiError } from "@/hooks/use-api-error";
 
 export default function Login() {
-  console.log("Login component rendering");
+  // Only log in development mode
+  if (process.env.NODE_ENV === "development") {
+    console.log("Login component rendering");
+  }
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loginError, setLoginError] = useState<string | null>(null);
-  const [errorType, setErrorType] = useState<"general" | "network" | "auth" | null>(null);
+  
+  const { error: apiError, handleError, clearError, isNetworkError } = useApiError();
   
   // Add error handling for auth context
   let login, isAuthenticated, isLoading;
@@ -46,132 +51,68 @@ export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  console.log("Login state:", { isAuthenticated, isLoading, email: email ? "set" : "empty" });
-
-  // Debugging: Check render cycle
-  React.useEffect(() => {
-    console.log("Login component mounted");
-    return () => console.log("Login component unmounted");
-  }, []);
-
+  // Only log in development mode
+  if (process.env.NODE_ENV === "development") {
+    console.log("Login state:", { isAuthenticated, isLoading, email: email ? "set" : "empty" });
+  }
+  
   // Debugging: Check authenticated status
-  React.useEffect(() => {
-    console.log("Login - Auth state changed:", { isAuthenticated, isLoading });
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      console.log("Login - Auth state changed:", { isAuthenticated, isLoading });
+    }
+    
     if (isAuthenticated) {
-      console.log("Login - User is authenticated, redirecting to dashboard");
+      if (process.env.NODE_ENV === "development") {
+        console.log("Login - User is authenticated, redirecting to dashboard");
+      }
       navigate("/dashboard");
     }
   }, [isAuthenticated, isLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login form submitted");
     
     // Clear any previous errors
-    setLoginError(null);
-    setErrorType(null);
+    clearError();
     
     if (!email || !password) {
-      console.log("Login validation failed - missing fields");
-      setLoginError("Please enter both email and password");
-      setErrorType("auth");
+      handleError({
+        message: "Please enter both email and password",
+        code: "validation_error"
+      }, "Please enter both email and password");
       return;
     }
     
     setIsSubmitting(true);
-    console.log("Attempting login for email:", email);
     
     try {
       const success = await login(email, password);
-      console.log("Login attempt result:", success);
       
       if (success) {
-        console.log("Login successful, will navigate to dashboard");
         toast({
           title: "Login Successful",
           description: "Welcome back!",
         });
         navigate("/dashboard");
       } else {
-        console.log("Login failed");
-        setLoginError("Invalid email or password. Please try again.");
-        setErrorType("auth");
-        toast({
-          title: "Login Failed",
-          description: "Invalid email or password. Please try again.",
-          variant: "destructive",
-        });
+        handleError({
+          message: "Invalid email or password. Please try again.",
+          code: "auth_error"
+        }, "Login failed");
       }
     } catch (error) {
-      console.error("Login error:", error);
-      
-      // Check if it's a CORS or network error
-      if (error instanceof Error && 
-         (error.message.includes("CORS") || 
-          error.message.includes("network") || 
-          error.message.includes("fetch") || 
-          error.message.includes("Failed to fetch"))) {
-        
-        const errorMsg = errorService.handleNetworkError(error);
-        setLoginError(errorMsg);
-        setErrorType("network");
-      } else {
-        setLoginError(error instanceof Error ? error.message : "An unexpected error occurred during login. Please try again.");
-        setErrorType("general");
-        errorService.captureError(error instanceof Error ? error : new Error("Login error"), {
-          severity: 'medium',
-          context: { email, component: "Login" }
-        });
-      }
-      
-      toast({
-        title: "Login Error",
-        description: "An error occurred during login. Please try again.",
-        variant: "destructive",
-      });
+      // Use our enhanced error handling
+      handleError(error, "An unexpected error occurred during login. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   if (isAuthenticated) {
-    console.log("Login - Already authenticated, returning empty div");
     return <div></div>;
   }
 
-  const getErrorAlert = () => {
-    if (!loginError) return null;
-    
-    if (errorType === "network") {
-      return (
-        <Alert variant="destructive" className="text-sm py-2">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{loginError}</AlertDescription>
-          <div className="mt-2 text-xs">
-            If this problem persists, please contact support or try using a different browser.
-          </div>
-        </Alert>
-      );
-    }
-    
-    if (errorType === "auth") {
-      return (
-        <Alert variant="destructive" className="text-sm py-2">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{loginError}</AlertDescription>
-        </Alert>
-      );
-    }
-    
-    return (
-      <Alert variant="destructive" className="text-sm py-2">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>{loginError}</AlertDescription>
-      </Alert>
-    );
-  };
-
-  console.log("Login - Rendering login form");
   return (
     <ErrorBoundary customMessage="There was a problem loading the login form. Please try refreshing the page.">
       <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 p-4">
@@ -184,7 +125,17 @@ export default function Login() {
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
-              {getErrorAlert()}
+              {apiError && (
+                <Alert variant="destructive" className="text-sm py-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{apiError.message}</AlertDescription>
+                  {isNetworkError && (
+                    <div className="mt-2 text-xs">
+                      If this problem persists, please contact support or try using a different browser.
+                    </div>
+                  )}
+                </Alert>
+              )}
               
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -195,7 +146,7 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  aria-invalid={!!loginError}
+                  aria-invalid={!!apiError}
                   disabled={isSubmitting}
                   autoFocus
                 />
@@ -223,7 +174,7 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  aria-invalid={!!loginError}
+                  aria-invalid={!!apiError}
                   disabled={isSubmitting}
                 />
               </div>

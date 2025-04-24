@@ -1,11 +1,13 @@
 
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { getAllClients, getClientsCountByStatus, getAverageNPS, getChurnData } from "@/lib/data";
 import type API from "@/types/api";
+import { errorService } from "@/utils/errorService";
 
 interface FetcherOptions {
   retries?: number;
   retryDelay?: number;
+  silentErrors?: boolean;
 }
 
 /**
@@ -16,15 +18,25 @@ export async function fetcher<T>(
   fn: () => Promise<T>,
   options: FetcherOptions = {}
 ): Promise<T> {
-  const { retries = 3, retryDelay = 1000 } = options;
+  const { retries = 3, retryDelay = 1000, silentErrors = false } = options;
   let lastError: Error;
 
   for (let i = 0; i < retries; i++) {
     try {
       return await fn();
     } catch (error) {
-      lastError = error as Error;
-      console.error(`Attempt ${i + 1} failed:`, error);
+      lastError = error instanceof Error ? error : new Error(String(error));
+      
+      // Only log in development
+      if (process.env.NODE_ENV === "development") {
+        console.error(`Attempt ${i + 1} failed:`, error);
+      }
+      
+      // Detect CORS errors
+      if (lastError.message.includes('CORS') || lastError.message.includes('blocked by CORS')) {
+        // CORS errors usually won't be fixed by retrying
+        break;
+      }
       
       if (i < retries - 1) {
         await new Promise(resolve => setTimeout(resolve, retryDelay * (i + 1)));
@@ -32,11 +44,9 @@ export async function fetcher<T>(
     }
   }
 
-  // If all retries failed, show error toast and throw
-  toast({
-    title: "Error",
-    description: lastError?.message || "Failed to fetch data",
-    variant: "destructive",
+  // Use our error service to handle the error properly
+  const errorMessage = errorService.handleNetworkError(lastError, { 
+    shouldNotify: !silentErrors 
   });
   
   throw lastError;
