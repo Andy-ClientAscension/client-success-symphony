@@ -15,13 +15,12 @@ import { HealthScoreOverview } from "@/components/Dashboard/HealthScore/HealthSc
 import { HealthScoreSummary } from "@/components/Dashboard/HealthScore/HealthScoreSummary";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { useApiError } from "@/hooks/use-api-error";
-import { errorService } from "@/utils/errorService";
 import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
   const { data, error, isLoading, lastUpdated, isRefreshing } = useSyncedData();
   const { npsData, churnData } = useDashboardData();
-  const { handleError, isNetworkError, clearError } = useApiError();
+  const { handleError, clearError, error: apiError, isNetworkError } = useApiError();
   
   // Handle API errors
   useEffect(() => {
@@ -48,7 +47,7 @@ export default function Dashboard() {
           <SyncStatus status={{ lastUpdated, isRefreshing }} />
         </div>
 
-        {error && (
+        {apiError && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4 mr-2" />
             <AlertTitle>
@@ -56,9 +55,7 @@ export default function Dashboard() {
             </AlertTitle>
             <AlertDescription className="flex flex-col gap-3">
               <div>
-                {isNetworkError 
-                  ? "Network connection error. Dashboard data might be outdated."
-                  : "There was an error loading the dashboard data. Some information might be outdated."}
+                {apiError.message}
               </div>
               <Button 
                 variant="outline" 

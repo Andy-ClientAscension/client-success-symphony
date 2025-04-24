@@ -1,11 +1,12 @@
 
 import { useState } from 'react';
 import { toast } from "@/hooks/use-toast";
-import { ErrorResponse, fetchWithErrorHandling, handleFormSubmission } from '@/utils/errorHandling';
+import { fetchWithErrorHandling, handleFormSubmission } from '@/utils/errorHandling';
+import { ErrorState } from '@/utils/errorService';
 
 export function useErrorHandling() {
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<ErrorResponse | null>(null);
+  const [error, setError] = useState<ErrorState | null>(null);
   
   async function handleAsyncOperation<T>(
     operation: () => Promise<T>,
@@ -47,7 +48,7 @@ export function useErrorHandling() {
     options: {
       successMessage?: string;
       onSuccess?: (data: T) => void;
-      onError?: (error: ErrorResponse) => void;
+      onError?: (error: ErrorState) => void;
     } = {}
   ): Promise<void> {
     setIsLoading(true);

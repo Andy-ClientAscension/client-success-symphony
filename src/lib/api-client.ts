@@ -1,4 +1,3 @@
-
 import { toast } from "@/hooks/use-toast";
 import { getAllClients, getClientsCountByStatus, getAverageNPS, getChurnData } from "@/lib/data";
 import type API from "@/types/api";
@@ -31,13 +30,13 @@ export async function fetcher<T>(
         console.error(`API request "${key}" failed (attempt ${i + 1}/${retries}):`, error);
       }
       
-      // Detect CORS errors or network issues early to avoid unnecessary retries
-      if (lastError.message.includes('CORS') || 
-          lastError.message.includes('blocked by CORS policy') ||
-          lastError.message.includes('Failed to fetch') ||
-          lastError.message.includes('NetworkError')) {
+      // Use errorService to detect error types
+      const errorType = errorService.detectErrorType(error);
+      
+      // Skip retries for certain error types
+      if (errorType === 'cors' || errorType === 'auth') {
         if (process.env.NODE_ENV === "development") {
-          console.warn('Network or CORS error detected - skipping additional retries');
+          console.warn(`${errorType} error detected - skipping additional retries`);
         }
         break;
       }

@@ -3,31 +3,10 @@
  * Utility functions for error handling
  */
 import { toast } from "@/hooks/use-toast";
+import { errorService, ErrorState } from "@/utils/errorService";
 
-// Function to format API errors into user-friendly messages
-export const formatAPIError = (error: unknown): string => {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  
-  if (typeof error === 'string') {
-    return error;
-  }
-  
-  if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
-    return error.message;
-  }
-  
-  return 'An unexpected error occurred. Please try again.';
-};
-
-// Type for error responses
-export interface ErrorResponse {
-  message: string;
-  field?: string;
-  code?: string;
-  details?: unknown;
-}
+// Re-export the ErrorState type from errorService
+export type { ErrorState as ErrorResponse };
 
 // Helper to safely execute async API calls with consistent error handling
 export async function safeApiCall<T>(
@@ -39,23 +18,23 @@ export async function safeApiCall<T>(
     return [result, null];
   } catch (error) {
     console.error(`${errorMessage}:`, error);
-    return [null, error instanceof Error ? error : new Error(formatAPIError(error))];
+    return [null, error instanceof Error ? error : new Error(errorService.getUserFriendlyMessage(error))];
   }
 }
 
 // Create a reusable error handler for API calls
 export const createApiErrorHandler = (customToast: typeof toast) => (error: unknown, title = 'Error') => {
-  const message = formatAPIError(error);
-  console.error(message, error);
+  const errorState = errorService.createErrorState(error);
+  console.error(errorState.message, error);
   
   customToast({
     title,
-    description: message,
+    description: errorState.message,
     variant: "destructive",
     duration: 5000,
   });
   
-  return message;
+  return errorState.message;
 };
 
 // Enhanced API error handler with type safety
@@ -66,51 +45,31 @@ export async function fetchWithErrorHandling<T>(
     throwOnError?: boolean;
     customErrorMessage?: string;
   } = {}
-): Promise<[T | null, ErrorResponse | null]> {
+): Promise<[T | null, ErrorState | null]> {
   const { toastOnError = true, throwOnError = false, customErrorMessage } = options;
   
   try {
     const result = await apiFunction();
     return [result, null];
   } catch (error) {
-    const formattedError = formatAPIError(error);
-    const errorResponse: ErrorResponse = {
-      message: customErrorMessage || formattedError,
-      details: error
-    };
+    const errorState = errorService.createErrorState(error, customErrorMessage);
     
     if (toastOnError) {
       toast({
         title: "Error",
-        description: errorResponse.message,
+        description: errorState.message,
         variant: "destructive",
       });
     }
     
-    console.error('API Error:', errorResponse);
+    console.error('API Error:', errorState);
     
     if (throwOnError) {
       throw error;
     }
     
-    return [null, errorResponse];
+    return [null, errorState];
   }
-}
-
-// Form error parser
-export function parseFormError(error: unknown): Record<string, string> {
-  if (error instanceof Error) {
-    try {
-      const parsed = JSON.parse(error.message);
-      if (typeof parsed === 'object' && parsed !== null) {
-        return parsed;
-      }
-    } catch {
-      // Not JSON, return generic error
-      return { form: error.message };
-    }
-  }
-  return { form: 'An unexpected error occurred' };
 }
 
 // Form submission wrapper
@@ -118,7 +77,7 @@ export async function handleFormSubmission<T>(
   submitFn: () => Promise<T>,
   options: {
     onSuccess?: (data: T) => void;
-    onError?: (error: ErrorResponse) => void;
+    onError?: (error: ErrorState) => void;
     successMessage?: string;
   } = {}
 ): Promise<void> {
@@ -136,18 +95,15 @@ export async function handleFormSubmission<T>(
     
     onSuccess?.(result);
   } catch (error) {
-    const errorResponse: ErrorResponse = {
-      message: error instanceof Error ? error.message : 'Form submission failed',
-      details: error
-    };
+    const errorState = errorService.createErrorState(error, 'Form submission failed');
     
     toast({
       title: "Error",
-      description: errorResponse.message,
+      description: errorState.message,
       variant: "destructive",
     });
     
-    onError?.(errorResponse);
+    onError?.(errorState);
   }
 }
 

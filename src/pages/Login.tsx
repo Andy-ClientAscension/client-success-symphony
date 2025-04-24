@@ -30,7 +30,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { error: apiError, handleError, clearError, isNetworkError } = useApiError();
+  const { error: apiError, handleError, clearError, isNetworkError, isAuthError } = useApiError();
   
   // Add error handling for auth context
   let login, isAuthenticated, isLoading;
@@ -80,7 +80,7 @@ export default function Login() {
       handleError({
         message: "Please enter both email and password",
         code: "validation_error"
-      }, "Please enter both email and password");
+      });
       return;
     }
     
@@ -99,11 +99,11 @@ export default function Login() {
         handleError({
           message: "Invalid email or password. Please try again.",
           code: "auth_error"
-        }, "Login failed");
+        });
       }
     } catch (error) {
       // Use our enhanced error handling
-      handleError(error, "An unexpected error occurred during login. Please try again.");
+      handleError(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -132,6 +132,11 @@ export default function Login() {
                   {isNetworkError && (
                     <div className="mt-2 text-xs">
                       If this problem persists, please contact support or try using a different browser.
+                    </div>
+                  )}
+                  {isAuthError && (
+                    <div className="mt-2 text-xs">
+                      Make sure you're using the correct credentials and try again.
                     </div>
                   )}
                 </Alert>
