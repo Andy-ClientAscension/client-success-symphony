@@ -4,6 +4,9 @@ import { captureError, captureMessage } from './errorNotification';
 import type { ErrorOptions, ErrorState, ErrorType, ErrorSeverity } from './errorTypes';
 import { isAuthError, isCorsError, isNetworkError, isValidationError, isPlaceholderDSN } from './errorDetection';
 
+const ENV = process.env.NODE_ENV || 'development';
+const IS_DEV = ENV === 'development';
+
 export const errorService = {
   isPlaceholderDSN,
   detectErrorType,

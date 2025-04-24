@@ -2,6 +2,7 @@
 import { toast } from "@/hooks/use-toast";
 import type { ErrorOptions, ErrorState } from './errorTypes';
 import { detectErrorType } from './errorMessages';
+import { isPlaceholderDSN } from './errorDetection';
 
 const ENV = process.env.NODE_ENV || 'development';
 const IS_DEV = ENV === 'development';
