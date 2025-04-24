@@ -1,6 +1,7 @@
 
 import { getAllClients } from '@/lib/data';
 import { loadData, STORAGE_KEYS } from '@/utils/persistence';
+import { errorService } from '@/utils/errorService';
 
 export interface DiagnosticResult {
   category: string;
@@ -23,13 +24,27 @@ export interface DiagnosticReport {
 
 export async function runComprehensiveDiagnostic(): Promise<DiagnosticReport> {
   const results: DiagnosticResult[] = [];
-  const clients = getAllClients();
+  let clients = [];
   const report: DiagnosticReport = {
     timestamp: new Date(),
     results: [],
     summary: { passed: 0, warnings: 0, critical: 0 },
     status: 'passed'
   };
+
+  // Try to safely get clients with error handling
+  try {
+    clients = getAllClients();
+  } catch (error) {
+    results.push({
+      category: 'Data Access',
+      status: 'critical',
+      message: 'Failed to load client data',
+      details: error instanceof Error ? error.message : 'Unknown error occurred when loading client data',
+      remediation: 'Check network connectivity and API endpoints.'
+    });
+    // Continue with other checks
+  }
 
   // 1. Data Integrity Checks
   if (clients.length === 0) {
@@ -97,22 +112,47 @@ export async function runComprehensiveDiagnostic(): Promise<DiagnosticReport> {
     });
   }
 
-  // 5. Risk Assessment
-  const atRiskClients = clients.filter(client => 
-    client.status === 'at-risk' || (client.npsScore !== undefined && client.npsScore < 6)
-  );
-  
-  if (atRiskClients.length > 0) {
+  // 5. Error Monitoring Check
+  const sentryCritical = checkSentryConfigured();
+  if (sentryCritical) {
     results.push({
-      category: 'Client Health',
-      status: atRiskClients.length > clients.length * 0.2 ? 'critical' : 'warning',
-      message: `${atRiskClients.length} clients at risk of churning`,
-      details: `${((atRiskClients.length / clients.length) * 100).toFixed(1)}% of clients show risk indicators.`,
-      remediation: 'Review at-risk clients and develop retention strategies.'
+      category: 'Error Monitoring',
+      status: 'warning',
+      message: 'Sentry error monitoring not properly configured',
+      details: 'Error tracking is disabled or using placeholder DSN.',
+      remediation: 'Set a valid Sentry DSN in the error service configuration or remove Sentry initialization.'
     });
   }
 
-  // 6. Browser Compatibility
+  // 6. Network Connectivity Check
+  try {
+    const networkTest = await testNetworkConnectivity();
+    if (!networkTest.success) {
+      results.push({
+        category: 'Network',
+        status: 'critical',
+        message: 'Network connectivity issues detected',
+        details: networkTest.message,
+        remediation: 'Check your internet connection and ensure API endpoints are accessible.'
+      });
+    } else {
+      results.push({
+        category: 'Network',
+        status: 'passed',
+        message: 'Network connectivity verified',
+      });
+    }
+  } catch (error) {
+    results.push({
+      category: 'Network',
+      status: 'warning',
+      message: 'Could not test network connectivity',
+      details: error instanceof Error ? error.message : 'Unknown error occurred during network test',
+      remediation: 'Ensure your browser has network access.'
+    });
+  }
+
+  // 7. Browser Compatibility
   const userAgent = navigator.userAgent;
   const isIE = /MSIE|Trident/.test(userAgent);
   if (isIE) {
@@ -125,7 +165,7 @@ export async function runComprehensiveDiagnostic(): Promise<DiagnosticReport> {
     });
   }
 
-  // 7. Storage Usage
+  // 8. Storage Usage
   try {
     const storageEstimate = 'storage' in navigator && navigator.storage ? 
       await navigator.storage.estimate() : null;
@@ -146,14 +186,6 @@ export async function runComprehensiveDiagnostic(): Promise<DiagnosticReport> {
     console.error('Error checking storage usage:', error);
   }
 
-  // 8. React Component Health Check
-  results.push({
-    category: 'React Components',
-    status: 'passed',
-    message: 'React component structure validated',
-    details: 'All React components are properly structured and using valid props.',
-  });
-
   // Calculate summary statistics
   report.results = results;
   report.summary.passed = results.filter(r => r.status === 'passed').length;
@@ -170,4 +202,65 @@ export async function runComprehensiveDiagnostic(): Promise<DiagnosticReport> {
   }
 
   return report;
+}
+
+// Helper functions for diagnostic checks
+function checkSentryConfigured(): boolean {
+  // Check if Sentry is configured properly
+  const sentryDsn = ''; // This should match what's in errorService.ts
+  return !sentryDsn || sentryDsn === 'YOUR_PRODUCTION_SENTRY_DSN';
+}
+
+async function testNetworkConnectivity(): Promise<{success: boolean, message: string}> {
+  try {
+    // Just test if we can reach a common API endpoint
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    const response = await fetch('https://httpbin.org/get', { 
+      method: 'GET',
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      return {
+        success: false,
+        message: `Network test failed with status: ${response.status}`
+      };
+    }
+    
+    return {
+      success: true,
+      message: 'Network connectivity test passed'
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      // Check for specific network error types
+      if (error.name === 'AbortError') {
+        return {
+          success: false,
+          message: 'Network request timed out'
+        };
+      }
+      
+      if (error.message.includes('CORS') || error.message.includes('cross-origin')) {
+        return {
+          success: false,
+          message: 'CORS policy blocked network test'
+        };
+      }
+      
+      return {
+        success: false,
+        message: `Network error: ${error.message}`
+      };
+    }
+    
+    return {
+      success: false,
+      message: 'Unknown network error occurred'
+    };
+  }
 }

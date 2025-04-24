@@ -27,14 +27,18 @@ export async function fetcher<T>(
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
       
-      // Only log in development
       if (process.env.NODE_ENV === "development") {
-        console.error(`Attempt ${i + 1} failed:`, error);
+        console.error(`API request "${key}" failed (attempt ${i + 1}/${retries}):`, error);
       }
       
-      // Detect CORS errors
-      if (lastError.message.includes('CORS') || lastError.message.includes('blocked by CORS')) {
-        // CORS errors usually won't be fixed by retrying
+      // Detect CORS errors or network issues early to avoid unnecessary retries
+      if (lastError.message.includes('CORS') || 
+          lastError.message.includes('blocked by CORS policy') ||
+          lastError.message.includes('Failed to fetch') ||
+          lastError.message.includes('NetworkError')) {
+        if (process.env.NODE_ENV === "development") {
+          console.warn('Network or CORS error detected - skipping additional retries');
+        }
         break;
       }
       
@@ -46,7 +50,8 @@ export async function fetcher<T>(
 
   // Use our error service to handle the error properly
   const errorMessage = errorService.handleNetworkError(lastError, { 
-    shouldNotify: !silentErrors 
+    shouldNotify: !silentErrors,
+    context: { key }
   });
   
   throw lastError;

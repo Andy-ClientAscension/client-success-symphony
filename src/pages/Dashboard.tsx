@@ -9,18 +9,19 @@ import { ClientList } from "@/components/Dashboard/ClientList";
 import { Card } from "@/components/ui/card";
 import { SyncStatus } from "@/components/SyncStatus";
 import { useSyncedData } from "@/hooks/useSyncedData";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, RefreshCw } from "lucide-react";
 import { HealthScoreOverview } from "@/components/Dashboard/HealthScore/HealthScoreOverview";
 import { HealthScoreSummary } from "@/components/Dashboard/HealthScore/HealthScoreSummary";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { useApiError } from "@/hooks/use-api-error";
 import { errorService } from "@/utils/errorService";
+import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
   const { data, error, isLoading, lastUpdated, isRefreshing } = useSyncedData();
   const { npsData, churnData } = useDashboardData();
-  const { handleError, isNetworkError } = useApiError();
+  const { handleError, isNetworkError, clearError } = useApiError();
   
   // Handle API errors
   useEffect(() => {
@@ -28,6 +29,16 @@ export default function Dashboard() {
       handleError(error, "Failed to load dashboard data");
     }
   }, [error, handleError]);
+
+  // Function to retry loading data
+  const handleRetryLoad = async () => {
+    clearError();
+    try {
+      window.location.reload();
+    } catch (retryError) {
+      handleError(retryError, "Failed to reload dashboard data");
+    }
+  };
 
   return (
     <Layout>
@@ -39,11 +50,25 @@ export default function Dashboard() {
 
         {error && (
           <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              {isNetworkError 
-                ? "Network connection error. Dashboard data might be outdated."
-                : "There was an error loading the dashboard data. Some information might be outdated."}
+            <AlertCircle className="h-4 w-4 mr-2" />
+            <AlertTitle>
+              {isNetworkError ? "Connection Error" : "Data Loading Error"}
+            </AlertTitle>
+            <AlertDescription className="flex flex-col gap-3">
+              <div>
+                {isNetworkError 
+                  ? "Network connection error. Dashboard data might be outdated."
+                  : "There was an error loading the dashboard data. Some information might be outdated."}
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-2 w-fit" 
+                onClick={handleRetryLoad}
+              >
+                <RefreshCw className="h-4 w-4" />
+                Retry
+              </Button>
             </AlertDescription>
           </Alert>
         )}

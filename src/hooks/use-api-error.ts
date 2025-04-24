@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { errorService } from '@/utils/errorService';
 import { toast } from '@/hooks/use-toast';
 
@@ -13,19 +13,18 @@ type ApiErrorState = {
 function detectErrorType(err: unknown): ApiErrorState['type'] {
   if (!err) return 'unknown';
   
-  const errorStr = err instanceof Error ? err.message : String(err);
-  
-  // Check for CORS errors first as they're the most critical
-  if (errorStr.includes('CORS') || errorStr.includes('cross-origin') || errorStr.includes('blocked by CORS policy')) {
-    return 'cors';
-  }
-  
-  if (errorStr.includes('network') || 
-      errorStr.includes('Failed to fetch') || 
-      errorStr.includes('NetworkError') ||
-      errorStr.includes('net::ERR')) {
+  // Use the error service's detection methods first
+  if (errorService.isNetworkError(err)) {
+    if (typeof err === 'string' && err.includes('CORS') || 
+        err instanceof Error && err.message.includes('CORS') ||
+        err instanceof Error && err.message.includes('cross-origin') || 
+        err instanceof Error && err.message.includes('blocked by CORS policy')) {
+      return 'cors';
+    }
     return 'network';
   }
+  
+  const errorStr = err instanceof Error ? err.message : String(err);
   
   if (errorStr.includes('401') || errorStr.includes('403') || errorStr.includes('unauthorized') || errorStr.includes('not authenticated')) {
     return 'auth';
@@ -62,7 +61,7 @@ function getErrorMessageFromType(error: unknown, errorType: ApiErrorState['type'
 export function useApiError() {
   const [error, setError] = useState<ApiErrorState | null>(null);
 
-  const handleError = (err: unknown, fallbackMessage = 'An error occurred') => {
+  const handleError = useCallback((err: unknown, fallbackMessage = 'An error occurred') => {
     let errorMessage: string;
     let errorCode: string | undefined;
     let errorDetails: unknown;
@@ -106,17 +105,17 @@ export function useApiError() {
 
     // Show toast notification for user feedback
     toast({
-      title: errorType === 'cors' || errorType === 'network' ? 
-             "Connection Error" : 
+      title: errorType === 'cors' ? "CORS Error" :
+             errorType === 'network' ? "Connection Error" : 
              errorType === 'server' ? "Server Error" : "Error",
       description: errorMessage,
       variant: "destructive",
     });
 
     return errorState;
-  };
+  }, []);
 
-  const clearError = () => setError(null);
+  const clearError = useCallback(() => setError(null), []);
 
   return {
     error,
