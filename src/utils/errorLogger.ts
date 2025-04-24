@@ -1,4 +1,6 @@
 
+import { errorService } from './errorService';
+
 interface ErrorInfo {
   componentStack: string;
   [key: string]: any;
@@ -19,6 +21,10 @@ export function logError(error: Error, errorInfo?: ErrorInfo) {
     console.groupEnd();
   }
   
-  // Here we can add external error logging services in the future
-  // Example: Sentry.captureException(error, { extra: errorInfo });
+  // Use our error service for consistent error handling
+  errorService.captureError(error, {
+    severity: 'high',
+    context: errorInfo,
+    shouldNotify: true
+  });
 }

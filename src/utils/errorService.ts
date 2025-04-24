@@ -1,45 +1,14 @@
 
-import * as Sentry from '@sentry/react';
-import { toast } from '@/hooks/use-toast';
+// Remove sentry imports since we're not using it
+import { toast } from "@/hooks/use-toast";
 
 // Define environment and DSN configuration strategy
 const ENV = process.env.NODE_ENV || 'development';
 const IS_PROD = ENV === 'production';
 const IS_DEV = ENV === 'development';
 
-// Only initialize Sentry if a valid DSN is provided and in production
-const SENTRY_DSN = process.env.NODE_ENV === "production" ? "" : ""; 
-const SENTRY_ENABLED = !!SENTRY_DSN && SENTRY_DSN !== "YOUR_PRODUCTION_SENTRY_DSN" && IS_PROD;
-
-// Initialize Sentry conditionally
-if (SENTRY_ENABLED) {
-  Sentry.init({
-    dsn: SENTRY_DSN,
-    integrations: [
-      new Sentry.BrowserTracing(),
-    ],
-    // Only capture actual errors, not warnings
-    tracesSampleRate: 1.0,
-    enabled: SENTRY_ENABLED,
-    environment: ENV,
-  });
-} else if (IS_DEV) {
-  console.info("Sentry is disabled. Set a valid DSN to enable error tracking in production.");
-}
-
-// Error severity levels
-export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
-
-interface ErrorOptions {
-  severity?: ErrorSeverity;
-  context?: Record<string, any>;
-  shouldNotify?: boolean;
-  user?: {
-    id?: string;
-    email?: string;
-    [key: string]: any;
-  };
-}
+// Sentry is disabled by default unless explicitly configured
+const SENTRY_ENABLED = false;
 
 // Enhanced error detection and handling
 function isCorsError(error: unknown): boolean {
@@ -84,53 +53,32 @@ function getNetworkErrorMessage(error: unknown): string {
   return typeof error === 'string' ? error : error instanceof Error ? error.message : "An unexpected error occurred";
 }
 
+// Error severity levels
+export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
+
+interface ErrorOptions {
+  severity?: ErrorSeverity;
+  context?: Record<string, any>;
+  shouldNotify?: boolean;
+  user?: {
+    id?: string;
+    email?: string;
+    [key: string]: any;
+  };
+}
+
 export const errorService = {
   setUser(user: { id: string; email: string }) {
-    if (SENTRY_ENABLED) {
-      Sentry.setUser(user);
-    }
+    // No-op since Sentry is disabled
   },
 
   clearUser() {
-    if (SENTRY_ENABLED) {
-      Sentry.setUser(null);
-    }
+    // No-op since Sentry is disabled
   },
 
   captureError(error: Error | string, options: ErrorOptions = {}) {
     const { severity = 'medium', context, shouldNotify = true, user } = options;
     
-    // Only use Sentry if properly configured
-    if (SENTRY_ENABLED) {
-      if (user) {
-        Sentry.setUser(user);
-      }
-
-      if (context) {
-        Sentry.setContext("error_context", context);
-      }
-
-      const errorObject = typeof error === 'string' ? new Error(error) : error;
-      
-      // Special handling for CORS errors
-      if (isCorsError(errorObject)) {
-        const corsErrorContext = {
-          type: 'cors_error',
-          url: window.location.href,
-          origin: window.location.origin,
-          ...context
-        };
-        
-        Sentry.setContext("cors_error_details", corsErrorContext);
-      }
-      
-      Sentry.captureException(errorObject, {
-        level: severity === 'critical' ? 'fatal' : 
-               severity === 'high' ? 'error' :
-               severity === 'medium' ? 'warning' : 'info'
-      });
-    }
-
     // Get user-friendly error message
     const userFriendlyMessage = isCorsError(error) 
       ? getNetworkErrorMessage(error)
@@ -158,12 +106,8 @@ export const errorService = {
 
   // Capture non-error events like user actions or system events
   captureMessage(message: string, options: ErrorOptions = {}) {
-    if (SENTRY_ENABLED) {
-      Sentry.captureMessage(message, {
-        level: options.severity === 'critical' ? 'fatal' :
-               options.severity === 'high' ? 'error' :
-               options.severity === 'medium' ? 'warning' : 'info'
-      });
+    if (IS_DEV) {
+      console.log('Message captured:', message, options);
     }
   },
   

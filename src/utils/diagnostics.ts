@@ -1,7 +1,6 @@
 
 import { getAllClients } from '@/lib/data';
 import { loadData, STORAGE_KEYS } from '@/utils/persistence';
-import { errorService } from '@/utils/errorService';
 
 export interface DiagnosticResult {
   category: string;
@@ -112,17 +111,7 @@ export async function runComprehensiveDiagnostic(): Promise<DiagnosticReport> {
     });
   }
 
-  // 5. Error Monitoring Check
-  const sentryCritical = checkSentryConfigured();
-  if (sentryCritical) {
-    results.push({
-      category: 'Error Monitoring',
-      status: 'warning',
-      message: 'Sentry error monitoring not properly configured',
-      details: 'Error tracking is disabled or using placeholder DSN.',
-      remediation: 'Set a valid Sentry DSN in the error service configuration or remove Sentry initialization.'
-    });
-  }
+  // 5. Error Monitoring Check - Removed Sentry-specific checks
 
   // 6. Network Connectivity Check
   try {
@@ -205,12 +194,6 @@ export async function runComprehensiveDiagnostic(): Promise<DiagnosticReport> {
 }
 
 // Helper functions for diagnostic checks
-function checkSentryConfigured(): boolean {
-  // Check if Sentry is configured properly
-  const sentryDsn = ''; // This should match what's in errorService.ts
-  return !sentryDsn || sentryDsn === 'YOUR_PRODUCTION_SENTRY_DSN';
-}
-
 async function testNetworkConnectivity(): Promise<{success: boolean, message: string}> {
   try {
     // Just test if we can reach a common API endpoint
