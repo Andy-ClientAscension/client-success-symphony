@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { errorService } from "@/utils/errorService";
 
 interface User {
   id: string;
@@ -35,13 +36,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Check for existing session on mount
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        console.log("Initializing auth, checking for session...");
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("Error getting session:", sessionError);
+          throw sessionError;
+        }
+        
         if (session?.user) {
+          console.log("Found existing session, setting user state");
           setUser({
             id: session.user.id,
             email: session.user.email!,
             name: session.user.user_metadata?.name
           });
+        } else {
+          console.log("No active session found");
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
@@ -55,6 +66,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event, session ? "Session exists" : "No session");
+      
       if (session?.user) {
         setUser({
           id: session.user.id,
@@ -68,6 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => {
+      console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
   }, []);
@@ -82,6 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       setError(null);
 
+      console.log("Login attempt for:", email);
       // Fixed the auth options structure to properly set session expiry
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -91,17 +106,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       });
 
-      // After successful login, update the session expiry to 30 days
-      if (!error && data.session) {
-        // Update session to last 30 days
-        await supabase.auth.refreshSession({
-          refresh_token: data.session.refresh_token,
-        });
+      if (error) {
+        console.error("Supabase auth error:", error);
+        setError(new Error(error.message));
+        return false;
       }
 
-      if (error) throw error;
+      // After successful login, update the session expiry to 30 days
+      if (data.session) {
+        console.log("Login successful, refreshing session");
+        try {
+          const refreshResult = await supabase.auth.refreshSession({
+            refresh_token: data.session.refresh_token,
+          });
+          
+          if (refreshResult.error) {
+            console.warn("Session refresh warning:", refreshResult.error);
+          } else {
+            console.log("Session refreshed successfully");
+          }
+        } catch (refreshError) {
+          console.warn("Failed to refresh session:", refreshError);
+          // Continue anyway as the login was successful
+        }
+      }
 
       if (data.user) {
+        console.log("Setting user state after successful login");
         setUser({
           id: data.user.id,
           email: data.user.email!,
@@ -113,7 +144,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return false;
     } catch (error) {
       console.error("Login error:", error);
-      setError(error instanceof Error ? error : new Error("Login failed"));
+      // Use errorService to get user-friendly error
+      const errorMessage = errorService.getUserFriendlyMessage(error, "Login failed");
+      setError(new Error(errorMessage));
       return false;
     } finally {
       setIsLoading(false);
@@ -176,7 +209,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      console.log("Logging out user");
+      const { error: signOutError } = await supabase.auth.signOut();
+      
+      if (signOutError) {
+        console.error("Error during sign out:", signOutError);
+      }
+      
       setUser(null);
       setError(null);
       navigate("/login");

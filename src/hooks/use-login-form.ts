@@ -30,16 +30,18 @@ export function useLoginForm() {
     setIsSubmitting(true);
     
     try {
-      console.log("Attempting to login...");
+      console.log("Attempting to login with:", { email, redactedPassword: '********' });
       const success = await login(email, password);
       
       if (success) {
+        console.log("Login successful, navigating to dashboard");
         toast({
           title: "Login Successful",
           description: "Welcome back!",
         });
         navigate("/dashboard");
       } else {
+        console.log("Login failed - no success returned from auth provider");
         handleError({
           message: "Invalid email or password. Please try again.",
           code: "auth_error"
@@ -49,7 +51,11 @@ export function useLoginForm() {
       console.error("Login error:", error);
       // Enhanced error handling
       if (error instanceof Error) {
-        if (error.message.includes('net::ERR_FAILED') || error.message.includes('Failed to fetch')) {
+        if (error.message.includes('net::ERR_FAILED') || 
+            error.message.includes('Failed to fetch') ||
+            error.message.includes('NetworkError') ||
+            error.message.includes('AbortError') ||
+            error.message.includes('CORS')) {
           handleError({
             message: "Unable to connect to the authentication service. Please check your internet connection and try again.",
             code: "network_error",

@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useCallback } from 'react';
 import { AuthContext } from "@/contexts/AuthContext";
 
 export interface AuthState {
