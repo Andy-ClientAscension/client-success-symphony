@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import { withSentryErrorBoundary } from "@/components/SentryErrorBoundary";
@@ -103,23 +104,25 @@ function App() {
 // Wrap the App component with Sentry monitoring
 export default withSentryErrorBoundary(App, {
   name: 'AppRoot',
-  fallback: ({ error }) => (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="max-w-md space-y-4 rounded-lg border bg-card p-6 shadow-lg">
-        <h1 className="text-xl font-semibold">Application Error</h1>
-        <p className="text-muted-foreground">
-          We're sorry, but something went wrong. Our team has been notified and we're working to fix it.
-        </p>
-        <p className="text-sm text-destructive">
-          {error?.message || "An unexpected error occurred"}
-        </p>
-        <button
-          onClick={() => window.location.reload()}
-          className="rounded bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
-        >
-          Reload Application
-        </button>
+  fallback: function SentryFallbackComponent({ error }) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="max-w-md space-y-4 rounded-lg border bg-card p-6 shadow-lg">
+          <h1 className="text-xl font-semibold">Application Error</h1>
+          <p className="text-muted-foreground">
+            We're sorry, but something went wrong. Our team has been notified and we're working to fix it.
+          </p>
+          <p className="text-sm text-destructive">
+            {error?.message || "An unexpected error occurred"}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="rounded bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
+          >
+            Reload Application
+          </button>
+        </div>
       </div>
-    </div>
-  ),
+    );
+  }
 });

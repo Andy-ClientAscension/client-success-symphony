@@ -4,16 +4,18 @@ import { supabase } from '@/integrations/supabase/client';
 
 export async function initializeSentry() {
   try {
-    const { data: { dsn }, error } = await supabase
+    const { data, error } = await supabase
       .from('secrets')
       .select('value')
       .eq('name', 'SENTRY_DSN')
       .single();
     
-    if (error || !dsn) {
+    if (error || !data) {
       console.warn('Sentry DSN not found in secrets');
       return;
     }
+
+    const dsn = data.value;
 
     Sentry.init({
       dsn: dsn,
@@ -48,4 +50,3 @@ export async function initializeSentry() {
     console.error('Failed to initialize Sentry:', error);
   }
 }
-
