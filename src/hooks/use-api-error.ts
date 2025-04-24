@@ -7,23 +7,77 @@ type ApiErrorState = {
   message: string;
   code?: string;
   details?: unknown;
+  type?: 'auth' | 'network' | 'cors' | 'validation' | 'server' | 'unknown';
 };
+
+function detectErrorType(err: unknown): ApiErrorState['type'] {
+  if (!err) return 'unknown';
+  
+  const errorStr = err instanceof Error ? err.message : String(err);
+  
+  if (errorStr.includes('CORS') || errorStr.includes('cross-origin') || errorStr.includes('blocked by CORS policy')) {
+    return 'cors';
+  }
+  
+  if (errorStr.includes('network') || 
+      errorStr.includes('Failed to fetch') || 
+      errorStr.includes('NetworkError')) {
+    return 'network';
+  }
+  
+  if (errorStr.includes('401') || errorStr.includes('403') || errorStr.includes('unauthorized') || errorStr.includes('not authenticated')) {
+    return 'auth';
+  }
+  
+  if (errorStr.includes('validation') || errorStr.includes('invalid')) {
+    return 'validation';
+  }
+  
+  if (errorStr.includes('500') || errorStr.includes('server error')) {
+    return 'server';
+  }
+  
+  return 'unknown';
+}
+
+function getErrorMessageFromType(error: unknown, errorType: ApiErrorState['type'], fallbackMessage: string): string {
+  switch (errorType) {
+    case 'cors':
+      return "Network request blocked due to CORS policy. This may be a temporary issue or require server configuration.";
+    case 'network':
+      return "Network connection error. Please check your internet connection and try again.";
+    case 'auth':
+      return "Authentication error. Please log in again to continue.";
+    case 'validation':
+      return error instanceof Error ? error.message : "The provided data is invalid. Please check your input and try again.";
+    case 'server':
+      return "Server error. Our team has been notified and is working on a fix.";
+    default:
+      return error instanceof Error ? error.message : fallbackMessage;
+  }
+}
 
 export function useApiError() {
   const [error, setError] = useState<ApiErrorState | null>(null);
 
   const handleError = (err: unknown, fallbackMessage = 'An error occurred') => {
-    let errorMessage = fallbackMessage;
+    let errorMessage: string;
     let errorCode: string | undefined;
     let errorDetails: unknown;
+    let errorType: ApiErrorState['type'] = 'unknown';
+
+    // Detect error type
+    errorType = detectErrorType(err);
+    
+    // Get user-friendly message based on error type
+    errorMessage = getErrorMessageFromType(err, errorType, fallbackMessage);
 
     if (err instanceof Error) {
-      errorMessage = err.message;
       errorDetails = err;
     } else if (typeof err === 'object' && err !== null) {
       // Handle structured API errors
       const apiError = err as { message?: string; code?: string; details?: unknown };
-      errorMessage = apiError.message || fallbackMessage;
+      if (apiError.message) errorMessage = apiError.message;
       errorCode = apiError.code;
       errorDetails = apiError.details;
     }
@@ -31,23 +85,28 @@ export function useApiError() {
     const errorState = {
       message: errorMessage,
       code: errorCode,
-      details: errorDetails
+      details: errorDetails,
+      type: errorType
     };
 
     setError(errorState);
     
     // Report to error service
     errorService.captureError(new Error(errorMessage), {
-      severity: 'medium',
+      severity: errorType === 'server' ? 'high' : 
+                errorType === 'cors' || errorType === 'network' ? 'medium' : 'low',
       context: {
         code: errorCode,
-        details: errorDetails
+        details: errorDetails,
+        errorType
       }
     });
 
-    // Show toast notification
+    // Show toast notification for user feedback
     toast({
-      title: "Error",
+      title: errorType === 'cors' || errorType === 'network' ? 
+             "Connection Error" : 
+             errorType === 'server' ? "Server Error" : "Error",
       description: errorMessage,
       variant: "destructive",
     });
@@ -60,6 +119,9 @@ export function useApiError() {
   return {
     error,
     handleError,
-    clearError
+    clearError,
+    isNetworkError: error?.type === 'network' || error?.type === 'cors',
+    isAuthError: error?.type === 'auth',
+    isServerError: error?.type === 'server'
   };
 }

@@ -34,6 +34,37 @@ interface ErrorOptions {
   };
 }
 
+// Enhanced error detection and handling
+function isCorsError(error: unknown): boolean {
+  if (error instanceof Error) {
+    return error.message.includes('CORS') || 
+           error.message.includes('cross-origin') ||
+           error.message.includes('blocked by CORS policy');
+  }
+  if (typeof error === 'string') {
+    return error.includes('CORS') || 
+           error.includes('cross-origin') ||
+           error.includes('blocked by CORS policy');
+  }
+  return false;
+}
+
+function getNetworkErrorMessage(error: unknown): string {
+  if (isCorsError(error)) {
+    return "Network request blocked due to CORS policy. This may be a temporary issue or require server configuration.";
+  }
+  
+  if (error instanceof Error) {
+    if (error.message.includes('Failed to fetch') || 
+        error.message.includes('NetworkError') ||
+        error.message.includes('Network request failed')) {
+      return "Network connection error. Please check your internet connection and try again.";
+    }
+  }
+  
+  return typeof error === 'string' ? error : error instanceof Error ? error.message : "An unexpected error occurred";
+}
+
 export const errorService = {
   setUser(user: { id: string; email: string }) {
     if (SENTRY_DSN) {
@@ -60,6 +91,21 @@ export const errorService = {
 
     const errorObject = typeof error === 'string' ? new Error(error) : error;
     
+    // Special handling for CORS errors
+    if (isCorsError(errorObject)) {
+      console.error('CORS Error detected:', errorObject);
+      const corsErrorContext = {
+        type: 'cors_error',
+        url: window.location.href,
+        origin: window.location.origin,
+        ...context
+      };
+      
+      if (SENTRY_DSN) {
+        Sentry.setContext("cors_error_details", corsErrorContext);
+      }
+    }
+    
     // Only send to Sentry if it's configured
     if (SENTRY_DSN) {
       Sentry.captureException(errorObject, {
@@ -69,21 +115,27 @@ export const errorService = {
       });
     }
 
+    // Get user-friendly error message
+    const userFriendlyMessage = isCorsError(errorObject) 
+      ? getNetworkErrorMessage(errorObject)
+      : errorObject.message;
+
     // Always show user feedback when needed
     if (shouldNotify) {
       toast({
         title: "An error occurred",
-        description: errorObject.message,
+        description: userFriendlyMessage,
         variant: "destructive",
       });
     }
 
     // Log to console in development
-    if (process.env.NODE_ENV !== 'production') {
+    if (import.meta.env.DEV) {
       console.error('Error captured:', {
         error: errorObject,
         severity,
-        context
+        context,
+        userFriendlyMessage
       });
     }
   },
@@ -97,5 +149,25 @@ export const errorService = {
                options.severity === 'medium' ? 'warning' : 'info'
       });
     }
+  },
+  
+  // Helper for network errors
+  handleNetworkError(error: unknown, options: ErrorOptions = {}) {
+    console.error('Network error:', error);
+    
+    const userFriendlyMessage = getNetworkErrorMessage(error);
+    const errorObject = error instanceof Error ? error : new Error(userFriendlyMessage);
+    
+    this.captureError(errorObject, {
+      ...options,
+      severity: 'medium',
+      context: { 
+        errorType: 'network', 
+        isCors: isCorsError(error),
+        ...options.context 
+      }
+    });
+    
+    return userFriendlyMessage;
   }
 };
