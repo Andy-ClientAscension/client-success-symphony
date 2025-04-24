@@ -1,8 +1,7 @@
-
 import { toast } from "@/hooks/use-toast";
 import { getAllClients, getClientsCountByStatus, getAverageNPS, getChurnData } from "@/lib/data";
 import type API from "@/types/api";
-import { errorService } from "@/utils/errorService";
+import { errorService } from "@/utils/error";
 
 interface FetcherOptions {
   retries?: number;

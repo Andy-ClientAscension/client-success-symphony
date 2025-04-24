@@ -1,5 +1,4 @@
-
-import { errorService } from './errorService';
+import { errorService } from './error';
 
 interface ErrorInfo {
   componentStack: string;

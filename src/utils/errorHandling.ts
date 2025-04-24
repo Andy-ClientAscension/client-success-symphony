@@ -1,9 +1,8 @@
-
 /**
  * Utility functions for error handling
  */
 import { toast } from "@/hooks/use-toast";
-import { errorService, ErrorState } from "@/utils/errorService";
+import { errorService, type ErrorState } from "@/utils/error";
 
 // Re-export the ErrorState type from errorService
 export type { ErrorState as ErrorResponse };
