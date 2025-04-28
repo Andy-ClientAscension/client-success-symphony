@@ -13,6 +13,7 @@ declare namespace Auth {
   interface AuthState {
     isAuthenticated: boolean;
     user: User | null;
+    session: any | null;
     isLoading: boolean;
     error: Error | null;
   }
@@ -36,6 +37,7 @@ declare namespace Auth {
 
   interface AuthContextType {
     user: User | null;
+    session: any | null;
     isAuthenticated: boolean;
     isLoading: boolean;
     error: Error | null;

@@ -13,45 +13,47 @@ interface ProtectedRouteProps {
 function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   const location = useLocation();
   const [authError, setAuthError] = useState<Error | null>(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   
   // Try to use the auth context with error handling
-  let isAuthenticated = false;
-  let isLoading = true;
-  let error = null;
-  
+  let auth;
   try {
-    const auth = useAuth();
-    isAuthenticated = auth.isAuthenticated;
-    isLoading = auth.isLoading;
-    error = auth.error;
+    auth = useAuth();
   } catch (e) {
     console.error("Failed to initialize auth in ProtectedRoute:", e);
     setAuthError(e instanceof Error ? e : new Error("Authentication system unavailable"));
-    isLoading = false;
-  }
-  
-  useEffect(() => {
-    console.log("ProtectedRoute: Mount effect at path", location.pathname);
-    return () => {
-      console.log("ProtectedRoute: Unmount effect from path", location.pathname);
-    };
-  }, [location.pathname]);
-  
-  if (authError) {
     return (
       <ValidationError
         type="error"
         title="Authentication System Error"
-        message={authError.message || "Failed to initialize authentication system"}
+        message={(e instanceof Error ? e.message : "Failed to initialize authentication system") || "Authentication system unavailable"}
         showIcon
       />
     );
   }
   
-  if (isLoading) {
+  const { isAuthenticated, isLoading, error } = auth;
+  
+  useEffect(() => {
+    console.log("ProtectedRoute: Auth check at path", location.pathname, { isAuthenticated, isLoading });
+    
+    // Short timeout to ensure auth check is complete
+    const timer = setTimeout(() => {
+      setIsCheckingAuth(false);
+    }, 300);
+    
+    return () => {
+      clearTimeout(timer);
+      console.log("ProtectedRoute: Unmount effect from path", location.pathname);
+    };
+  }, [location.pathname, isAuthenticated, isLoading]);
+  
+  // Show loading state while checking authentication
+  if (isLoading || isCheckingAuth) {
     return <LoadingState message="Checking authentication..." />;
   }
   
+  // Show error if there's an authentication error
   if (error) {
     return (
       <ValidationError
@@ -63,8 +65,10 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
     );
   }
   
+  // Redirect if not authenticated
   if (!isAuthenticated) {
     console.log("ProtectedRoute: Not authenticated, redirecting to login");
+    // Store the location they were trying to access so we can redirect after login
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

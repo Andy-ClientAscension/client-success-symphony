@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useApiError } from "@/hooks/use-api-error";
 
@@ -11,6 +11,7 @@ export function useLoginForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const { toast } = useToast();
   const { handleError, clearError, error: apiError } = useApiError();
@@ -34,12 +35,15 @@ export function useLoginForm() {
       const success = await login(email, password);
       
       if (success) {
-        console.log("Login successful, navigating to dashboard");
+        console.log("Login successful");
         toast({
           title: "Login Successful",
           description: "Welcome back!",
         });
-        navigate("/dashboard");
+        
+        // Navigate to the page they were trying to access or dashboard
+        const from = location.state?.from?.pathname || "/dashboard";
+        navigate(from, { replace: true });
       } else {
         console.log("Login failed - no success returned from auth provider");
         handleError({
@@ -60,6 +64,12 @@ export function useLoginForm() {
             message: "Unable to connect to the authentication service. Please check your internet connection and try again.",
             code: "network_error",
             type: "network"
+          });
+        } else if (error.message.toLowerCase().includes('too many requests')) {
+          handleError({
+            message: "Too many login attempts. Please try again later.",
+            code: "rate_limit",
+            type: "auth"
           });
         } else {
           // Pass the error through the error service for consistent handling

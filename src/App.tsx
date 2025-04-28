@@ -60,7 +60,7 @@ function App() {
               <BrowserCompatibilityCheck />
               <OfflineDetector />
               <Toaster />
-              <Suspense fallback={<div>Loading...</div>}>
+              <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading application...</div>}>
                 <Routes>
                   {/* Public diagnostic route */}
                   <Route path="/diagnostic" element={<DiagnosticIndex />} />
@@ -74,13 +74,49 @@ function App() {
                   <Route path="/clients/:id" element={<ProtectedRoute><ClientDetails /></ProtectedRoute>} />
                   <Route path="/add-client" element={<ProtectedRoute><AddClient /></ProtectedRoute>} />
                   <Route path="/renewals" element={<ProtectedRoute><Renewals /></ProtectedRoute>} />
-                  <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
-                  <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
+                  <Route path="/communications" element={
+                    <ProtectedRoute>
+                      <Suspense fallback={<div className="p-4">Loading communications...</div>}>
+                        {lazy(() => import("@/pages/Communications"))}
+                      </Suspense>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/payments" element={
+                    <ProtectedRoute>
+                      <Suspense fallback={<div className="p-4">Loading payments...</div>}>
+                        {lazy(() => import("@/pages/Payments"))}
+                      </Suspense>
+                    </ProtectedRoute>
+                  } />
                   <Route path="/dashboard" element={<ProtectedRoute><UnifiedDashboard /></ProtectedRoute>} />
-                  <Route path="/health-score" element={<ProtectedRoute><HealthScoreDashboard /></ProtectedRoute>} />
-                  <Route path="/automations" element={<ProtectedRoute><Automations /></ProtectedRoute>} />
-                  <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                  <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
+                  <Route path="/health-score" element={
+                    <ProtectedRoute>
+                      <Suspense fallback={<div className="p-4">Loading health score dashboard...</div>}>
+                        {lazy(() => import("@/pages/HealthScoreDashboard"))}
+                      </Suspense>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/automations" element={
+                    <ProtectedRoute>
+                      <Suspense fallback={<div className="p-4">Loading automations...</div>}>
+                        {lazy(() => import("@/pages/Automations"))}
+                      </Suspense>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/settings" element={
+                    <ProtectedRoute>
+                      <Suspense fallback={<div className="p-4">Loading settings...</div>}>
+                        {lazy(() => import("@/pages/Settings"))}
+                      </Suspense>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/help" element={
+                    <ProtectedRoute>
+                      <Suspense fallback={<div className="p-4">Loading help...</div>}>
+                        {lazy(() => import("@/pages/Help"))}
+                      </Suspense>
+                    </ProtectedRoute>
+                  } />
                   
                   {/* Root route */}
                   <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />

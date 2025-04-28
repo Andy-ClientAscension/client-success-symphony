@@ -1,7 +1,7 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { 
   Card, 
@@ -14,8 +14,10 @@ import { useLoginForm } from "@/hooks/use-login-form";
 import { LoginForm } from "@/components/auth/LoginForm";
 
 export default function Login() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  
   const {
     email,
     setEmail,
@@ -26,13 +28,16 @@ export default function Login() {
     apiError
   } = useLoginForm();
 
-  // Redirect if already authenticated
-  React.useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/dashboard");
+  // Handle redirection after login
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      const from = location.state?.from?.pathname || "/dashboard";
+      console.log("Already authenticated, redirecting to", from);
+      navigate(from, { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, isLoading, navigate, location.state]);
 
+  // Don't render anything if redirecting
   if (isAuthenticated) {
     return null;
   }
