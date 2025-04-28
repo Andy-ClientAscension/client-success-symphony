@@ -11,6 +11,11 @@ export const mockAuthValues = {
     email: 'test@example.com',
     name: 'Test User'
   },
+  session: { 
+    access_token: 'mock-access-token',
+    refresh_token: 'mock-refresh-token',
+    expires_at: Date.now() / 1000 + 3600 // 1 hour from now
+  },
   isAuthenticated: true,
   isLoading: false,
   error: null,
@@ -23,6 +28,7 @@ export const mockAuthValues = {
 // Mock unauthenticated values
 export const mockUnauthValues = {
   user: null,
+  session: null,
   isAuthenticated: false,
   isLoading: false,
   error: null,

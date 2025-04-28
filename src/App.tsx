@@ -77,14 +77,14 @@ function App() {
                   <Route path="/communications" element={
                     <ProtectedRoute>
                       <Suspense fallback={<div className="p-4">Loading communications...</div>}>
-                        {lazy(() => import("@/pages/Communications"))}
+                        <Communications />
                       </Suspense>
                     </ProtectedRoute>
                   } />
                   <Route path="/payments" element={
                     <ProtectedRoute>
                       <Suspense fallback={<div className="p-4">Loading payments...</div>}>
-                        {lazy(() => import("@/pages/Payments"))}
+                        <Payments />
                       </Suspense>
                     </ProtectedRoute>
                   } />
@@ -92,28 +92,28 @@ function App() {
                   <Route path="/health-score" element={
                     <ProtectedRoute>
                       <Suspense fallback={<div className="p-4">Loading health score dashboard...</div>}>
-                        {lazy(() => import("@/pages/HealthScoreDashboard"))}
+                        <HealthScoreDashboard />
                       </Suspense>
                     </ProtectedRoute>
                   } />
                   <Route path="/automations" element={
                     <ProtectedRoute>
                       <Suspense fallback={<div className="p-4">Loading automations...</div>}>
-                        {lazy(() => import("@/pages/Automations"))}
+                        <Automations />
                       </Suspense>
                     </ProtectedRoute>
                   } />
                   <Route path="/settings" element={
                     <ProtectedRoute>
                       <Suspense fallback={<div className="p-4">Loading settings...</div>}>
-                        {lazy(() => import("@/pages/Settings"))}
+                        <Settings />
                       </Suspense>
                     </ProtectedRoute>
                   } />
                   <Route path="/help" element={
                     <ProtectedRoute>
                       <Suspense fallback={<div className="p-4">Loading help...</div>}>
-                        {lazy(() => import("@/pages/Help"))}
+                        <Help />
                       </Suspense>
                     </ProtectedRoute>
                   } />
