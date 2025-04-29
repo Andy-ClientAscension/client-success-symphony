@@ -14,7 +14,9 @@ interface LoginFormProps {
   password: string;
   setPassword: (password: string) => void;
   isSubmitting: boolean;
+  isResettingPassword?: boolean;
   onSubmit: (e: React.FormEvent) => Promise<void>;
+  onPasswordReset?: () => Promise<void>;
   error?: { message: string; type?: string } | null;
 }
 
@@ -24,7 +26,9 @@ export function LoginForm({
   password,
   setPassword,
   isSubmitting,
+  isResettingPassword = false,
   onSubmit,
+  onPasswordReset,
   error
 }: LoginFormProps) {
   const { toast } = useToast();
@@ -56,6 +60,12 @@ export function LoginForm({
               The server encountered an error. Please try again later.
             </div>
           )}
+          {error.message.includes('Email not confirmed') && (
+            <div className="mt-2 text-xs">
+              You need to verify your email before logging in. Please check your inbox 
+              (including spam folder) for a verification email.
+            </div>
+          )}
         </Alert>
       )}
       
@@ -69,7 +79,7 @@ export function LoginForm({
           onChange={(e) => setEmail(e.target.value)}
           required
           aria-invalid={!!error}
-          disabled={isSubmitting}
+          disabled={isSubmitting || isResettingPassword}
           autoFocus
         />
       </div>
@@ -82,14 +92,19 @@ export function LoginForm({
             className="px-0 font-normal text-sm text-blue-500 hover:text-blue-700"
             onClick={(e) => {
               e.preventDefault();
-              // We'll keep the toast for now since it's just a demo message
-              toast({
-                title: "Password Reset",
-                description: "Password reset functionality is not implemented in this demo.",
-              });
+              if (onPasswordReset) {
+                onPasswordReset();
+              } else {
+                toast({
+                  title: "Password Reset",
+                  description: "Password reset functionality is not implemented in this demo.",
+                });
+              }
             }}
+            disabled={isSubmitting || isResettingPassword}
+            type="button"
           >
-            Forgot password?
+            {isResettingPassword ? "Sending..." : "Forgot password?"}
           </Button>
         </div>
         <Input
@@ -99,14 +114,14 @@ export function LoginForm({
           onChange={(e) => setPassword(e.target.value)}
           required
           aria-invalid={!!error}
-          disabled={isSubmitting}
+          disabled={isSubmitting || isResettingPassword}
         />
       </div>
 
       <Button 
         type="submit" 
         className="w-full" 
-        disabled={isSubmitting}
+        disabled={isSubmitting || isResettingPassword}
       >
         {isSubmitting ? "Logging in..." : "Login"}
       </Button>
@@ -117,6 +132,8 @@ export function LoginForm({
           variant="link"
           className="p-0 font-normal text-blue-500 hover:text-blue-700"
           onClick={() => navigate("/signup")}
+          disabled={isSubmitting || isResettingPassword}
+          type="button"
         >
           Sign up
         </Button>

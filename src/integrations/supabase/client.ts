@@ -10,7 +10,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: false,
+    detectSessionInUrl: true, // Re-enable this to properly handle redirects
     storage: localStorage
   },
   global: {
@@ -35,3 +35,25 @@ export const checkSessionStatus = async () => {
     return { valid: false, session: null };
   }
 };
+
+// Add a helper function to reset the password
+export const resetPassword = async (email: string) => {
+  try {
+    console.log("Requesting password reset for:", email);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    
+    if (error) throw error;
+    return { success: true, message: "Password reset instructions sent to your email." };
+  } catch (error) {
+    console.error("Password reset error:", error);
+    return { 
+      success: false, 
+      message: error instanceof Error 
+        ? error.message 
+        : "Failed to send password reset email. Please try again." 
+    };
+  }
+};
+

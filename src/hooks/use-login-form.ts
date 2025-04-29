@@ -4,17 +4,57 @@ import { useAuth } from "@/hooks/use-auth";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useApiError } from "@/hooks/use-api-error";
+import { resetPassword } from "@/integrations/supabase/client";
 
 export function useLoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
   
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
   const { toast } = useToast();
   const { handleError, clearError, error: apiError } = useApiError();
+
+  const handlePasswordReset = async () => {
+    if (!email) {
+      handleError({
+        message: "Please enter your email address to reset your password",
+        code: "validation_error"
+      });
+      return;
+    }
+    
+    setIsResettingPassword(true);
+    
+    try {
+      const result = await resetPassword(email);
+      
+      if (result.success) {
+        toast({
+          title: "Password Reset Email Sent",
+          description: "Check your inbox for instructions to reset your password.",
+        });
+      } else {
+        handleError({
+          message: result.message,
+          code: "auth_error",
+          type: "auth"
+        });
+      }
+    } catch (error) {
+      console.error("Password reset error:", error);
+      handleError({
+        message: "Failed to send password reset email. Please try again later.",
+        code: "unknown_error",
+        type: "auth"
+      });
+    } finally {
+      setIsResettingPassword(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,7 +145,9 @@ export function useLoginForm() {
     password,
     setPassword,
     isSubmitting,
+    isResettingPassword,
     handleSubmit,
+    handlePasswordReset,
     apiError
   };
 }

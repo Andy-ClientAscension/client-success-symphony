@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/card";
 import { useLoginForm } from "@/hooks/use-login-form";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export default function Login() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -24,9 +26,16 @@ export default function Login() {
     password,
     setPassword,
     isSubmitting,
+    isResettingPassword,
     handleSubmit,
+    handlePasswordReset,
     apiError
   } = useLoginForm();
+
+  // Check for email verification status in the URL
+  const searchParams = new URLSearchParams(location.search);
+  const verificationError = searchParams.get('error_description');
+  const errorCode = searchParams.get('error');
 
   // Handle redirection after login
   useEffect(() => {
@@ -53,13 +62,30 @@ export default function Login() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Show verification error from URL if present */}
+            {(verificationError || errorCode) && (
+              <Alert variant="destructive" className="mb-4 text-sm py-2">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {verificationError || "Authentication error occurred"}
+                  {errorCode === "email_confirmation_required" && (
+                    <div className="mt-2 text-xs">
+                      Please check your email for a verification link.
+                    </div>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+            
             <LoginForm
               email={email}
               setEmail={setEmail}
               password={password}
               setPassword={setPassword}
               isSubmitting={isSubmitting}
+              isResettingPassword={isResettingPassword}
               onSubmit={handleSubmit}
+              onPasswordReset={handlePasswordReset}
               error={apiError}
             />
           </CardContent>
