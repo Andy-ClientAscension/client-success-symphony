@@ -10,7 +10,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true,
+    detectSessionInUrl: false,
     storage: localStorage
   },
   global: {
@@ -19,3 +19,19 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     }
   }
 });
+
+// Export helper function to check session status
+export const checkSessionStatus = async () => {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    return {
+      valid: !!data.session,
+      session: data.session,
+      expiresAt: data.session?.expires_at
+    };
+  } catch (e) {
+    console.error("Error checking session:", e);
+    return { valid: false, session: null };
+  }
+};

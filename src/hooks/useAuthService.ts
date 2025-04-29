@@ -37,7 +37,7 @@ export function useAuthService() {
         }
         
         if (currentSession) {
-          console.log("Found existing session");
+          console.log("Found existing session", currentSession);
           setSession(currentSession);
           setUser({
             id: currentSession.user.id,
@@ -59,7 +59,7 @@ export function useAuthService() {
 
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
-      console.log("Auth state changed:", event);
+      console.log("Auth state changed:", event, currentSession);
       
       if (currentSession) {
         setSession(currentSession);
@@ -146,7 +146,7 @@ export function useAuthService() {
       }
 
       if (data.session) {
-        console.log("Login successful, session established");
+        console.log("Login successful, session established", data.session);
         setSession(data.session);
         setUser({
           id: data.user.id,
@@ -177,6 +177,8 @@ export function useAuthService() {
       setIsLoading(true);
       setError(null);
 
+      console.log("Registration attempt for:", email);
+
       // Validate invite code first
       const isValidCode = await validateInviteCode(inviteCode);
       if (!isValidCode) {
@@ -188,10 +190,15 @@ export function useAuthService() {
 
       const { data, error } = await supabase.auth.signUp({
         email,
-        password
+        password,
+        options: {
+          emailRedirectTo: window.location.origin
+        }
       });
 
       if (error) throw error;
+
+      console.log("Registration result:", data);
 
       if (data.user) {
         if (data.session) {
@@ -205,6 +212,12 @@ export function useAuthService() {
           return {
             success: true,
             message: "Registration successful! You are now logged in."
+          };
+        } else if (data.user.identities?.length === 0) {
+          // User already exists
+          return {
+            success: false,
+            message: "This email is already registered. Please login instead."
           };
         } else {
           // Email confirmation is required

@@ -55,7 +55,19 @@ export function useLoginForm() {
       console.error("Login error:", error);
       // Enhanced error handling
       if (error instanceof Error) {
-        if (error.message.includes('net::ERR_FAILED') || 
+        if (error.message.includes('Email not confirmed')) {
+          handleError({
+            message: "Please verify your email address before logging in. Check your inbox for a confirmation email.",
+            code: "email_verification",
+            type: "auth"
+          });
+        } else if (error.message.includes('Invalid login credentials')) {
+          handleError({
+            message: "Invalid email or password. Please try again.",
+            code: "auth_error",
+            type: "auth"
+          });
+        } else if (error.message.includes('net::ERR_FAILED') || 
             error.message.includes('Failed to fetch') ||
             error.message.includes('NetworkError') ||
             error.message.includes('AbortError') ||
@@ -76,7 +88,11 @@ export function useLoginForm() {
           handleError(error);
         }
       } else {
-        handleError(error);
+        handleError({
+          message: "An unexpected error occurred during login. Please try again.",
+          code: "unknown_error",
+          type: "auth"
+        });
       }
     } finally {
       setIsSubmitting(false);
