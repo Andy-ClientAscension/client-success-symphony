@@ -10,12 +10,20 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true, // Re-enable this to properly handle redirects
-    storage: localStorage
+    detectSessionInUrl: true,
+    storage: localStorage,
+    // Add debug option to log auth events
+    debug: process.env.NODE_ENV === 'development'
   },
   global: {
     headers: {
       ...corsHeaders
+    }
+  },
+  // Add network error retry options
+  realtime: {
+    params: {
+      eventsPerSecond: 2
     }
   }
 });
@@ -57,3 +65,62 @@ export const resetPassword = async (email: string) => {
   }
 };
 
+// Add network connectivity check
+export const checkNetworkConnectivity = async () => {
+  try {
+    // Simple ping to check if we can reach Supabase
+    const start = Date.now();
+    const response = await fetch(`${supabaseUrl}/ping`, { 
+      method: 'GET',
+      headers: corsHeaders,
+      mode: 'cors'
+    });
+    const latency = Date.now() - start;
+    
+    return { 
+      online: response.ok, 
+      latency,
+      status: response.status
+    };
+  } catch (error) {
+    console.error("Network connectivity error:", error);
+    return { 
+      online: false, 
+      latency: 0,
+      error: error instanceof Error ? error.message : "Unknown network error"
+    };
+  }
+};
+
+// Add a function to help diagnose auth issues
+export const diagnoseAuthIssue = async () => {
+  try {
+    // Check network
+    const network = await checkNetworkConnectivity();
+    if (!network.online) {
+      return {
+        issue: 'network',
+        message: 'Network connectivity issue detected. Please check your internet connection.',
+        details: network.error
+      };
+    }
+    
+    // Check session
+    const session = await checkSessionStatus();
+    
+    return {
+      issue: session.valid ? null : 'auth_session',
+      network,
+      session: {
+        valid: session.valid,
+        expiresIn: session.expiresAt ? new Date(session.expiresAt * 1000).toISOString() : null
+      }
+    };
+  } catch (e) {
+    return {
+      issue: 'unknown',
+      message: e instanceof Error ? e.message : 'Unknown error during diagnosis',
+      network: { online: false }
+    };
+  }
+};
