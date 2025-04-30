@@ -14,7 +14,7 @@ import {
 import { useLoginForm } from "@/hooks/use-login-form";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Wifi, RefreshCw } from "lucide-react";
+import { AlertCircle, Wifi, RefreshCw, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { checkNetworkConnectivity, diagnoseAuthIssue } from "@/integrations/supabase/client";
 
