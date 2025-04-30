@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { LoadingState } from "@/components/LoadingState";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ValidationError } from "@/components/ValidationError";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -14,6 +15,7 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   const location = useLocation();
   const [authError, setAuthError] = useState<Error | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const { toast } = useToast();
   
   // Try to use the auth context with error handling
   let auth;
@@ -32,21 +34,25 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
     );
   }
   
-  const { isAuthenticated, isLoading, error } = auth;
+  const { isAuthenticated, isLoading, error, user } = auth;
   
   useEffect(() => {
-    console.log("ProtectedRoute: Auth check at path", location.pathname, { isAuthenticated, isLoading });
+    console.log("ProtectedRoute: Auth check at path", location.pathname, { 
+      isAuthenticated, 
+      isLoading, 
+      userId: user?.id,
+      userEmail: user?.email 
+    });
     
     // Short timeout to ensure auth check is complete
     const timer = setTimeout(() => {
       setIsCheckingAuth(false);
-    }, 300);
+    }, 500);
     
     return () => {
       clearTimeout(timer);
-      console.log("ProtectedRoute: Unmount effect from path", location.pathname);
     };
-  }, [location.pathname, isAuthenticated, isLoading]);
+  }, [location.pathname, isAuthenticated, isLoading, user]);
   
   // Show loading state while checking authentication
   if (isLoading || isCheckingAuth) {
@@ -69,6 +75,11 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   if (!isAuthenticated) {
     console.log("ProtectedRoute: Not authenticated, redirecting to login");
     // Store the location they were trying to access so we can redirect after login
+    toast({
+      title: "Authentication Required",
+      description: "Please log in to access this page.",
+      variant: "destructive"
+    });
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

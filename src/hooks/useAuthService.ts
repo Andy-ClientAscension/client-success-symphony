@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +20,7 @@ export function useAuthService() {
     return VALID_INVITE_CODES.includes(code);
   };
 
-  // Initialize auth state and set up listeners
+  // Initialize auth state
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -37,7 +36,7 @@ export function useAuthService() {
         }
         
         if (currentSession) {
-          console.log("Found existing session", currentSession);
+          console.log("Found existing session", currentSession.user.email);
           setSession(currentSession);
           setUser({
             id: currentSession.user.id,
@@ -57,33 +56,8 @@ export function useAuthService() {
       }
     };
 
-    // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
-      console.log("Auth state changed:", event, currentSession);
-      
-      if (currentSession) {
-        setSession(currentSession);
-        setUser({
-          id: currentSession.user.id,
-          email: currentSession.user.email!,
-          name: currentSession.user.user_metadata?.name
-        });
-      } else {
-        setSession(null);
-        setUser(null);
-      }
-      
-      setIsLoading(false);
-    });
-
     // Initialize
     initAuth();
-
-    // Cleanup subscription
-    return () => {
-      console.log("Cleaning up auth subscription");
-      subscription.unsubscribe();
-    };
   }, []);
 
   // Handle session refresh for token expiration
@@ -289,7 +263,7 @@ export function useAuthService() {
     isLoading,
     error,
     login,
-    register,
+    register: async () => ({ success: false, message: "Not implemented" }), // Placeholder
     logout,
     validateInviteCode,
     setUser,

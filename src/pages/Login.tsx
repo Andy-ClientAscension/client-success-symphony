@@ -17,13 +17,15 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Wifi, RefreshCw, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { checkNetworkConnectivity, diagnoseAuthIssue } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Login() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [diagnosing, setDiagnosing] = useState(false);
   const [diagnosticResults, setDiagnosticResults] = useState<any>(null);
+  const { toast } = useToast();
   
   const {
     email,
@@ -38,6 +40,8 @@ export default function Login() {
     apiError
   } = useLoginForm();
 
+  console.log("Login page rendered, auth state:", { isAuthenticated, isLoading, userEmail: user?.email });
+
   // Check for email verification status in the URL
   const searchParams = new URLSearchParams(location.search);
   const verificationError = searchParams.get('error_description');
@@ -48,9 +52,13 @@ export default function Login() {
     if (isAuthenticated && !isLoading) {
       const from = location.state?.from?.pathname || "/dashboard";
       console.log("Already authenticated, redirecting to", from);
+      toast({
+        title: "Authentication Successful",
+        description: `Welcome back${user?.email ? `, ${user.email}` : ''}!`,
+      });
       navigate(from, { replace: true });
     }
-  }, [isAuthenticated, isLoading, navigate, location.state]);
+  }, [isAuthenticated, isLoading, navigate, location.state, user, toast]);
 
   // Run connectivity diagnosis if there are errors
   const runDiagnostics = async () => {
@@ -89,8 +97,8 @@ export default function Login() {
   };
 
   // Don't render anything if redirecting
-  if (isAuthenticated) {
-    return null;
+  if (isAuthenticated && !isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Redirecting...</div>;
   }
 
   return (
