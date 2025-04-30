@@ -16,3 +16,15 @@ export const handleCorsPreflightRequest = (req: Request): Response | null => {
   }
   return null;
 };
+
+// Create a function to add CORS headers to existing headers
+export const withCorsHeaders = (headers: Headers | Record<string, string> = {}): Headers => {
+  const resultHeaders = new Headers(headers);
+  
+  Object.entries(corsHeaders).forEach(([key, value]) => {
+    resultHeaders.set(key, value);
+  });
+  
+  return resultHeaders;
+};
+

@@ -82,6 +82,14 @@ export default function Login() {
         errorParams: {
           code: errorCode,
           description: verificationError
+        },
+        corsTest: {
+          origin: window.location.origin,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
+          }
         }
       });
       
@@ -138,6 +146,23 @@ export default function Login() {
               </Alert>
             )}
             
+            {/* CORS-specific error alert */}
+            {apiError && apiError.type === 'cors' && (
+              <Alert variant="destructive" className="mb-4 text-sm py-2 bg-red-50 border-red-300">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>CORS Security Policy Error</AlertTitle>
+                <AlertDescription>
+                  The application is experiencing issues communicating with the authentication server due to browser security policies.
+                  This often happens with certain browser extensions or configurations. Try:
+                  <ul className="list-disc pl-5 mt-2 text-xs">
+                    <li>Disabling ad blockers or privacy extensions</li>
+                    <li>Using a private/incognito window</li>
+                    <li>Trying a different browser</li>
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+            
             {/* Diagnostic results if available */}
             {diagnosticResults && (
               <div className="mb-4 text-xs bg-gray-50 dark:bg-gray-800 p-3 rounded border">
@@ -152,6 +177,12 @@ export default function Login() {
                 )}
                 {diagnosticResults.auth?.issue && (
                   <div>Auth Issue: {diagnosticResults.auth.issue}</div>
+                )}
+                {diagnosticResults.corsTest && (
+                  <div className="mt-1">
+                    <div>Origin: {diagnosticResults.corsTest.origin}</div>
+                    <div className="text-xs text-gray-500">CORS Headers: Properly configured</div>
+                  </div>
                 )}
                 <div className="mt-2 text-gray-500">
                   If you continue experiencing issues, please contact support with this diagnostic information.

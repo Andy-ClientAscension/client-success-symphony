@@ -1,6 +1,6 @@
 
 import { errorService, type ErrorState } from "@/utils/error";
-import { corsHeaders } from "@/utils/corsHeaders";
+import { corsHeaders, withCorsHeaders } from "@/utils/corsHeaders";
 
 interface ApiClientOptions {
   baseUrl?: string;
@@ -69,10 +69,10 @@ class ApiClient {
     } = config;
 
     // Merge default headers with request-specific headers
-    const headers = {
+    const headers = withCorsHeaders({
       ...this.options.headers,
       ...(fetchConfig.headers || {})
-    };
+    });
 
     let lastError: Error | null = null;
     
@@ -87,7 +87,9 @@ class ApiClient {
         const response = await fetch(url, {
           ...fetchConfig,
           headers,
-          signal: controller.signal
+          signal: controller.signal,
+          mode: 'cors',
+          credentials: 'include'
         });
 
         // Clear timeout if request completes

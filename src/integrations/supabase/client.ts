@@ -1,10 +1,16 @@
 
 import { createClient } from '@supabase/supabase-js';
-import { corsHeaders } from '@/utils/corsHeaders';
+import { corsHeaders, withCorsHeaders } from '@/utils/corsHeaders';
 
 // Ensure the Supabase client is configured with CORS headers
 const supabaseUrl = 'https://bajfdvphpoopkmpgzyeo.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhamZkdnBocG9vcGttcGd6eWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ3MTM5NTYsImV4cCI6MjA2MDI4OTk1Nn0.QJ7M2iBALcCy_bvJXAIbwFZ8JDh0G3O-t_IgBfDTikE';
+
+// Create fetch with CORS headers
+const fetchWithCors = (url: string, options: RequestInit = {}) => {
+  const headers = withCorsHeaders(options.headers || {});
+  return fetch(url, { ...options, headers });
+};
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
@@ -16,9 +22,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     debug: process.env.NODE_ENV === 'development'
   },
   global: {
-    headers: {
-      ...corsHeaders
-    }
+    headers: corsHeaders,
+    fetch: fetchWithCors
   },
   // Add network error retry options
   realtime: {
@@ -65,14 +70,13 @@ export const resetPassword = async (email: string) => {
   }
 };
 
-// Add network connectivity check
+// Add network connectivity check with CORS headers
 export const checkNetworkConnectivity = async () => {
   try {
     // Simple ping to check if we can reach Supabase
     const start = Date.now();
-    const response = await fetch(`${supabaseUrl}/ping`, { 
+    const response = await fetchWithCors(`${supabaseUrl}/ping`, { 
       method: 'GET',
-      headers: corsHeaders,
       mode: 'cors'
     });
     const latency = Date.now() - start;
