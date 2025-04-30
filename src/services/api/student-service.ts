@@ -1,8 +1,7 @@
 
-import { apiClient, apiRequest } from "./api-client";
+import { apiCore, executeApiRequest, ApiResponse } from './api-core';
 import { supabase } from "@/integrations/supabase/client";
 import { errorService } from "@/utils/error";
-import type { ErrorState } from "@/utils/error/errorTypes";
 
 export interface Student {
   id: string;
@@ -25,17 +24,9 @@ interface GetStudentsOptions {
   limit?: number;
 }
 
-interface StudentResponse {
-  data: Student[] | null;
-  count?: number;
-  isLoading: boolean;
-  error: ErrorState | null;
-}
-
-interface SingleStudentResponse {
-  data: Student | null;
-  isLoading: boolean;
-  error: ErrorState | null;
+interface StudentListResponse {
+  data: Student[];
+  count: number;
 }
 
 /**
@@ -43,8 +34,8 @@ interface SingleStudentResponse {
  */
 export async function getStudents(
   options?: GetStudentsOptions
-): Promise<StudentResponse> {
-  try {
+): Promise<ApiResponse<StudentListResponse>> {
+  return executeApiRequest(async () => {
     let query = supabase
       .from('clients')
       .select('*', { count: 'exact' });
@@ -73,27 +64,20 @@ export async function getStudents(
 
     if (error) throw error;
 
-    return {
+    return { 
       data: data as Student[],
-      count,
-      isLoading: false,
-      error: null
+      count: count || 0 
     };
-  } catch (error) {
-    console.error("Error fetching students:", error);
-    return {
-      data: null,
-      isLoading: false,
-      error: errorService.createErrorState(error, "Failed to fetch students")
-    };
-  }
+  }, {
+    errorMessage: "Failed to fetch students"
+  });
 }
 
 /**
  * Get a single student by ID
  */
-export async function getStudent(id: string): Promise<SingleStudentResponse> {
-  try {
+export async function getStudent(id: string): Promise<ApiResponse<Student>> {
+  return executeApiRequest(async () => {
     const { data, error } = await supabase
       .from('clients')
       .select('*')
@@ -101,20 +85,12 @@ export async function getStudent(id: string): Promise<SingleStudentResponse> {
       .maybeSingle();
 
     if (error) throw error;
+    if (!data) throw new Error(`Student with ID ${id} not found`);
 
-    return {
-      data: data as Student,
-      isLoading: false,
-      error: null
-    };
-  } catch (error) {
-    console.error("Error fetching student:", error);
-    return {
-      data: null,
-      isLoading: false,
-      error: errorService.createErrorState(error, "Failed to fetch student details")
-    };
-  }
+    return data as Student;
+  }, {
+    errorMessage: "Failed to fetch student details"
+  });
 }
 
 /**
@@ -123,8 +99,8 @@ export async function getStudent(id: string): Promise<SingleStudentResponse> {
 export async function updateStudentNotes(
   id: string, 
   notes: string
-): Promise<SingleStudentResponse> {
-  try {
+): Promise<ApiResponse<Student>> {
+  return executeApiRequest(async () => {
     const { data, error } = await supabase
       .from('clients')
       .update({ notes })
@@ -133,20 +109,12 @@ export async function updateStudentNotes(
       .maybeSingle();
 
     if (error) throw error;
+    if (!data) throw new Error(`Failed to update student with ID ${id}`);
 
-    return {
-      data: data as Student,
-      isLoading: false,
-      error: null
-    };
-  } catch (error) {
-    console.error("Error updating student notes:", error);
-    return {
-      data: null,
-      isLoading: false,
-      error: errorService.createErrorState(error, "Failed to update student notes")
-    };
-  }
+    return data as Student;
+  }, {
+    errorMessage: "Failed to update student notes"
+  });
 }
 
 /**
@@ -154,8 +122,8 @@ export async function updateStudentNotes(
  */
 export async function createStudent(
   student: Omit<Student, 'id'>
-): Promise<SingleStudentResponse> {
-  try {
+): Promise<ApiResponse<Student>> {
+  return executeApiRequest(async () => {
     const { data, error } = await supabase
       .from('clients')
       .insert([student])
@@ -163,27 +131,19 @@ export async function createStudent(
       .maybeSingle();
 
     if (error) throw error;
+    if (!data) throw new Error('Failed to create student');
 
-    return {
-      data: data as Student,
-      isLoading: false,
-      error: null
-    };
-  } catch (error) {
-    console.error("Error creating student:", error);
-    return {
-      data: null,
-      isLoading: false,
-      error: errorService.createErrorState(error, "Failed to create student")
-    };
-  }
+    return data as Student;
+  }, {
+    errorMessage: "Failed to create student"
+  });
 }
 
 /**
  * Delete a student
  */
-export async function deleteStudent(id: string): Promise<{ success: boolean; error: ErrorState | null }> {
-  try {
+export async function deleteStudent(id: string): Promise<ApiResponse<{ success: boolean }>> {
+  return executeApiRequest(async () => {
     const { error } = await supabase
       .from('clients')
       .delete()
@@ -191,15 +151,8 @@ export async function deleteStudent(id: string): Promise<{ success: boolean; err
 
     if (error) throw error;
 
-    return {
-      success: true,
-      error: null
-    };
-  } catch (error) {
-    console.error("Error deleting student:", error);
-    return {
-      success: false,
-      error: errorService.createErrorState(error, "Failed to delete student")
-    };
-  }
+    return { success: true };
+  }, {
+    errorMessage: "Failed to delete student"
+  });
 }

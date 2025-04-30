@@ -1,8 +1,7 @@
 
-import { apiClient, apiRequest } from "./api-client";
+import { apiCore, executeApiRequest, ApiResponse } from './api-core';
 import { supabase } from "@/integrations/supabase/client";
 import { errorService } from "@/utils/error";
-import type { ErrorState } from "@/utils/error/errorTypes";
 
 export interface MetricData {
   id: string;
@@ -27,23 +26,11 @@ export interface DashboardMetrics {
   revenue: number;
 }
 
-interface MetricsResponse {
-  data: MetricData[] | null;
-  isLoading: boolean;
-  error: ErrorState | null;
-}
-
-interface DashboardMetricsResponse {
-  data: DashboardMetrics | null;
-  isLoading: boolean;
-  error: ErrorState | null;
-}
-
 /**
  * Get all metrics
  */
-export async function getMetrics(): Promise<MetricsResponse> {
-  try {
+export async function getMetrics(): Promise<ApiResponse<MetricData[]>> {
+  return executeApiRequest(async () => {
     // In a real app this would fetch from an actual metrics table
     // For now, simulate with client data aggregation
     const { data: clients, error } = await supabase
@@ -53,7 +40,6 @@ export async function getMetrics(): Promise<MetricsResponse> {
     if (error) throw error;
 
     // Transform client data into metrics
-    // This is a simplified example - in a real app, you'd have actual metrics data
     const metrics: MetricData[] = [
       {
         id: '1',
@@ -91,26 +77,17 @@ export async function getMetrics(): Promise<MetricsResponse> {
       }
     ];
 
-    return {
-      data: metrics,
-      isLoading: false,
-      error: null
-    };
-  } catch (error) {
-    console.error("Error fetching metrics:", error);
-    return {
-      data: null,
-      isLoading: false,
-      error: errorService.createErrorState(error, "Failed to fetch metrics")
-    };
-  }
+    return metrics;
+  }, {
+    errorMessage: "Failed to fetch metrics"
+  });
 }
 
 /**
  * Get dashboard metrics summary
  */
-export async function getDashboardMetrics(): Promise<DashboardMetricsResponse> {
-  try {
+export async function getDashboardMetrics(): Promise<ApiResponse<DashboardMetrics>> {
+  return executeApiRequest(async () => {
     const { data: clients, error } = await supabase
       .from('clients')
       .select('*');
@@ -133,17 +110,8 @@ export async function getDashboardMetrics(): Promise<DashboardMetricsResponse> {
       revenue: clients.reduce((sum, c) => sum + (c.mrr || 0), 0)
     };
 
-    return {
-      data: metrics,
-      isLoading: false,
-      error: null
-    };
-  } catch (error) {
-    console.error("Error fetching dashboard metrics:", error);
-    return {
-      data: null,
-      isLoading: false,
-      error: errorService.createErrorState(error, "Failed to fetch dashboard metrics")
-    };
-  }
+    return metrics;
+  }, {
+    errorMessage: "Failed to fetch dashboard metrics"
+  });
 }
