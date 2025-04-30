@@ -1,4 +1,3 @@
-
 import { errorService, type ErrorState } from "@/utils/error";
 import { corsHeaders, withCorsHeaders } from "@/utils/corsHeaders";
 
@@ -68,11 +67,14 @@ class ApiClient {
       ...fetchConfig
     } = config;
 
-    // Merge default headers with request-specific headers
-    const headers = withCorsHeaders({
+    // Merge default headers with request-specific headers - fixed type handling
+    const mergedHeaders: Record<string, string> = {
       ...this.options.headers,
-      ...(fetchConfig.headers || {})
-    });
+      ...(fetchConfig.headers as Record<string, string> || {})
+    };
+    
+    // Use the withCorsHeaders helper for proper typing
+    const headers = withCorsHeaders(mergedHeaders);
 
     let lastError: Error | null = null;
     

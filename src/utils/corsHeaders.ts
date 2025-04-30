@@ -21,10 +21,10 @@ export const handleCorsPreflightRequest = (req: Request): Response | null => {
 export const withCorsHeaders = (headers: Headers | Record<string, string> = {}): Headers => {
   const resultHeaders = new Headers(headers);
   
+  // Add the CORS headers
   Object.entries(corsHeaders).forEach(([key, value]) => {
     resultHeaders.set(key, value);
   });
   
   return resultHeaders;
 };
-

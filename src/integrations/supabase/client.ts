@@ -22,7 +22,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     debug: process.env.NODE_ENV === 'development'
   },
   global: {
-    headers: corsHeaders,
+    headers: corsHeaders as Record<string, string>,
     fetch: fetchWithCors
   },
   // Add network error retry options
