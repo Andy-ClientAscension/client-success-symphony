@@ -67,14 +67,26 @@ class ApiClient {
       ...fetchConfig
     } = config;
 
-    // Merge default headers with request-specific headers - fixed type handling
-    const mergedHeaders: Record<string, string> = {
-      ...this.options.headers,
-      ...(fetchConfig.headers as Record<string, string> || {})
-    };
+    // Create a plain object with string keys and values for headers
+    const headerObj: Record<string, string> = {};
     
-    // Use the withCorsHeaders helper for proper typing
-    const headers = withCorsHeaders(mergedHeaders);
+    // Add default headers
+    if (this.options.headers) {
+      Object.entries(this.options.headers).forEach(([key, value]) => {
+        headerObj[key] = value;
+      });
+    }
+    
+    // Add request-specific headers
+    if (fetchConfig.headers) {
+      const requestHeaders = fetchConfig.headers as Record<string, string>;
+      Object.entries(requestHeaders).forEach(([key, value]) => {
+        headerObj[key] = value;
+      });
+    }
+    
+    // Use the withCorsHeaders helper with the plain object
+    const headers = withCorsHeaders(headerObj);
 
     let lastError: Error | null = null;
     
