@@ -67,7 +67,7 @@ class ApiClient {
       ...fetchConfig
     } = config;
 
-    // Create a plain object with string keys and values for headers
+    // Create a properly typed object to collect headers
     const headerObj: Record<string, string> = {};
     
     // Add default headers
@@ -77,15 +77,16 @@ class ApiClient {
       });
     }
     
-    // Add request-specific headers
+    // Add request-specific headers if they exist
     if (fetchConfig.headers) {
-      const requestHeaders = fetchConfig.headers as Record<string, string>;
-      Object.entries(requestHeaders).forEach(([key, value]) => {
+      // Convert any HeadersInit to a consistent format
+      const headers = new Headers(fetchConfig.headers);
+      headers.forEach((value, key) => {
         headerObj[key] = value;
       });
     }
     
-    // Use the withCorsHeaders helper with the plain object
+    // Use the withCorsHeaders helper with our properly typed object
     const headers = withCorsHeaders(headerObj);
 
     let lastError: Error | null = null;

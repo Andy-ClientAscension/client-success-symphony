@@ -8,7 +8,27 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 
 // Create fetch with CORS headers
 const fetchWithCors = (url: string, options: RequestInit = {}) => {
-  const headers = withCorsHeaders(options.headers || {});
+  // Create an empty Headers object
+  const headersObj: Record<string, string> = {};
+  
+  // Add any existing headers from options to our object
+  if (options.headers) {
+    if (options.headers instanceof Headers) {
+      options.headers.forEach((value, key) => {
+        headersObj[key] = value;
+      });
+    } else {
+      // Handle other HeadersInit types (plain object or array of tuples)
+      const headers = new Headers(options.headers);
+      headers.forEach((value, key) => {
+        headersObj[key] = value;
+      });
+    }
+  }
+  
+  // Now use withCorsHeaders with our properly formatted object
+  const headers = withCorsHeaders(headersObj);
+  
   return fetch(url, { ...options, headers });
 };
 
