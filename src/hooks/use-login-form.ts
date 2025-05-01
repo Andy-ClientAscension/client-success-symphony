@@ -11,9 +11,10 @@ export function useLoginForm() {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
-  const [networkStatus, setNetworkStatus] = useState<{online: boolean, latency?: number}>({
+  const [networkStatus, setNetworkStatus] = useState<{online: boolean, latency?: number, status?: string}>({
     online: navigator.onLine
   });
+  const [offlineMode, setOfflineMode] = useState(false);
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -24,37 +25,75 @@ export function useLoginForm() {
   // Monitor network status
   useEffect(() => {
     const checkNetwork = async () => {
-      const status = await checkNetworkConnectivity();
-      setNetworkStatus(status);
+      // First assume browser's online status
+      setNetworkStatus(prev => ({...prev, online: navigator.onLine}));
+      
+      if (!navigator.onLine) {
+        return;
+      }
+      
+      try {
+        // Then verify with actual request
+        const status = await checkNetworkConnectivity();
+        setNetworkStatus(status);
+        
+        if (!status.online && status.status === 'timeout') {
+          console.log("Network check timed out, falling back to browser network status");
+          setNetworkStatus(prev => ({...prev, online: navigator.onLine}));
+        }
+      } catch (error) {
+        console.error("Error checking network connectivity:", error);
+        // Fallback to browser's online status
+        setNetworkStatus({online: navigator.onLine, status: 'error'});
+      }
     };
     
-    // Check initially and when coming online
+    // Check initially
     checkNetwork();
     
     const handleOnline = () => {
-      setNetworkStatus(prev => ({...prev, online: true}));
+      setNetworkStatus(prev => ({...prev, online: true, status: 'browser-detected'}));
       checkNetwork();
+      toast({
+        title: "Connected",
+        description: "Your internet connection has been restored.",
+      });
     };
     
     const handleOffline = () => {
-      setNetworkStatus({online: false});
+      setNetworkStatus({online: false, status: 'browser-detected'});
+      toast({
+        title: "Disconnected",
+        description: "You are currently offline. Some features may be limited.",
+        variant: "destructive"
+      });
     };
     
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     
-    // Set up periodic checks if in development
-    let intervalId: number;
-    if (process.env.NODE_ENV === 'development') {
-      intervalId = window.setInterval(checkNetwork, 30000);
-    }
+    // Set up periodic checks
+    const intervalId = window.setInterval(checkNetwork, 30000);
     
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
-      if (intervalId) clearInterval(intervalId);
+      clearInterval(intervalId);
     };
-  }, []);
+  }, [toast]);
+
+  // Function to manually check network status
+  const checkNetworkStatus = async () => {
+    try {
+      const status = await checkNetworkConnectivity();
+      setNetworkStatus(status);
+      return status;
+    } catch (error) {
+      console.error("Error checking network:", error);
+      setNetworkStatus({online: navigator.onLine, status: 'error'});
+      return {online: navigator.onLine, status: 'error'};
+    }
+  };
 
   const handlePasswordReset = async () => {
     if (!email) {
@@ -128,9 +167,15 @@ export function useLoginForm() {
     
     try {
       console.log("Attempting to login with:", { email, redactedPassword: '********' });
-      // Check connectivity before attempting login
-      const networkDiag = await checkNetworkConnectivity();
-      if (!networkDiag.online) {
+      
+      // Recheck connectivity before attempting login
+      const networkDiag = await checkNetworkStatus();
+      
+      // If we're still offline but browser reports online, we might be having connectivity issues
+      if (!networkDiag.online && navigator.onLine) {
+        console.log("Browser reports online but network check failed. Using fallback.");
+        // We'll try the login anyway since the browser reports we're online
+      } else if (!networkDiag.online) {
         throw new Error(`Unable to reach authentication server. Please check your internet connection. Status: ${networkDiag.status || 'unreachable'}`);
       }
       
@@ -156,14 +201,19 @@ export function useLoginForm() {
     } catch (error) {
       console.error("Login error:", error);
       
-      // Detailed diagnostics for development troubleshooting
-      if (process.env.NODE_ENV === 'development') {
-        try {
-          const diagnosis = await diagnoseAuthIssue();
-          console.log("Auth diagnosis:", diagnosis);
-        } catch (diagError) {
-          console.error("Error during auth diagnosis:", diagError);
-        }
+      // Handle network-related errors specially
+      if (!navigator.onLine || 
+          (error instanceof Error && 
+           (error.message.includes('Failed to fetch') || 
+            error.message.includes('network') || 
+            error.message.includes('offline')))) {
+        
+        handleError({
+          message: "You appear to be offline. Please check your internet connection and try again.",
+          code: "network_error",
+          type: "network"
+        });
+        return;
       }
       
       // Enhanced error handling
@@ -185,7 +235,7 @@ export function useLoginForm() {
             error.message.includes('NetworkError') ||
             error.message.includes('AbortError')) {
           handleError({
-            message: "Unable to connect to the authentication service. This may be due to network issues or an ad blocker. Please check your connection settings and try again.",
+            message: "Unable to connect to the authentication service. This may be due to network issues. Please check your connection settings and try again.",
             code: "network_error",
             type: "network"
           });
@@ -225,8 +275,10 @@ export function useLoginForm() {
     isSubmitting,
     isResettingPassword,
     networkStatus,
+    offlineMode,
     handleSubmit,
     handlePasswordReset,
+    checkNetworkStatus,
     apiError
   };
 }

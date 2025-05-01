@@ -43,7 +43,7 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   }
   
   // Show error if there's an authentication error
-  if (error) {
+  if (error && error.message && !error.message.includes('offline') && !error.message.includes('network')) {
     return (
       <ValidationError
         type="error"

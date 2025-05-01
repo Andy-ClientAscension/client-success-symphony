@@ -1,173 +1,192 @@
 
 import { createClient } from '@supabase/supabase-js';
-import { corsHeaders, withCorsHeaders } from '@/utils/corsHeaders';
+import { corsHeaders } from '@/utils/corsHeaders';
 
-// Ensure the Supabase client is configured with CORS headers
+// Initialize the Supabase client
 const supabaseUrl = 'https://bajfdvphpoopkmpgzyeo.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhamZkdnBocG9vcGttcGd6eWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ3MTM5NTYsImV4cCI6MjA2MDI4OTk1Nn0.QJ7M2iBALcCy_bvJXAIbwFZ8JDh0G3O-t_IgBfDTikE';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhamZkdnBocG9vcGttcGd6eWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ3MTM5NTYsImV4cCI6MjA2MDI4OTk1Nn0.QJ7M2iBALcCy_bvJXAIbwFZ8JDh0G3O-t_IgBfDTikE';
 
-// Create fetch with CORS headers
-const fetchWithCors = (url: string, options: RequestInit = {}) => {
-  // Create an empty Headers object
-  const headersObj: Record<string, string> = {};
-  
-  // Add any existing headers from options to our object
-  if (options.headers) {
-    if (options.headers instanceof Headers) {
-      options.headers.forEach((value, key) => {
-        headersObj[key] = value;
-      });
-    } else {
-      // Handle other HeadersInit types (plain object or array of tuples)
-      const headers = new Headers(options.headers);
-      headers.forEach((value, key) => {
-        headersObj[key] = value;
-      });
-    }
-  }
-  
-  // Now use withCorsHeaders with our properly formatted object
-  const headers = withCorsHeaders(headersObj);
-  
-  return fetch(url, { ...options, headers });
-};
-
-// Configuration explicitly sets auth options for proper session management
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
-    persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storage: localStorage,
-    // Add debug option to log auth events
-    debug: process.env.NODE_ENV === 'development'
-  },
-  global: {
-    headers: corsHeaders,
-    fetch: fetchWithCors
-  },
-  // Add network error retry options
-  realtime: {
-    params: {
-      eventsPerSecond: 2
-    }
+    persistSession: true,
+    storage: localStorage
   }
 });
 
-// Export helper function to check session status
-export const checkSessionStatus = async () => {
+/**
+ * Helper function to fetch with CORS headers
+ */
+async function fetchWithCors(url, options = {}) {
+  const timeout = 5000; // 5 second timeout
+  
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  
   try {
-    const { data, error } = await supabase.auth.getSession();
-    if (error) throw error;
-    return {
-      valid: !!data.session,
-      session: data.session,
-      expiresAt: data.session?.expires_at
-    };
-  } catch (e) {
-    console.error("Error checking session:", e);
-    return { valid: false, session: null };
-  }
-};
-
-// Add a helper function to reset the password
-export const resetPassword = async (email: string) => {
-  try {
-    console.log("Requesting password reset for:", email);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    
-    if (error) throw error;
-    return { success: true, message: "Password reset instructions sent to your email." };
-  } catch (error) {
-    console.error("Password reset error:", error);
-    return { 
-      success: false, 
-      message: error instanceof Error 
-        ? error.message 
-        : "Failed to send password reset email. Please try again." 
-    };
-  }
-};
-
-// Function to update user profile data
-export const updateUserProfile = async (userId: string, profileData: any) => {
-  try {
-    const { error } = await supabase
-      .from('profiles')
-      .upsert({ 
-        id: userId,
-        ...profileData,
-        updated_at: new Date()
-      });
-      
-    if (error) throw error;
-    return { success: true, message: "Profile updated successfully" };
-  } catch (error) {
-    console.error("Profile update error:", error);
-    return { 
-      success: false, 
-      message: error instanceof Error ? error.message : "Failed to update profile"
-    };
-  }
-};
-
-// Add network connectivity check with CORS headers
-export const checkNetworkConnectivity = async () => {
-  try {
-    // Simple ping to check if we can reach Supabase
-    const start = Date.now();
-    const response = await fetchWithCors(`${supabaseUrl}/ping`, { 
-      method: 'GET',
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        ...corsHeaders
+      },
+      signal: controller.signal,
       mode: 'cors'
     });
-    const latency = Date.now() - start;
     
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    clearTimeout(id);
+    throw error;
+  }
+}
+
+/**
+ * Reset password function
+ */
+export async function resetPassword(email) {
+  try {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+
+    if (error) {
+      return { success: false, message: error.message };
+    }
+    return { success: true, message: 'Password reset email sent' };
+  } catch (error) {
+    console.error('Reset password error:', error);
     return { 
-      online: response.ok, 
-      latency,
-      status: response.status
+      success: false, 
+      message: error instanceof Error ? error.message : 'Failed to send password reset email' 
     };
+  }
+}
+
+/**
+ * Check network connectivity
+ */
+export async function checkNetworkConnectivity() {
+  try {
+    // First check basic browser connectivity
+    if (!navigator.onLine) {
+      return { online: false, status: 'browser-offline' };
+    }
+    
+    // Use ping endpoint to test real connectivity to Supabase
+    const startTime = Date.now();
+    
+    // Set a short timeout for the request
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+    
+    try {
+      const response = await fetch(`${supabaseUrl}/ping`, {
+        method: 'GET',
+        headers: corsHeaders,
+        signal: controller.signal,
+        mode: 'cors'
+      });
+      
+      clearTimeout(timeoutId);
+      
+      // Calculate latency
+      const latency = Date.now() - startTime;
+      
+      if (response.ok) {
+        return { online: true, latency, status: response.status };
+      } else {
+        return { online: false, latency, status: response.status };
+      }
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      
+      // If timeout or abort error, return timeout status
+      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+        return { online: false, status: 'timeout' };
+      }
+      
+      // For fetch errors (like CORS, network errors), show more details
+      console.error("Network connectivity fetch error:", fetchError);
+      return { 
+        online: false, 
+        status: fetchError instanceof Error ? fetchError.name : 'error',
+        errorMessage: fetchError instanceof Error ? fetchError.message : String(fetchError)
+      };
+    }
   } catch (error) {
     console.error("Network connectivity error:", error);
     return { 
       online: false, 
-      latency: 0,
-      error: error instanceof Error ? error.message : "Unknown network error"
+      status: 'error',
+      errorMessage: error instanceof Error ? error.message : String(error)
     };
   }
-};
+}
 
-// Add a function to help diagnose auth issues
-export const diagnoseAuthIssue = async () => {
+/**
+ * Diagnose authentication issues
+ */
+export async function diagnoseAuthIssue() {
   try {
-    // Check network
-    const network = await checkNetworkConnectivity();
-    if (!network.online) {
-      return {
-        issue: 'network',
-        message: 'Network connectivity issue detected. Please check your internet connection.',
-        details: network.error
+    // Check if Supabase client is available
+    if (!supabase) {
+      return { issue: "Supabase client not initialized" };
+    }
+
+    // Try to get current session
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      return { 
+        issue: "Error retrieving session", 
+        details: sessionError.message,
+        code: sessionError.code || 'unknown'
       };
     }
     
-    // Check session
-    const session = await checkSessionStatus();
+    if (sessionData && sessionData.session) {
+      return { 
+        issue: "Session exists but not recognized by app", 
+        sessionExpires: sessionData.session.expires_at,
+        hasExpired: sessionData.session.expires_at * 1000 < Date.now(),
+      };
+    }
+
+    // Check if we can retrieve user
+    const { data: userData, error: userError } = await supabase.auth.getUser();
     
+    if (userError) {
+      return { 
+        issue: "Error retrieving user", 
+        details: userError.message,
+        code: userError.code || 'unknown'
+      };
+    }
+    
+    if (userData && userData.user) {
+      return { 
+        issue: "User exists but no session", 
+        details: "User may need to login again",
+        emailConfirmed: userData.user.email_confirmed_at !== null
+      };
+    }
+
+    // If we get here, no obvious issues found
     return {
-      issue: session.valid ? null : 'auth_session',
-      network,
-      session: {
-        valid: session.valid,
-        expiresIn: session.expiresAt ? new Date(session.expiresAt * 1000).toISOString() : null
-      }
+      issue: "No authentication data found",
+      details: "User may need to sign up or login",
+      browserStorage: localStorage && localStorage.getItem('sb-bajfdvphpoopkmpgzyeo-auth-token') ? "Auth token found in localStorage" : "No auth token in localStorage"
     };
-  } catch (e) {
+  } catch (error) {
+    console.error("Auth diagnosis error:", error);
     return {
-      issue: 'unknown',
-      message: e instanceof Error ? e.message : 'Unknown error during diagnosis',
-      network: { online: false }
+      issue: "Error during authentication diagnosis",
+      details: error instanceof Error ? error.message : String(error),
+      type: error instanceof Error ? error.name : 'unknown'
     };
   }
-};
+}
+
+export default supabase;

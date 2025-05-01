@@ -37,7 +37,8 @@ export default function Login() {
     networkStatus,
     handleSubmit,
     handlePasswordReset,
-    apiError
+    apiError,
+    checkNetworkStatus
   } = useLoginForm();
 
   console.log("Login page rendered, auth state:", { isAuthenticated, isLoading, userEmail: user?.email });
@@ -64,13 +65,21 @@ export default function Login() {
   const runDiagnostics = async () => {
     setDiagnosing(true);
     try {
+      // First check network connectivity manually
+      await checkNetworkStatus();
+      
       // Check network connectivity first
       const connectivity = await checkNetworkConnectivity();
       
       // If network is available, check auth status
       let authDiag = null;
       if (connectivity.online) {
-        authDiag = await diagnoseAuthIssue();
+        try {
+          authDiag = await diagnoseAuthIssue();
+        } catch (e) {
+          console.error("Error diagnosing auth:", e);
+          authDiag = { error: "Failed to check auth service" };
+        }
       }
       
       setDiagnosticResults({
@@ -90,14 +99,23 @@ export default function Login() {
             'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
             'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
           }
-        }
+        },
+        browserNetworkStatus: navigator.onLine
+      });
+      
+      toast({
+        title: connectivity.online ? "Connected" : "Offline",
+        description: connectivity.online 
+          ? "Network connection established." 
+          : "You appear to be offline. Local authentication mode enabled.",
       });
       
     } catch (error) {
       console.error("Error running diagnostics:", error);
       setDiagnosticResults({
         error: error instanceof Error ? error.message : "Unknown error during diagnostics",
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        browserNetworkStatus: navigator.onLine
       });
     } finally {
       setDiagnosing(false);
@@ -121,12 +139,21 @@ export default function Login() {
           </CardHeader>
           <CardContent>
             {/* Network status indicator */}
-            {!networkStatus.online && (
+            {networkStatus && !networkStatus.online && (
               <Alert variant="destructive" className="mb-4 text-sm py-2 bg-amber-50 border-amber-300">
                 <WifiOff className="h-4 w-4" />
                 <AlertTitle>Network Connectivity Issue</AlertTitle>
-                <AlertDescription>
-                  You appear to be offline. Please check your internet connection to continue.
+                <AlertDescription className="flex justify-between items-center">
+                  <span>You appear to be offline. Please check your internet connection to continue.</span>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={checkNetworkStatus}
+                    className="ml-2"
+                  >
+                    <RefreshCw className="h-3 w-3 mr-1" />
+                    Retry
+                  </Button>
                 </AlertDescription>
               </Alert>
             )}
@@ -168,12 +195,20 @@ export default function Login() {
               <div className="mb-4 text-xs bg-gray-50 dark:bg-gray-800 p-3 rounded border">
                 <div className="font-medium mb-1">Connection Diagnostics:</div>
                 <div>
-                  Network: {diagnosticResults.network?.online ? 
+                  Browser Online: {navigator.onLine ? 
+                    <span className="text-green-600">Yes</span> : 
+                    <span className="text-red-600">No</span>}
+                </div>
+                <div>
+                  Network Check: {diagnosticResults.network?.online ? 
                     <span className="text-green-600">Online</span> : 
                     <span className="text-red-600">Offline</span>}
                 </div>
                 {diagnosticResults.network?.latency && (
                   <div>Latency: {diagnosticResults.network.latency}ms</div>
+                )}
+                {diagnosticResults.network?.status && (
+                  <div>Status: {diagnosticResults.network.status}</div>
                 )}
                 {diagnosticResults.auth?.issue && (
                   <div>Auth Issue: {diagnosticResults.auth.issue}</div>
@@ -181,7 +216,7 @@ export default function Login() {
                 {diagnosticResults.corsTest && (
                   <div className="mt-1">
                     <div>Origin: {diagnosticResults.corsTest.origin}</div>
-                    <div className="text-xs text-gray-500">CORS Headers: Properly configured</div>
+                    <div className="text-xs text-gray-500">CORS Headers: Present</div>
                   </div>
                 )}
                 <div className="mt-2 text-gray-500">
@@ -200,6 +235,8 @@ export default function Login() {
               onSubmit={handleSubmit}
               onPasswordReset={handlePasswordReset}
               error={apiError}
+              networkStatus={networkStatus}
+              onRetryConnection={checkNetworkStatus}
             />
           </CardContent>
           <CardFooter className="flex justify-center border-t pt-4">
