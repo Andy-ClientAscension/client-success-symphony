@@ -16,7 +16,6 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { toast } = useToast();
   
-  // Use auth hook outside of render to prevent infinite loops
   const { isAuthenticated, isLoading, error, user } = useAuth();
   
   useEffect(() => {
@@ -58,15 +57,21 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   // Redirect if not authenticated
   if (!isAuthenticated) {
     console.log("ProtectedRoute: Not authenticated, redirecting to login");
-    // Only show toast when actually redirecting (not on every render)
-    toast({
-      title: "Authentication Required",
-      description: "Please log in to access this page.",
-      variant: "destructive"
-    });
+    // Use a flag to prevent multiple toast displays
+    if (!sessionStorage.getItem('auth_redirect_notified')) {
+      sessionStorage.setItem('auth_redirect_notified', 'true');
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to access this page.",
+        variant: "destructive"
+      });
+    }
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // Clear the notification flag when successfully authenticated
+  sessionStorage.removeItem('auth_redirect_notified');
+  
   return <>{children}</>;
 }
 

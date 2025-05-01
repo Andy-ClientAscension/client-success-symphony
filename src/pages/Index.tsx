@@ -22,19 +22,15 @@ export default function Index() {
     }
   }, [navigate, isAuthenticated, isLoading]);
   
-  if (isLoading) {
-    return (
-      <Layout>
-        <LoadingState message="Initializing application..." />
-      </Layout>
-    );
-  }
-  
   return (
     <Layout>
-      <div className="flex items-center justify-center h-screen">
-        <p>Redirecting...</p>
-      </div>
+      {isLoading ? (
+        <LoadingState message="Initializing application..." />
+      ) : (
+        <div className="flex items-center justify-center h-screen">
+          <p>Redirecting...</p>
+        </div>
+      )}
     </Layout>
   );
 }
