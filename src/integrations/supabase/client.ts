@@ -17,7 +17,7 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
 /**
  * Helper function to fetch with CORS headers
  */
-async function fetchWithCors(url, options = {}) {
+async function fetchWithCors(url: string, options: RequestInit = {}) {
   const timeout = 5000; // 5 second timeout
   
   const controller = new AbortController();
