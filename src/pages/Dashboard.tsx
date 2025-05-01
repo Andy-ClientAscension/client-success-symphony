@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Layout } from "@/components/Layout/Layout";
 import { DashboardHeader } from "@/components/Dashboard/DashboardHeader";
@@ -87,7 +86,7 @@ export default function Dashboard() {
         </div>
 
         {error && (
-          <Alert variant="warning" className="mb-4">
+          <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Sync Warning</AlertTitle>
             <AlertDescription>

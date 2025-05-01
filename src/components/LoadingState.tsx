@@ -8,13 +8,15 @@ interface LoadingStateProps {
   showProgress?: boolean;
   progress?: number;
   className?: string;
+  size?: "sm" | "md" | "lg"; // Add size prop
 }
 
 export function LoadingState({ 
   message = "Loading...", 
   showProgress = false, 
   progress = undefined,
-  className = ""
+  className = "",
+  size = "md" // Default size
 }: LoadingStateProps) {
   const [localProgress, setLocalProgress] = React.useState(0);
 
@@ -38,9 +40,16 @@ export function LoadingState({
     }
   }, [showProgress, progress]);
 
+  // Define size classes
+  const sizeClasses = {
+    sm: "h-6 w-6",
+    md: "h-10 w-10",
+    lg: "h-16 w-16"
+  };
+
   return (
     <div className={`flex flex-col items-center justify-center p-8 ${className}`}>
-      <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+      <Loader2 className={`${sizeClasses[size]} animate-spin text-primary mb-4`} />
       <p className="text-muted-foreground mb-2">{message}</p>
       
       {showProgress && (

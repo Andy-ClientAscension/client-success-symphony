@@ -2,7 +2,7 @@
 import React from "react";
 import { RefreshCw } from "lucide-react";
 import { format } from "date-fns";
-import { Button } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button"; // Correct import
 import { useQueryClient } from "@tanstack/react-query";
 import { DATA_KEYS } from "@/hooks/useSyncedDashboard";
 import { useToast } from "@/hooks/use-toast";
