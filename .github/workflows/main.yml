@@ -3,9 +3,14 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, master, dev, development ]
+    branches: [main, master, dev, development]
+    tags: [v*]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -31,7 +36,7 @@ jobs:
           key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
       - name: Install dependencies
         run: npm ci
-      - name: Lint code
+      - name: Run linter
         run: npm run lint
 
   type-check:
@@ -52,11 +57,12 @@ jobs:
           key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
       - name: Install dependencies
         run: npm ci
-      - name: Type check with strict settings
+      - name: Type check
         run: npx tsc --project tsconfig.ci.json --noEmit
 
   test:
     runs-on: ubuntu-latest
+    needs: lint
     steps:
       - uses: actions/checkout@v4
       - name: Set up Node.js
@@ -74,7 +80,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run tests
-        run: npm test
+        run: npm test -- --coverage
         env:
           CI: true
       - name: Upload test results
@@ -88,7 +94,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    needs: [lint, type-check, test]
+    needs: [type-check, test]
     steps:
       - uses: actions/checkout@v4
       - name: Set up Node.js
@@ -120,18 +126,13 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-      - name: Download build artifacts
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
           path: dist/
       - name: Deploy to production
-        # This is a placeholder - replace with your actual deployment action
+        # Replace with your actual deployment action
         run: |
           echo "Deploying to production..."
           # Example for Netlify:
@@ -148,3 +149,5 @@ jobs:
           #   vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID}}
           #   working-directory: ./
           #   vercel-args: '--prod'
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
