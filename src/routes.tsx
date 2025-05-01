@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import DiagnosticIndex from './pages/DiagnosticIndex';
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import Dashboard from './pages/Dashboard';
 import NotFound from './pages/NotFound';
+import Index from './pages/Index';
 
 // Wrapper component for route error handling
 const RouteErrorBoundary = ({ children }: { children: React.ReactNode }) => (
@@ -59,8 +60,8 @@ export const AppRoutes = () => {
         }
       />
       
-      {/* Root route - redirect to dashboard if logged in, otherwise to login */}
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      {/* Root route - handles auth redirects */}
+      <Route path="/" element={<Index />} />
       
       {/* 404 route */}
       <Route path="*" element={<NotFound />} />

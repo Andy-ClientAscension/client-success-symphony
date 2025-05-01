@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { corsHeaders } from '@/utils/corsHeaders';
 
@@ -6,13 +5,21 @@ import { corsHeaders } from '@/utils/corsHeaders';
 const supabaseUrl = 'https://bajfdvphpoopkmpgzyeo.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhamZkdnBocG9vcGttcGd6eWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ3MTM5NTYsImV4cCI6MjA2MDI4OTk1Nn0.QJ7M2iBALcCy_bvJXAIbwFZ8JDh0G3O-t_IgBfDTikE';
 
+// Define the site URL for redirection handling
+const siteUrl = window.location.origin;
+
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    storage: localStorage
+    storage: localStorage,
+    detectSessionInUrl: true,
+    flowType: 'pkce'
   }
 });
+
+// Configure the site URL in localStorage for Supabase
+localStorage.setItem('supabase.auth.site_url', siteUrl);
 
 /**
  * Helper function to fetch with CORS headers
