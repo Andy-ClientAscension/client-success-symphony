@@ -116,7 +116,7 @@ function App() {
                   <Route path="/dashboard" element={
                     <ProtectedRoute>
                       <SentryRouteErrorBoundary>
-                        <UnifiedDashboard />
+                        <Dashboard />
                       </SentryRouteErrorBoundary>
                     </ProtectedRoute>
                   } />

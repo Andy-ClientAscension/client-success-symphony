@@ -1,12 +1,9 @@
 
-declare namespace Metrics {
-  interface BaseMetrics {
-    totalMRR: number;
-    totalCallsBooked: number;
-    totalDealsClosed: number;
-    clientCount: number;
-  }
+/**
+ * Metrics Type Definitions
+ */
 
+declare namespace Metrics {
   interface StatusCounts {
     active: number;
     atRisk: number;
@@ -22,27 +19,35 @@ declare namespace Metrics {
     growthRate: number;
   }
 
-  interface PerformanceTrend {
-    month: string;
-    value: number;
-    trend: number;
-  }
-
-  interface CompanyMetrics extends BaseMetrics {
+  interface CompanyMetrics {
+    totalMRR: number;
+    totalCallsBooked: number;
+    totalDealsClosed: number;
+    clientCount: number;
     statusCounts: StatusCounts;
     rates: Rates;
-    trends: PerformanceTrend[];
+    trends: TrendPoint[];
   }
 
-  interface TeamMetrics extends BaseMetrics {
-    teamId: string;
-    teamName: string;
-    teamLead: string;
-    memberCount: number;
-    performance: {
-      avgResponseTime: number;
-      taskCompletion: number;
-      clientSatisfaction: number;
-    };
+  interface TrendPoint {
+    date: string;
+    value: number;
+    type: string;
+  }
+
+  interface PerformanceMetrics {
+    successRate: number;
+    responseTime: number;
+    npsScore: number;
+    completionRate: number;
+  }
+
+  interface TeamMember {
+    id: string;
+    name: string;
+    role: string;
+    metrics: PerformanceMetrics;
   }
 }
+
+export = Metrics;
