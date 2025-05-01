@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import { withSentryErrorBoundary, SentryRouteErrorBoundary } from "@/components/SentryErrorBoundary";
@@ -10,27 +11,8 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { logStartupPhase } from "@/utils/errorHandling";
-
-// Import pages
-import DiagnosticIndex from "@/pages/DiagnosticIndex";
-import Login from "@/pages/Login";
-import SignUp from "@/pages/SignUp";
-import UnifiedDashboard from "@/pages/UnifiedDashboard";
-import Index from "@/pages/Index";
-import NotFound from "@/pages/NotFound";
-import Clients from "@/pages/Clients";
-import ClientDetails from "@/pages/ClientDetails";
-import AddClient from "@/pages/AddClient";
-import Renewals from "@/pages/Renewals";
-import Dashboard from "@/pages/Dashboard"; // Add this import for the Dashboard component
-
-// Lazy load less frequently accessed pages
-const Communications = lazy(() => import("@/pages/Communications"));
-const Payments = lazy(() => import("@/pages/Payments"));
-const HealthScoreDashboard = lazy(() => import("@/pages/HealthScoreDashboard"));
-const Automations = lazy(() => import("@/pages/Automations"));
-const Settings = lazy(() => import("@/pages/Settings"));
-const Help = lazy(() => import("@/pages/Help"));
+import { RouterProvider } from "react-router-dom";
+import router from "./routes";
 
 logStartupPhase("App.tsx: Module loading started");
 
@@ -51,134 +33,16 @@ function App() {
 
   return (
     <SentryRouteErrorBoundary>
-      <Router>
-        <ThemeProvider defaultTheme="system" storageKey="vite-react-theme">
-          <QueryClientProvider client={queryClient}>
-            <AuthProvider>
-              <BrowserCompatibilityCheck />
-              <OfflineDetector />
-              <Toaster />
-              <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading application...</div>}>
-                <Routes>
-                  {/* Public diagnostic route */}
-                  <Route path="/diagnostic" element={<DiagnosticIndex />} />
-                  
-                  {/* Authentication routes */}
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<SignUp />} />
-                  
-                  {/* Protected routes with Sentry error boundaries */}
-                  <Route path="/clients" element={
-                    <ProtectedRoute>
-                      <SentryRouteErrorBoundary>
-                        <Clients />
-                      </SentryRouteErrorBoundary>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/clients/:id" element={
-                    <ProtectedRoute>
-                      <SentryRouteErrorBoundary>
-                        <ClientDetails />
-                      </SentryRouteErrorBoundary>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/add-client" element={
-                    <ProtectedRoute>
-                      <SentryRouteErrorBoundary>
-                        <AddClient />
-                      </SentryRouteErrorBoundary>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/renewals" element={
-                    <ProtectedRoute>
-                      <SentryRouteErrorBoundary>
-                        <Renewals />
-                      </SentryRouteErrorBoundary>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/communications" element={
-                    <ProtectedRoute>
-                      <SentryRouteErrorBoundary>
-                        <Suspense fallback={<div className="p-4">Loading communications...</div>}>
-                          <Communications />
-                        </Suspense>
-                      </SentryRouteErrorBoundary>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/payments" element={
-                    <ProtectedRoute>
-                      <SentryRouteErrorBoundary>
-                        <Suspense fallback={<div className="p-4">Loading payments...</div>}>
-                          <Payments />
-                        </Suspense>
-                      </SentryRouteErrorBoundary>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/dashboard" element={
-                    <ProtectedRoute>
-                      <SentryRouteErrorBoundary>
-                        <Dashboard />
-                      </SentryRouteErrorBoundary>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/health-score" element={
-                    <ProtectedRoute>
-                      <SentryRouteErrorBoundary>
-                        <Suspense fallback={<div className="p-4">Loading health score dashboard...</div>}>
-                          <HealthScoreDashboard />
-                        </Suspense>
-                      </SentryRouteErrorBoundary>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/automations" element={
-                    <ProtectedRoute>
-                      <SentryRouteErrorBoundary>
-                        <Suspense fallback={<div className="p-4">Loading automations...</div>}>
-                          <Automations />
-                        </Suspense>
-                      </SentryRouteErrorBoundary>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings" element={
-                    <ProtectedRoute>
-                      <SentryRouteErrorBoundary>
-                        <Suspense fallback={<div className="p-4">Loading settings...</div>}>
-                          <Settings />
-                        </Suspense>
-                      </SentryRouteErrorBoundary>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/help" element={
-                    <ProtectedRoute>
-                      <SentryRouteErrorBoundary>
-                        <Suspense fallback={<div className="p-4">Loading help...</div>}>
-                          <Help />
-                        </Suspense>
-                      </SentryRouteErrorBoundary>
-                    </ProtectedRoute>
-                  } />
-                  
-                  {/* Root route */}
-                  <Route path="/" element={
-                    <ProtectedRoute>
-                      <SentryRouteErrorBoundary>
-                        <Index />
-                      </SentryRouteErrorBoundary>
-                    </ProtectedRoute>
-                  } />
-                  
-                  {/* Redirects */}
-                  <Route path="/analytics" element={<Navigate to="/dashboard" replace />} />
-                  <Route path="/ai-dashboard" element={<Navigate to="/dashboard" replace />} />
-                  
-                  {/* 404 route */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
-            </AuthProvider>
-          </QueryClientProvider>
-        </ThemeProvider>
-      </Router>
+      <ThemeProvider defaultTheme="system" storageKey="vite-react-theme">
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <BrowserCompatibilityCheck />
+            <OfflineDetector />
+            <Toaster />
+            <RouterProvider router={router} />
+          </AuthProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
     </SentryRouteErrorBoundary>
   );
 }

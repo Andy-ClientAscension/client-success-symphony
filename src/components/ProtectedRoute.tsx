@@ -13,30 +13,14 @@ interface ProtectedRouteProps {
 
 function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   const location = useLocation();
-  const [authError, setAuthError] = useState<Error | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { toast } = useToast();
   
-  // Try to use the auth context with error handling
-  let auth;
-  try {
-    auth = useAuth();
-  } catch (e) {
-    console.error("Failed to initialize auth in ProtectedRoute:", e);
-    setAuthError(e instanceof Error ? e : new Error("Authentication system unavailable"));
-    return (
-      <ValidationError
-        type="error"
-        title="Authentication System Error"
-        message={(e instanceof Error ? e.message : "Failed to initialize authentication system") || "Authentication system unavailable"}
-        showIcon
-      />
-    );
-  }
-  
-  const { isAuthenticated, isLoading, error, user } = auth;
+  // Use auth hook outside of render to prevent infinite loops
+  const { isAuthenticated, isLoading, error, user } = useAuth();
   
   useEffect(() => {
+    // Log auth status for debugging
     console.log("ProtectedRoute: Auth check at path", location.pathname, { 
       isAuthenticated, 
       isLoading, 
@@ -44,7 +28,7 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
       userEmail: user?.email 
     });
     
-    // Short timeout to ensure auth check is complete
+    // Short delay to ensure auth check is complete
     const timer = setTimeout(() => {
       setIsCheckingAuth(false);
     }, 500);
@@ -74,7 +58,7 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   // Redirect if not authenticated
   if (!isAuthenticated) {
     console.log("ProtectedRoute: Not authenticated, redirecting to login");
-    // Store the location they were trying to access so we can redirect after login
+    // Only show toast when actually redirecting (not on every render)
     toast({
       title: "Authentication Required",
       description: "Please log in to access this page.",
