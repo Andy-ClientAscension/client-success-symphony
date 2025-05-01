@@ -6,12 +6,21 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardErrorAlert } from '@/components/Dashboard/DashboardErrorAlert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { withSentryErrorBoundary } from '@/components/SentryErrorBoundary';
+import { captureException } from '@/utils/sentry/config';
 
-export function StudentsData() {
+function StudentsDataComponent() {
   const { data, isLoading, error, execute } = useApi(
     () => getStudents({ limit: 10, page: 1 }),
     { executeOnMount: true }
   );
+
+  // Report error to Sentry manually if needed
+  React.useEffect(() => {
+    if (error) {
+      captureException(error, { source: 'StudentsData', context: 'data loading' });
+    }
+  }, [error]);
 
   if (error) {
     return <DashboardErrorAlert error={new Error(error.message)} />;
@@ -73,3 +82,8 @@ export function StudentsData() {
     </Card>
   );
 }
+
+// Export the component wrapped with Sentry error boundary
+export const StudentsData = withSentryErrorBoundary(StudentsDataComponent, {
+  name: 'StudentsData',
+});

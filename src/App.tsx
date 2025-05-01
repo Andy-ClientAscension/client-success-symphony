@@ -1,7 +1,7 @@
 
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Suspense, lazy } from "react";
-import { withSentryErrorBoundary } from "@/components/SentryErrorBoundary";
+import { withSentryErrorBoundary, SentryRouteErrorBoundary } from "@/components/SentryErrorBoundary";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -50,9 +50,7 @@ function App() {
   logStartupPhase("App component rendering");
 
   return (
-    <ErrorBoundary
-      customMessage="The application encountered an unexpected error. Please refresh the page or try again later."
-    >
+    <SentryRouteErrorBoundary>
       <Router>
         <ThemeProvider defaultTheme="system" storageKey="vite-react-theme">
           <QueryClientProvider client={queryClient}>
@@ -69,57 +67,105 @@ function App() {
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<SignUp />} />
                   
-                  {/* Protected routes */}
-                  <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
-                  <Route path="/clients/:id" element={<ProtectedRoute><ClientDetails /></ProtectedRoute>} />
-                  <Route path="/add-client" element={<ProtectedRoute><AddClient /></ProtectedRoute>} />
-                  <Route path="/renewals" element={<ProtectedRoute><Renewals /></ProtectedRoute>} />
+                  {/* Protected routes with Sentry error boundaries */}
+                  <Route path="/clients" element={
+                    <ProtectedRoute>
+                      <SentryRouteErrorBoundary>
+                        <Clients />
+                      </SentryRouteErrorBoundary>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/clients/:id" element={
+                    <ProtectedRoute>
+                      <SentryRouteErrorBoundary>
+                        <ClientDetails />
+                      </SentryRouteErrorBoundary>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/add-client" element={
+                    <ProtectedRoute>
+                      <SentryRouteErrorBoundary>
+                        <AddClient />
+                      </SentryRouteErrorBoundary>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/renewals" element={
+                    <ProtectedRoute>
+                      <SentryRouteErrorBoundary>
+                        <Renewals />
+                      </SentryRouteErrorBoundary>
+                    </ProtectedRoute>
+                  } />
                   <Route path="/communications" element={
                     <ProtectedRoute>
-                      <Suspense fallback={<div className="p-4">Loading communications...</div>}>
-                        <Communications />
-                      </Suspense>
+                      <SentryRouteErrorBoundary>
+                        <Suspense fallback={<div className="p-4">Loading communications...</div>}>
+                          <Communications />
+                        </Suspense>
+                      </SentryRouteErrorBoundary>
                     </ProtectedRoute>
                   } />
                   <Route path="/payments" element={
                     <ProtectedRoute>
-                      <Suspense fallback={<div className="p-4">Loading payments...</div>}>
-                        <Payments />
-                      </Suspense>
+                      <SentryRouteErrorBoundary>
+                        <Suspense fallback={<div className="p-4">Loading payments...</div>}>
+                          <Payments />
+                        </Suspense>
+                      </SentryRouteErrorBoundary>
                     </ProtectedRoute>
                   } />
-                  <Route path="/dashboard" element={<ProtectedRoute><UnifiedDashboard /></ProtectedRoute>} />
+                  <Route path="/dashboard" element={
+                    <ProtectedRoute>
+                      <SentryRouteErrorBoundary>
+                        <UnifiedDashboard />
+                      </SentryRouteErrorBoundary>
+                    </ProtectedRoute>
+                  } />
                   <Route path="/health-score" element={
                     <ProtectedRoute>
-                      <Suspense fallback={<div className="p-4">Loading health score dashboard...</div>}>
-                        <HealthScoreDashboard />
-                      </Suspense>
+                      <SentryRouteErrorBoundary>
+                        <Suspense fallback={<div className="p-4">Loading health score dashboard...</div>}>
+                          <HealthScoreDashboard />
+                        </Suspense>
+                      </SentryRouteErrorBoundary>
                     </ProtectedRoute>
                   } />
                   <Route path="/automations" element={
                     <ProtectedRoute>
-                      <Suspense fallback={<div className="p-4">Loading automations...</div>}>
-                        <Automations />
-                      </Suspense>
+                      <SentryRouteErrorBoundary>
+                        <Suspense fallback={<div className="p-4">Loading automations...</div>}>
+                          <Automations />
+                        </Suspense>
+                      </SentryRouteErrorBoundary>
                     </ProtectedRoute>
                   } />
                   <Route path="/settings" element={
                     <ProtectedRoute>
-                      <Suspense fallback={<div className="p-4">Loading settings...</div>}>
-                        <Settings />
-                      </Suspense>
+                      <SentryRouteErrorBoundary>
+                        <Suspense fallback={<div className="p-4">Loading settings...</div>}>
+                          <Settings />
+                        </Suspense>
+                      </SentryRouteErrorBoundary>
                     </ProtectedRoute>
                   } />
                   <Route path="/help" element={
                     <ProtectedRoute>
-                      <Suspense fallback={<div className="p-4">Loading help...</div>}>
-                        <Help />
-                      </Suspense>
+                      <SentryRouteErrorBoundary>
+                        <Suspense fallback={<div className="p-4">Loading help...</div>}>
+                          <Help />
+                        </Suspense>
+                      </SentryRouteErrorBoundary>
                     </ProtectedRoute>
                   } />
                   
                   {/* Root route */}
-                  <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+                  <Route path="/" element={
+                    <ProtectedRoute>
+                      <SentryRouteErrorBoundary>
+                        <Index />
+                      </SentryRouteErrorBoundary>
+                    </ProtectedRoute>
+                  } />
                   
                   {/* Redirects */}
                   <Route path="/analytics" element={<Navigate to="/dashboard" replace />} />
@@ -133,14 +179,14 @@ function App() {
           </QueryClientProvider>
         </ThemeProvider>
       </Router>
-    </ErrorBoundary>
+    </SentryRouteErrorBoundary>
   );
 }
 
 // Wrap the App component with Sentry monitoring
 export default withSentryErrorBoundary(App, {
   name: 'AppRoot',
-  fallback: function SentryFallbackComponent({ error }) {
+  fallback: function SentryFallbackComponent({ error, resetError }) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
         <div className="max-w-md space-y-4 rounded-lg border bg-card p-6 shadow-lg">
@@ -151,12 +197,20 @@ export default withSentryErrorBoundary(App, {
           <p className="text-sm text-destructive">
             {error?.message || "An unexpected error occurred"}
           </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="rounded bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
-          >
-            Reload Application
-          </button>
+          <div className="flex space-x-3">
+            <button
+              onClick={resetError}
+              className="rounded bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
+            >
+              Try Again
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="rounded border border-input bg-background px-4 py-2 hover:bg-accent"
+            >
+              Reload Application
+            </button>
+          </div>
         </div>
       </div>
     );

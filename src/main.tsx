@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
@@ -7,8 +8,10 @@ import { logStartupPhase, logDetailedError } from '@/utils/errorHandling';
 
 logStartupPhase("Application initialization starting");
 
-// Initialize Sentry
-initializeSentry().catch(error => {
+// Initialize Sentry as early as possible
+initializeSentry().then(() => {
+  console.log('Sentry initialization completed');
+}).catch(error => {
   console.error('Failed to initialize Sentry:', error);
 });
 
