@@ -32,6 +32,7 @@ const fetchWithCors = (url: string, options: RequestInit = {}) => {
   return fetch(url, { ...options, headers });
 };
 
+// Configuration explicitly sets auth options for proper session management
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
@@ -86,6 +87,28 @@ export const resetPassword = async (email: string) => {
       message: error instanceof Error 
         ? error.message 
         : "Failed to send password reset email. Please try again." 
+    };
+  }
+};
+
+// Function to update user profile data
+export const updateUserProfile = async (userId: string, profileData: any) => {
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .upsert({ 
+        id: userId,
+        ...profileData,
+        updated_at: new Date()
+      });
+      
+    if (error) throw error;
+    return { success: true, message: "Profile updated successfully" };
+  } catch (error) {
+    console.error("Profile update error:", error);
+    return { 
+      success: false, 
+      message: error instanceof Error ? error.message : "Failed to update profile"
     };
   }
 };
