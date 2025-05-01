@@ -21,6 +21,11 @@ export default defineConfig({
         '**/index.ts'
       ],
     },
+    outputFile: {
+      json: './test-results/results.json',
+      junit: './test-results/junit.xml',
+    },
+    reporters: ['default', 'json', 'junit'],
     typecheck: {
       tsconfig: './tsconfig.json',
       include: ['src/**/*.{test,spec}.{ts,tsx}']
@@ -35,3 +40,4 @@ export default defineConfig({
     },
   },
 });
+
