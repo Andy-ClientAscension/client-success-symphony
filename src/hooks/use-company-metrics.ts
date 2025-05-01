@@ -3,9 +3,10 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getAllClients, getClientsCountByStatus } from '@/lib/data';
 import { calculateRates } from '@/utils/analyticsUtils';
+import type * as MetricsTypes from '@/types/metrics';
 
 export function useCompanyMetrics() {
-  const [metrics, setMetrics] = useState<Metrics.CompanyMetrics | null>(null);
+  const [metrics, setMetrics] = useState<MetricsTypes.CompanyMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
@@ -18,7 +19,7 @@ export function useCompanyMetrics() {
         const clientCounts = getClientsCountByStatus();
         
         // Transform client counts to match StatusCounts interface
-        const statusCounts: Metrics.StatusCounts = {
+        const statusCounts: MetricsTypes.StatusCounts = {
           active: clientCounts.active || 0,
           atRisk: clientCounts["at-risk"] || 0,
           churned: clientCounts.churned || 0,
@@ -29,7 +30,7 @@ export function useCompanyMetrics() {
         const rates = calculateRates(statusCounts);
         
         // Add growthRate to meet the Rates interface requirements
-        const enhancedRates: Metrics.Rates = {
+        const enhancedRates: MetricsTypes.Rates = {
           ...rates,
           growthRate: rates.retentionRate - rates.churnRate // Simple calculation for growth rate
         };

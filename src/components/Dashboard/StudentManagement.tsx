@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -27,7 +26,6 @@ export function StudentManagement({ clients }: StudentManagementProps) {
   const filteredStudents = clients.filter(student => {
     const matchesSearch = 
       student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (student.email && student.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
       false;
       
     const matchesStatus = selectedStatus ? student.status === selectedStatus : true;
