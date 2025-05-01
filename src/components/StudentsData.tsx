@@ -39,7 +39,7 @@ export function StudentsData() {
             <Skeleton className="h-6 w-full" />
             <Skeleton className="h-6 w-full" />
           </div>
-        ) : data?.data?.length ? (
+        ) : data?.data?.data?.length ? (
           <Table>
             <TableHeader>
               <TableRow>
@@ -50,7 +50,7 @@ export function StudentsData() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.data.map(student => (
+              {data.data.data.map(student => (
                 <TableRow key={student.id}>
                   <TableCell>{student.name}</TableCell>
                   <TableCell>{student.status}</TableCell>
@@ -67,7 +67,7 @@ export function StudentsData() {
         )}
         
         <div className="mt-4 text-sm text-muted-foreground">
-          {data?.count ? `Showing ${data.data?.length || 0} of ${data.count} students` : ''}
+          {data?.data?.count ? `Showing ${data.data.data?.length || 0} of ${data.data.count} students` : ''}
         </div>
       </CardContent>
     </Card>
