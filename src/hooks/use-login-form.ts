@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -35,7 +34,12 @@ export function useLoginForm() {
       try {
         // Then verify with actual request
         const status = await checkNetworkConnectivity();
-        setNetworkStatus(status);
+        // Ensure status is always a string
+        setNetworkStatus({
+          online: status.online,
+          latency: status.latency,
+          status: status.status ? String(status.status) : undefined
+        });
         
         if (!status.online && status.status === 'timeout') {
           console.log("Network check timed out, falling back to browser network status");
@@ -86,7 +90,12 @@ export function useLoginForm() {
   const checkNetworkStatus = async () => {
     try {
       const status = await checkNetworkConnectivity();
-      setNetworkStatus(status);
+      // Ensure status is always a string
+      setNetworkStatus({
+        online: status.online,
+        latency: status.latency,
+        status: status.status ? String(status.status) : undefined
+      });
       return status;
     } catch (error) {
       console.error("Error checking network:", error);

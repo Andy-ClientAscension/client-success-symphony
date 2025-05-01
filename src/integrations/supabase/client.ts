@@ -27,7 +27,7 @@ async function fetchWithCors(url, options = {}) {
     const response = await fetch(url, {
       ...options,
       headers: {
-        ...options.headers,
+        ...(options.headers || {}),
         ...corsHeaders
       },
       signal: controller.signal,
