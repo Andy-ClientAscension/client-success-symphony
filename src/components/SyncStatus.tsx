@@ -1,19 +1,37 @@
 
+import React from "react";
 import { RefreshCw } from "lucide-react";
 import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/badge";
 import { useQueryClient } from "@tanstack/react-query";
-import type { SyncedDataResult } from "@/hooks/useSyncedData";
+import { DATA_KEYS } from "@/hooks/useSyncedDashboard";
+import { useToast } from "@/hooks/use-toast";
 
 interface SyncStatusProps {
-  status: Pick<SyncedDataResult, "lastUpdated" | "isRefreshing">;
+  lastUpdated: Date | null;
+  isRefreshing: boolean;
+  onManualSync?: () => void;
 }
 
-export function SyncStatus({ status }: SyncStatusProps) {
+export function SyncStatus({ lastUpdated, isRefreshing, onManualSync }: SyncStatusProps) {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   const handleManualSync = () => {
-    queryClient.invalidateQueries({ queryKey: ['synced-data'] });
+    if (onManualSync) {
+      onManualSync();
+    } else {
+      // Default implementation if no custom handler is provided
+      queryClient.invalidateQueries({ queryKey: [DATA_KEYS.CLIENTS] });
+      queryClient.invalidateQueries({ queryKey: [DATA_KEYS.CLIENT_COUNTS] });
+      queryClient.invalidateQueries({ queryKey: [DATA_KEYS.NPS_DATA] });
+      queryClient.invalidateQueries({ queryKey: [DATA_KEYS.CHURN_DATA] });
+      
+      toast({
+        title: "Syncing data",
+        description: "Refreshing dashboard data...",
+      });
+    }
   };
   
   return (
@@ -22,17 +40,17 @@ export function SyncStatus({ status }: SyncStatusProps) {
         variant="ghost"
         size="sm"
         onClick={handleManualSync}
-        disabled={status.isRefreshing}
+        disabled={isRefreshing}
         className="h-8 px-2"
       >
         <RefreshCw 
-          className={`h-4 w-4 mr-2 ${status.isRefreshing ? 'animate-spin' : ''}`}
+          className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`}
         />
-        {status.isRefreshing ? 'Syncing...' : 'Sync Now'}
+        {isRefreshing ? 'Syncing...' : 'Sync Now'}
       </Button>
-      {status.lastUpdated && (
+      {lastUpdated && (
         <span>
-          Last updated: {format(status.lastUpdated, 'h:mm a')}
+          Last updated: {format(lastUpdated, 'h:mm a')}
         </span>
       )}
     </div>

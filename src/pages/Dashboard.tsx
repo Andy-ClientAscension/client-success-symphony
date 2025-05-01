@@ -6,86 +6,65 @@ import { MetricsOverview } from "@/components/Dashboard/MetricsOverview";
 import { StudentManagement } from "@/components/Dashboard/StudentManagement";
 import { TeamPerformance } from "@/components/Dashboard/TeamPerformance";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getAllClients, getClientsCountByStatus } from "@/lib/data";
 import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
+import { RealtimeSyncIndicator } from "@/components/RealtimeSyncIndicator";
+import { LoadingState } from "@/components/LoadingState";
+import { RefreshCw, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { useSyncedDashboard } from "@/hooks/useSyncedDashboard";
 
 export default function Dashboard() {
-  const { toast } = useToast();
   const [activeTab, setActiveTab] = React.useState("overview");
   
-  const { 
-    data: dashboardData,
+  const {
+    clients,
+    clientCounts,
+    npsScore,
     isLoading,
     error,
-    refetch,
-    isRefetching
-  } = useQuery({
-    queryKey: ['dashboard-data'],
-    queryFn: async () => {
-      const clients = getAllClients();
-      const clientCounts = getClientsCountByStatus();
-      
-      return {
-        clients,
-        clientCounts,
-        lastUpdated: new Date().toISOString()
-      };
-    }
-  });
-
-  const handleRefresh = () => {
-    refetch();
-    toast({
-      title: "Refreshing dashboard",
-      description: "Fetching latest data..."
-    });
-  };
+    refreshData,
+    isRefreshing,
+    lastUpdated
+  } = useSyncedDashboard();
 
   if (isLoading) {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <div className="space-y-4 text-center">
-            <RefreshCw className="h-10 w-10 animate-spin text-primary mx-auto" />
-            <p className="text-muted-foreground">Loading dashboard data...</p>
-          </div>
+          <LoadingState message="Loading dashboard data..." showProgress />
         </div>
       </Layout>
     );
   }
 
-  if (error) {
+  if (error && clients.length === 0) {
     return (
       <Layout>
         <Card className="border-destructive">
           <CardContent className="pt-6">
-            <h2 className="text-lg font-semibold text-destructive mb-2">Error Loading Dashboard</h2>
-            <p className="text-muted-foreground mb-4">
-              {error instanceof Error ? error.message : "Failed to load dashboard data"}
-            </p>
-            <Button onClick={() => refetch()}>Try Again</Button>
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error Loading Dashboard</AlertTitle>
+              <AlertDescription>
+                {error.message || "Failed to load dashboard data"}
+              </AlertDescription>
+            </Alert>
+            <Button onClick={refreshData} className="mt-4">
+              <RefreshCw className="mr-2 h-4 w-4" /> Try Again
+            </Button>
           </CardContent>
         </Card>
       </Layout>
     );
   }
 
-  const clients = dashboardData?.clients || [];
-  const clientCounts = dashboardData?.clientCounts || { active: 0, "at-risk": 0, new: 0, churned: 0 };
-  const lastUpdated = dashboardData?.lastUpdated ? new Date(dashboardData.lastUpdated) : new Date();
-
   // Calculate metrics for the overview
   const totalStudents = clients.length;
   const activeStudents = clientCounts.active || 0;
   const retentionRate = totalStudents > 0 ? Math.round((activeStudents / totalStudents) * 100) : 0;
   const monthlyRevenue = clients.reduce((sum, client) => sum + (client.mrr || 0), 0);
-  const averageNps = clients.length > 0 
-    ? Math.round(clients.reduce((sum, client) => sum + (client.npsScore || 0), 0) / clients.length) 
-    : 0;
+  const averageNps = npsScore || 0;
 
   const metricsData = {
     totalClients: totalStudents,
@@ -97,12 +76,25 @@ export default function Dashboard() {
   return (
     <Layout>
       <div className="space-y-6 p-6">
-        <DashboardHeader 
-          title="Student Dashboard" 
-          lastUpdated={lastUpdated}
-          onRefresh={handleRefresh}
-          isRefreshing={isRefetching}
-        />
+        <div className="flex flex-col space-y-2 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
+          <DashboardHeader 
+            title="Student Dashboard" 
+            lastUpdated={lastUpdated || new Date()}
+            onRefresh={refreshData}
+            isRefreshing={isRefreshing}
+          />
+          <RealtimeSyncIndicator />
+        </div>
+
+        {error && (
+          <Alert variant="warning" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Sync Warning</AlertTitle>
+            <AlertDescription>
+              {error.message}. Using cached data. Click refresh to try again.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">

@@ -1,38 +1,54 @@
-import { Loader } from "lucide-react";
-import { cn } from "@/lib/utils";
+
+import React from "react";
+import { Loader2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 interface LoadingStateProps {
   message?: string;
-  className?: string;
-  size?: "sm" | "md" | "lg";
   showProgress?: boolean;
+  progress?: number;
+  className?: string;
 }
 
 export function LoadingState({ 
   message = "Loading...", 
-  className,
-  size = "md",
-  showProgress = false
+  showProgress = false, 
+  progress = undefined,
+  className = ""
 }: LoadingStateProps) {
-  const sizeClasses = {
-    sm: "h-4 w-4",
-    md: "h-6 w-6",
-    lg: "h-8 w-8"
-  };
+  const [localProgress, setLocalProgress] = React.useState(0);
+
+  React.useEffect(() => {
+    if (showProgress && progress === undefined) {
+      // Simulate loading progress when no actual progress is provided
+      const interval = setInterval(() => {
+        setLocalProgress(prev => {
+          // Slow down as it approaches 90%
+          if (prev >= 90) {
+            return prev + 0.2;
+          } else if (prev >= 60) {
+            return prev + 0.5;
+          } else {
+            return prev + 2;
+          }
+        });
+      }, 150);
+
+      return () => clearInterval(interval);
+    }
+  }, [showProgress, progress]);
 
   return (
-    <div className={cn(
-      "flex flex-col items-center justify-center p-4",
-      className
-    )}>
-      <Loader className={cn(
-        "animate-spin text-muted-foreground",
-        sizeClasses[size]
-      )} />
-      <p className="mt-2 text-sm text-muted-foreground">{message}</p>
+    <div className={`flex flex-col items-center justify-center p-8 ${className}`}>
+      <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+      <p className="text-muted-foreground mb-2">{message}</p>
+      
       {showProgress && (
-        <div className="w-48 h-1 bg-gray-200 mt-4 rounded-full overflow-hidden">
-          <div className="h-full bg-primary rounded-full animate-pulse" style={{ width: '60%' }}></div>
+        <div className="w-full max-w-xs mt-2">
+          <Progress value={progress !== undefined ? progress : Math.min(localProgress, 99)} className="h-2" />
+          <p className="text-xs text-muted-foreground mt-1 text-center">
+            {progress !== undefined ? `${Math.round(progress)}%` : "Please wait..."}
+          </p>
         </div>
       )}
     </div>
