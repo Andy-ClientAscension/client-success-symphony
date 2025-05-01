@@ -27,7 +27,7 @@ export function StudentManagement({ clients }: StudentManagementProps) {
   const filteredStudents = clients.filter(student => {
     const matchesSearch = 
       student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      student.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (student.email && student.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
       false;
       
     const matchesStatus = selectedStatus ? student.status === selectedStatus : true;

@@ -22,6 +22,7 @@ import Clients from "@/pages/Clients";
 import ClientDetails from "@/pages/ClientDetails";
 import AddClient from "@/pages/AddClient";
 import Renewals from "@/pages/Renewals";
+import Dashboard from "@/pages/Dashboard"; // Add this import for the Dashboard component
 
 // Lazy load less frequently accessed pages
 const Communications = lazy(() => import("@/pages/Communications"));
