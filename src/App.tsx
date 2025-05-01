@@ -1,18 +1,15 @@
 
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import { withSentryErrorBoundary, SentryRouteErrorBoundary } from "@/components/SentryErrorBoundary";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter } from "react-router-dom";
 import { BrowserCompatibilityCheck } from "@/components/BrowserCompatibilityCheck";
 import { OfflineDetector } from "@/components/OfflineDetector";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { logStartupPhase } from "@/utils/errorHandling";
-import { RouterProvider } from "react-router-dom";
-import router from "./routes";
+import { AppRoutes } from "./routes";
 
 logStartupPhase("App.tsx: Module loading started");
 
@@ -35,12 +32,14 @@ function App() {
     <SentryRouteErrorBoundary>
       <ThemeProvider defaultTheme="system" storageKey="vite-react-theme">
         <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <BrowserCompatibilityCheck />
-            <OfflineDetector />
-            <Toaster />
-            <RouterProvider router={router} />
-          </AuthProvider>
+          <BrowserRouter>
+            <AuthProvider>
+              <BrowserCompatibilityCheck />
+              <OfflineDetector />
+              <Toaster />
+              <AppRoutes />
+            </AuthProvider>
+          </BrowserRouter>
         </QueryClientProvider>
       </ThemeProvider>
     </SentryRouteErrorBoundary>
