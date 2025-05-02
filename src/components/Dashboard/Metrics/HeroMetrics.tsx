@@ -16,13 +16,25 @@ export function HeroMetrics({ className }: HeroMetricsProps) {
     queryKey: ['hero-metrics'],
     queryFn: async () => {
       const clients = dataSyncService.loadData('clients', []);
+      
+      // Safely calculate metrics with fallbacks for zero/empty cases
+      const activeClients = clients.filter(c => c.status === 'active');
+      const totalClients = clients.length || 1; // Avoid division by zero
+      
       const metrics = {
-        activeStudents: clients.filter(c => c.status === 'active').length,
-        retentionRate: Math.round((clients.filter(c => c.status === 'active').length / clients.length) * 100),
+        activeStudents: activeClients.length,
+        retentionRate: Math.round((activeClients.length / totalClients) * 100) || 0,
         mrr: clients.reduce((sum, client) => sum + (client.mrr || 0), 0),
-        npsAverage: Math.round(clients.reduce((sum, client) => sum + (client.npsScore || 0), 0) / clients.length),
-        healthScore: Math.round(clients.reduce((sum, client) => sum + (client.progress || 0), 0) / clients.length)
+        npsAverage: clients.some(c => c.npsScore !== undefined && c.npsScore !== null) 
+          ? Math.round(clients.reduce((sum, client) => sum + (client.npsScore || 0), 0) / 
+              clients.filter(c => c.npsScore !== undefined && c.npsScore !== null).length || 1) 
+          : 0,
+        healthScore: clients.some(c => c.progress !== undefined && c.progress !== null)
+          ? Math.round(clients.reduce((sum, client) => sum + (client.progress || 0), 0) / 
+              clients.filter(c => c.progress !== undefined && c.progress !== null).length || 1)
+          : 0
       };
+      
       return metrics;
     },
     refetchInterval: 30000, // 30 seconds
@@ -89,7 +101,7 @@ export function HeroMetrics({ className }: HeroMetricsProps) {
   ];
 
   return (
-    <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4", className)}>
+    <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4", className)} aria-label="Key performance metrics">
       {heroMetrics.map((metric, index) => (
         <HeroMetric
           key={metric.title}

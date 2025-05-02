@@ -59,6 +59,13 @@ export function HeroMetric({
     tertiary: 'bg-white dark:bg-gray-800'
   };
 
+  // Check if the value is 0 or "0%" to add context
+  const displayValue = value === 0 || value === "0%" 
+    ? (typeof value === "string" && value.endsWith("%") ? "0%" : "0") 
+    : value;
+  
+  const emptyMetric = displayValue === 0 || displayValue === "0%" || displayValue === "$0";
+
   return (
     <Card 
       className={cn(
@@ -83,19 +90,26 @@ export function HeroMetric({
             <h3 
               className={cn(
                 "font-bold text-foreground",
-                sizeClasses[size].value
+                sizeClasses[size].value,
+                emptyMetric ? "text-muted-foreground" : ""
               )}
               aria-label={ariaLabel || `${title}: ${value}`}
               aria-labelledby={`${title.toLowerCase().replace(/\s+/g, '-')}-label`}
             >
-              {value}
+              {displayValue}
+              {emptyMetric && (
+                <span className="text-sm font-normal ml-2 text-muted-foreground">
+                  (No data)
+                </span>
+              )}
             </h3>
           </div>
           {icon && (
             <div 
               className={cn(
                 "text-brand-500 dark:text-brand-400",
-                sizeClasses[size].icon
+                sizeClasses[size].icon,
+                emptyMetric ? "opacity-50" : ""
               )}
               aria-hidden="true"
             >
@@ -107,9 +121,11 @@ export function HeroMetric({
           <div 
             className={cn(
               "flex items-center font-medium",
-              trend.direction === 'up' 
-                ? "text-emerald-600 dark:text-emerald-400" 
-                : "text-red-500 dark:text-red-400",
+              emptyMetric ? "text-muted-foreground" : (
+                trend.direction === 'up' 
+                  ? "text-emerald-600 dark:text-emerald-400" 
+                  : "text-red-500 dark:text-red-400"
+              ),
               sizeClasses[size].trend
             )}
             role="status"

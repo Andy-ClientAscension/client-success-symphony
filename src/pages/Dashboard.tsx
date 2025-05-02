@@ -84,7 +84,7 @@ export default function Dashboard() {
         <HeroMetrics className="mb-6" />
 
         {/* Quick links section */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6" aria-label="Quick navigation links">
           <Card className="hover:shadow-md transition-all duration-200">
             <Link to="/analytics" className="block p-6">
               <div className="flex items-center space-x-4">

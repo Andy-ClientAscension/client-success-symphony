@@ -36,10 +36,12 @@ export function calculateStatusCounts(clients: any[]): StatusCounts {
 }
 
 export function calculateRates(counts: StatusCounts): StatusRates {
+  const total = counts.total || 1; // Prevent division by zero
+  
   return {
-    retentionRate: counts.total > 0 ? Math.round((counts.active / counts.total) * 100) : 0,
-    atRiskRate: counts.total > 0 ? Math.round((counts.atRisk / counts.total) * 100) : 0,
-    churnRate: counts.total > 0 ? Math.round((counts.churned / counts.total) * 100) : 0
+    retentionRate: Math.round((counts.active / total) * 100),
+    atRiskRate: Math.round((counts.atRisk / total) * 100),
+    churnRate: Math.round((counts.churned / total) * 100)
   };
 }
 
@@ -53,7 +55,7 @@ export function formatCurrency(value: number): string {
 }
 
 export function calculateGrowthRate(current: number, previous: number): number {
-  if (previous === 0) return 0;
+  if (previous === 0) return 0; // Prevent division by zero
   return Math.round(((current - previous) / previous) * 100);
 }
 
