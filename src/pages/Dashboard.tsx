@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Layout } from "@/components/Layout/Layout";
 import { DashboardHeader } from "@/components/Dashboard/DashboardHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import { useSyncedDashboard } from "@/hooks/useSyncedDashboard";
 import { HeroMetrics } from "@/components/Dashboard/Metrics/HeroMetrics";
 import { StudentsData } from "@/components/StudentsData";
 import { SyncMonitorPanel } from "@/components/Dashboard/SyncStatus/SyncMonitorPanel";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Dashboard() {
   const {
@@ -26,6 +27,36 @@ export default function Dashboard() {
     isRefreshing,
     lastUpdated
   } = useSyncedDashboard();
+  
+  const { isAuthenticated } = useAuth();
+
+  // Prefetch critical dashboard resources when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      // Prefetch important chart components
+      const prefetchResources = async () => {
+        console.log("Prefetching critical dashboard resources...");
+        
+        // Prefetch chart components
+        const chartPromises = [
+          import('@/components/Dashboard/ChartLibrary').catch(err => 
+            console.log("Optional resource not available:", err.message)),
+          import('@/components/Dashboard/DataTable').catch(err => 
+            console.log("Optional resource not available:", err.message)),
+          // Add more critical components as needed
+        ];
+        
+        try {
+          await Promise.allSettled(chartPromises);
+          console.log("Dashboard resources prefetching complete");
+        } catch (error) {
+          console.log("Some resources failed to prefetch:", error);
+        }
+      };
+      
+      prefetchResources();
+    }
+  }, [isAuthenticated]);
 
   if (isLoading) {
     return (
