@@ -13,6 +13,7 @@ export default function Index() {
   const { isAuthenticated, isLoading } = useAuth();
   const [processingAuth, setProcessingAuth] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [urlProcessed, setUrlProcessed] = useState(false);
   
   // Handle access token in URL (for email confirmations)
   useEffect(() => {
@@ -52,7 +53,10 @@ export default function Index() {
           navigate('/login', { replace: true });
         } finally {
           setProcessingAuth(false);
+          setUrlProcessed(true); // Mark URL token processing as complete
         }
+      } else {
+        setUrlProcessed(true); // No token in URL, mark as processed
       }
     };
     
@@ -61,8 +65,9 @@ export default function Index() {
   
   // Standard redirection based on auth state
   useEffect(() => {
-    // Only redirect after auth state is confirmed and we're not processing an access token
-    if (!isLoading && !processingAuth) {
+    // Only redirect after auth state is confirmed, we're not processing an access token,
+    // and URL processing has completed (whether there was a token or not)
+    if (!isLoading && !processingAuth && urlProcessed) {
       if (isAuthenticated) {
         // Redirect authenticated users to dashboard
         navigate('/dashboard', { replace: true });
@@ -71,7 +76,7 @@ export default function Index() {
         navigate('/login', { replace: true });
       }
     }
-  }, [navigate, isAuthenticated, isLoading, processingAuth]);
+  }, [navigate, isAuthenticated, isLoading, processingAuth, urlProcessed]);
   
   return (
     <Layout>
