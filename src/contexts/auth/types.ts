@@ -1,5 +1,6 @@
 
-import type Auth from '@/types/auth';
+// Instead of importing Auth, we'll use the original namespace
+import type { User } from '@/types/auth';
 
 export interface AuthProviderProps {
   children: React.ReactNode;
@@ -15,15 +16,32 @@ export interface SessionManager {
   sessionExpiryTime: Date | null;
 }
 
-// Add AuthResult interface to the Auth namespace
-declare namespace Auth {
-  interface AuthResult {
+// Define Auth namespace without conflicting with imports
+export namespace Auth {
+  export interface AuthResult {
     success: boolean;
     error: Error | null;
     session: any | null;
-    user: Auth.User | null;
+    user: User | null;
+  }
+  
+  // Re-export types from the original Auth namespace
+  export type User = User;
+  
+  export interface AuthContextType {
+    user: User | null;
+    session: any | null;
+    isAuthenticated: boolean;
+    isLoading: boolean;
+    error: Error | null;
+    login: (email: string, password: string) => Promise<boolean>;
+    register: (email: string, password: string, inviteCode: string) => Promise<{ success: boolean; message: string }>;
+    logout: () => void;
+    validateInviteCode: (code: string) => Promise<boolean>;
+    refreshSession: () => Promise<void>;
+    sessionExpiryTime?: Date | null;
   }
 }
 
-// Re-export Auth type for convenience
-export type { Auth };
+// Export the Auth namespace
+export type { User };

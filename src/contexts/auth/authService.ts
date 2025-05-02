@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { updateSentryUser } from "@/utils/sentry/config";
 import { validateInviteCode } from "./inviteCodeUtils";
-import type { Auth } from "./types";
+import { Auth } from "./types";
 
 // Function to refresh the auth state from Supabase
 export const refreshAuthState = async (): Promise<void> => {
