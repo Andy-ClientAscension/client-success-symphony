@@ -1,4 +1,3 @@
-
 import React, { createContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -8,7 +7,7 @@ import { updateSentryUser } from "@/utils/sentry/config";
 import { AuthProviderProps } from "./types";
 import { validateInviteCode } from "./inviteCodeUtils";
 import { refreshAuthState, login, register, logout, isSessionExpired } from "./authService";
-import type Auth from '@/types/auth';
+import type { Auth } from "./types";
 
 export const AuthContext = createContext<Auth.AuthContextType | undefined>(undefined);
 
