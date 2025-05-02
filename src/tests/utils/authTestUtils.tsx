@@ -25,7 +25,7 @@ export const mockAuthValues = {
   validateInviteCode: vi.fn().mockResolvedValue(true),
   refreshSession: vi.fn(() => Promise.resolve()),
   verifyMagicLink: vi.fn().mockResolvedValue({ success: true, status: 'valid', message: 'Valid link' }),
-  tokenValidationState: 'valid',
+  tokenValidationState: 'valid' as const, // Use const assertion to fix the type
   lastAuthEvent: null,
   sessionExpiryTime: new Date(Date.now() + 3600000) // 1 hour from now
 };
@@ -43,7 +43,7 @@ export const mockUnauthValues = {
   validateInviteCode: vi.fn().mockResolvedValue(false),
   refreshSession: vi.fn(() => Promise.resolve()),
   verifyMagicLink: vi.fn().mockResolvedValue({ success: false, status: 'invalid', message: 'Invalid link' }),
-  tokenValidationState: 'unknown',
+  tokenValidationState: 'unknown' as const, // Use const assertion to fix the type
   lastAuthEvent: null,
   sessionExpiryTime: null
 };
