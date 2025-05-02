@@ -276,6 +276,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       console.log("Auth state changed:", event);
       
+      // Handle token refresh events specifically
+      if (event === 'TOKEN_REFRESHED') {
+        console.log("Token refreshed, updating session state");
+        // Use setTimeout to prevent deadlocks in the supabase client
+        setTimeout(async () => {
+          try {
+            await refreshAuthState();
+            toast({
+              title: "Session Refreshed",
+              description: "Your authentication has been updated successfully."
+            });
+          } catch (error) {
+            console.error("Failed to refresh authentication state:", error);
+            toast({
+              title: "Authentication Error",
+              description: "Failed to refresh your session. You may need to login again.",
+              variant: "destructive"
+            });
+          }
+        }, 0);
+        return; // Early return after handling token refresh
+      }
+      
       // Use setTimeout to prevent deadlocks in the supabase client
       setTimeout(() => {
         if (currentSession) {
@@ -346,7 +369,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
-  }, []);
+  }, [toast]); // Added toast to dependencies
 
   // Auth context value
   const authContextValue: Auth.AuthContextType = {
