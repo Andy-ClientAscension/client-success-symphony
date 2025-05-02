@@ -2,11 +2,12 @@ import React, { createContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useSessionManager } from "@/hooks/use-session-manager";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, getCachedUserSession } from "@/integrations/supabase/client";
 import { updateSentryUser } from "@/utils/sentry/config";
 import { AuthProviderProps, Auth, User } from "./types";
 import { validateInviteCode } from "./inviteCodeUtils";
 import { refreshAuthState, login, register, logout, isSessionExpired } from "./authService";
+import { clearCachedSession } from "@/utils/sessionCache";
 
 export const AuthContext = createContext<Auth.AuthContextType | undefined>(undefined);
 
@@ -44,7 +45,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setIsLoading(true);
       
-      const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+      // Use cached session if available
+      const { data: { session: currentSession }, error: sessionError } = await getCachedUserSession();
       
       if (sessionError) {
         console.error("Error refreshing session:", sessionError);
@@ -297,6 +299,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log("Logging out user");
       setIsLoading(true);
       
+      // Clear cached session
+      clearCachedSession();
+      
       const { error: signOutError } = await supabase.auth.signOut();
       
       if (signOutError) {
@@ -442,7 +447,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const checkSession = async () => {
       try {
         setIsLoading(true);
-        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        // Use cached session with fallback to API call
+        const { data: { session: currentSession }, error } = await getCachedUserSession();
         
         if (error) {
           console.error("Error getting session:", error);

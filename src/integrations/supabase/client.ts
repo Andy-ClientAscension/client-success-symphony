@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { corsHeaders } from '@/utils/corsHeaders';
+import { cacheSession, getCachedSession, clearCachedSession } from '@/utils/sessionCache';
 
 // Initialize the Supabase client
 const supabaseUrl = 'https://bajfdvphpoopkmpgzyeo.supabase.co';
@@ -61,13 +62,10 @@ async function fetchWithCors(url: string, options: RequestInit = {}) {
 }
 
 /**
- * Login function for authentication
+ * Enhanced login function for authentication with session caching
  */
 export async function login(email: string, password: string) {
   try {
-    // Use session-based auth for more reliable token handling
-    console.log("Attempting login with email:", email);
-    
     // First, check network connectivity to avoid failed attempts
     const networkStatus = await checkNetworkConnectivity();
     if (!networkStatus.online) {
@@ -110,6 +108,11 @@ export async function login(email: string, password: string) {
       throw error;
     }
     
+    // Cache the session data with expiry time (30 minutes)
+    if (data && data.session) {
+      cacheSession(data.session, 30 * 60 * 1000);
+    }
+    
     return { 
       success: true, 
       user: data.user 
@@ -134,6 +137,47 @@ export async function login(email: string, password: string) {
       code: 'unknown_error'
     };
   }
+}
+
+/**
+ * Get user session with caching to reduce API calls 
+ */
+export async function getCachedUserSession() {
+  try {
+    // Check for cached session first
+    const cachedSession = getCachedSession();
+    if (cachedSession) {
+      console.log("Using cached session");
+      return { 
+        data: { session: cachedSession },
+        error: null
+      };
+    }
+    
+    // If no cached session, fetch from Supabase
+    console.log("No cached session, fetching from API");
+    const { data, error } = await supabase.auth.getSession();
+    
+    // Cache the new session
+    if (data.session) {
+      cacheSession(data.session);
+    }
+    
+    return { data, error };
+  } catch (error) {
+    console.error("Error getting session:", error);
+    return {
+      data: { session: null },
+      error: error instanceof Error ? error : new Error("Failed to get session")
+    };
+  }
+}
+
+// Update logout function to clear cached session
+const originalLogout = logout;
+export async function logout() {
+  clearCachedSession();
+  return originalLogout();
 }
 
 /**
