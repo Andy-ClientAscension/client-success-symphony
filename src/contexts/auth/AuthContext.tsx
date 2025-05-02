@@ -12,7 +12,7 @@ import { refreshAuthState, login, register, logout, isSessionExpired } from "./a
 export const AuthContext = createContext<Auth.AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<Auth.User | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
