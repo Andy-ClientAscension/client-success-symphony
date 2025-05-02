@@ -5,7 +5,7 @@ import { DashboardHeader } from "@/components/Dashboard/DashboardHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { BarChart2, Users, FileText, TrendingUp } from "lucide-react";
+import { BarChart2, Users, FileText, TrendingUp, RefreshCw } from "lucide-react";
 import { RealtimeSyncIndicator } from "@/components/RealtimeSyncIndicator";
 import { LoadingState } from "@/components/LoadingState";
 import { AlertCircle } from "lucide-react";

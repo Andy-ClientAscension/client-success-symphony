@@ -9,7 +9,6 @@ import {
 import { cn } from "@/lib/utils";
 
 export const navLinks = [
-  { to: '/', label: 'Home', icon: Home },
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/analytics', label: 'Analytics', icon: BarChart2 },
   { to: '/clients', label: 'Clients', icon: Users },

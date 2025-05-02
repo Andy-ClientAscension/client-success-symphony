@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { withSentryErrorBoundary } from '@/components/SentryErrorBoundary';
 import { captureException } from '@/utils/sentry/config';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { RefreshCw } from 'lucide-react'; // Changed to use RefreshCw from lucide-react instead
+import { RefreshCw } from 'lucide-react'; 
 
 function StudentsDataComponent() {
   const { data, isLoading, error, execute } = useApi(
