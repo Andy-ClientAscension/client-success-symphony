@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { withSentryErrorBoundary } from '@/components/SentryErrorBoundary';
 import { captureException } from '@/utils/sentry/config';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ReloadIcon } from '@radix-ui/react-icons';
 
 function StudentsDataComponent() {
   const { data, isLoading, error, execute } = useApi(
@@ -15,15 +17,48 @@ function StudentsDataComponent() {
     { executeOnMount: true }
   );
 
+  const [retryCount, setRetryCount] = React.useState(0);
+
   // Report error to Sentry manually if needed
   React.useEffect(() => {
     if (error) {
-      captureException(error, { source: 'StudentsData', context: 'data loading' });
+      captureException(error, { 
+        source: 'StudentsData', 
+        context: 'data loading',
+        extra: { retryCount }
+      });
     }
-  }, [error]);
+  }, [error, retryCount]);
+
+  const handleRetry = React.useCallback(() => {
+    setRetryCount(prev => prev + 1);
+    execute();
+  }, [execute]);
 
   if (error) {
-    return <DashboardErrorAlert error={new Error(error.message)} />;
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex justify-between items-center">
+            <span>Students</span>
+            <button 
+              onClick={handleRetry} 
+              className="text-sm text-blue-500 hover:text-blue-700 flex items-center gap-1"
+              disabled={isLoading}
+            >
+              {isLoading ? <ReloadIcon className="animate-spin h-4 w-4 mr-1" /> : null}
+              {isLoading ? 'Retrying...' : 'Retry'}
+            </button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{error.message || "Failed to load student data"}</AlertDescription>
+          </Alert>
+          <DashboardErrorAlert error={new Error(error.message)} />
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -33,9 +68,10 @@ function StudentsDataComponent() {
           <span>Students</span>
           <button 
             onClick={() => execute()} 
-            className="text-sm text-blue-500 hover:text-blue-700"
+            className="text-sm text-blue-500 hover:text-blue-700 flex items-center gap-1"
             disabled={isLoading}
           >
+            {isLoading ? <ReloadIcon className="animate-spin h-4 w-4 mr-1" /> : null}
             {isLoading ? 'Refreshing...' : 'Refresh'}
           </button>
         </CardTitle>

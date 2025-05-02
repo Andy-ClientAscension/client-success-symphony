@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, memo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClientList } from "./ClientList";
 import { TeamAnalytics } from "./TeamAnalytics";
@@ -8,6 +8,8 @@ import { CheckCircle, AlertTriangle, UserPlus, XCircle, BarChart2 } from "lucide
 import { getAllClients } from "@/lib/data";
 import { focusRingClasses } from "@/lib/accessibility";
 import { SkipLink } from "./Accessibility/SkipLink";
+import { StudentsData } from "@/components/StudentsData";
+import { useTabNavigation } from "@/hooks/useTabNavigation";
 
 interface ClientsTabsProps {
   activeTab: string;
@@ -15,24 +17,35 @@ interface ClientsTabsProps {
   forceReload: number;
 }
 
-export function ClientsTabs({ activeTab, onTabChange, forceReload }: ClientsTabsProps) {
+export const ClientsTabs = memo(function ClientsTabs({ 
+  activeTab, 
+  onTabChange, 
+  forceReload 
+}: ClientsTabsProps) {
+  // Use our custom hook to sync with parent state
+  const { activeTab: internalTab, handleTabChange } = useTabNavigation(activeTab || "all");
+  
+  // Sync with parent state
+  useEffect(() => {
+    if (activeTab !== internalTab) {
+      handleTabChange(activeTab);
+    }
+  }, [activeTab, internalTab, handleTabChange]);
+  
   const clients = getAllClients();
   
-  // This effect ensures we don't lose track of tab state during rendering
-  useEffect(() => {
-    // Ensure tab initialization
-    if (!activeTab) {
-      onTabChange("all");
-    }
-  }, [activeTab, onTabChange]);
+  const handleTabChangeWithParent = (tab: string) => {
+    handleTabChange(tab);
+    onTabChange(tab);
+  };
 
   return (
     <div>
       <SkipLink targetId="clients-content" label="Skip to clients content" />
       
       <Tabs 
-        value={activeTab} 
-        onValueChange={onTabChange} 
+        value={internalTab} 
+        onValueChange={handleTabChangeWithParent} 
         className="w-full"
         defaultValue="all"
         aria-label="Client Management Sections"
@@ -107,7 +120,6 @@ export function ClientsTabs({ activeTab, onTabChange, forceReload }: ClientsTabs
         </div>
         
         <div id="clients-content" role="region" aria-label="Client content area">
-          {/* Use memo pattern to prevent unnecessary rerenders */}
           <TabsContent 
             value="all" 
             className="m-0"
@@ -174,4 +186,4 @@ export function ClientsTabs({ activeTab, onTabChange, forceReload }: ClientsTabs
       </Tabs>
     </div>
   );
-}
+});

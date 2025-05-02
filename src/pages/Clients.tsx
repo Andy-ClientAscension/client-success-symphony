@@ -17,6 +17,7 @@ export default function Clients() {
   const [forceReload, setForceReload] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [clients, setClients] = useState<Client[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { loadPersistedData } = useKanbanStore();
@@ -24,6 +25,7 @@ export default function Clients() {
   // Optimize client data initialization
   const initializeClientData = useCallback(async () => {
     setIsLoading(true);
+    setError(null);
     
     try {
       // Enable data persistence
@@ -50,7 +52,7 @@ export default function Clients() {
         }
       }
       
-      // Load the kanban data but don't wait for it to complete
+      // Load the kanban data
       try {
         await loadPersistedData();
       } catch (error) {
@@ -59,6 +61,7 @@ export default function Clients() {
       }
     } catch (error) {
       console.error("Error initializing client data:", error);
+      setError("Failed to load client data. Please refresh the page.");
       toast({
         title: "Error Loading Students",
         description: "There was an issue loading the student data. Please refresh the page.",
@@ -94,13 +97,17 @@ export default function Clients() {
           console.log("Storage change detected in Clients.tsx:", key);
           
           // Reload clients from storage
-          const updatedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
-          if (updatedClients && updatedClients.length > 0) {
-            setClients(updatedClients);
+          try {
+            const updatedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
+            if (updatedClients && updatedClients.length > 0) {
+              setClients(updatedClients);
+            }
+            
+            // Increment force reload counter to refresh child components
+            setForceReload(prev => prev + 1);
+          } catch (error) {
+            console.error("Error processing storage change:", error);
           }
-          
-          // Increment force reload counter to refresh child components
-          setForceReload(prev => prev + 1);
         }, 100);
       }
     };
@@ -164,6 +171,25 @@ export default function Clients() {
     return (
       <Layout>
         <LoadingState message="Loading dashboard data..." size="lg" />
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout>
+        <Card className="p-6">
+          <div className="text-center space-y-4">
+            <h2 className="text-2xl font-bold text-destructive">Error Loading Data</h2>
+            <p>{error}</p>
+            <button 
+              onClick={initializeClientData}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+            >
+              Retry
+            </button>
+          </div>
+        </Card>
       </Layout>
     );
   }

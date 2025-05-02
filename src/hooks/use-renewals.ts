@@ -13,6 +13,8 @@ export function useRenewals() {
 
   const fetchRenewalData = async () => {
     setIsLoading(true);
+    setError(null); // Clear previous errors when starting a new fetch
+    
     try {
       const forecastsResponse = await supabase
         .from('renewal_forecasts')
@@ -37,6 +39,7 @@ export function useRenewals() {
       })) || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      console.error("Error fetching renewal data:", err);
     } finally {
       setIsLoading(false);
     }
