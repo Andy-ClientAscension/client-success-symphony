@@ -1,3 +1,4 @@
+
 import { SentryRouteErrorBoundary } from "@/components/SentryErrorBoundary";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -7,7 +8,7 @@ import { BrowserCompatibilityCheck } from "@/components/BrowserCompatibilityChec
 import { OfflineDetector } from "@/components/OfflineDetector";
 import { AuthProvider } from "@/contexts/auth";
 import { logStartupPhase } from "@/utils/errorHandling";
-import { AppRoutes } from "./routes";
+import AppRoutes from "./routes";  // Changed from import { AppRoutes }
 
 logStartupPhase("App.tsx: Module loading started");
 

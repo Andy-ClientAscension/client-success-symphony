@@ -1,3 +1,4 @@
+
 import React, { ReactNode } from 'react';
 import { AuthContext } from '@/contexts/auth';
 import { BrowserRouter } from 'react-router-dom';
@@ -23,6 +24,9 @@ export const mockAuthValues = {
   logout: vi.fn(),
   validateInviteCode: vi.fn().mockResolvedValue(true),
   refreshSession: vi.fn(() => Promise.resolve()),
+  verifyMagicLink: vi.fn().mockResolvedValue({ success: true, status: 'valid', message: 'Valid link' }),
+  tokenValidationState: 'valid',
+  lastAuthEvent: null,
   sessionExpiryTime: new Date(Date.now() + 3600000) // 1 hour from now
 };
 
@@ -38,6 +42,9 @@ export const mockUnauthValues = {
   logout: vi.fn(),
   validateInviteCode: vi.fn().mockResolvedValue(false),
   refreshSession: vi.fn(() => Promise.resolve()),
+  verifyMagicLink: vi.fn().mockResolvedValue({ success: false, status: 'invalid', message: 'Invalid link' }),
+  tokenValidationState: 'unknown',
+  lastAuthEvent: null,
   sessionExpiryTime: null
 };
 
