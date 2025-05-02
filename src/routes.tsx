@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -8,6 +7,7 @@ import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
+import Analytics from './pages/Analytics';
 import NotFound from './pages/NotFound';
 import Index from './pages/Index';
 import AuthCallback from './pages/AuthCallback';
@@ -83,6 +83,17 @@ export const AppRoutes = () => {
           <RouteErrorBoundary>
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          </RouteErrorBoundary>
+        }
+      />
+
+      <Route
+        path="/analytics"
+        element={
+          <RouteErrorBoundary>
+            <ProtectedRoute>
+              <Analytics />
             </ProtectedRoute>
           </RouteErrorBoundary>
         }

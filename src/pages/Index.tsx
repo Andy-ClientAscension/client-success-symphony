@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { LoadingState } from "@/components/LoadingState";
 import { supabase } from "@/integrations/supabase/client";
 
+// This is the landing page that redirects based on auth state
 export default function Index() {
   const navigate = useNavigate();
   const location = useLocation();

@@ -2,21 +2,19 @@
 import React from "react";
 import { Layout } from "@/components/Layout/Layout";
 import { DashboardHeader } from "@/components/Dashboard/DashboardHeader";
-import { MetricsOverview } from "@/components/Dashboard/MetricsOverview";
-import { StudentManagement } from "@/components/Dashboard/StudentManagement";
-import { TeamPerformance } from "@/components/Dashboard/TeamPerformance";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { BarChart2, Users, FileText, TrendingUp } from "lucide-react";
 import { RealtimeSyncIndicator } from "@/components/RealtimeSyncIndicator";
 import { LoadingState } from "@/components/LoadingState";
-import { RefreshCw, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { AlertCircle } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { useSyncedDashboard } from "@/hooks/useSyncedDashboard";
+import { HeroMetrics } from "@/components/Dashboard/Metrics/HeroMetrics";
+import { StudentsData } from "@/components/StudentsData";
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = React.useState("overview");
-  
   const {
     clients,
     clientCounts,
@@ -59,26 +57,12 @@ export default function Dashboard() {
     );
   }
 
-  // Calculate metrics for the overview
-  const totalStudents = clients.length;
-  const activeStudents = clientCounts.active || 0;
-  const retentionRate = totalStudents > 0 ? Math.round((activeStudents / totalStudents) * 100) : 0;
-  const monthlyRevenue = clients.reduce((sum, client) => sum + (client.mrr || 0), 0);
-  const averageNps = npsScore || 0;
-
-  const metricsData = {
-    totalClients: totalStudents,
-    monthlyRevenue,
-    growthRate: 12, // Example fixed value, would be calculated from historical data
-    successRate: retentionRate
-  };
-
   return (
     <Layout>
       <div className="space-y-6 p-6">
         <div className="flex flex-col space-y-2 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
           <DashboardHeader 
-            title="Student Dashboard" 
+            title="Executive Dashboard" 
             lastUpdated={lastUpdated || new Date()}
             onRefresh={refreshData}
             isRefreshing={isRefreshing}
@@ -96,25 +80,56 @@ export default function Dashboard() {
           </Alert>
         )}
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="overview">Metrics Overview</TabsTrigger>
-            <TabsTrigger value="students">Student Management</TabsTrigger>
-            <TabsTrigger value="team">Team Performance</TabsTrigger>
-          </TabsList>
+        {/* Key Metrics Section */}
+        <HeroMetrics className="mb-6" />
+
+        {/* Quick links section */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Card className="hover:shadow-md transition-all duration-200">
+            <Link to="/analytics" className="block p-6">
+              <div className="flex items-center space-x-4">
+                <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-full">
+                  <BarChart2 className="h-6 w-6 text-blue-600 dark:text-blue-300" />
+                </div>
+                <div>
+                  <h3 className="font-medium">Analytics</h3>
+                  <p className="text-sm text-muted-foreground">View detailed reports and metrics</p>
+                </div>
+              </div>
+            </Link>
+          </Card>
           
-          <TabsContent value="overview" className="space-y-6">
-            <MetricsOverview data={metricsData} />
-          </TabsContent>
+          <Card className="hover:shadow-md transition-all duration-200">
+            <Link to="/clients" className="block p-6">
+              <div className="flex items-center space-x-4">
+                <div className="bg-green-100 dark:bg-green-900 p-3 rounded-full">
+                  <Users className="h-6 w-6 text-green-600 dark:text-green-300" />
+                </div>
+                <div>
+                  <h3 className="font-medium">Students</h3>
+                  <p className="text-sm text-muted-foreground">Manage student profiles</p>
+                </div>
+              </div>
+            </Link>
+          </Card>
           
-          <TabsContent value="students" className="space-y-6">
-            <StudentManagement clients={clients} />
-          </TabsContent>
-          
-          <TabsContent value="team" className="space-y-6">
-            <TeamPerformance clients={clients} />
-          </TabsContent>
-        </Tabs>
+          <Card className="hover:shadow-md transition-all duration-200">
+            <Link to="/renewals" className="block p-6">
+              <div className="flex items-center space-x-4">
+                <div className="bg-purple-100 dark:bg-purple-900 p-3 rounded-full">
+                  <TrendingUp className="h-6 w-6 text-purple-600 dark:text-purple-300" />
+                </div>
+                <div>
+                  <h3 className="font-medium">Renewals</h3>
+                  <p className="text-sm text-muted-foreground">Track and manage renewals</p>
+                </div>
+              </div>
+            </Link>
+          </Card>
+        </section>
+
+        {/* Recent students list */}
+        <StudentsData />
       </div>
     </Layout>
   );
