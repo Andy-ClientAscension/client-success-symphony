@@ -11,6 +11,14 @@ import Dashboard from './pages/Dashboard';
 import NotFound from './pages/NotFound';
 import Index from './pages/Index';
 import AuthCallback from './pages/AuthCallback';
+import Clients from './pages/Clients';
+import Renewals from './pages/Renewals';
+import Communications from './pages/Communications';
+import Payments from './pages/Payments';
+import Automations from './pages/Automations';
+import HealthScoreDashboard from './pages/HealthScoreDashboard';
+import Settings from './pages/Settings';
+import Help from './pages/Help';
 
 // Wrapper component for route error handling
 const RouteErrorBoundary = ({ children }: { children: React.ReactNode }) => (
@@ -75,6 +83,94 @@ export const AppRoutes = () => {
           <RouteErrorBoundary>
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          </RouteErrorBoundary>
+        }
+      />
+      
+      <Route
+        path="/clients"
+        element={
+          <RouteErrorBoundary>
+            <ProtectedRoute>
+              <Clients />
+            </ProtectedRoute>
+          </RouteErrorBoundary>
+        }
+      />
+      
+      <Route
+        path="/renewals"
+        element={
+          <RouteErrorBoundary>
+            <ProtectedRoute>
+              <Renewals />
+            </ProtectedRoute>
+          </RouteErrorBoundary>
+        }
+      />
+      
+      <Route
+        path="/communications"
+        element={
+          <RouteErrorBoundary>
+            <ProtectedRoute>
+              <Communications />
+            </ProtectedRoute>
+          </RouteErrorBoundary>
+        }
+      />
+      
+      <Route
+        path="/payments"
+        element={
+          <RouteErrorBoundary>
+            <ProtectedRoute>
+              <Payments />
+            </ProtectedRoute>
+          </RouteErrorBoundary>
+        }
+      />
+      
+      <Route
+        path="/automations"
+        element={
+          <RouteErrorBoundary>
+            <ProtectedRoute>
+              <Automations />
+            </ProtectedRoute>
+          </RouteErrorBoundary>
+        }
+      />
+      
+      <Route
+        path="/health-score"
+        element={
+          <RouteErrorBoundary>
+            <ProtectedRoute>
+              <HealthScoreDashboard />
+            </ProtectedRoute>
+          </RouteErrorBoundary>
+        }
+      />
+      
+      <Route
+        path="/settings"
+        element={
+          <RouteErrorBoundary>
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          </RouteErrorBoundary>
+        }
+      />
+      
+      <Route
+        path="/help"
+        element={
+          <RouteErrorBoundary>
+            <ProtectedRoute>
+              <Help />
             </ProtectedRoute>
           </RouteErrorBoundary>
         }

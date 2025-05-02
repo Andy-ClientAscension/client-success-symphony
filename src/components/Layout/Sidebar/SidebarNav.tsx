@@ -10,8 +10,8 @@ import { cn } from "@/lib/utils";
 
 export const navLinks = [
   { to: '/', label: 'Home', icon: Home },
-  { to: '/clients', label: 'Clients', icon: Users },
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/clients', label: 'Clients', icon: Users },
   { to: '/renewals', label: 'Renewals', icon: Activity },
   { to: '/communications', label: 'Communications', icon: MessageSquare },
   { to: '/payments', label: 'Payments', icon: CreditCard },

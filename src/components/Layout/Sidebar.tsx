@@ -1,38 +1,22 @@
 
-import React, { useState } from "react";
+import React from "react";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import {
-  Home,
-  Users,
-  Settings,
-  HelpCircle,
-  LayoutDashboard,
-  Activity,
-  CreditCard,
-  MessageSquare,
-  FileSliders,
-  Brain,
-  Building2,
-  LogOut,
-  Menu,
-  ChevronLeft,
-  ChevronsLeft
-} from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/use-auth";
-import { useToast } from "@/hooks/use-toast";
-import { useTheme } from "@/components/ThemeProvider";
+import { Menu, ChevronsLeft, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SidebarNav } from "@/components/Layout/Sidebar/SidebarNav";  // Updated import path
+import { Link } from "react-router-dom";
+import { Building2 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/hooks/use-auth";
+import { LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 interface SidebarProps {
   isMobile: boolean;
@@ -44,8 +28,6 @@ interface SidebarProps {
 export function Sidebar({ isMobile, closeSidebar, collapsed, toggleCollapse }: SidebarProps) {
   const { user, logout: signOut } = useAuth();
   const { toast } = useToast();
-  const { theme } = useTheme();
-  const location = useLocation();
   const navigate = useNavigate();
   
   // Use the user's name if available (from metadata) or fallback to email
@@ -73,42 +55,6 @@ export function Sidebar({ isMobile, closeSidebar, collapsed, toggleCollapse }: S
         variant: "destructive",
       });
     }
-  };
-
-  const navLinks = [
-    { to: '/', label: 'Home', icon: Home },
-    { to: '/clients', label: 'Clients', icon: Users },
-    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/renewals', label: 'Renewals', icon: Activity },
-    { to: '/communications', label: 'Communications', icon: MessageSquare },
-    { to: '/payments', label: 'Payments', icon: CreditCard },
-    { to: '/automations', label: 'Automations', icon: FileSliders },
-    { to: '/health-score', label: 'Health Score', icon: Brain },
-    { to: '/settings', label: 'Settings', icon: Settings },
-    { to: '/help', label: 'Help', icon: HelpCircle },
-  ];
-
-  const activeLinkStyle = "bg-secondary text-secondary-foreground";
-
-  const renderNavLink = (link: { to: string; label: string; icon: React.ComponentType<React.SVGProps<SVGSVGElement>> }) => {
-    const Icon = link.icon;
-    const isActive = location.pathname === link.to;
-
-    return (
-      <Link to={link.to} onClick={closeSidebar} className="w-full" key={link.to}>
-        <Button
-          variant="ghost"
-          className={cn(
-            "justify-start px-4 py-2 w-full font-normal",
-            isActive ? activeLinkStyle : "hover:bg-secondary",
-            collapsed && "justify-center"
-          )}
-        >
-          <Icon className="h-4 w-4 mr-2" />
-          {!collapsed && <span>{link.label}</span>}
-        </Button>
-      </Link>
-    );
   };
 
   const renderSidebarContent = () => (
@@ -140,9 +86,7 @@ export function Sidebar({ isMobile, closeSidebar, collapsed, toggleCollapse }: S
         </div>
         <Separator />
       </div>
-      <div className="flex-1 space-y-1">
-        {navLinks.map((link) => renderNavLink(link))}
-      </div>
+      <SidebarNav collapsed={collapsed} closeSidebar={closeSidebar} />
       <Separator />
       <div className="p-4">
         <Button variant="outline" className="w-full" onClick={handleSignOut}>
