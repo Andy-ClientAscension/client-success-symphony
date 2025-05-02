@@ -1,4 +1,3 @@
-
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -148,14 +147,24 @@ export function LoginForm({
           {error.type === 'network' && (
             <div className="mt-2 text-xs">
               If this problem persists, please check your internet connection or try using a different browser.
-              <Button 
-                variant="link" 
-                size="sm" 
-                className="p-0 ml-2" 
-                onClick={handleNetworkRetry}
-              >
-                Try Again
-              </Button>
+              <div className="flex space-x-2 mt-1">
+                <Button 
+                  variant="link" 
+                  size="sm" 
+                  className="p-0 h-auto" 
+                  onClick={handleNetworkRetry}
+                >
+                  Try Again
+                </Button>
+                <Button 
+                  variant="link" 
+                  size="sm" 
+                  className="p-0 h-auto" 
+                  onClick={() => navigate("/diagnostic")}
+                >
+                  Run Diagnostics
+                </Button>
+              </div>
             </div>
           )}
           {error.type === 'cors' && (
@@ -244,18 +253,31 @@ export function LoginForm({
         {isSubmitting ? "Logging in..." : "Login"}
       </Button>
 
-      <p className="text-center text-sm">
-        Don't have an account?{" "}
-        <Button
-          variant="link"
-          className="p-0 font-normal text-blue-500 hover:text-blue-700"
-          onClick={() => navigate("/signup")}
-          disabled={isSubmitting || isResettingPassword}
-          type="button"
-        >
-          Sign up
-        </Button>
-      </p>
+      <div className="text-center text-sm space-y-2">
+        <p>
+          Don't have an account?{" "}
+          <Button
+            variant="link"
+            className="p-0 font-normal text-blue-500 hover:text-blue-700"
+            onClick={() => navigate("/signup")}
+            disabled={isSubmitting || isResettingPassword}
+            type="button"
+          >
+            Sign up
+          </Button>
+        </p>
+        <p className="text-xs text-gray-500">
+          Having trouble logging in?{" "}
+          <Button
+            variant="link"
+            className="p-0 h-auto text-xs font-normal text-gray-500 hover:text-gray-700"
+            onClick={() => navigate("/diagnostic")}
+            type="button"
+          >
+            Run diagnostics
+          </Button>
+        </p>
+      </div>
     </form>
   );
 }
