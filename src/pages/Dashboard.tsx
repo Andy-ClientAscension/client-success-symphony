@@ -15,6 +15,7 @@ import { HeroMetrics } from "@/components/Dashboard/Metrics/HeroMetrics";
 import { StudentsData } from "@/components/StudentsData";
 import { SyncMonitorPanel } from "@/components/Dashboard/SyncStatus/SyncMonitorPanel";
 import { useAuth } from "@/hooks/use-auth";
+import { announceToScreenReader } from "@/lib/accessibility";
 
 export default function Dashboard() {
   const {
@@ -33,6 +34,9 @@ export default function Dashboard() {
   // Prefetch critical dashboard resources when authenticated
   useEffect(() => {
     if (isAuthenticated) {
+      // Announce dashboard is loading to screen readers
+      announceToScreenReader("Dashboard is loading", "polite");
+      
       // Prefetch important chart components
       const prefetchResources = async () => {
         console.log("Prefetching critical dashboard resources...");
@@ -49,6 +53,7 @@ export default function Dashboard() {
         try {
           await Promise.allSettled(chartPromises);
           console.log("Dashboard resources prefetching complete");
+          announceToScreenReader("Dashboard resources loaded", "polite");
         } catch (error) {
           console.log("Some resources failed to prefetch:", error);
         }
@@ -58,11 +63,32 @@ export default function Dashboard() {
     }
   }, [isAuthenticated]);
 
+  // Announce loading state changes to screen readers
+  useEffect(() => {
+    if (isLoading) {
+      announceToScreenReader("Loading dashboard data", "polite");
+    } else if (error) {
+      announceToScreenReader(`Dashboard error: ${error.message}`, "assertive");
+    } else {
+      announceToScreenReader("Dashboard data loaded successfully", "polite");
+    }
+  }, [isLoading, error]);
+
+  // Announce refresh actions to screen readers
+  useEffect(() => {
+    if (isRefreshing) {
+      announceToScreenReader("Refreshing dashboard data", "polite");
+    }
+  }, [isRefreshing]);
+
   if (isLoading) {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
           <LoadingState message="Loading dashboard data..." showProgress />
+          <div aria-live="polite" className="sr-only">
+            Loading dashboard data, please wait
+          </div>
         </div>
       </Layout>
     );
@@ -83,6 +109,10 @@ export default function Dashboard() {
             <Button onClick={refreshData} className="mt-4">
               <RefreshCw className="mr-2 h-4 w-4" /> Try Again
             </Button>
+            <div aria-live="assertive" className="sr-only">
+              Error loading dashboard: {error.message || "Failed to load dashboard data"}. 
+              Please try refreshing the data.
+            </div>
           </CardContent>
         </Card>
       </Layout>
@@ -92,6 +122,10 @@ export default function Dashboard() {
   return (
     <Layout>
       <div className="space-y-6 p-6">
+        <div aria-live="polite" className="sr-only">
+          Dashboard loaded successfully. Last updated {lastUpdated ? lastUpdated.toLocaleString() : 'recently'}.
+        </div>
+        
         <div className="flex flex-col space-y-2 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
           <DashboardHeader 
             title="Executive Dashboard" 

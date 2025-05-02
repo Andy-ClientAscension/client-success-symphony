@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { LoadingState } from "@/components/LoadingState";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { announceToScreenReader } from "@/lib/accessibility";
 
 // This is the landing page that redirects based on auth state
 export default function Index() {
@@ -32,6 +33,7 @@ export default function Index() {
     const handleEmailConfirmation = async () => {
       if (accessToken) {
         setProcessingAuth(true);
+        announceToScreenReader("Processing authentication", "polite");
         
         // Create a timeout to abort long-running requests
         const TIMEOUT_MS = 10000; // 10 seconds timeout
@@ -76,6 +78,7 @@ export default function Index() {
           }
           
           console.log("Session validated successfully");
+          announceToScreenReader("Authentication successful", "polite");
           
           // Clear the URL hash, using navigation safety
           if (typeof window !== 'undefined') {
@@ -108,6 +111,7 @@ export default function Index() {
           }
           
           setAuthError(errorMessage);
+          announceToScreenReader(`Authentication error: ${errorMessage}`, "assertive");
           
           // Show error toast
           toast({
@@ -139,9 +143,13 @@ export default function Index() {
     // and URL processing has completed (whether there was a token or not)
     if (!isLoading && !processingAuth && urlProcessed) {
       if (isAuthenticated) {
+        // Announce redirection for screen readers
+        announceToScreenReader("Authentication verified, redirecting to dashboard", "polite");
         // Redirect authenticated users to dashboard
         navigate('/dashboard', { replace: true });
       } else {
+        // Announce redirection for screen readers
+        announceToScreenReader("Authentication required, redirecting to login", "polite");
         // Redirect unauthenticated users to login
         navigate('/login', { replace: true });
       }
@@ -151,7 +159,12 @@ export default function Index() {
   return (
     <Layout>
       {(isLoading || processingAuth) ? (
-        <LoadingState message={processingAuth ? "Processing authentication..." : "Initializing application..."} />
+        <div className="flex items-center justify-center h-screen">
+          <LoadingState message={processingAuth ? "Processing authentication..." : "Initializing application..."} />
+          <div aria-live="polite" className="sr-only">
+            {processingAuth ? "Processing authentication" : "Initializing application"}
+          </div>
+        </div>
       ) : (
         <div className="flex items-center justify-center h-screen">
           {authError ? (
@@ -159,9 +172,17 @@ export default function Index() {
               <p className="text-destructive font-medium">Authentication Error</p>
               <p className="text-sm text-muted-foreground">{authError}</p>
               <p>Redirecting to login...</p>
+              <div aria-live="assertive" className="sr-only">
+                Authentication error: {authError}. Redirecting to login page.
+              </div>
             </div>
           ) : (
-            <p>Redirecting...</p>
+            <div>
+              <p>Redirecting...</p>
+              <div aria-live="polite" className="sr-only">
+                Redirecting to appropriate page based on your authentication status.
+              </div>
+            </div>
           )}
         </div>
       )}

@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LoginForm } from "@/components/auth/LoginForm";
 import { useToast } from "@/hooks/use-toast";
+import { announceToScreenReader } from "@/lib/accessibility";
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -21,6 +22,7 @@ export default function Login() {
     const state = location.state as { authError?: string } | undefined;
     if (state?.authError) {
       setError({ message: state.authError });
+      announceToScreenReader(`Authentication error: ${state.authError}`, "assertive");
       
       // Clear the state so error doesn't persist on refresh
       window.history.replaceState({}, document.title);
@@ -28,8 +30,12 @@ export default function Login() {
   }, [location.state]);
 
   useEffect(() => {
+    // Announce login page loaded
+    announceToScreenReader("Login page loaded", "polite");
+    
     // Redirect to dashboard if already authenticated
     if (isAuthenticated) {
+      announceToScreenReader("Already authenticated, redirecting to dashboard", "polite");
       navigate('/dashboard', { replace: true });
     }
   }, [isAuthenticated, navigate]);
@@ -38,20 +44,26 @@ export default function Login() {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
+    announceToScreenReader("Attempting to log in, please wait", "polite");
 
     try {
       const success = await login(email, password);
       if (success) {
+        announceToScreenReader("Login successful, redirecting to dashboard", "polite");
         navigate('/dashboard', { replace: true });
       } else {
-        setError({ message: 'Login failed. Please check your credentials.' });
+        const errorMessage = 'Login failed. Please check your credentials.';
+        setError({ message: errorMessage });
+        announceToScreenReader(errorMessage, "assertive");
       }
     } catch (err) {
       console.error('Login error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
       setError({ 
-        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+        message: errorMessage,
         type: 'auth'
       });
+      announceToScreenReader(`Login error: ${errorMessage}`, "assertive");
     } finally {
       setIsSubmitting(false);
     }
@@ -75,6 +87,10 @@ export default function Login() {
             onSubmit={handleSubmit}
             error={error}
           />
+          
+          <div aria-live="polite" className="sr-only">
+            {isSubmitting ? "Logging in..." : error ? `Error: ${error.message}` : ""}
+          </div>
         </div>
       </div>
     </Layout>

@@ -6,6 +6,7 @@ import { LoadingState } from "@/components/LoadingState";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ValidationError } from "@/components/ValidationError";
 import { useToast } from "@/hooks/use-toast";
+import { announceToScreenReader } from "@/lib/accessibility";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -27,6 +28,9 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
       userEmail: user?.email 
     });
     
+    // Announce authentication check to screen readers
+    announceToScreenReader("Verifying authentication status", "polite");
+    
     // Short delay to ensure auth check is complete
     const timer = setTimeout(() => {
       setIsCheckingAuth(false);
@@ -37,20 +41,46 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
     };
   }, [location.pathname, isAuthenticated, isLoading, user]);
   
+  // When auth status changes, announce to screen readers
+  useEffect(() => {
+    if (!isLoading && !isCheckingAuth) {
+      if (isAuthenticated) {
+        announceToScreenReader("Authentication verified, loading content", "polite");
+      } else {
+        announceToScreenReader("Authentication required, redirecting to login", "assertive");
+      }
+    }
+  }, [isAuthenticated, isLoading, isCheckingAuth]);
+  
   // Show loading state while checking authentication
   if (isLoading || isCheckingAuth) {
-    return <LoadingState message="Checking authentication..." />;
+    return (
+      <>
+        <LoadingState message="Checking authentication..." />
+        <div aria-live="polite" className="sr-only">
+          Checking authentication status, please wait
+        </div>
+      </>
+    );
   }
   
   // Show error if there's an authentication error
   if (error && error.message && !error.message.includes('offline') && !error.message.includes('network')) {
+    const errorMessage = error.message || "Failed to verify authentication status";
+    announceToScreenReader(`Authentication error: ${errorMessage}`, "assertive");
+    
     return (
-      <ValidationError
-        type="error"
-        title="Authentication Error"
-        message={error.message || "Failed to verify authentication status"}
-        showIcon
-      />
+      <>
+        <ValidationError
+          type="error"
+          title="Authentication Error"
+          message={errorMessage}
+          showIcon
+        />
+        <div aria-live="assertive" className="sr-only">
+          Authentication error: {errorMessage}
+        </div>
+      </>
     );
   }
   
@@ -66,7 +96,14 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
         variant: "destructive"
       });
     }
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return (
+      <>
+        <Navigate to="/login" state={{ from: location }} replace />
+        <div aria-live="assertive" className="sr-only">
+          Authentication required. Redirecting to login page.
+        </div>
+      </>
+    );
   }
 
   // Clear the notification flag when successfully authenticated
@@ -86,6 +123,9 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
             message="Unable to verify authentication status. Please try refreshing the page."
             showIcon
           />
+          <div aria-live="assertive" className="sr-only">
+            Authentication error. Unable to verify authentication status. Please try refreshing the page.
+          </div>
         </div>
       }
     >
