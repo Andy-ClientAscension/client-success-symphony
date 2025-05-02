@@ -47,7 +47,7 @@ export default function Index() {
     };
     
     handleEmailConfirmation();
-  }, [navigate]);
+  }, [navigate, location.hash]); // Added location.hash to the dependency array
   
   // Standard redirection based on auth state
   useEffect(() => {
