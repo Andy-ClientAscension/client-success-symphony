@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSessionManager } from "@/hooks/use-session-manager";
 import { supabase } from "@/integrations/supabase/client";
 import { updateSentryUser } from "@/utils/sentry/config";
-import { AuthProviderProps, Auth } from "./types";
+import { AuthProviderProps, Auth, User } from "./types";
 import { validateInviteCode } from "./inviteCodeUtils";
 import { refreshAuthState, login, register, logout, isSessionExpired } from "./authService";
 

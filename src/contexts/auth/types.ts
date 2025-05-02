@@ -25,8 +25,8 @@ export namespace Auth {
     user: User | null;
   }
   
-  // Re-export types from the original Auth namespace
-  export type User = User;
+  // Instead of self-referencing, reference the imported type
+  export type UserType = User;
   
   export interface AuthContextType {
     user: User | null;
@@ -43,5 +43,5 @@ export namespace Auth {
   }
 }
 
-// Export the Auth namespace
+// Export the User type
 export type { User };

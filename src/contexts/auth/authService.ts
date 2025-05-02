@@ -1,8 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { updateSentryUser } from "@/utils/sentry/config";
 import { validateInviteCode } from "./inviteCodeUtils";
-import { Auth } from "./types";
+import { Auth, User } from "./types";
 
 // Function to refresh the auth state from Supabase
 export const refreshAuthState = async (): Promise<void> => {
@@ -80,7 +79,7 @@ export const register = async (
   email: string, 
   password: string, 
   inviteCode: string
-): Promise<{ success: boolean; message: string; session: any; user: Auth.User | null }> => {
+): Promise<{ success: boolean; message: string; session: any; user: User | null }> => {
   try {
     console.log("Registration attempt for:", email);
 
