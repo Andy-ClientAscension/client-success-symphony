@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 export default function Index() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, refreshSession } = useAuth();
   const [processingAuth, setProcessingAuth] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [urlProcessed, setUrlProcessed] = useState(false);
@@ -55,6 +55,9 @@ export default function Index() {
             window.history.replaceState(null, '', window.location.pathname);
           }
           
+          // Refresh auth context to ensure it's in sync with Supabase
+          await refreshSession();
+          
           // Show success toast
           toast({
             title: "Authentication successful",
@@ -90,7 +93,7 @@ export default function Index() {
     };
     
     handleEmailConfirmation();
-  }, [navigate, location.hash, toast]); // Added location.hash and toast to the dependency array
+  }, [navigate, location.hash, toast, refreshSession]); // Added refreshSession to the dependency array
   
   // Standard redirection based on auth state
   useEffect(() => {

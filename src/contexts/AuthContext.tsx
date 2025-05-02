@@ -1,3 +1,4 @@
+
 import React, { createContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { updateSentryUser } from "@/utils/sentry/config";
@@ -42,6 +43,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const validateInviteCode = async (code: string): Promise<boolean> => {
     // In a real app, this would verify against a database
     return VALID_INVITE_CODES.includes(code);
+  };
+
+  // Function to refresh the auth state from Supabase
+  const refreshAuthState = async (): Promise<void> => {
+    try {
+      setIsLoading(true);
+      console.log("Refreshing auth state from Supabase");
+      
+      const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error("Error refreshing session:", sessionError);
+        throw sessionError;
+      }
+      
+      if (currentSession) {
+        console.log("Session refresh successful");
+        setSession(currentSession);
+        setUser({
+          id: currentSession.user.id,
+          email: currentSession.user.email!,
+          name: currentSession.user.user_metadata?.name
+        });
+        
+        // Update Sentry user context
+        updateSentryUser({
+          id: currentSession.user.id,
+          email: currentSession.user.email
+        });
+      } else {
+        console.log("No active session found during refresh");
+        setSession(null);
+        setUser(null);
+        
+        // Update Sentry user context
+        updateSentryUser(null);
+      }
+      
+      return Promise.resolve();
+    } catch (error) {
+      console.error("Session refresh error:", error);
+      setError(error instanceof Error ? error : new Error("Failed to refresh session"));
+      return Promise.reject(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Handle login
@@ -312,10 +359,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     register,
     logout,
     validateInviteCode,
-    // Fix the type mismatch by modifying the session management helpers
-    refreshSession: sessionManager.refreshSession ? async () => {
-      await sessionManager.refreshSession();
-    } : undefined,
+    refreshSession: refreshAuthState, // Add the refresh function to the context
     sessionExpiryTime: sessionManager.sessionExpiryTime,
   };
 
