@@ -45,6 +45,8 @@ declare namespace Auth {
     register: (email: string, password: string, inviteCode: string) => Promise<{ success: boolean; message: string }>;
     logout: () => void;
     validateInviteCode: (code: string) => Promise<boolean>;
+    refreshSession?: () => Promise<void>;
+    sessionExpiryTime?: Date | null;
   }
 }
 

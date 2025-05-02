@@ -158,7 +158,7 @@ export default function ResetPassword() {
                 <AuthErrorDisplay 
                   error={{ 
                     message: error.message,
-                    type: error.code?.includes("validation") ? "validation" : "auth" 
+                    type: typeof error.code === 'string' && error.code.includes("validation") ? "validation" : "auth" 
                   }} 
                 />
               )}
