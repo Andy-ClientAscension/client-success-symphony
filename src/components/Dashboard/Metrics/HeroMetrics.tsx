@@ -95,7 +95,7 @@ export function HeroMetrics({ className }: HeroMetricsProps) {
     {
       title: "NPS Score",
       // Ensure we only pass a number, not a complex object
-      value: data?.npsAverage ?? npsScore ?? 0,
+      value: typeof npsScore === 'object' ? (npsScore?.current || 0) : (data?.npsAverage ?? npsScore ?? 0),
       icon: <TrendingUp />,
       trend: {
         value: 2,
@@ -105,7 +105,7 @@ export function HeroMetrics({ className }: HeroMetricsProps) {
     },
     {
       title: "Health Score",
-      // Ensure we only pass a string or number value, not a complex object
+      // Ensure we only pass a string value, not a complex object
       value: `${data?.healthScore ?? 0}%`,
       icon: <Gauge />,
       trend: {
