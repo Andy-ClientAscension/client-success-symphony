@@ -12,6 +12,7 @@ export default function Index() {
   const location = useLocation();
   const { isAuthenticated, isLoading } = useAuth();
   const [processingAuth, setProcessingAuth] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   
   // Handle access token in URL (for email confirmations)
   useEffect(() => {
@@ -32,6 +33,14 @@ export default function Index() {
           
           if (error) throw error;
           
+          // Validate that the session was actually set correctly by fetching the user
+          const { data: userData, error: userError } = await supabase.auth.getUser();
+          if (userError || !userData?.user) {
+            throw userError || new Error("Failed to fetch user after session set");
+          }
+          
+          console.log("Session validated successfully");
+          
           // Clear the URL hash
           window.history.replaceState(null, '', window.location.pathname);
           
@@ -39,6 +48,7 @@ export default function Index() {
           navigate('/dashboard', { replace: true });
         } catch (error) {
           console.error("Error setting session from URL:", error);
+          setAuthError(error instanceof Error ? error.message : "Authentication failed");
           navigate('/login', { replace: true });
         } finally {
           setProcessingAuth(false);
@@ -69,7 +79,15 @@ export default function Index() {
         <LoadingState message={processingAuth ? "Processing authentication..." : "Initializing application..."} />
       ) : (
         <div className="flex items-center justify-center h-screen">
-          <p>Redirecting...</p>
+          {authError ? (
+            <div className="text-center space-y-2">
+              <p className="text-destructive font-medium">Authentication Error</p>
+              <p className="text-sm text-muted-foreground">{authError}</p>
+              <p>Redirecting to login...</p>
+            </div>
+          ) : (
+            <p>Redirecting...</p>
+          )}
         </div>
       )}
     </Layout>
