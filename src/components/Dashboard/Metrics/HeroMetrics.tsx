@@ -58,6 +58,9 @@ export function HeroMetrics({ className }: HeroMetricsProps) {
   // Loading state while metrics are being calculated
   const isLoadingData = isLoading || isMetricsLoading;
 
+  // Calculate total clients count from the clientCounts object
+  const totalClientsCount = Object.values(clientCounts).reduce((sum, count) => sum + count, 0) || 1;
+
   const heroMetrics = [
     {
       title: "Active Students",
@@ -71,7 +74,7 @@ export function HeroMetrics({ className }: HeroMetricsProps) {
     },
     {
       title: "Retention Rate",
-      value: `${data?.retentionRate ?? (clientCounts.active / (clientCounts.total || 1) * 100).toFixed(0) ?? 0}%`,
+      value: `${data?.retentionRate ?? Math.round((clientCounts.active / totalClientsCount) * 100) ?? 0}%`,
       icon: <Heart />,
       trend: {
         value: 5,
