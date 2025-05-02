@@ -58,6 +58,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw sessionError;
       }
       
+      // Check session expiration
+      const sessionExpired = currentSession?.expires_at 
+        ? currentSession.expires_at * 1000 < Date.now()
+        : false;
+      
+      if (sessionExpired) {
+        console.log("Session has expired, signing out user");
+        await supabase.auth.signOut();
+        setSession(null);
+        setUser(null);
+        updateSentryUser(null);
+        
+        toast({
+          title: "Session Expired",
+          description: "Your session has expired. Please log in again.",
+          variant: "destructive"
+        });
+        
+        navigate('/login', { replace: true });
+        return Promise.resolve();
+      }
+      
       if (currentSession) {
         console.log("Session refresh successful");
         setSession(currentSession);
@@ -299,9 +321,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return; // Early return after handling token refresh
       }
       
+      // Check session expiration
+      const sessionExpired = currentSession?.expires_at 
+        ? currentSession.expires_at * 1000 < Date.now()
+        : false;
+      
       // Use setTimeout to prevent deadlocks in the supabase client
       setTimeout(() => {
-        if (currentSession) {
+        if (currentSession && !sessionExpired) {
           setSession(currentSession);
           setUser({
             id: currentSession.user.id,
@@ -314,6 +341,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             id: currentSession.user.id,
             email: currentSession.user.email
           });
+        } else if (sessionExpired) {
+          console.log("Session expired, signing out user");
+          // Will handle signout in the next tick to avoid potential deadlocks
+          setTimeout(async () => {
+            await supabase.auth.signOut();
+            setSession(null);
+            setUser(null);
+            updateSentryUser(null);
+            
+            toast({
+              title: "Session Expired",
+              description: "Your session has expired. Please log in again.",
+              variant: "destructive"
+            });
+            
+            navigate('/login', { replace: true });
+          }, 0);
         } else {
           setSession(null);
           setUser(null);
@@ -335,7 +379,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           throw error;
         }
         
-        if (currentSession) {
+        // Check session expiration
+        const sessionExpired = currentSession?.expires_at 
+          ? currentSession.expires_at * 1000 < Date.now()
+          : false;
+        
+        if (currentSession && !sessionExpired) {
           console.log("Found existing session");
           setSession(currentSession);
           setUser({
@@ -349,6 +398,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             id: currentSession.user.id,
             email: currentSession.user.email
           });
+        } else if (sessionExpired) {
+          console.log("Found expired session, signing out user");
+          await supabase.auth.signOut();
+          setSession(null);
+          setUser(null);
+          updateSentryUser(null);
+          
+          toast({
+            title: "Session Expired",
+            description: "Your session has expired. Please log in again.",
+            variant: "destructive"
+          });
+          
+          navigate('/login', { replace: true });
         } else {
           console.log("No active session found");
           setSession(null);
@@ -369,7 +432,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
-  }, [toast]); // Added toast to dependencies
+  }, [toast, navigate]); // Added toast and navigate to dependencies
 
   // Auth context value
   const authContextValue: Auth.AuthContextType = {
