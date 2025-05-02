@@ -1,4 +1,3 @@
-
 import React, { createContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { updateSentryUser } from "@/utils/sentry/config";
@@ -313,8 +312,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     register,
     logout,
     validateInviteCode,
-    // Add session management helpers
-    refreshSession: sessionManager.refreshSession,
+    // Fix the type mismatch by modifying the session management helpers
+    refreshSession: sessionManager.refreshSession ? async () => {
+      await sessionManager.refreshSession();
+    } : undefined,
     sessionExpiryTime: sessionManager.sessionExpiryTime,
   };
 
