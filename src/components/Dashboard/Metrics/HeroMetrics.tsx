@@ -105,6 +105,7 @@ export function HeroMetrics({ className }: HeroMetricsProps) {
     },
     {
       title: "Health Score",
+      // Ensure we only pass a string or number value, not a complex object
       value: `${data?.healthScore ?? 0}%`,
       icon: <Gauge />,
       trend: {
