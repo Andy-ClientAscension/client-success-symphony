@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/Layout/Layout";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
@@ -49,12 +50,11 @@ export default function Clients() {
         }
       }
       
-      // Load the kanban data - wrapped in a try/catch to prevent errors
-      try {
-        await loadPersistedData();
-      } catch (error) {
+      // Load the kanban data but don't wait for it to complete
+      loadPersistedData().catch(error => {
         console.error("Error loading kanban data:", error);
-      }
+        // Don't block the UI if kanban data can't be loaded
+      });
     } catch (error) {
       console.error("Error initializing client data:", error);
       toast({
@@ -72,8 +72,10 @@ export default function Clients() {
     initializeClientData();
   }, [initializeClientData]);
 
-  // Optimize storage event handling
+  // Optimize storage event handling with debouncing
   useEffect(() => {
+    let debounceTimer: NodeJS.Timeout | null = null;
+    
     const handleStorageChange = (event: StorageEvent | CustomEvent) => {
       const key = event instanceof StorageEvent ? event.key : (event as CustomEvent).detail?.key;
       
@@ -81,16 +83,23 @@ export default function Clients() {
       if (key === STORAGE_KEYS.CLIENTS || key === STORAGE_KEYS.CLIENT_STATUS || 
           key === STORAGE_KEYS.KANBAN || key === null) {
         
-        console.log("Storage change detected in Clients.tsx:", key);
-        
-        // Reload clients from storage
-        const updatedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
-        if (updatedClients && updatedClients.length > 0) {
-          setClients(updatedClients);
+        // Debounce the reload to prevent multiple rapid updates
+        if (debounceTimer) {
+          clearTimeout(debounceTimer);
         }
         
-        // Increment force reload counter to refresh child components
-        setForceReload(prev => prev + 1);
+        debounceTimer = setTimeout(() => {
+          console.log("Storage change detected in Clients.tsx:", key);
+          
+          // Reload clients from storage
+          const updatedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
+          if (updatedClients && updatedClients.length > 0) {
+            setClients(updatedClients);
+          }
+          
+          // Increment force reload counter to refresh child components
+          setForceReload(prev => prev + 1);
+        }, 100);
       }
     };
     
@@ -103,6 +112,7 @@ export default function Clients() {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('storageUpdated', handleStorageChange as EventListener);
       window.removeEventListener('storageRestored', handleStorageChange as EventListener);
+      if (debounceTimer) clearTimeout(debounceTimer);
     };
   }, []);
 
@@ -110,13 +120,16 @@ export default function Clients() {
     navigate("/add-client");
   }, [navigate]);
 
-  // Optimize tab change handling
+  // Optimize tab change handling to prevent unnecessary rerenders
   const handleTabChange = useCallback((value: string) => {
-    setActiveTab(value);
-    requestAnimationFrame(() => {
-      setForceReload(prev => prev + 1);
-    });
-  }, []);
+    if (activeTab !== value) {
+      setActiveTab(value);
+      // Use requestAnimationFrame for smoother UI updates
+      requestAnimationFrame(() => {
+        setForceReload(prev => prev + 1);
+      });
+    }
+  }, [activeTab]);
 
   const getStatusSummary = () => {
     if (!clients.length) return null;
@@ -172,4 +185,3 @@ export default function Clients() {
     </Layout>
   );
 }
-

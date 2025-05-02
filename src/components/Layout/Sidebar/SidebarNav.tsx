@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import {
   Home, Users, Settings, HelpCircle, LayoutDashboard,
   Activity, CreditCard, MessageSquare, FileSliders,
-  Brain, Building2
+  Brain
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 

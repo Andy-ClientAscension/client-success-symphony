@@ -1,10 +1,10 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClientList } from "./ClientList";
 import { TeamAnalytics } from "./TeamAnalytics";
 import { EnhancedKanbanBoard } from "./EnhancedKanbanBoard";
-import { BarChart2, CheckCircle, AlertTriangle, UserPlus, XCircle } from "lucide-react";
+import { CheckCircle, AlertTriangle, UserPlus, XCircle, BarChart2 } from "lucide-react";
 import { getAllClients } from "@/lib/data";
 import { focusRingClasses } from "@/lib/accessibility";
 import { SkipLink } from "./Accessibility/SkipLink";
@@ -18,6 +18,14 @@ interface ClientsTabsProps {
 export function ClientsTabs({ activeTab, onTabChange, forceReload }: ClientsTabsProps) {
   const clients = getAllClients();
   
+  // This effect ensures we don't lose track of tab state during rendering
+  useEffect(() => {
+    // Ensure tab initialization
+    if (!activeTab) {
+      onTabChange("all");
+    }
+  }, [activeTab, onTabChange]);
+
   return (
     <div>
       <SkipLink targetId="clients-content" label="Skip to clients content" />
@@ -26,6 +34,7 @@ export function ClientsTabs({ activeTab, onTabChange, forceReload }: ClientsTabs
         value={activeTab} 
         onValueChange={onTabChange} 
         className="w-full"
+        defaultValue="all"
         aria-label="Client Management Sections"
       >
         <div className="overflow-x-auto border-b mb-4">
@@ -98,7 +107,7 @@ export function ClientsTabs({ activeTab, onTabChange, forceReload }: ClientsTabs
         </div>
         
         <div id="clients-content" role="region" aria-label="Client content area">
-          {/* Use key prop to force remount components only when needed */}
+          {/* Use memo pattern to prevent unnecessary rerenders */}
           <TabsContent 
             value="all" 
             className="m-0"
