@@ -1,15 +1,18 @@
 
 import React, { createContext, useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { updateSentryUser } from "@/utils/sentry/config";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useSessionManager } from "@/hooks/use-session-manager";
+import { supabase } from "@/integrations/supabase/client";
+import { updateSentryUser } from "@/utils/sentry/config";
+import { AuthProviderProps } from "./types";
+import { validateInviteCode } from "./inviteCodeUtils";
+import { refreshAuthState, login, register, logout, isSessionExpired } from "./authService";
 import type Auth from '@/types/auth';
 
 export const AuthContext = createContext<Auth.AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<Auth.User | null>(null);
   const [session, setSession] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,31 +28,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         title: "Session Expired",
         description: "Your session has expired. Please log in again."
       });
-      logout();
+      handleLogout();
     },
     onInactive: () => {
       toast({
         title: "Inactivity Timeout",
         description: "You've been logged out due to inactivity."
       });
-      logout();
+      handleLogout();
     }
   });
 
-  // Valid invitation codes (in a real app, these would be stored in a database)
-  const VALID_INVITE_CODES = ["SSC2024", "AGENT007", "WELCOME1"];
-
-  // Function to validate invite codes
-  const validateInviteCode = async (code: string): Promise<boolean> => {
-    // In a real app, this would verify against a database
-    return VALID_INVITE_CODES.includes(code);
-  };
-
-  // Function to refresh the auth state from Supabase
-  const refreshAuthState = async (): Promise<void> => {
+  // Handle session refresh
+  const handleRefreshAuthState = async (): Promise<void> => {
     try {
       setIsLoading(true);
-      console.log("Refreshing auth state from Supabase");
       
       const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
       
@@ -59,9 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       // Check session expiration
-      const sessionExpired = currentSession?.expires_at 
-        ? currentSession.expires_at * 1000 < Date.now()
-        : false;
+      const sessionExpired = isSessionExpired(currentSession);
       
       if (sessionExpired) {
         console.log("Session has expired, signing out user");
@@ -114,37 +105,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Handle login
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const handleLogin = async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
       setError(null);
 
-      console.log("Login attempt for:", email);
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      const result = await login(email, password);
 
-      if (error) {
-        console.error("Supabase auth error:", error);
-        setError(new Error(error.message));
+      if (result.error) {
+        setError(result.error);
         return false;
       }
 
-      if (data.session) {
-        console.log("Login successful, session established");
-        setSession(data.session);
-        setUser({
-          id: data.user.id,
-          email: data.user.email!,
-          name: data.user.user_metadata?.name
-        });
+      if (result.success && result.session && result.user) {
+        setSession(result.session);
+        setUser(result.user);
         
         // Update Sentry user context
         updateSentryUser({
-          id: data.user.id,
-          email: data.user.email
+          id: result.user.id,
+          email: result.user.email
         });
         
         return true;
@@ -162,7 +142,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Handle registration
-  const register = async (
+  const handleRegister = async (
     email: string, 
     password: string, 
     inviteCode: string
@@ -171,78 +151,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       setError(null);
 
-      console.log("Registration attempt for:", email);
+      const result = await register(email, password, inviteCode);
 
-      // Validate invite code first
-      const isValidCode = await validateInviteCode(inviteCode);
-      if (!isValidCode) {
-        return {
-          success: false,
-          message: "Invalid invitation code"
-        };
+      if (!result.success) {
+        return result;
       }
 
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: window.location.origin
-        }
-      });
-
-      if (error) throw error;
-
-      if (data.user) {
-        if (data.session) {
-          setSession(data.session);
-          setUser({
-            id: data.user.id,
-            email: data.user.email!,
-            name: data.user.user_metadata?.name
-          });
-          
-          // Update Sentry user context
-          updateSentryUser({
-            id: data.user.id,
-            email: data.user.email
-          });
-          
-          return {
-            success: true,
-            message: "Registration successful! You are now logged in."
-          };
-        } else if (data.user.identities?.length === 0) {
-          // User already exists
-          return {
-            success: false,
-            message: "This email is already registered. Please login instead."
-          };
-        } else {
-          // Email confirmation is required
-          return {
-            success: true,
-            message: "Registration successful! Please check your email to confirm your account."
-          };
-        }
+      if (result.user && result.session) {
+        setSession(result.session);
+        setUser(result.user);
+        
+        // Update Sentry user context
+        updateSentryUser({
+          id: result.user.id,
+          email: result.user.email
+        });
       }
-
-      return {
-        success: false,
-        message: "Registration failed for unknown reason"
-      };
+      
+      return result;
     } catch (error) {
       console.error("Registration error:", error);
-      
-      // Handle specific error cases
-      if (error instanceof Error) {
-        if (error.message.includes("already registered")) {
-          return {
-            success: false,
-            message: "This email is already registered. Please login instead."
-          };
-        }
-      }
-      
       setError(error instanceof Error ? error : new Error("Registration failed"));
       return {
         success: false,
@@ -254,7 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Handle logout
-  const logout = async () => {
+  const handleLogout = async () => {
     try {
       console.log("Logging out user");
       setIsLoading(true);
@@ -304,7 +232,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Use setTimeout to prevent deadlocks in the supabase client
         setTimeout(async () => {
           try {
-            await refreshAuthState();
+            await handleRefreshAuthState();
             toast({
               title: "Session Refreshed",
               description: "Your authentication has been updated successfully."
@@ -322,9 +250,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       // Check session expiration
-      const sessionExpired = currentSession?.expires_at 
-        ? currentSession.expires_at * 1000 < Date.now()
-        : false;
+      const sessionExpired = isSessionExpired(currentSession);
       
       // Use setTimeout to prevent deadlocks in the supabase client
       setTimeout(() => {
@@ -380,9 +306,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         
         // Check session expiration
-        const sessionExpired = currentSession?.expires_at 
-          ? currentSession.expires_at * 1000 < Date.now()
-          : false;
+        const sessionExpired = isSessionExpired(currentSession);
         
         if (currentSession && !sessionExpired) {
           console.log("Found existing session");
@@ -441,11 +365,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: !!user,
     isLoading,
     error,
-    login,
-    register,
-    logout,
+    login: handleLogin,
+    register: handleRegister,
+    logout: handleLogout,
     validateInviteCode,
-    refreshSession: refreshAuthState, // Add the refresh function to the context
+    refreshSession: handleRefreshAuthState,
     sessionExpiryTime: sessionManager.sessionExpiryTime,
   };
 

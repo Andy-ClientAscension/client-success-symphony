@@ -1,6 +1,5 @@
-
 import React, { ReactNode } from 'react';
-import { AuthContext } from '@/contexts/AuthContext';
+import { AuthContext } from '@/contexts/auth';
 import { BrowserRouter } from 'react-router-dom';
 import { vi } from 'vitest';
 

@@ -1,4 +1,11 @@
 
-// This file ensures backward compatibility for imports that expect a .ts extension
-// It re-exports everything from the actual implementation (.tsx)
-export * from './use-auth.tsx';
+import { useContext } from 'react';
+import { AuthContext } from '@/contexts/auth';
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}

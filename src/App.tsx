@@ -1,4 +1,3 @@
-
 import { SentryRouteErrorBoundary } from "@/components/SentryErrorBoundary";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -6,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { BrowserCompatibilityCheck } from "@/components/BrowserCompatibilityCheck";
 import { OfflineDetector } from "@/components/OfflineDetector";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/auth";
 import { logStartupPhase } from "@/utils/errorHandling";
 import { AppRoutes } from "./routes";
 
