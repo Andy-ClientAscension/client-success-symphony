@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { getAllClients, getClientsCountByStatus, getAverageNPS, getChurnData } from "@/lib/data";
 import { useEffect } from "react";
+import { useAutoSync } from "@/hooks/useAutoSync";
 
 export const DATA_KEYS = {
   CLIENTS: 'clients',
@@ -15,6 +16,7 @@ export const DATA_KEYS = {
 export function useSyncedDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { triggerSync, isSyncing } = useAutoSync();
 
   // Get all clients with automatic background refresh
   const clientsQuery = useQuery({
@@ -92,22 +94,21 @@ export function useSyncedDashboard() {
     }
   });
 
-  // Force refresh all data
-  const refreshAllData = () => {
+  // Force refresh all data using the auto-sync engine
+  const refreshAllData = async () => {
+    // First invalidate queries to ensure React Query fetches fresh data
     queryClient.invalidateQueries({ queryKey: [DATA_KEYS.CLIENTS] });
     queryClient.invalidateQueries({ queryKey: [DATA_KEYS.CLIENT_COUNTS] });
     queryClient.invalidateQueries({ queryKey: [DATA_KEYS.NPS_DATA] });
     queryClient.invalidateQueries({ queryKey: [DATA_KEYS.CHURN_DATA] });
     
-    toast({
-      title: "Refreshing dashboard data",
-      description: "Fetching the latest data from the server.",
-    });
+    // Then trigger a comprehensive auto-sync
+    await triggerSync();
   };
 
   // Monitor online/offline status for reconnection
   useEffect(() => {
-    const handleOnline = () => {
+    const handleOnline = async () => {
       refreshAllData();
       toast({
         title: "Back online",
@@ -117,10 +118,10 @@ export function useSyncedDashboard() {
 
     window.addEventListener('online', handleOnline);
     return () => window.removeEventListener('online', handleOnline);
-  }, [queryClient]);
+  }, []);
 
   const isLoading = clientsQuery.isLoading || countQuery.isLoading || npsQuery.isLoading || churnQuery.isLoading;
-  const isRefreshing = clientsQuery.isFetching || countQuery.isFetching || npsQuery.isFetching || churnQuery.isFetching;
+  const isRefreshing = isSyncing || clientsQuery.isFetching || countQuery.isFetching || npsQuery.isFetching || churnQuery.isFetching;
   
   const error = clientsQuery.error || countQuery.error || npsQuery.error || churnQuery.error;
 

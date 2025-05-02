@@ -13,6 +13,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { useSyncedDashboard } from "@/hooks/useSyncedDashboard";
 import { HeroMetrics } from "@/components/Dashboard/Metrics/HeroMetrics";
 import { StudentsData } from "@/components/StudentsData";
+import { SyncMonitorPanel } from "@/components/Dashboard/SyncStatus/SyncMonitorPanel";
 
 export default function Dashboard() {
   const {
@@ -79,6 +80,9 @@ export default function Dashboard() {
             </AlertDescription>
           </Alert>
         )}
+
+        {/* Sync Monitor Panel */}
+        <SyncMonitorPanel />
 
         {/* Key Metrics Section */}
         <HeroMetrics className="mb-6" />
