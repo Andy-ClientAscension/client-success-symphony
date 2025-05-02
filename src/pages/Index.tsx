@@ -5,6 +5,7 @@ import { Layout } from "@/components/Layout/Layout";
 import { useAuth } from "@/hooks/use-auth";
 import { LoadingState } from "@/components/LoadingState";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 // This is the landing page that redirects based on auth state
 export default function Index() {
@@ -14,6 +15,7 @@ export default function Index() {
   const [processingAuth, setProcessingAuth] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [urlProcessed, setUrlProcessed] = useState(false);
+  const { toast } = useToast();
   
   // Handle access token in URL (for email confirmations)
   useEffect(() => {
@@ -45,12 +47,31 @@ export default function Index() {
           // Clear the URL hash
           window.history.replaceState(null, '', window.location.pathname);
           
+          // Show success toast
+          toast({
+            title: "Authentication successful",
+            description: "You have been successfully logged in."
+          });
+          
           // Navigate to dashboard
           navigate('/dashboard', { replace: true });
         } catch (error) {
           console.error("Error setting session from URL:", error);
-          setAuthError(error instanceof Error ? error.message : "Authentication failed");
-          navigate('/login', { replace: true });
+          const errorMessage = error instanceof Error ? error.message : "Authentication failed";
+          setAuthError(errorMessage);
+          
+          // Show error toast
+          toast({
+            title: "Authentication Error",
+            description: errorMessage,
+            variant: "destructive",
+          });
+          
+          // Pass error message to login page via state
+          navigate('/login', { 
+            replace: true,
+            state: { authError: errorMessage }
+          });
         } finally {
           setProcessingAuth(false);
           setUrlProcessed(true); // Mark URL token processing as complete
@@ -61,7 +82,7 @@ export default function Index() {
     };
     
     handleEmailConfirmation();
-  }, [navigate, location.hash]); // Added location.hash to the dependency array
+  }, [navigate, location.hash, toast]); // Added location.hash and toast to the dependency array
   
   // Standard redirection based on auth state
   useEffect(() => {

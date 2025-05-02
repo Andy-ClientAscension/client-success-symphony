@@ -1,86 +1,82 @@
 
-import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useLoginForm } from "@/hooks/use-login-form";
-import { LoginForm } from "@/components/auth/LoginForm";
+import React, { useState, useEffect } from 'react';
+import { Layout } from "@/components/Layout/Layout";
 import { useAuth } from "@/hooks/use-auth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { SocialLoginButtons } from "@/components/auth/SocialLoginButtons";
-import { BarChart2 } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
+import { useNavigate, useLocation } from 'react-router-dom';
+import { LoginForm } from "@/components/auth/LoginForm";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Login() {
-  const {
-    email,
-    setEmail,
-    password,
-    setPassword,
-    isSubmitting,
-    isResettingPassword,
-    networkStatus,
-    handleSubmit,
-    handlePasswordReset,
-    checkNetworkStatus,
-    apiError
-  } = useLoginForm();
-  
-  const { isAuthenticated } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<{ message: string; type?: string } | null>(null);
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { toast } = useToast();
   
-  // If already authenticated, redirect to dashboard
+  // Check for auth error passed from Index page
   useEffect(() => {
+    const state = location.state as { authError?: string } | undefined;
+    if (state?.authError) {
+      setError({ message: state.authError });
+      
+      // Clear the state so error doesn't persist on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
+  useEffect(() => {
+    // Redirect to dashboard if already authenticated
     if (isAuthenticated) {
-      navigate("/dashboard");
+      navigate('/dashboard', { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      const success = await login(email, password);
+      if (success) {
+        navigate('/dashboard', { replace: true });
+      } else {
+        setError({ message: 'Login failed. Please check your credentials.' });
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError({ 
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+        type: 'auth'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <div className="flex justify-center mb-4">
-            <div className="rounded-full bg-black p-3 flex items-center justify-center">
-              <BarChart2 className="h-10 w-10 text-red-600" />
-            </div>
+    <Layout>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-full max-w-md p-8 space-y-8 bg-card rounded-xl shadow-lg">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold">Login</h1>
+            <p className="text-muted-foreground">Welcome back! Please sign in to your account.</p>
           </div>
-          <CardTitle className="text-2xl font-bold text-center">Welcome back</CardTitle>
-          <CardDescription className="text-center">
-            Sign in to your account to continue
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+
           <LoginForm
             email={email}
             setEmail={setEmail}
             password={password}
             setPassword={setPassword}
             isSubmitting={isSubmitting}
-            isResettingPassword={isResettingPassword}
             onSubmit={handleSubmit}
-            onPasswordReset={handlePasswordReset}
-            error={apiError}
-            networkStatus={networkStatus}
-            onRetryConnection={checkNetworkStatus}
+            error={error}
           />
-          
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white dark:bg-gray-900 px-2 text-gray-500">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-            
-            <div className="mt-6">
-              <SocialLoginButtons className="flex justify-center" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </div>
+    </Layout>
   );
 }
