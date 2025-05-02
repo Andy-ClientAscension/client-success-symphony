@@ -2,12 +2,15 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, Send, Eye, CheckCircle2, XCircle } from "lucide-react";
+import { DollarSign, Send, Eye, CheckCircle2, XCircle, PlusCircle } from "lucide-react";
 import { useRenewals } from "@/hooks/use-renewals";
-import { format } from "date-fns";
+import { format, addDays } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 export function BackendOffersTracker() {
-  const { offers, isLoading, error, updateBackendOffer } = useRenewals();
+  const { offers, isLoading, error, updateBackendOffer, createBackendOffer } = useRenewals();
+  const { toast } = useToast();
 
   const getStatusIcon = (status: string) => {
     switch(status) {
@@ -26,9 +29,107 @@ export function BackendOffersTracker() {
     });
   };
 
-  if (isLoading) return <div>Loading backend offers...</div>;
-  if (error) return <div>Error loading offers: {error}</div>;
+  const addSampleOffers = async () => {
+    try {
+      const currentDate = new Date();
+      
+      const sampleOffers = [
+        {
+          client_id: "client-001",
+          offer_type: "Renewal",
+          offer_amount: 6500,
+          status: "sent" as const,
+          sent_at: new Date().toISOString()
+        },
+        {
+          client_id: "client-002",
+          offer_type: "Upsell",
+          offer_amount: 2500,
+          status: "draft" as const
+        },
+        {
+          client_id: "client-003",
+          offer_type: "Premium Package",
+          offer_amount: 9750,
+          status: "viewed" as const,
+          sent_at: addDays(currentDate, -5).toISOString(),
+          viewed_at: addDays(currentDate, -2).toISOString()
+        }
+      ];
+      
+      // Add sample offers one by one
+      for (const offer of sampleOffers) {
+        await createBackendOffer(offer);
+      }
+      
+      toast({
+        title: "Sample offers added",
+        description: "Sample backend offers have been added successfully.",
+      });
+      
+    } catch (err) {
+      toast({
+        title: "Error adding offers",
+        description: err instanceof Error ? err.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    }
+  };
 
+  // Show loading state
+  if (isLoading) return (
+    <Card className="p-6">
+      <div className="flex items-center justify-center h-60">
+        <div className="flex flex-col items-center gap-2">
+          <div className="h-8 w-8 border-4 border-t-primary rounded-full animate-spin"></div>
+          <p className="text-muted-foreground">Loading backend offers...</p>
+        </div>
+      </div>
+    </Card>
+  );
+
+  // Show error state
+  if (error) return (
+    <Card className="p-6">
+      <div className="flex flex-col items-center justify-center h-60 gap-2">
+        <XCircle className="h-10 w-10 text-red-500" />
+        <p className="text-lg font-medium">Error loading offers</p>
+        <p className="text-muted-foreground">{error}</p>
+      </div>
+    </Card>
+  );
+
+  // Show empty state with option to add sample data
+  if (!offers.length) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5" />
+            Backend Offers
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center h-60 gap-4 p-6">
+            <DollarSign className="h-16 w-16 text-muted-foreground opacity-20" />
+            <p className="text-lg font-medium text-center">No backend offers yet</p>
+            <p className="text-muted-foreground text-center max-w-md">
+              Create your first backend offer to start tracking client upsells and renewals or add sample data for testing.
+            </p>
+            <Button 
+              onClick={addSampleOffers} 
+              className="mt-2"
+            >
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Add Sample Offers
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show existing offers
   return (
     <Card>
       <CardHeader>
