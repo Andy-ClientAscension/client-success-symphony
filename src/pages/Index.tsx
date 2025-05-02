@@ -19,6 +19,12 @@ export default function Index() {
   
   // Handle access token in URL (for email confirmations)
   useEffect(() => {
+    // Skip URL processing if we're in a non-browser environment
+    if (typeof window === 'undefined') {
+      setUrlProcessed(true);
+      return;
+    }
+    
     // Check if we have an access_token in the URL
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = hashParams.get('access_token');
@@ -44,8 +50,10 @@ export default function Index() {
           
           console.log("Session validated successfully");
           
-          // Clear the URL hash
-          window.history.replaceState(null, '', window.location.pathname);
+          // Clear the URL hash, using navigation safety
+          if (typeof window !== 'undefined') {
+            window.history.replaceState(null, '', window.location.pathname);
+          }
           
           // Show success toast
           toast({
