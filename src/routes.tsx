@@ -6,6 +6,7 @@ import DiagnosticIndex from './pages/DiagnosticIndex';
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import NotFound from './pages/NotFound';
 import Index from './pages/Index';
@@ -36,6 +37,14 @@ export const AppRoutes = () => {
         element={
           <RouteErrorBoundary>
             <SignUp />
+          </RouteErrorBoundary>
+        }
+      />
+      <Route
+        path="/reset-password"
+        element={
+          <RouteErrorBoundary>
+            <ResetPassword />
           </RouteErrorBoundary>
         }
       />

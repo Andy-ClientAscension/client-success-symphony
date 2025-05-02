@@ -99,6 +99,26 @@ export function LoginForm({
       description: "Attempting to reconnect to authentication service.",
     });
   };
+
+  const handlePasswordResetClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    if (!isConnected) {
+      toast({
+        title: "Network Error",
+        description: "You appear to be offline. Please check your internet connection and try again.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (onPasswordReset) {
+      await onPasswordReset();
+    } else {
+      // If onPasswordReset is not provided, navigate directly to reset page
+      navigate('/reset-password');
+    }
+  };
   
   return (
     <form onSubmit={handleSubmitWithRetry} className="space-y-4">
@@ -153,7 +173,7 @@ export function LoginForm({
               The server encountered an error. Please try again later.
             </div>
           )}
-          {error.message.includes('Email not confirmed') && (
+          {error.message?.includes('Email not confirmed') && (
             <div className="mt-2 text-xs">
               You need to verify your email before logging in. Please check your inbox 
               (including spam folder) for a verification email.
@@ -197,26 +217,7 @@ export function LoginForm({
           <Button 
             variant="link" 
             className="px-0 font-normal text-sm text-blue-500 hover:text-blue-700"
-            onClick={(e) => {
-              e.preventDefault();
-              if (!isConnected) {
-                toast({
-                  title: "Network Error",
-                  description: "You appear to be offline. Please check your internet connection and try again.",
-                  variant: "destructive"
-                });
-                return;
-              }
-              
-              if (onPasswordReset) {
-                onPasswordReset();
-              } else {
-                toast({
-                  title: "Password Reset",
-                  description: "Password reset functionality is not implemented in this demo.",
-                });
-              }
-            }}
+            onClick={handlePasswordResetClick}
             disabled={isSubmitting || isResettingPassword || !isConnected}
             type="button"
           >

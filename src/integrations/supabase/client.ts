@@ -65,12 +65,50 @@ async function fetchWithCors(url: string, options: RequestInit = {}) {
  */
 export async function login(email: string, password: string) {
   try {
+    // Use session-based auth for more reliable token handling
+    console.log("Attempting login with email:", email);
+    
+    // First, check network connectivity to avoid failed attempts
+    const networkStatus = await checkNetworkConnectivity();
+    if (!networkStatus.online) {
+      console.error("Network appears offline, cannot proceed with login");
+      return {
+        success: false,
+        error: 'Network connectivity issue. Please check your connection and try again.'
+      };
+    }
+    
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
 
-    if (error) throw error;
+    if (error) {
+      console.error("Login error:", error.message, error.code);
+      
+      // Enhanced error handling with user-friendly messages
+      if (error.message.includes('Email not confirmed')) {
+        return {
+          success: false,
+          error: 'Please verify your email address before logging in. Check your inbox for a confirmation email.',
+          code: 'email_not_confirmed'
+        };
+      } else if (error.message.includes('Invalid login')) {
+        return {
+          success: false,
+          error: 'Invalid email or password. Please try again.',
+          code: 'invalid_credentials'
+        };
+      } else if (error.message.includes('rate limit')) {
+        return {
+          success: false,
+          error: 'Too many login attempts. Please try again later.',
+          code: 'rate_limited'
+        };
+      }
+      
+      throw error;
+    }
     
     return { 
       success: true, 
@@ -78,37 +116,88 @@ export async function login(email: string, password: string) {
     };
   } catch (error) {
     console.error('Login error:', error);
+    // Check for network-related errors
+    if (error instanceof Error && 
+        (error.message.includes('fetch') || 
+         error.message.includes('network') || 
+         error.message.includes('offline'))) {
+      return {
+        success: false,
+        error: 'Network connectivity issue. Please check your connection and try again.',
+        code: 'network_error'
+      };
+    }
+    
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Login failed'
+      error: error instanceof Error ? error.message : 'Login failed',
+      code: 'unknown_error'
     };
   }
 }
 
 /**
- * Reset password function
+ * Reset password function with improved error handling
  */
-export async function resetPassword(email) {
+export async function resetPassword(email: string) {
   try {
+    // Check network connectivity first
+    const networkStatus = await checkNetworkConnectivity();
+    if (!networkStatus.online) {
+      return { 
+        success: false, 
+        message: 'Network connectivity issue. Please check your connection and try again.',
+        code: 'network_error'
+      };
+    }
+    
+    console.log("Sending password reset email to:", email);
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
 
     if (error) {
-      return { success: false, message: error.message };
+      console.error("Password reset error:", error.message);
+      
+      // Enhanced error handling with specific codes
+      if (error.message.includes('rate limit')) {
+        return { 
+          success: false, 
+          message: 'Too many requests. Please try again later.',
+          code: 'rate_limited' 
+        };
+      } else if (error.message.includes('not found')) {
+        return { 
+          success: false, 
+          message: 'Email address not found. Please check the email address and try again.',
+          code: 'user_not_found' 
+        };
+      }
+      
+      return { 
+        success: false, 
+        message: error.message,
+        code: error.code || 'unknown' 
+      };
     }
-    return { success: true, message: 'Password reset email sent' };
+    
+    return { 
+      success: true, 
+      message: 'Password reset email sent successfully. Please check your inbox.',
+      code: 'email_sent' 
+    };
   } catch (error) {
     console.error('Reset password error:', error);
     return { 
       success: false, 
-      message: error instanceof Error ? error.message : 'Failed to send password reset email' 
+      message: error instanceof Error ? error.message : 'Failed to send password reset email',
+      code: 'unknown_error'
     };
   }
 }
 
 /**
- * Check network connectivity
+ * Check network connectivity with multiple fallback mechanisms
  */
 export async function checkNetworkConnectivity() {
   try {
@@ -117,60 +206,53 @@ export async function checkNetworkConnectivity() {
       return { online: false, status: 'browser-offline' };
     }
     
-    // Instead of pinging Supabase directly, try to load a well-known public endpoint
-    // that's less likely to have CORS restrictions
-    const startTime = Date.now();
+    // Try multiple reliable endpoints with fallbacks
+    const endpoints = [
+      'https://www.google.com/generate_204',
+      'https://www.cloudflare.com/cdn-cgi/trace',
+      'https://httpbin.org/get'
+    ];
     
-    // Set a short timeout for the request
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
     
-    try {
-      // Use a more reliable public endpoint - can be Google or other reliable services
-      // We avoid direct Supabase ping which might cause CORS issues
-      const response = await fetch('https://www.google.com/generate_204', {
-        method: 'GET',
-        signal: controller.signal,
-        // Do not set mode: 'cors' here as it's not needed for connectivity check
-      });
-      
-      clearTimeout(timeoutId);
-      
-      // Calculate latency
-      const latency = Date.now() - startTime;
-      
-      if (response.ok) {
-        // If we can reach Google, try a lightweight check to Supabase 
-        try {
-          // This is just to check if Supabase is reachable, not to get actual data
-          const { data, error } = await supabase.from('_dummy_query_for_health_check_').select('count', { count: 'exact', head: true }).limit(0);
-          
-          return { online: true, latency, status: 'connected' };
-        } catch (supabaseError) {
-          console.log("Supabase connection test error (non-critical):", supabaseError);
-          // Still return online as the main network check passed
-          return { online: true, latency, status: 'internet-only' };
+    // Try each endpoint until one succeeds
+    for (const url of endpoints) {
+      try {
+        const startTime = Date.now();
+        const response = await fetch(url, {
+          method: 'GET',
+          signal: controller.signal,
+          // Use no-cors mode as a last resort if regular fetch fails
+          mode: url === endpoints[endpoints.length - 1] ? 'no-cors' : undefined,
+          cache: 'no-store'
+        });
+        
+        clearTimeout(timeoutId);
+        const latency = Date.now() - startTime;
+        
+        // For no-cors mode, we can't read the response but if we get here it means request didn't fail
+        if (url === endpoints[endpoints.length - 1] && response.type === 'opaque') {
+          return { online: true, latency, status: 'connectivity-verified-nocors' };
         }
-      } else {
-        return { online: false, latency, status: String(response.status) };
+        
+        if (response.ok || response.status === 204) {
+          return { online: true, latency, status: 'connected' };
+        }
+      } catch (fetchError) {
+        // Continue to next endpoint if this one fails
+        console.log(`Connectivity check to ${url} failed, trying next endpoint...`);
       }
-    } catch (fetchError) {
-      clearTimeout(timeoutId);
-      
-      // If timeout or abort error, return timeout status
-      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
-        return { online: false, status: 'timeout' };
-      }
-      
-      // For fetch errors (like network errors), still return browser online status
-      // as a fallback since the fetch might fail due to other reasons
-      console.error("Network connectivity fetch error:", fetchError);
-      return { 
-        online: navigator.onLine, 
-        status: fetchError instanceof Error ? fetchError.name : 'error',
-        errorMessage: fetchError instanceof Error ? fetchError.message : String(fetchError)
-      };
     }
+    
+    clearTimeout(timeoutId);
+    
+    // If all endpoints failed but browser reports online, return ambiguous status
+    if (navigator.onLine) {
+      return { online: true, status: 'browser-only' };
+    }
+    
+    return { online: false, status: 'all-endpoints-failed' };
   } catch (error) {
     console.error("Network connectivity error:", error);
     return { 
