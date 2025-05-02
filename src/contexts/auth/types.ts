@@ -39,6 +39,13 @@ export namespace Auth {
     logout: () => void;
     validateInviteCode: (code: string) => Promise<boolean>;
     refreshSession: () => Promise<void>;
+    verifyMagicLink: (token: string) => Promise<{
+      success: boolean;
+      status: 'valid' | 'expired' | 'invalid';
+      message: string;
+    }>;
+    tokenValidationState: 'valid' | 'expired' | 'invalid' | 'unknown';
+    lastAuthEvent: string | null;
     sessionExpiryTime?: Date | null;
   }
 }

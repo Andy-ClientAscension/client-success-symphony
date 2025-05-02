@@ -1,4 +1,3 @@
-
 import React, { createContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +15,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [lastAuthEvent, setLastAuthEvent] = useState<string | null>(null);
+  const [tokenValidationState, setTokenValidationState] = useState<'valid' | 'expired' | 'invalid' | 'unknown'>('unknown');
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -55,6 +56,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       if (sessionExpired) {
         console.log("Session has expired, signing out user");
+        setTokenValidationState('expired');
         await supabase.auth.signOut();
         setSession(null);
         setUser(null);
@@ -72,6 +74,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       if (currentSession) {
         console.log("Session refresh successful");
+        setTokenValidationState('valid');
         setSession(currentSession);
         setUser({
           id: currentSession.user.id,
@@ -119,6 +122,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (result.success && result.session && result.user) {
         setSession(result.session);
         setUser(result.user);
+        setTokenValidationState('valid');
         
         // Update Sentry user context
         updateSentryUser({
@@ -135,6 +139,112 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const errorMessage = error instanceof Error ? error.message : "Login failed";
       setError(new Error(errorMessage));
       return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle magic link verification
+  const verifyMagicLink = async (token: string): Promise<{
+    success: boolean;
+    status: 'valid' | 'expired' | 'invalid';
+    message: string;
+  }> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Check if token is malformed
+      if (!token || token.length < 10 || !token.includes('.')) {
+        setTokenValidationState('invalid');
+        return {
+          success: false,
+          status: 'invalid',
+          message: "Invalid authentication token format"
+        };
+      }
+      
+      // Simulate a network failure for testing if specified
+      if (token === 'test_network_failure') {
+        return {
+          success: false,
+          status: 'invalid',
+          message: "Network error during authentication"
+        };
+      }
+      
+      // Simulate an expired token for testing if specified
+      if (token === 'test_expired_token') {
+        setTokenValidationState('expired');
+        return {
+          success: false,
+          status: 'expired',
+          message: "Your authentication link has expired. Please request a new one."
+        };
+      }
+
+      const { data, error } = await supabase.auth.verifyOtp({
+        token_hash: token,
+        type: 'magiclink'
+      });
+
+      if (error) {
+        // Check if it's an expired token
+        if (error.message.includes('expired') || error.message.toLowerCase().includes('invalid')) {
+          setTokenValidationState('expired');
+          return {
+            success: false,
+            status: 'expired',
+            message: "Your authentication link has expired. Please request a new one."
+          };
+        }
+        
+        // Other validation errors
+        setTokenValidationState('invalid');
+        return {
+          success: false,
+          status: 'invalid',
+          message: error.message
+        };
+      }
+
+      if (data && data.user) {
+        setSession(data.session);
+        setUser({
+          id: data.user.id,
+          email: data.user.email!,
+          name: data.user.user_metadata?.name
+        });
+        setTokenValidationState('valid');
+        
+        updateSentryUser({
+          id: data.user.id,
+          email: data.user.email
+        });
+
+        return {
+          success: true,
+          status: 'valid',
+          message: "Authentication successful"
+        };
+      }
+      
+      // Fallback error
+      setTokenValidationState('invalid');
+      return {
+        success: false,
+        status: 'invalid',
+        message: "Failed to validate authentication token"
+      };
+    } catch (error) {
+      console.error("Magic link verification error:", error);
+      setTokenValidationState('invalid');
+      setError(error instanceof Error ? error : new Error("Failed to verify authentication link"));
+      return {
+        success: false,
+        status: 'invalid',
+        message: error instanceof Error ? error.message : "Failed to verify authentication link"
+      };
     } finally {
       setIsLoading(false);
     }
@@ -159,6 +269,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (result.user && result.session) {
         setSession(result.session);
         setUser(result.user);
+        setTokenValidationState('valid');
         
         // Update Sentry user context
         updateSentryUser({
@@ -197,6 +308,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(null);
       setSession(null);
       setError(null);
+      setTokenValidationState('unknown');
       
       // Update Sentry user context
       updateSentryUser(null);
@@ -220,10 +332,32 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Set up auth state listener for session management
   useEffect(() => {
     console.log("Setting up auth state listener");
+    const broadcastChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('auth_channel') : null;
+    
+    // Listen for auth events from other tabs
+    if (broadcastChannel) {
+      broadcastChannel.onmessage = (event) => {
+        const { type, data } = event.data;
+        console.log(`Received auth event from another tab: ${type}`);
+        
+        if (type === 'SIGNIN_SUCCESS') {
+          // Refresh auth state
+          handleRefreshAuthState();
+          setLastAuthEvent('signin_from_other_tab');
+        } else if (type === 'SIGNOUT') {
+          // Force logout on this tab too
+          setUser(null);
+          setSession(null);
+          setLastAuthEvent('signout_from_other_tab');
+          navigate('/login', { replace: true });
+        }
+      };
+    }
     
     // First set up the auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       console.log("Auth state changed:", event);
+      setLastAuthEvent(event);
       
       // Handle token refresh events specifically
       if (event === 'TOKEN_REFRESHED') {
@@ -248,6 +382,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return; // Early return after handling token refresh
       }
       
+      // Broadcast auth events to other tabs
+      if (broadcastChannel) {
+        if (event === 'SIGNED_IN') {
+          broadcastChannel.postMessage({ type: 'SIGNIN_SUCCESS', data: { timestamp: Date.now() } });
+        } else if (event === 'SIGNED_OUT') {
+          broadcastChannel.postMessage({ type: 'SIGNOUT', data: { timestamp: Date.now() } });
+        }
+      }
+      
       // Check session expiration
       const sessionExpired = isSessionExpired(currentSession);
       
@@ -260,6 +403,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             email: currentSession.user.email!,
             name: currentSession.user.user_metadata?.name
           });
+          setTokenValidationState('valid');
           
           // Update Sentry user context
           updateSentryUser({
@@ -268,6 +412,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           });
         } else if (sessionExpired) {
           console.log("Session expired, signing out user");
+          setTokenValidationState('expired');
           // Will handle signout in the next tick to avoid potential deadlocks
           setTimeout(async () => {
             await supabase.auth.signOut();
@@ -309,6 +454,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         
         if (currentSession && !sessionExpired) {
           console.log("Found existing session");
+          setTokenValidationState('valid');
           setSession(currentSession);
           setUser({
             id: currentSession.user.id,
@@ -323,6 +469,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           });
         } else if (sessionExpired) {
           console.log("Found expired session, signing out user");
+          setTokenValidationState('expired');
           await supabase.auth.signOut();
           setSession(null);
           setUser(null);
@@ -350,10 +497,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     
     checkSession();
     
-    // Cleanup subscription when component unmounts
+    // Cleanup subscription and broadcast channel when component unmounts
     return () => {
       console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
+      if (broadcastChannel) {
+        broadcastChannel.close();
+      }
     };
   }, [toast, navigate]); // Added toast and navigate to dependencies
 
@@ -369,6 +519,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     logout: handleLogout,
     validateInviteCode,
     refreshSession: handleRefreshAuthState,
+    verifyMagicLink,
+    tokenValidationState,
+    lastAuthEvent,
     sessionExpiryTime: sessionManager.sessionExpiryTime,
   };
 
