@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { withSentryErrorBoundary } from '@/components/SentryErrorBoundary';
 import { captureException } from '@/utils/sentry/config';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ReloadIcon } from '@radix-ui/react-icons';
+import { RefreshCw } from 'lucide-react'; // Changed to use RefreshCw from lucide-react instead
 
 function StudentsDataComponent() {
   const { data, isLoading, error, execute } = useApi(
@@ -46,7 +46,7 @@ function StudentsDataComponent() {
               className="text-sm text-blue-500 hover:text-blue-700 flex items-center gap-1"
               disabled={isLoading}
             >
-              {isLoading ? <ReloadIcon className="animate-spin h-4 w-4 mr-1" /> : null}
+              {isLoading ? <RefreshCw className="animate-spin h-4 w-4 mr-1" /> : null}
               {isLoading ? 'Retrying...' : 'Retry'}
             </button>
           </CardTitle>
@@ -71,7 +71,7 @@ function StudentsDataComponent() {
             className="text-sm text-blue-500 hover:text-blue-700 flex items-center gap-1"
             disabled={isLoading}
           >
-            {isLoading ? <ReloadIcon className="animate-spin h-4 w-4 mr-1" /> : null}
+            {isLoading ? <RefreshCw className="animate-spin h-4 w-4 mr-1" /> : null}
             {isLoading ? 'Refreshing...' : 'Refresh'}
           </button>
         </CardTitle>
