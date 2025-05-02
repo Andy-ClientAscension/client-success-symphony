@@ -22,7 +22,8 @@ export const mockAuthValues = {
   login: vi.fn().mockResolvedValue(true),
   register: vi.fn().mockResolvedValue({ success: true, message: 'Success' }),
   logout: vi.fn(),
-  validateInviteCode: vi.fn().mockResolvedValue(true)
+  validateInviteCode: vi.fn().mockResolvedValue(true),
+  refreshSession: vi.fn().mockResolvedValue()
 };
 
 // Mock unauthenticated values
@@ -35,7 +36,8 @@ export const mockUnauthValues = {
   login: vi.fn().mockResolvedValue(false),
   register: vi.fn().mockResolvedValue({ success: false, message: 'Failed' }),
   logout: vi.fn(),
-  validateInviteCode: vi.fn().mockResolvedValue(false)
+  validateInviteCode: vi.fn().mockResolvedValue(false),
+  refreshSession: vi.fn().mockResolvedValue()
 };
 
 // Auth Provider for testing
