@@ -62,6 +62,31 @@ async function fetchWithCors(url: string, options: RequestInit = {}) {
 }
 
 /**
+ * Login function for authentication
+ */
+export async function login(email: string, password: string) {
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) throw error;
+    
+    return { 
+      success: true, 
+      user: data.user 
+    };
+  } catch (error) {
+    console.error('Login error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Login failed'
+    };
+  }
+}
+
+/**
  * Reset password function
  */
 export async function resetPassword(email) {
