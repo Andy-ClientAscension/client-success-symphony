@@ -3,6 +3,7 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowUp, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface HeroMetricProps {
   title: string;
@@ -16,6 +17,7 @@ export interface HeroMetricProps {
   size?: 'sm' | 'md' | 'lg';
   className?: string;
   variant?: 'primary' | 'secondary' | 'tertiary';
+  isLoading?: boolean;
   "aria-label"?: string;
 }
 
@@ -27,6 +29,7 @@ export function HeroMetric({
   size = 'md',
   variant = 'primary',
   className,
+  isLoading = false,
   "aria-label": ariaLabel,
 }: HeroMetricProps) {
   const sizeClasses = {
@@ -59,12 +62,41 @@ export function HeroMetric({
     tertiary: 'bg-white dark:bg-gray-800'
   };
 
-  // Check if the value is 0 or "0%" to add context
-  const displayValue = value === 0 || value === "0%" 
-    ? (typeof value === "string" && value.endsWith("%") ? "0%" : "0") 
-    : value;
+  // Handle various "empty" values
+  const isEmpty = 
+    value === 0 || 
+    value === "0%" || 
+    value === "$0" || 
+    value === "0";
   
-  const emptyMetric = displayValue === 0 || displayValue === "0%" || displayValue === "$0";
+  // Format value for display
+  const displayValue = isEmpty 
+    ? (typeof value === "string" && value.endsWith("%") ? "0%" : (typeof value === "string" && value.startsWith("$") ? "$0" : "0"))
+    : value;
+
+  if (isLoading) {
+    return (
+      <Card 
+        className={cn(
+          "border-border/30 shadow-sm hover:shadow-md transition-all duration-200",
+          variantClasses[variant],
+          sizeClasses[size].card,
+          className
+        )}
+      >
+        <CardContent className="p-0">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <Skeleton className="h-4 w-20 mb-2" />
+              <Skeleton className="h-7 w-16" />
+            </div>
+            <Skeleton className="h-8 w-8 rounded-full" />
+          </div>
+          <Skeleton className="h-4 w-24" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card 
@@ -91,13 +123,13 @@ export function HeroMetric({
               className={cn(
                 "font-bold text-foreground",
                 sizeClasses[size].value,
-                emptyMetric ? "text-muted-foreground" : ""
+                isEmpty ? "text-muted-foreground" : ""
               )}
               aria-label={ariaLabel || `${title}: ${value}`}
               aria-labelledby={`${title.toLowerCase().replace(/\s+/g, '-')}-label`}
             >
               {displayValue}
-              {emptyMetric && (
+              {isEmpty && (
                 <span className="text-sm font-normal ml-2 text-muted-foreground">
                   (No data)
                 </span>
@@ -109,7 +141,7 @@ export function HeroMetric({
               className={cn(
                 "text-brand-500 dark:text-brand-400",
                 sizeClasses[size].icon,
-                emptyMetric ? "opacity-50" : ""
+                isEmpty ? "opacity-50" : ""
               )}
               aria-hidden="true"
             >
@@ -121,7 +153,7 @@ export function HeroMetric({
           <div 
             className={cn(
               "flex items-center font-medium",
-              emptyMetric ? "text-muted-foreground" : (
+              isEmpty ? "text-muted-foreground" : (
                 trend.direction === 'up' 
                   ? "text-emerald-600 dark:text-emerald-400" 
                   : "text-red-500 dark:text-red-400"

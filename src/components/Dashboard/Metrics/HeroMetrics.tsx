@@ -4,26 +4,35 @@ import { HeroMetric } from "./HeroMetric";
 import { useQuery } from "@tanstack/react-query";
 import { Users, DollarSign, Heart, Gauge, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatCurrency } from "@/utils/analyticsUtils";
+import { formatCurrency, calculateStatusCounts, calculateRates } from "@/utils/analyticsUtils";
 import { dataSyncService } from "@/utils/dataSyncService";
+import { useSyncedDashboard } from "@/hooks/useSyncedDashboard";
 
 interface HeroMetricsProps {
   className?: string;
 }
 
 export function HeroMetrics({ className }: HeroMetricsProps) {
-  const { data, isLoading, error } = useQuery({
+  // Use the shared dashboard hook to ensure consistent data across components
+  const { clients, clientCounts, npsScore, isLoading, error } = useSyncedDashboard();
+  
+  const { data, isLoading: isMetricsLoading } = useQuery({
     queryKey: ['hero-metrics'],
     queryFn: async () => {
-      const clients = dataSyncService.loadData('clients', []);
+      // Use the synchronized clients data from useSyncedDashboard
+      // which is already loaded by the parent component
       
       // Safely calculate metrics with fallbacks for zero/empty cases
       const activeClients = clients.filter(c => c.status === 'active');
       const totalClients = clients.length || 1; // Avoid division by zero
       
+      // Calculate status counts and rates using shared utility functions
+      const statusCounts = calculateStatusCounts(clients);
+      const rates = calculateRates(statusCounts);
+      
       const metrics = {
-        activeStudents: activeClients.length,
-        retentionRate: Math.round((activeClients.length / totalClients) * 100) || 0,
+        activeStudents: statusCounts.active || 0,
+        retentionRate: rates.retentionRate || 0,
         mrr: clients.reduce((sum, client) => sum + (client.mrr || 0), 0),
         npsAverage: clients.some(c => c.npsScore !== undefined && c.npsScore !== null) 
           ? Math.round(clients.reduce((sum, client) => sum + (client.npsScore || 0), 0) / 
@@ -37,9 +46,8 @@ export function HeroMetrics({ className }: HeroMetricsProps) {
       
       return metrics;
     },
-    refetchInterval: 30000, // 30 seconds
-    refetchOnWindowFocus: true,
-    retry: 3,
+    // Only refetch when clients data changes
+    enabled: clients.length > 0 && !isLoading,
     staleTime: 15000, // Consider data fresh for 15 seconds
   });
 
@@ -47,10 +55,13 @@ export function HeroMetrics({ className }: HeroMetricsProps) {
     console.error('Error fetching metrics:', error);
   }
 
+  // Loading state while metrics are being calculated
+  const isLoadingData = isLoading || isMetricsLoading;
+
   const heroMetrics = [
     {
       title: "Active Students",
-      value: data?.activeStudents ?? 0,
+      value: data?.activeStudents ?? clientCounts?.active ?? 0,
       icon: <Users />,
       trend: {
         value: 12,
@@ -60,7 +71,7 @@ export function HeroMetrics({ className }: HeroMetricsProps) {
     },
     {
       title: "Retention Rate",
-      value: `${data?.retentionRate ?? 0}%`,
+      value: `${data?.retentionRate ?? (clientCounts.active / (clientCounts.total || 1) * 100).toFixed(0) ?? 0}%`,
       icon: <Heart />,
       trend: {
         value: 5,
@@ -80,7 +91,7 @@ export function HeroMetrics({ className }: HeroMetricsProps) {
     },
     {
       title: "NPS Score",
-      value: data?.npsAverage ?? 0,
+      value: data?.npsAverage ?? npsScore ?? 0,
       icon: <TrendingUp />,
       trend: {
         value: 2,
@@ -111,6 +122,7 @@ export function HeroMetrics({ className }: HeroMetricsProps) {
           trend={metric.trend}
           variant={index === 0 ? 'primary' : 'secondary'}
           size="md"
+          isLoading={isLoadingData}
           aria-label={`${metric.title}: ${metric.value}`}
         />
       ))}

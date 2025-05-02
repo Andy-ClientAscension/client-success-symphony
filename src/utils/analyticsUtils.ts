@@ -17,6 +17,17 @@ export interface StatusRates {
 }
 
 export function calculateStatusCounts(clients: any[]): StatusCounts {
+  // Handle empty array or undefined clients
+  if (!clients || !Array.isArray(clients) || clients.length === 0) {
+    return {
+      active: 0,
+      atRisk: 0,
+      churned: 0,
+      new: 0,
+      total: 0
+    };
+  }
+  
   const counts = {
     active: 0,
     atRisk: 0,
@@ -46,12 +57,15 @@ export function calculateRates(counts: StatusCounts): StatusRates {
 }
 
 export function formatCurrency(value: number): string {
+  // Ensure value is a number and not NaN
+  const safeValue = isNaN(value) ? 0 : value;
+
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
-  }).format(value);
+  }).format(safeValue);
 }
 
 export function calculateGrowthRate(current: number, previous: number): number {
@@ -74,6 +88,16 @@ export function generateMonthLabels(months = 6): string[] {
 
 // Add the missing functions
 export function getComprehensiveMetrics(clients: any[]) {
+  // Handle empty array or undefined clients
+  if (!clients || !Array.isArray(clients) || clients.length === 0) {
+    return {
+      totalMRR: 0,
+      totalCallsBooked: 0,
+      totalDealsClosed: 0,
+      clientCount: 0
+    };
+  }
+
   return {
     totalMRR: clients.reduce((sum, client) => sum + (client.mrr || 0), 0),
     totalCallsBooked: clients.reduce((sum, client) => sum + (client.callsBooked || 0), 0),
@@ -83,6 +107,19 @@ export function getComprehensiveMetrics(clients: any[]) {
 }
 
 export function getTeamPerformanceData(teamId: string, clients: any[]) {
+  // Handle empty array or undefined clients
+  if (!clients || !Array.isArray(clients) || clients.length === 0) {
+    return {
+      statusCounts: { active: 0, atRisk: 0, churned: 0, new: 0, total: 0 },
+      rates: { retentionRate: 0, atRiskRate: 0, churnRate: 0 },
+      trends: { retentionTrend: 0, atRiskTrend: 0, churnTrend: 0 },
+      totalMRR: 0,
+      totalCallsBooked: 0,
+      totalDealsClosed: 0,
+      clientCount: 0
+    };
+  }
+  
   const teamClients = teamId === "all" 
     ? clients 
     : clients.filter(client => client.team === teamId);
