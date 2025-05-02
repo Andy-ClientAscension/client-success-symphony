@@ -10,6 +10,7 @@ import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import NotFound from './pages/NotFound';
 import Index from './pages/Index';
+import AuthCallback from './pages/AuthCallback';
 
 // Wrapper component for route error handling
 const RouteErrorBoundary = ({ children }: { children: React.ReactNode }) => (
@@ -53,6 +54,16 @@ export const AppRoutes = () => {
         element={
           <RouteErrorBoundary>
             <DiagnosticIndex />
+          </RouteErrorBoundary>
+        }
+      />
+      
+      {/* Auth callback route for social login */}
+      <Route
+        path="/auth/callback"
+        element={
+          <RouteErrorBoundary>
+            <AuthCallback />
           </RouteErrorBoundary>
         }
       />

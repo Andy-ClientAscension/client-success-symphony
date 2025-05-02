@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
@@ -10,6 +11,8 @@ import { BarChart2, Lock, Mail, Key, ArrowLeft } from "lucide-react";
 import { LoadingState } from "@/components/LoadingState";
 import { ValidationError } from "@/components/ValidationError";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
+import { AuthErrorDisplay } from "@/components/auth/AuthErrorDisplay";
 
 export default function SignUp() {
   const [email, setEmail] = useState("");
@@ -21,6 +24,8 @@ export default function SignUp() {
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [inviteCodeError, setInviteCodeError] = useState("");
+  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [formError, setFormError] = useState<{message: string; type?: string} | null>(null);
   
   // Try to use the auth context, but with error handling
   let register, validateInviteCode;
@@ -54,8 +59,8 @@ export default function SignUp() {
     if (!password) {
       setPasswordError("Password is required");
       isValid = false;
-    } else if (password.length < 6) {
-      setPasswordError("Password must be at least 6 characters");
+    } else if (passwordStrength < 60) {
+      setPasswordError("Please create a stronger password");
       isValid = false;
     } else {
       setPasswordError("");
@@ -85,12 +90,12 @@ export default function SignUp() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
     
     if (!validateForm()) {
-      toast({
-        title: "Validation Error",
-        description: "Please fix the errors in the form",
-        variant: "destructive",
+      setFormError({
+        message: "Please fix the errors in the form",
+        type: "validation"
       });
       return;
     }
@@ -102,10 +107,9 @@ export default function SignUp() {
       const isValidCode = await validateInviteCode(inviteCode);
       if (!isValidCode) {
         setInviteCodeError("Invalid invitation code");
-        toast({
-          title: "Error",
-          description: "Invalid invitation code. Please check and try again.",
-          variant: "destructive",
+        setFormError({
+          message: "Invalid invitation code. Please check and try again.",
+          type: "validation"
         });
         setIsLoading(false);
         return;
@@ -121,17 +125,15 @@ export default function SignUp() {
         });
         navigate("/");
       } else {
-        toast({
-          title: "Error",
-          description: result.message,
-          variant: "destructive",
+        setFormError({
+          message: result.message,
+          type: result.message.includes("already registered") ? "auth" : "server"
         });
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
+      setFormError({
+        message: error instanceof Error ? error.message : "Something went wrong. Please try again.",
+        type: "server"
       });
     } finally {
       setIsLoading(false);
@@ -154,6 +156,10 @@ export default function SignUp() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {formError && (
+              <AuthErrorDisplay error={formError} />
+            )}
+            
             {isLoading ? (
               <div className="py-8">
                 <LoadingState 
@@ -194,6 +200,10 @@ export default function SignUp() {
                       required
                     />
                   </div>
+                  <PasswordStrengthMeter 
+                    password={password} 
+                    onStrengthChange={setPasswordStrength} 
+                  />
                   {passwordError && <ValidationError message={passwordError} />}
                 </div>
                 <div className="space-y-2">

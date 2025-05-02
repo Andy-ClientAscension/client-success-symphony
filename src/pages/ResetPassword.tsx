@@ -19,6 +19,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useApiError } from "@/hooks/use-api-error";
+import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
+import { AuthErrorDisplay } from "@/components/auth/AuthErrorDisplay";
 
 export default function ResetPassword() {
   const [password, setPassword] = useState("");
@@ -26,6 +28,7 @@ export default function ResetPassword() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [hashParams, setHashParams] = useState<URLSearchParams | null>(null);
+  const [passwordStrength, setPasswordStrength] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -51,15 +54,16 @@ export default function ResetPassword() {
     e.preventDefault();
     clearError();
 
-    // Validate password
-    if (password.length < 6) {
+    // Validate password strength
+    if (passwordStrength < 60) {
       handleError({
-        message: "Password must be at least 6 characters long",
+        message: "Please create a stronger password",
         code: "validation_error"
       });
       return;
     }
 
+    // Validate password match
     if (password !== confirmPassword) {
       handleError({
         message: "Passwords do not match",
@@ -151,11 +155,12 @@ export default function ResetPassword() {
             </CardHeader>
             <CardContent>
               {error && (
-                <Alert variant="destructive" className="mb-4">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Error</AlertTitle>
-                  <AlertDescription>{error.message}</AlertDescription>
-                </Alert>
+                <AuthErrorDisplay 
+                  error={{ 
+                    message: error.message,
+                    type: error.code?.includes("validation") ? "validation" : "auth" 
+                  }} 
+                />
               )}
 
               {!hashParams && !isSuccess && (
@@ -190,6 +195,10 @@ export default function ResetPassword() {
                         required
                         disabled={isSubmitting}
                       />
+                      <PasswordStrengthMeter 
+                        password={password} 
+                        onStrengthChange={setPasswordStrength} 
+                      />
                     </div>
 
                     <div className="space-y-2">
@@ -208,7 +217,7 @@ export default function ResetPassword() {
                     <Button
                       type="submit"
                       className="w-full"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || passwordStrength < 60}
                     >
                       {isSubmitting ? "Resetting Password..." : "Reset Password"}
                     </Button>

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { updateSentryUser } from "@/utils/sentry/config";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useSessionManager } from "@/hooks/use-session-manager";
 import type Auth from '@/types/auth';
 
 export const AuthContext = createContext<Auth.AuthContextType | undefined>(undefined);
@@ -15,6 +16,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<Error | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Enhanced session management
+  const sessionManager = useSessionManager({
+    sessionTimeoutMinutes: 60, // 1 hour
+    onExpired: () => {
+      toast({
+        title: "Session Expired",
+        description: "Your session has expired. Please log in again."
+      });
+      logout();
+    },
+    onInactive: () => {
+      toast({
+        title: "Inactivity Timeout",
+        description: "You've been logged out due to inactivity."
+      });
+      logout();
+    }
+  });
 
   // Valid invitation codes (in a real app, these would be stored in a database)
   const VALID_INVITE_CODES = ["SSC2024", "AGENT007", "WELCOME1"];
@@ -282,45 +302,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Handle automatic token refresh
-  useEffect(() => {
-    if (!session) return;
-    
-    // Set up token refresh logic
-    const expiresAt = session.expires_at;
-    if (!expiresAt) return;
-    
-    const expiryTime = new Date(expiresAt * 1000);
-    const timeUntilExpiry = expiryTime.getTime() - Date.now();
-    
-    // Refresh 5 minutes before expiration
-    const refreshTime = Math.max(timeUntilExpiry - 5 * 60 * 1000, 0);
-    
-    console.log(`Session expires in ${Math.round(timeUntilExpiry / 60000)} minutes, will refresh in ${Math.round(refreshTime / 60000)} minutes`);
-    
-    // Only set timer if expiry is less than an hour away
-    if (refreshTime > 60 * 60 * 1000) return;
-    
-    const refreshTimer = setTimeout(async () => {
-      console.log("Refreshing session token");
-      try {
-        const { data, error } = await supabase.auth.refreshSession();
-        if (error) throw error;
-        
-        if (data.session) {
-          setSession(data.session);
-          console.log("Session refreshed successfully");
-        }
-      } catch (error) {
-        console.error("Failed to refresh session:", error);
-        // If refresh fails, logout the user
-        logout();
-      }
-    }, refreshTime);
-    
-    return () => clearTimeout(refreshTimer);
-  }, [session]);
-
   // Auth context value
   const authContextValue: Auth.AuthContextType = {
     user,
@@ -331,7 +312,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     register,
     logout,
-    validateInviteCode
+    validateInviteCode,
+    // Add session management helpers
+    refreshSession: sessionManager.refreshSession,
+    sessionExpiryTime: sessionManager.sessionExpiryTime,
   };
 
   return (

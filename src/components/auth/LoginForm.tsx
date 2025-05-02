@@ -1,9 +1,11 @@
+
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Wifi, WifiOff, RefreshCw } from "lucide-react";
+import { Wifi, WifiOff, RefreshCw } from "lucide-react";
 import { ValidationError } from "@/components/ValidationError";
+import { AuthErrorDisplay } from "@/components/auth/AuthErrorDisplay";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -118,6 +120,10 @@ export function LoginForm({
       navigate('/reset-password');
     }
   };
+
+  const handleRunDiagnostic = () => {
+    navigate("/diagnostic");
+  };
   
   return (
     <form onSubmit={handleSubmitWithRetry} className="space-y-4">
@@ -140,69 +146,12 @@ export function LoginForm({
         </Alert>
       )}
       
-      {error && (
-        <Alert variant="destructive" className="text-sm py-2">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error.message}</AlertDescription>
-          {error.type === 'network' && (
-            <div className="mt-2 text-xs">
-              If this problem persists, please check your internet connection or try using a different browser.
-              <div className="flex space-x-2 mt-1">
-                <Button 
-                  variant="link" 
-                  size="sm" 
-                  className="p-0 h-auto" 
-                  onClick={handleNetworkRetry}
-                >
-                  Try Again
-                </Button>
-                <Button 
-                  variant="link" 
-                  size="sm" 
-                  className="p-0 h-auto" 
-                  onClick={() => navigate("/diagnostic")}
-                >
-                  Run Diagnostics
-                </Button>
-              </div>
-            </div>
-          )}
-          {error.type === 'cors' && (
-            <div className="mt-2 text-xs">
-              Network request blocked. This could be due to a CORS policy issue. Please try refreshing the page or try again later.
-            </div>
-          )}
-          {error.type === 'auth' && (
-            <div className="mt-2 text-xs">
-              Make sure you're using the correct credentials and try again.
-            </div>
-          )}
-          {error.type === 'server' && (
-            <div className="mt-2 text-xs">
-              The server encountered an error. Please try again later.
-            </div>
-          )}
-          {error.message?.includes('Email not confirmed') && (
-            <div className="mt-2 text-xs">
-              You need to verify your email before logging in. Please check your inbox 
-              (including spam folder) for a verification email.
-              <Button 
-                variant="link" 
-                size="sm" 
-                className="p-0 ml-2" 
-                onClick={() => {
-                  toast({
-                    title: "Verification Email",
-                    description: `A verification email was sent to ${email}. Please check your inbox (including spam folder).`,
-                  });
-                }}
-              >
-                Resend Verification Email
-              </Button>
-            </div>
-          )}
-        </Alert>
-      )}
+      {/* Enhanced error display */}
+      <AuthErrorDisplay 
+        error={error as any}
+        onRetry={() => setRetryCount(0)}
+        onDiagnostic={handleRunDiagnostic}
+      />
       
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
