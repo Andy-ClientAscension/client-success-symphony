@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import { corsHeaders } from '@/utils/corsHeaders';
 
@@ -45,7 +46,8 @@ async function fetchWithCors(url: string, options: RequestInit = {}) {
       ...options,
       headers: {
         ...(options.headers || {}),
-        ...corsHeaders
+        ...corsHeaders,
+        'apikey': supabaseKey // Required for Supabase
       },
       signal: controller.signal,
       mode: 'cors'
