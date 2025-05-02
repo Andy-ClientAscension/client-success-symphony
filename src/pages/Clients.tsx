@@ -51,10 +51,12 @@ export default function Clients() {
       }
       
       // Load the kanban data but don't wait for it to complete
-      loadPersistedData().catch(error => {
+      try {
+        await loadPersistedData();
+      } catch (error) {
         console.error("Error loading kanban data:", error);
         // Don't block the UI if kanban data can't be loaded
-      });
+      }
     } catch (error) {
       console.error("Error initializing client data:", error);
       toast({
