@@ -32,18 +32,45 @@ export default function Index() {
     const handleEmailConfirmation = async () => {
       if (accessToken) {
         setProcessingAuth(true);
+        
+        // Create a timeout to abort long-running requests
+        const TIMEOUT_MS = 10000; // 10 seconds timeout
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => {
+            reject(new Error("Authentication request timed out. Please try again."));
+          }, TIMEOUT_MS);
+        });
+        
         try {
           console.log("Found access token in URL, setting session");
-          // Set the session with the access token from the URL
-          const { data, error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: hashParams.get('refresh_token') || '',
-          });
+          
+          // Race between the auth request and the timeout
+          const sessionResult = await Promise.race([
+            supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: hashParams.get('refresh_token') || '',
+            }),
+            timeoutPromise
+          ]);
+          
+          // If we get here, the request completed before timeout
+          const { data, error } = sessionResult as any;
           
           if (error) throw error;
           
           // Validate that the session was actually set correctly by fetching the user
-          const { data: userData, error: userError } = await supabase.auth.getUser();
+          const userPromise = supabase.auth.getUser();
+          const userResult = await Promise.race([
+            userPromise,
+            new Promise((_, reject) => {
+              setTimeout(() => {
+                reject(new Error("User validation timed out. Please try again."));
+              }, TIMEOUT_MS);
+            })
+          ]);
+          
+          const { data: userData, error: userError } = userResult as any;
+          
           if (userError || !userData?.user) {
             throw userError || new Error("Failed to fetch user after session set");
           }
@@ -68,7 +95,18 @@ export default function Index() {
           navigate('/dashboard', { replace: true });
         } catch (error) {
           console.error("Error setting session from URL:", error);
-          const errorMessage = error instanceof Error ? error.message : "Authentication failed";
+          
+          // Handle timeout errors specifically
+          let errorMessage;
+          if (error instanceof Error) {
+            errorMessage = error.message;
+            if (errorMessage.includes("timed out")) {
+              errorMessage = "Authentication request timed out. This could be due to network issues. Please try again.";
+            }
+          } else {
+            errorMessage = "Authentication failed";
+          }
+          
           setAuthError(errorMessage);
           
           // Show error toast
@@ -93,7 +131,7 @@ export default function Index() {
     };
     
     handleEmailConfirmation();
-  }, [navigate, location.hash, toast, refreshSession]); // Added refreshSession to the dependency array
+  }, [navigate, location.hash, toast, refreshSession]); 
   
   // Standard redirection based on auth state
   useEffect(() => {
