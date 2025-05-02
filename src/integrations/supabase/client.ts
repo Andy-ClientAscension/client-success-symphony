@@ -5,9 +5,16 @@ import { corsHeaders } from '@/utils/corsHeaders';
 const supabaseUrl = 'https://bajfdvphpoopkmpgzyeo.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhamZkdnBocG9vcGttcGd6eWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ3MTM5NTYsImV4cCI6MjA2MDI4OTk1Nn0.QJ7M2iBALcCy_bvJXAIbwFZ8JDh0G3O-t_IgBfDTikE';
 
+// Validate credentials
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Supabase credentials not configured!');
+  throw new Error('Authentication service unavailable. Please check configuration.');
+}
+
 // Define the site URL for redirection handling
 const siteUrl = window.location.origin;
 
+// Initialize with proper configuration and error handling
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
     autoRefreshToken: true,
@@ -15,6 +22,9 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
     storage: localStorage,
     detectSessionInUrl: true,
     flowType: 'pkce'
+  },
+  global: {
+    headers: corsHeaders
   }
 });
 
