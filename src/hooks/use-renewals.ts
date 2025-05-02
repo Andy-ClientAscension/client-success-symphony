@@ -48,9 +48,18 @@ export function useRenewals() {
 
   const createRenewalForecast = async (forecast: Omit<Renewals.Forecast, 'id'>) => {
     try {
+      // Ensure client_id is a valid UUID string
+      const forecastData = {
+        ...forecast,
+        // Use a generated UUID for sample data instead of string IDs like "client-001"
+        client_id: forecast.client_id.startsWith('client-') 
+          ? crypto.randomUUID() 
+          : forecast.client_id
+      };
+      
       const { data, error } = await supabase
         .from('renewal_forecasts')
-        .insert(forecast)
+        .insert(forecastData)
         .select();
       
       if (error) throw error;
@@ -67,15 +76,29 @@ export function useRenewals() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create forecast';
       setError(errorMessage);
+      toast({
+        title: "Error creating forecast",
+        description: errorMessage,
+        variant: "destructive"
+      });
       throw new Error(errorMessage);
     }
   };
 
   const createBackendOffer = async (offer: Omit<Renewals.BackendOffer, 'id'>) => {
     try {
+      // Ensure client_id is a valid UUID string
+      const offerData = {
+        ...offer,
+        // Use a generated UUID for sample data instead of string IDs like "client-001"
+        client_id: offer.client_id.startsWith('client-') 
+          ? crypto.randomUUID() 
+          : offer.client_id
+      };
+      
       const { data, error } = await supabase
         .from('backend_offers')
-        .insert(offer)
+        .insert(offerData)
         .select();
       
       if (error) throw error;
@@ -92,6 +115,11 @@ export function useRenewals() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create offer';
       setError(errorMessage);
+      toast({
+        title: "Error creating offer",
+        description: errorMessage,
+        variant: "destructive"
+      });
       throw new Error(errorMessage);
     }
   };
