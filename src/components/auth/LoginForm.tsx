@@ -7,7 +7,10 @@ import { AuthErrorDisplay } from "@/components/auth/AuthErrorDisplay";
 import { NetworkStatusAlert } from "@/components/auth/NetworkStatusAlert";
 import { ForgotPasswordButton } from "@/components/auth/ForgotPasswordButton";
 import { LoginFormFooter } from "@/components/auth/LoginFormFooter";
+import { Captcha } from "@/components/auth/Captcha";
 import { useState, useEffect } from "react";
+import { AlertCircle } from "lucide-react";
+import { Alert } from "@/components/ui/alert";
 
 interface LoginFormProps {
   email: string;
@@ -21,6 +24,11 @@ interface LoginFormProps {
   error?: { message: string; type?: string } | null;
   networkStatus?: { online: boolean; latency?: number };
   onRetryConnection?: () => void;
+  isRateLimited?: boolean;
+  rateLimitInfo?: { remainingMs?: number; attemptsLeft?: number };
+  requireCaptcha?: boolean;
+  captchaVerified?: boolean;
+  onCaptchaVerify?: (verified: boolean) => void;
 }
 
 export function LoginForm({
@@ -34,10 +42,16 @@ export function LoginForm({
   onPasswordReset,
   error,
   networkStatus,
-  onRetryConnection
+  onRetryConnection,
+  isRateLimited = false,
+  rateLimitInfo = {},
+  requireCaptcha = false,
+  captchaVerified = false,
+  onCaptchaVerify
 }: LoginFormProps) {
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [retryCount, setRetryCount] = useState<number>(0);
+  const [remainingTimeText, setRemainingTimeText] = useState<string>("");
   
   // Use passed network status if available, otherwise use browser online status
   const isConnected = networkStatus ? networkStatus.online : isOnline;
@@ -55,12 +69,35 @@ export function LoginForm({
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  // Calculate remaining time text
+  useEffect(() => {
+    if (isRateLimited && rateLimitInfo.remainingMs) {
+      const updateRemainingTime = () => {
+        const minutes = Math.floor(rateLimitInfo.remainingMs! / 60000);
+        const seconds = Math.ceil((rateLimitInfo.remainingMs! % 60000) / 1000);
+        
+        if (minutes > 0) {
+          setRemainingTimeText(`${minutes} minute${minutes !== 1 ? 's' : ''} ${seconds} second${seconds !== 1 ? 's' : ''}`);
+        } else {
+          setRemainingTimeText(`${seconds} second${seconds !== 1 ? 's' : ''}`);
+        }
+      };
+      
+      updateRemainingTime();
+      const timer = setInterval(updateRemainingTime, 1000);
+      
+      return () => clearInterval(timer);
+    } else {
+      setRemainingTimeText("");
+    }
+  }, [isRateLimited, rateLimitInfo.remainingMs]);
   
   // Handle form submission with retry capability
   const handleSubmitWithRetry = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!isConnected) {
+    if (!isConnected || isRateLimited) {
       return;
     }
     
@@ -96,6 +133,17 @@ export function LoginForm({
         onRetryConnection={handleNetworkRetry}
       />
       
+      {/* Rate limit alert */}
+      {isRateLimited && (
+        <Alert variant="destructive" className="flex items-center space-x-2">
+          <AlertCircle className="h-4 w-4" />
+          <div className="flex-1">
+            <p className="text-sm font-medium">Too many login attempts</p>
+            <p className="text-xs">For security reasons, login has been temporarily locked. Please try again in {remainingTimeText}.</p>
+          </div>
+        </Alert>
+      )}
+      
       {/* Enhanced error display */}
       <AuthErrorDisplay 
         error={error as any}
@@ -113,7 +161,7 @@ export function LoginForm({
           onChange={(e) => setEmail(e.target.value)}
           required
           aria-invalid={!!error}
-          disabled={isSubmitting || isResettingPassword}
+          disabled={isSubmitting || isResettingPassword || isRateLimited}
           autoFocus
           className={!isConnected ? "bg-gray-100" : ""}
         />
@@ -136,15 +184,24 @@ export function LoginForm({
           onChange={(e) => setPassword(e.target.value)}
           required
           aria-invalid={!!error}
-          disabled={isSubmitting || isResettingPassword}
+          disabled={isSubmitting || isResettingPassword || isRateLimited}
           className={!isConnected ? "bg-gray-100" : ""}
         />
       </div>
 
+      {/* CAPTCHA when required */}
+      {requireCaptcha && (
+        <Captcha 
+          onVerify={onCaptchaVerify || (() => {})} 
+          disabled={isSubmitting || isResettingPassword || isRateLimited}
+          required={true}
+        />
+      )}
+
       <Button 
         type="submit" 
         className="w-full" 
-        disabled={isSubmitting || isResettingPassword || !isConnected}
+        disabled={isSubmitting || isResettingPassword || !isConnected || isRateLimited || (requireCaptcha && !captchaVerified)}
       >
         {isSubmitting ? "Logging in..." : "Login"}
       </Button>

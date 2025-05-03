@@ -1,9 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useApiError } from "@/hooks/use-api-error";
 import { resetPassword, diagnoseAuthIssue, checkNetworkConnectivity } from "@/integrations/supabase/client";
+import { checkRateLimit, recordRateLimitAttempt, resetRateLimit, rateLimitConfigs } from "@/utils/rateLimiter";
 
 export function useLoginForm() {
   const [email, setEmail] = useState("");
@@ -15,11 +17,50 @@ export function useLoginForm() {
   });
   const [offlineMode, setOfflineMode] = useState(false);
   
+  // Rate limiting states
+  const [isRateLimited, setIsRateLimited] = useState(false);
+  const [rateLimitInfo, setRateLimitInfo] = useState<{ remainingMs?: number; attemptsLeft?: number }>({});
+  const [requireCaptcha, setRequireCaptcha] = useState(false);
+  const [captchaVerified, setCaptchaVerified] = useState(false);
+  
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
   const { toast } = useToast();
   const { handleError, clearError, error: apiError } = useApiError();
+
+  // Check rate limits on initial load
+  useEffect(() => {
+    const loginLimitCheck = checkRateLimit('login', rateLimitConfigs.login);
+    setIsRateLimited(loginLimitCheck.isLimited);
+    setRateLimitInfo(loginLimitCheck);
+    
+    // Require captcha after 2 failed attempts
+    if (loginLimitCheck.attemptsLeft !== undefined && loginLimitCheck.attemptsLeft <= 3) {
+      setRequireCaptcha(true);
+    }
+  }, []);
+
+  // Monitor rate limit countdown timer
+  useEffect(() => {
+    let timer: number;
+    
+    if (isRateLimited && rateLimitInfo.remainingMs) {
+      timer = window.setInterval(() => {
+        const updated = checkRateLimit('login', rateLimitConfigs.login);
+        setIsRateLimited(updated.isLimited);
+        setRateLimitInfo(updated);
+        
+        if (!updated.isLimited) {
+          clearInterval(timer);
+        }
+      }, 1000);
+    }
+    
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isRateLimited, rateLimitInfo.remainingMs]);
 
   // Monitor network status
   useEffect(() => {
@@ -105,6 +146,19 @@ export function useLoginForm() {
   };
 
   const handlePasswordReset = async () => {
+    // Check rate limiting for password reset
+    const resetLimitCheck = checkRateLimit('passwordReset', rateLimitConfigs.passwordReset);
+    
+    if (resetLimitCheck.isLimited) {
+      const minutes = Math.ceil((resetLimitCheck.remainingMs || 0) / 60000);
+      
+      handleError({
+        message: `Too many password reset attempts. Please try again in ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}.`,
+        code: "rate_limited"
+      });
+      return;
+    }
+    
     if (!email) {
       handleError({
         message: "Please enter your email address to reset your password",
@@ -122,12 +176,27 @@ export function useLoginForm() {
       return;
     }
     
+    // If CAPTCHA is required but not verified
+    if (requireCaptcha && !captchaVerified) {
+      handleError({
+        message: "Please complete the security verification before resetting your password.",
+        code: "captcha_required"
+      });
+      return;
+    }
+    
     setIsResettingPassword(true);
     
     try {
+      // Record the attempt regardless of outcome
+      recordRateLimitAttempt('passwordReset');
+      
       const result = await resetPassword(email);
       
       if (result.success) {
+        // Reset rate limit on success
+        resetRateLimit('passwordReset');
+        
         toast({
           title: "Password Reset Email Sent",
           description: "Check your inbox for instructions to reset your password.",
@@ -155,6 +224,31 @@ export function useLoginForm() {
     e.preventDefault();
     clearError();
     
+    // Check rate limiting
+    const loginLimitCheck = checkRateLimit('login', rateLimitConfigs.login);
+    
+    if (loginLimitCheck.isLimited) {
+      const minutes = Math.ceil((loginLimitCheck.remainingMs || 0) / 60000);
+      
+      setIsRateLimited(true);
+      setRateLimitInfo(loginLimitCheck);
+      
+      handleError({
+        message: `Too many login attempts. Please try again in ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}.`,
+        code: "rate_limited"
+      });
+      return;
+    }
+    
+    // If CAPTCHA is required but not verified
+    if (requireCaptcha && !captchaVerified) {
+      handleError({
+        message: "Please complete the security verification before logging in.",
+        code: "captcha_required"
+      });
+      return;
+    }
+    
     if (!email || !password) {
       handleError({
         message: "Please enter both email and password",
@@ -177,6 +271,9 @@ export function useLoginForm() {
     try {
       console.log("Attempting to login with:", { email, redactedPassword: '********' });
       
+      // Record the attempt regardless of outcome
+      recordRateLimitAttempt('login');
+      
       // Recheck connectivity before attempting login
       const networkDiag = await checkNetworkStatus();
       
@@ -192,6 +289,10 @@ export function useLoginForm() {
       
       if (success) {
         console.log("Login successful");
+        
+        // Reset rate limit counters on successful login
+        resetRateLimit('login');
+        
         toast({
           title: "Login Successful",
           description: "Welcome back!",
@@ -202,6 +303,13 @@ export function useLoginForm() {
         navigate(from, { replace: true });
       } else {
         console.log("Login failed - no success returned from auth provider");
+        
+        // After 2 failed attempts, require CAPTCHA
+        const updatedLimitCheck = checkRateLimit('login', rateLimitConfigs.login);
+        if (updatedLimitCheck.attemptsLeft !== undefined && updatedLimitCheck.attemptsLeft <= 3) {
+          setRequireCaptcha(true);
+        }
+        
         handleError({
           message: "Invalid email or password. Please try again.",
           code: "auth_error"
@@ -209,6 +317,12 @@ export function useLoginForm() {
       }
     } catch (error) {
       console.error("Login error:", error);
+      
+      // After 2 failed attempts, require CAPTCHA
+      const updatedLimitCheck = checkRateLimit('login', rateLimitConfigs.login);
+      if (updatedLimitCheck.attemptsLeft !== undefined && updatedLimitCheck.attemptsLeft <= 3) {
+        setRequireCaptcha(true);
+      }
       
       // Handle network-related errors specially
       if (!navigator.onLine || 
@@ -276,6 +390,10 @@ export function useLoginForm() {
     }
   };
 
+  const handleCaptchaVerify = (verified: boolean) => {
+    setCaptchaVerified(verified);
+  };
+
   return {
     email,
     setEmail,
@@ -288,6 +406,12 @@ export function useLoginForm() {
     handleSubmit,
     handlePasswordReset,
     checkNetworkStatus,
-    apiError
+    apiError,
+    // Rate limiting props
+    isRateLimited,
+    rateLimitInfo,
+    requireCaptcha,
+    captchaVerified,
+    handleCaptchaVerify
   };
 }

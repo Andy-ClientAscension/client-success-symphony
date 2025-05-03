@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -15,128 +15,46 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Check, ArrowLeft } from "lucide-react";
 import { Layout } from "@/components/Layout/Layout";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { useApiError } from "@/hooks/use-api-error";
 import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
 import { AuthErrorDisplay } from "@/components/auth/AuthErrorDisplay";
+import { useResetPassword } from "@/hooks/use-reset-password";
+import { Captcha } from "@/components/auth/Captcha";
 
 export default function ResetPassword() {
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [hashParams, setHashParams] = useState<URLSearchParams | null>(null);
-  const [passwordStrength, setPasswordStrength] = useState(0);
   const navigate = useNavigate();
-  const location = useLocation();
-  const { toast } = useToast();
-  const { handleError, clearError, error } = useApiError();
+  const {
+    password,
+    setPassword,
+    confirmPassword,
+    setConfirmPassword,
+    isSubmitting,
+    isSuccess,
+    hashParams,
+    passwordStrength,
+    setPasswordStrength,
+    error,
+    handleSubmit,
+    isRateLimited,
+    rateLimitInfo,
+    requireCaptcha,
+    captchaVerified,
+    handleCaptchaVerify
+  } = useResetPassword();
 
-  // Extract token from URL
-  useEffect(() => {
-    // Check for hash parameters (Supabase puts tokens in the hash part of URL)
-    const hash = window.location.hash.substring(1);
-    if (hash) {
-      const params = new URLSearchParams(hash);
-      setHashParams(params);
-    }
-
-    // Also check for query parameters (sometimes tokens come in query)
-    const query = new URLSearchParams(location.search);
-    if (query.has('token') || query.has('access_token')) {
-      setHashParams(query);
-    }
-  }, [location]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    clearError();
-
-    // Validate password strength
-    if (passwordStrength < 60) {
-      handleError({
-        message: "Please create a stronger password",
-        code: "validation_error"
-      });
-      return;
-    }
-
-    // Validate password match
-    if (password !== confirmPassword) {
-      handleError({
-        message: "Passwords do not match",
-        code: "validation_error"
-      });
-      return;
-    }
-
-    if (!hashParams) {
-      handleError({
-        message: "Reset token is missing. Please use the link from your email.",
-        code: "token_error"
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      // Extract token from hash params
-      const accessToken = hashParams.get('access_token');
-      const refreshToken = hashParams.get('refresh_token');
-      const type = hashParams.get('type');
-
-      if (!accessToken) {
-        throw new Error("Reset token is invalid or expired");
+  // Calculate remaining time text
+  const getRemainingTimeText = () => {
+    if (isRateLimited && rateLimitInfo.remainingMs) {
+      const minutes = Math.floor(rateLimitInfo.remainingMs / 60000);
+      const seconds = Math.ceil((rateLimitInfo.remainingMs % 60000) / 1000);
+      
+      if (minutes > 0) {
+        return `${minutes} minute${minutes !== 1 ? 's' : ''} ${seconds} second${seconds !== 1 ? 's' : ''}`;
+      } else {
+        return `${seconds} second${seconds !== 1 ? 's' : ''}`;
       }
-
-      // If we have both tokens, we need to set the session first
-      if (accessToken && refreshToken) {
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken
-        });
-
-        if (sessionError) {
-          throw sessionError;
-        }
-      }
-
-      // Now update the password
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: password
-      });
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      // Show success message
-      setIsSuccess(true);
-      toast({
-        title: "Password Reset Successful",
-        description: "Your password has been reset successfully.",
-      });
-
-      // Clear password fields
-      setPassword("");
-      setConfirmPassword("");
-
-      // Redirect after 3 seconds
-      setTimeout(() => {
-        navigate('/login', { replace: true });
-      }, 3000);
-    } catch (error) {
-      console.error("Password reset error:", error);
-      handleError({
-        message: error instanceof Error ? error.message : "Password reset failed",
-        code: "reset_error"
-      });
-    } finally {
-      setIsSubmitting(false);
     }
+    return "";
   };
 
   return (
@@ -154,13 +72,24 @@ export default function ResetPassword() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {error && (
+              {error.message && (
                 <AuthErrorDisplay 
                   error={{ 
                     message: error.message,
                     type: typeof error.code === 'string' && error.code.includes("validation") ? "validation" : "auth" 
                   }} 
                 />
+              )}
+
+              {/* Rate limit alert */}
+              {isRateLimited && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Too Many Attempts</AlertTitle>
+                  <AlertDescription>
+                    For security reasons, password reset has been temporarily locked. Please try again in {getRemainingTimeText()}.
+                  </AlertDescription>
+                </Alert>
               )}
 
               {!hashParams && !isSuccess && (
@@ -193,7 +122,7 @@ export default function ResetPassword() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isRateLimited}
                       />
                       <PasswordStrengthMeter 
                         password={password} 
@@ -210,14 +139,23 @@ export default function ResetPassword() {
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         required
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isRateLimited}
                       />
                     </div>
+
+                    {/* CAPTCHA when required */}
+                    {requireCaptcha && (
+                      <Captcha 
+                        onVerify={handleCaptchaVerify} 
+                        disabled={isSubmitting || isRateLimited}
+                        required={true}
+                      />
+                    )}
 
                     <Button
                       type="submit"
                       className="w-full"
-                      disabled={isSubmitting || passwordStrength < 60}
+                      disabled={isSubmitting || passwordStrength < 60 || isRateLimited || (requireCaptcha && !captchaVerified)}
                     >
                       {isSubmitting ? "Resetting Password..." : "Reset Password"}
                     </Button>

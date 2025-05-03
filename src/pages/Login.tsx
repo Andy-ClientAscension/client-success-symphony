@@ -6,16 +6,34 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { LoginForm } from "@/components/auth/LoginForm";
 import { useToast } from "@/hooks/use-toast";
 import { announceToScreenReader, setFocusToElement } from "@/lib/accessibility";
+import { useLoginForm } from "@/hooks/use-login-form";
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<{ message: string; type?: string } | null>(null);
-  const { login, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  
+  // Use the enhanced login form hook
+  const {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    isSubmitting,
+    isResettingPassword,
+    networkStatus,
+    handleSubmit,
+    handlePasswordReset,
+    checkNetworkStatus,
+    apiError,
+    isRateLimited,
+    rateLimitInfo,
+    requireCaptcha,
+    captchaVerified,
+    handleCaptchaVerify
+  } = useLoginForm();
   
   // Check for auth error passed from Index page
   useEffect(() => {
@@ -28,6 +46,18 @@ export default function Login() {
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
+
+  // Show API errors from the hook
+  useEffect(() => {
+    if (apiError) {
+      setError({ 
+        message: apiError.message, 
+        type: apiError.code ? String(apiError.code) : undefined 
+      });
+    } else {
+      setError(null);
+    }
+  }, [apiError]);
 
   useEffect(() => {
     // Announce login page loaded
@@ -50,54 +80,6 @@ export default function Login() {
     }
   }, [isAuthenticated, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
-    announceToScreenReader("Attempting to log in, please wait", "polite");
-
-    try {
-      const success = await login(email, password);
-      if (success) {
-        announceToScreenReader("Login successful, redirecting to dashboard", "polite");
-        const from = location.state?.from?.pathname || '/dashboard';
-        navigate(from, { replace: true });
-      } else {
-        const errorMessage = 'Login failed. Please check your credentials.';
-        setError({ message: errorMessage });
-        announceToScreenReader(errorMessage, "assertive");
-        
-        // Focus on error message
-        setTimeout(() => {
-          const errorElement = document.querySelector('[role="alert"]');
-          if (errorElement) {
-            (errorElement as HTMLElement).focus();
-          } else {
-            setFocusToElement('email');
-          }
-        }, 100);
-      }
-    } catch (err) {
-      console.error('Login error:', err);
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
-      setError({ 
-        message: errorMessage,
-        type: 'auth'
-      });
-      announceToScreenReader(`Login error: ${errorMessage}`, "assertive");
-      
-      // Focus on error message
-      setTimeout(() => {
-        const errorElement = document.querySelector('[role="alert"]');
-        if (errorElement) {
-          (errorElement as HTMLElement).focus();
-        }
-      }, 100);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   // Create a custom login layout component that doesn't show the sidebar
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
@@ -114,8 +96,17 @@ export default function Login() {
             password={password}
             setPassword={setPassword}
             isSubmitting={isSubmitting}
+            isResettingPassword={isResettingPassword}
             onSubmit={handleSubmit}
+            onPasswordReset={handlePasswordReset}
             error={error}
+            networkStatus={networkStatus}
+            onRetryConnection={checkNetworkStatus}
+            isRateLimited={isRateLimited}
+            rateLimitInfo={rateLimitInfo}
+            requireCaptcha={requireCaptcha}
+            captchaVerified={captchaVerified}
+            onCaptchaVerify={handleCaptchaVerify}
           />
           
           <div aria-live="polite" className="sr-only">
