@@ -22,6 +22,7 @@ export function DashboardHeader({
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full">
       <div className="flex items-center gap-3">
+        <h1 className="text-2xl font-bold tracking-tight">Executive Dashboard</h1>
         {lastUpdated && (
           <span className="text-sm text-muted-foreground" aria-live="polite">
             Last updated: {lastUpdated.toLocaleString()}

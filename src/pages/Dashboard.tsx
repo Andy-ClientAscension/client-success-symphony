@@ -62,10 +62,10 @@ export default function Dashboard() {
         
         <div className="flex flex-col space-y-2 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
           <DashboardHeader 
-            title="Executive Dashboard" 
-            lastUpdated={lastUpdated || new Date()}
-            onRefresh={refreshData}
             isRefreshing={isRefreshing}
+            handleRefreshData={refreshData}
+            lastUpdated={lastUpdated || new Date()}
+            error={error instanceof Error ? error : null}
           />
           <RealtimeSyncIndicator />
         </div>
