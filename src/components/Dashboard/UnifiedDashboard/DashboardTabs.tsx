@@ -1,33 +1,7 @@
-
-import React, { lazy, Suspense } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bot, LineChart, PieChart, BarChart2 } from "lucide-react";
-import { DashboardOverview } from "./DashboardOverview";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { ChartErrorFallback } from "../Shared/ErrorFallbacks";
-import { focusRingClasses } from "@/lib/accessibility";
-import { reducedMotionConfig } from "@/lib/accessibility";
-
-// Lazy-loaded components
-const TeamAnalytics = lazy(() => import("../TeamAnalytics").then(mod => ({ default: mod.TeamAnalytics })));
-const ClientAnalytics = lazy(() => import("../ClientAnalytics").then(mod => ({ default: mod.ClientAnalytics })));
-const AIInsightsTab = lazy(() => import("./AIInsightsTab").then(mod => ({ default: mod.AIInsightsTab })));
-
-// Loading component for lazy-loaded content
-const TabSkeleton = () => (
-  <div className="w-full space-y-4" role="status" aria-label="Loading tab content">
-    <Skeleton className="h-[60px] w-full rounded-md" />
-    <Skeleton className="h-[200px] w-full rounded-md" />
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <Skeleton className="h-[100px] rounded-md" />
-      <Skeleton className="h-[100px] rounded-md" />
-      <Skeleton className="h-[100px] rounded-md" />
-    </div>
-    <span className="sr-only">Loading tab content, please wait</span>
-  </div>
-);
+import React from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DashboardOverview } from './DashboardOverview';
+import { useToast } from '@/hooks/use-toast';
 
 interface DashboardTabsProps {
   activeTab: string;
@@ -35,12 +9,10 @@ interface DashboardTabsProps {
   predictions: any[];
   insights: any[];
   isAnalyzing: boolean;
-  error?: Error | null;
+  error: Error | null;
   comparisons: any[];
   handleRefreshData: () => void;
-  cancelAnalysis?: () => void;
   trendData: any[];
-  lastAnalyzed?: Date | null;
 }
 
 export function DashboardTabs({
@@ -52,157 +24,107 @@ export function DashboardTabs({
   error,
   comparisons,
   handleRefreshData,
-  cancelAnalysis,
-  trendData,
-  lastAnalyzed
+  trendData
 }: DashboardTabsProps) {
-  const { isMobile } = useIsMobile();
+  const { toast } = useToast();
   
-  const getIconLabel = (iconName: string) => {
-    return isMobile ? iconName : `${iconName} Icon`;
+  // When tab changes, inform screen readers
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    
+    // Using window.setTimeout to break out of the React event loop
+    // This ensures the screen reader announcement happens after the UI updates
+    window.setTimeout(() => {
+      const tabNames: Record<string, string> = {
+        'overview': 'Dashboard Overview',
+        'analytics': 'Analytics',
+        'insights': 'AI Insights',
+        'predictions': 'Predictions'
+      };
+      
+      // Announce the tab change to screen readers
+      const announce = document.createElement('div');
+      announce.setAttribute('aria-live', 'polite');
+      announce.classList.add('sr-only');
+      announce.innerText = `${tabNames[value] || value} tab selected`;
+      document.body.appendChild(announce);
+      
+      // Remove the element after announcement
+      setTimeout(() => document.body.removeChild(announce), 1000);
+    }, 100);
   };
 
-  // Apply reduced motion settings
-  const animationsEnabled = reducedMotionConfig.enableAnimation();
-  const animationClass = animationsEnabled ? "transition-opacity duration-200" : "transition-none";
-
   return (
-    <Tabs 
-      value={activeTab} 
-      onValueChange={setActiveTab} 
+    <Tabs
+      value={activeTab}
+      onValueChange={handleTabChange}
       className="w-full"
-      aria-label="Dashboard Sections"
     >
-      <TabsList 
-        className={`mb-4 flex-wrap gap-2 justify-start overflow-x-auto max-w-full ${focusRingClasses}`}
-        aria-label="Dashboard navigation"
-      >
-        <TabsTrigger 
-          value="overview" 
-          aria-label="Overview Section"
-          role="tab"
-          className={focusRingClasses}
-        >
-          <LineChart 
-            className="h-4 w-4 mr-2" 
-            aria-hidden="true"
-            role="img"
-            aria-label={getIconLabel("Line Chart")} 
-          />
-          <span className="sm:inline">Overview</span>
-        </TabsTrigger>
-        <TabsTrigger 
-          value="team-analytics" 
-          aria-label="Team Analytics Section"
-          role="tab"
-          className={focusRingClasses}
-        >
-          <PieChart 
-            className="h-4 w-4 mr-2" 
-            aria-hidden="true"
-            role="img"
-            aria-label={getIconLabel("Pie Chart")}
-          />
-          <span className="sm:inline">Team Analytics</span>
-        </TabsTrigger>
-        <TabsTrigger 
-          value="client-analytics" 
-          aria-label="Client Analytics Section"
-          role="tab"
-          className={focusRingClasses}
-        >
-          <BarChart2 
-            className="h-4 w-4 mr-2" 
-            aria-hidden="true"
-            role="img"
-            aria-label={getIconLabel("Bar Chart")}
-          />
-          <span className="sm:inline">Client Analytics</span>
-        </TabsTrigger>
-        <TabsTrigger 
-          value="ai-insights" 
-          aria-label="AI Insights Section"
-          role="tab"
-          className={focusRingClasses}
-        >
-          <Bot 
-            className="h-4 w-4 mr-2" 
-            aria-hidden="true"
-            role="img"
-            aria-label={getIconLabel("Bot")}
-          />
-          <span className="sm:inline">AI Insights</span>
-        </TabsTrigger>
+      <TabsList className="grid grid-cols-4 mb-4">
+        <TabsTrigger value="overview">Overview</TabsTrigger>
+        <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        <TabsTrigger value="insights">AI Insights</TabsTrigger>
+        <TabsTrigger value="predictions">Predictions</TabsTrigger>
       </TabsList>
-
-      <div 
-        className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md ${animationClass}`}
-        role="tabpanel"
-      >
-        <TabsContent 
-          value="overview" 
-          role="tabpanel" 
-          tabIndex={0}
-          aria-label="Overview Content"
-          className={animationClass}
-        >
-          <ErrorBoundary fallback={<ChartErrorFallback error={new Error("Failed to load overview")} resetErrorBoundary={() => window.location.reload()} />}>
-            <DashboardOverview />
-          </ErrorBoundary>
-        </TabsContent>
-
-        <TabsContent 
-          value="team-analytics" 
-          role="tabpanel" 
-          tabIndex={0}
-          aria-label="Team Analytics Content"
-          className={animationClass}
-        >
-          <ErrorBoundary fallback={<ChartErrorFallback error={new Error("Failed to load team analytics")} resetErrorBoundary={() => window.location.reload()} />}>
-            <Suspense fallback={<TabSkeleton />}>
-              <TeamAnalytics />
-            </Suspense>
-          </ErrorBoundary>
-        </TabsContent>
-
-        <TabsContent 
-          value="client-analytics" 
-          role="tabpanel" 
-          tabIndex={0}
-          aria-label="Client Analytics Content"
-          className={animationClass}
-        >
-          <ErrorBoundary fallback={<ChartErrorFallback error={new Error("Failed to load client analytics")} resetErrorBoundary={() => window.location.reload()} />}>
-            <Suspense fallback={<TabSkeleton />}>
-              <ClientAnalytics />
-            </Suspense>
-          </ErrorBoundary>
-        </TabsContent>
-
-        <TabsContent 
-          value="ai-insights" 
-          role="tabpanel" 
-          tabIndex={0}
-          aria-label="AI Insights Content"
-          className={animationClass}
-        >
-          <ErrorBoundary fallback={<ChartErrorFallback error={new Error("Failed to load AI insights")} resetErrorBoundary={() => window.location.reload()} />}>
-            <Suspense fallback={<TabSkeleton />}>
-              <AIInsightsTab 
-                predictions={predictions}
-                insights={insights}
-                isAnalyzing={isAnalyzing}
-                error={error}
-                comparisons={comparisons}
-                handleRefreshData={handleRefreshData}
-                cancelAnalysis={cancelAnalysis}
-                trendData={trendData}
-                lastAnalyzed={lastAnalyzed}
-              />
-            </Suspense>
-          </ErrorBoundary>
-        </TabsContent>
-      </div>
+      
+      <TabsContent value="overview" tabIndex={0}>
+        <DashboardOverview />
+      </TabsContent>
+      
+      <TabsContent value="analytics" tabIndex={0}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Analytics content would go here */}
+          <div className="col-span-2">
+            <h3 className="text-xl font-semibold mb-4">Performance Analytics</h3>
+            {/* This would be populated with analytics charts/data */}
+          </div>
+        </div>
+      </TabsContent>
+      
+      <TabsContent value="insights" tabIndex={0}>
+        <div className="space-y-6">
+          <h3 className="text-xl font-semibold">AI Generated Insights</h3>
+          {isAnalyzing ? (
+            <div className="flex items-center justify-center p-12">
+              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+              <span className="ml-3">Analyzing your data...</span>
+            </div>
+          ) : insights && insights.length > 0 ? (
+            <div className="space-y-4">
+              {insights.map((insight, index) => (
+                <div key={index} className="p-4 border rounded-md">
+                  {/* Insight content would go here */}
+                  <p>{insight.text || 'No insight description available'}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p>No insights available. Request an analysis to generate insights.</p>
+            </div>
+          )}
+        </div>
+      </TabsContent>
+      
+      <TabsContent value="predictions" tabIndex={0}>
+        <div className="space-y-6">
+          <h3 className="text-xl font-semibold">Future Predictions</h3>
+          {predictions && predictions.length > 0 ? (
+            <div className="space-y-4">
+              {predictions.map((prediction, index) => (
+                <div key={index} className="p-4 border rounded-md">
+                  {/* Prediction content would go here */}
+                  <p>{prediction.text || 'No prediction description available'}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p>No predictions available.</p>
+            </div>
+          )}
+        </div>
+      </TabsContent>
     </Tabs>
   );
 }
