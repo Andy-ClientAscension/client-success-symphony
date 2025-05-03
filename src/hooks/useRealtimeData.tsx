@@ -52,7 +52,8 @@ export function useRealtimeData<T>(
   const loadPersistedData = useCallback(async () => {
     try {
       // First try to get from local storage for fast initial load
-      const persistedData = loadData<T>(storageKey);
+      const persistedData = loadData<T>(storageKey, defaultValue);
+      
       if (persistedData) {
         setData(persistedData);
       }
@@ -83,7 +84,7 @@ export function useRealtimeData<T>(
     } finally {
       setIsLoading(false);
     }
-  }, [tableName, storageKey]);
+  }, [tableName, storageKey, defaultValue]);
 
   // Function to handle realtime updates
   const handleRealtimeChanges = useCallback((payload: RealtimePostgresChangesPayload<any>) => {
