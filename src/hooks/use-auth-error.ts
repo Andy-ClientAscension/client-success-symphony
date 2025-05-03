@@ -1,19 +1,38 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from './use-auth';
 
 export function useAuthError() {
   const { error: authError, isLoading } = useAuth();
   const [error, setError] = useState<Error | null>(null);
+  const timerRef = useRef<number | null>(null);
   
   useEffect(() => {
+    // Clear any pending timers when dependencies change
+    if (timerRef.current !== null) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    
     if (authError && !isLoading) {
       // Process the error to provide more context
-      const processedError = processAuthError(authError);
-      setError(processedError);
+      // Using a small delay to debounce multiple error events
+      timerRef.current = window.setTimeout(() => {
+        const processedError = processAuthError(authError);
+        setError(processedError);
+        timerRef.current = null;
+      }, 50);
     } else {
       setError(null);
     }
+    
+    // Cleanup on unmount
+    return () => {
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, [authError, isLoading]);
   
   // Enhanced error handler

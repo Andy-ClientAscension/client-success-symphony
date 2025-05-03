@@ -1,5 +1,4 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Layout } from "@/components/Layout/Layout";
 import { useAuth } from "@/hooks/use-auth";
@@ -17,9 +16,14 @@ export default function Index() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [urlProcessed, setUrlProcessed] = useState(false);
   const { toast } = useToast();
+  const abortControllerRef = useRef<AbortController | null>(null);
   
   // Handle access token in URL (for email confirmations)
   useEffect(() => {
+    // Create a new abort controller for this effect
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+    
     // Skip URL processing if we're in a non-browser environment
     if (typeof window === 'undefined') {
       setUrlProcessed(true);
@@ -37,41 +41,31 @@ export default function Index() {
         
         // Create a timeout to abort long-running requests
         const TIMEOUT_MS = 10000; // 10 seconds timeout
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => {
-            reject(new Error("Authentication request timed out. Please try again."));
-          }, TIMEOUT_MS);
-        });
+        const timeoutId = setTimeout(() => {
+          if (abortControllerRef.current) {
+            abortControllerRef.current.abort('Timeout exceeded');
+          }
+        }, TIMEOUT_MS);
         
         try {
           console.log("Found access token in URL, setting session");
           
-          // Race between the auth request and the timeout
-          const sessionResult = await Promise.race([
-            supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: hashParams.get('refresh_token') || '',
-            }),
-            timeoutPromise
-          ]);
+          // Use the abort controller signal for the session request
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: hashParams.get('refresh_token') || '',
+          }, {
+            signal
+          });
           
-          // If we get here, the request completed before timeout
-          const { data, error } = sessionResult as any;
+          clearTimeout(timeoutId);
           
           if (error) throw error;
           
           // Validate that the session was actually set correctly by fetching the user
-          const userPromise = supabase.auth.getUser();
-          const userResult = await Promise.race([
-            userPromise,
-            new Promise((_, reject) => {
-              setTimeout(() => {
-                reject(new Error("User validation timed out. Please try again."));
-              }, TIMEOUT_MS);
-            })
-          ]);
-          
-          const { data: userData, error: userError } = userResult as any;
+          const { data: userData, error: userError } = await supabase.auth.getUser({
+            signal  // Pass the signal to this request too
+          });
           
           if (userError || !userData?.user) {
             throw userError || new Error("Failed to fetch user after session set");
@@ -86,7 +80,7 @@ export default function Index() {
           }
           
           // Refresh auth context to ensure it's in sync with Supabase
-          await refreshSession();
+          await refreshSession({ signal });
           
           // Show success toast
           toast({
@@ -97,6 +91,15 @@ export default function Index() {
           // Navigate to dashboard
           navigate('/dashboard', { replace: true });
         } catch (error) {
+          clearTimeout(timeoutId);
+          
+          // Don't process abort errors as real errors
+          if (error instanceof DOMException && error.name === 'AbortError') {
+            console.log("Authentication request was cancelled");
+            setAuthError("Authentication request was cancelled. Please try again.");
+            return;
+          }
+          
           console.error("Error setting session from URL:", error);
           
           // Handle timeout errors specifically
@@ -135,6 +138,14 @@ export default function Index() {
     };
     
     handleEmailConfirmation();
+    
+    // Cleanup function
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    };
   }, [navigate, location.hash, toast, refreshSession]); 
   
   // Standard redirection based on auth state

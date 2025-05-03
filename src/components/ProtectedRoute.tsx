@@ -1,5 +1,5 @@
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useState, useRef } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { LoadingState } from "@/components/LoadingState";
@@ -18,11 +18,38 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   const location = useLocation();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { toast } = useToast();
+  const abortControllerRef = useRef<AbortController | null>(null);
   
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading, user, refreshSession } = useAuth();
   const [error] = useAuthError();
-  
+
+  // Setup abort controller for cancelling in-flight requests
   useEffect(() => {
+    abortControllerRef.current = new AbortController();
+    
+    // Short delay to ensure auth check is complete
+    const timer = setTimeout(() => {
+      setIsCheckingAuth(false);
+    }, 500);
+    
+    // Announce authentication check to screen readers
+    announceToScreenReader("Verifying authentication status", "polite");
+    
+    // Optionally refresh session with cancellation support
+    const refreshAuthWithCancellation = async () => {
+      if (!isAuthenticated && !isLoading) {
+        try {
+          await refreshSession({ signal: abortControllerRef.current?.signal });
+        } catch (err) {
+          if (!(err instanceof DOMException && err.name === 'AbortError')) {
+            console.error("Error refreshing session:", err);
+          }
+        }
+      }
+    };
+    
+    refreshAuthWithCancellation();
+    
     // Log auth status for debugging
     console.log("ProtectedRoute: Auth check at path", location.pathname, { 
       isAuthenticated, 
@@ -31,18 +58,15 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
       userEmail: user?.email 
     });
     
-    // Announce authentication check to screen readers
-    announceToScreenReader("Verifying authentication status", "polite");
-    
-    // Short delay to ensure auth check is complete
-    const timer = setTimeout(() => {
-      setIsCheckingAuth(false);
-    }, 500);
-    
     return () => {
       clearTimeout(timer);
+      // Cancel any in-flight requests when component unmounts
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
     };
-  }, [location.pathname, isAuthenticated, isLoading, user]);
+  }, [location.pathname, refreshSession]);
   
   // When auth status changes, announce to screen readers
   useEffect(() => {
