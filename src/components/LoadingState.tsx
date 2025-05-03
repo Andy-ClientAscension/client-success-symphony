@@ -1,14 +1,17 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { useSmartLoading } from "@/hooks/useSmartLoading";
 
 interface LoadingStateProps {
   message?: string;
   showProgress?: boolean;
   progress?: number;
   className?: string;
-  size?: "sm" | "md" | "lg"; // Add size prop
+  size?: "sm" | "md" | "lg";
+  priority?: 1 | 2 | 3 | 4 | 5;
+  isLoading?: boolean;
 }
 
 export function LoadingState({ 
@@ -16,12 +19,19 @@ export function LoadingState({
   showProgress = false, 
   progress = undefined,
   className = "",
-  size = "md" // Default size
+  size = "md",
+  priority = 3,
+  isLoading = true
 }: LoadingStateProps) {
-  const [localProgress, setLocalProgress] = React.useState(0);
+  const [localProgress, setLocalProgress] = useState(0);
+  const { isLoading: smartIsLoading } = useSmartLoading(isLoading, {
+    priority,
+    minLoadingTime: 400,
+    loadingDelay: 100
+  });
 
-  React.useEffect(() => {
-    if (showProgress && progress === undefined) {
+  useEffect(() => {
+    if (showProgress && progress === undefined && smartIsLoading) {
       // Simulate loading progress when no actual progress is provided
       const interval = setInterval(() => {
         setLocalProgress(prev => {
@@ -38,7 +48,10 @@ export function LoadingState({
 
       return () => clearInterval(interval);
     }
-  }, [showProgress, progress]);
+  }, [showProgress, progress, smartIsLoading]);
+
+  // If not loading after smart loading logic is applied, don't render
+  if (!smartIsLoading) return null;
 
   // Define size classes
   const sizeClasses = {

@@ -11,6 +11,7 @@ import { AuthErrorBoundary } from "@/components/AuthErrorBoundary";
 import { logStartupPhase } from "@/utils/errorHandling";
 import { SessionValidator } from "@/components/SessionValidator";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { NavigationProgressBar } from "@/components/ui/progress-bar";
 import AppRoutes from "./routes";
 
 logStartupPhase("App.tsx: Module loading started");
@@ -38,6 +39,7 @@ function App() {
             <AuthProvider>
               <AuthErrorBoundary>
                 <SessionValidator>
+                  <NavigationProgressBar variant="brand" />
                   <BrowserCompatibilityCheck />
                   <OfflineDetector />
                   <OfflineBanner position="bottom" />
