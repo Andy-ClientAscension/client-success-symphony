@@ -5,6 +5,7 @@ import App from './App.tsx'
 import './index.css'
 import { initializeSentry } from '@/utils/sentry/config';
 import { logStartupPhase, logDetailedError } from '@/utils/errorHandling';
+import { registerServiceWorker } from '@/utils/serviceWorkerRegistration';
 
 logStartupPhase("Application initialization starting");
 
@@ -14,6 +15,9 @@ initializeSentry().then(() => {
 }).catch(error => {
   console.error('Failed to initialize Sentry:', error);
 });
+
+// Register service worker for offline support
+registerServiceWorker();
 
 // Global error handler
 window.onerror = function(message, source, lineno, colno, error) {

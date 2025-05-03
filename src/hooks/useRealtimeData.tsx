@@ -95,7 +95,7 @@ export function useRealtimeData<T>(
         // Handle different events: INSERT, UPDATE, DELETE
         if (Array.isArray(currentData)) {
           // Handle array data (collections)
-          let updatedData: any[];
+          let updatedData: any[] = [...currentData];
           
           switch (payload.eventType) {
             case 'INSERT':
@@ -104,7 +104,7 @@ export function useRealtimeData<T>(
               if (!currentData.some((item: any) => item.id === newRecord.id)) {
                 updatedData = [...currentData, newRecord];
                 saveData(storageKey, updatedData);
-                return updatedData as T;
+                return updatedData as unknown as T;
               }
               break;
               
@@ -113,19 +113,19 @@ export function useRealtimeData<T>(
                 item.id === payload.new.id ? { ...item, ...payload.new } : item
               );
               saveData(storageKey, updatedData);
-              return updatedData as T;
+              return updatedData as unknown as T;
               
             case 'DELETE':
               updatedData = currentData.filter((item: any) => item.id !== payload.old.id);
               saveData(storageKey, updatedData);
-              return updatedData as T;
+              return updatedData as unknown as T;
           }
         } else if (typeof currentData === 'object' && currentData !== null) {
           // Handle single object data
           if (payload.eventType === 'UPDATE') {
             const newData = { ...currentData, ...payload.new };
             saveData(storageKey, newData);
-            return newData as T;
+            return newData as unknown as T;
           }
         }
         

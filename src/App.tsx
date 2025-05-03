@@ -10,6 +10,7 @@ import { AuthProvider } from "@/contexts/auth";
 import { AuthErrorBoundary } from "@/components/AuthErrorBoundary";
 import { logStartupPhase } from "@/utils/errorHandling";
 import { SessionValidator } from "@/components/SessionValidator";
+import { OfflineBanner } from "@/components/OfflineBanner";
 import AppRoutes from "./routes";
 
 logStartupPhase("App.tsx: Module loading started");
@@ -39,6 +40,7 @@ function App() {
                 <SessionValidator>
                   <BrowserCompatibilityCheck />
                   <OfflineDetector />
+                  <OfflineBanner position="bottom" />
                   <Toaster />
                   <AppRoutes />
                 </SessionValidator>
