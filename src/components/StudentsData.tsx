@@ -31,6 +31,7 @@ function StudentsDataComponent() {
     retry();
   }, [retry]);
 
+  // Enhanced columns with proper ARIA labels and descriptions
   const columns = [
     {
       id: 'name',
@@ -40,14 +41,22 @@ function StudentsDataComponent() {
     {
       id: 'status',
       header: 'Status',
-      cell: (student: any) => (
-        <Badge variant={
+      cell: (student: any) => {
+        const statusVariant = 
           student.status === 'active' ? 'success' :
-          student.status === 'at-risk' ? 'warning' : 'default'
-        }>
-          {student.status}
-        </Badge>
-      )
+          student.status === 'at-risk' ? 'warning' : 'default';
+        
+        const statusText = student.status.charAt(0).toUpperCase() + student.status.slice(1);
+        
+        return (
+          <Badge 
+            variant={statusVariant}
+            aria-label={`Status: ${statusText}`}
+          >
+            {statusText}
+          </Badge>
+        );
+      }
     },
     {
       id: 'team',
@@ -57,20 +66,31 @@ function StudentsDataComponent() {
     {
       id: 'progress',
       header: 'Progress',
-      cell: (student: any) => (
-        <div className="flex items-center gap-2">
-          <Progress 
-            value={student.progress || 0} 
-            className="h-2"
-            indicatorClassName={cn(
-              student.progress < 30 ? "bg-red-500" : 
-              student.progress < 70 ? "bg-yellow-500" : 
-              "bg-green-500"
-            )}
-          />
-          <span className="text-xs w-8 text-right">{student.progress || 0}%</span>
-        </div>
-      )
+      cell: (student: any) => {
+        const progress = student.progress || 0;
+        const progressColor = 
+          progress < 30 ? "bg-red-500" : 
+          progress < 70 ? "bg-yellow-500" : 
+          "bg-green-500";
+          
+        return (
+          <div 
+            className="flex items-center gap-2"
+            aria-label={`Progress: ${progress}%`}
+            role="meter"
+            aria-valuenow={progress}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
+            <Progress 
+              value={progress} 
+              className="h-2"
+              indicatorClassName={cn(progressColor)}
+            />
+            <span className="text-xs w-8 text-right">{progress}%</span>
+          </div>
+        );
+      }
     }
   ];
 
@@ -84,6 +104,9 @@ function StudentsDataComponent() {
       isRetrying={isRetrying}
       title="Students"
       emptyMessage="No students found"
+      aria-label="Students data table"
+      aria-busy={isLoading || isRetrying}
+      aria-live="polite"
     />
   );
 }

@@ -1,6 +1,6 @@
 
-export * from './TableSkeleton';
-export * from './CardSkeleton';
-export * from './ChartSkeleton';
-export * from './AvatarSkeleton';
-export * from './DataTableSkeleton';
+export { ChartSkeleton } from './ChartSkeleton';
+export { DataTableSkeleton } from './DataTableSkeleton';
+export { CardSkeleton } from './CardSkeleton';
+export { AvatarSkeleton } from './AvatarSkeleton';
+export { ErrorWithRetry } from './ErrorWithRetry';

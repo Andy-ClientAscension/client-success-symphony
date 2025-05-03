@@ -1,45 +1,43 @@
 
-import React from "react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import React from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 interface CardSkeletonProps {
   hasHeader?: boolean;
-  hasFooter?: boolean;
-  contentRows?: number;
+  headerHeight?: number;
+  contentCount?: number;
+  aspectRatio?: 'auto' | 'square' | 'video';
   className?: string;
 }
 
 export function CardSkeleton({ 
   hasHeader = true, 
-  hasFooter = false, 
-  contentRows = 3,
-  className = ""
+  headerHeight = 5,
+  contentCount = 3,
+  aspectRatio = 'auto',
+  className
 }: CardSkeletonProps) {
   return (
-    <Card className={`w-full ${className}`}>
+    <Card className={className}>
       {hasHeader && (
-        <CardHeader className="pb-2">
-          <CardTitle>
-            <Skeleton className="h-6 w-2/3" />
-          </CardTitle>
+        <CardHeader>
+          <Skeleton className={`h-${headerHeight} w-1/2`} />
         </CardHeader>
       )}
-      <CardContent>
-        <div className="space-y-3">
-          {Array.from({ length: contentRows }).map((_, i) => (
-            <Skeleton 
-              key={`content-${i}`} 
-              className={`h-4 w-[${Math.max(40, Math.min(95, 90 - (i * 15)))}%]`} 
-            />
-          ))}
-        </div>
+      <CardContent className="space-y-2">
+        {aspectRatio !== 'auto' && (
+          <div className={`aspect-${aspectRatio} w-full`}>
+            <Skeleton className="h-full w-full" />
+          </div>
+        )}
+        {Array.from({ length: contentCount }).map((_, index) => (
+          <Skeleton 
+            key={index} 
+            className={`h-4 w-${index === contentCount - 1 ? '3/4' : 'full'}`} 
+          />
+        ))}
       </CardContent>
-      {hasFooter && (
-        <div className="p-4 pt-0">
-          <Skeleton className="h-8 w-28 mt-2" />
-        </div>
-      )}
     </Card>
   );
 }

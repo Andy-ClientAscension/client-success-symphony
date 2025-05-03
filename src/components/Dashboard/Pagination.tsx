@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useMemo } from "react";
+import { focusRingClasses } from "@/lib/accessibility";
 
 interface PaginationProps {
   currentPage: number;
@@ -52,8 +53,17 @@ export function Pagination({
           key={pageNumber}
           variant={pageNumber === currentPage ? "default" : "outline"}
           size="sm"
-          className={`h-8 w-8 p-0 ${pageNumber === currentPage ? 'bg-primary hover:bg-primary/90' : ''}`}
-          onClick={() => onPageChange(pageNumber)}
+          className={`h-8 w-8 p-0 ${pageNumber === currentPage ? 'bg-primary hover:bg-primary/90' : ''} ${focusRingClasses}`}
+          onClick={() => {
+            onPageChange(pageNumber);
+            // Announce page change to screen readers
+            const announcement = document.createElement('div');
+            announcement.className = 'sr-only';
+            announcement.setAttribute('aria-live', 'polite');
+            announcement.innerText = `Page ${pageNumber} of ${totalPages}`;
+            document.body.appendChild(announcement);
+            setTimeout(() => document.body.removeChild(announcement), 1000);
+          }}
           aria-current={pageNumber === currentPage ? "page" : undefined}
           aria-label={pageNumber === currentPage ? `Current Page, Page ${pageNumber}` : `Go to Page ${pageNumber}`}
         >
@@ -93,9 +103,8 @@ export function Pagination({
   }, [totalPages]);
   
   return (
-    <div 
+    <nav 
       className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mt-4"
-      role="navigation"
       aria-label="Pagination navigation"
     >
       <div 
@@ -105,16 +114,16 @@ export function Pagination({
       >
         Showing {startIndex + 1}-{endIndex} of {totalItems} items
       </div>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1" role="group" aria-label="Pagination controls">
         <Button 
           variant="outline" 
           size="sm" 
-          className="h-8 w-8 p-0"
+          className={`h-8 w-8 p-0 ${focusRingClasses}`}
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          aria-label="Go to previous page"
+          aria-label="Previous page"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
           <span className="sr-only">Previous page</span>
         </Button>
         
@@ -126,7 +135,7 @@ export function Pagination({
             onValueChange={(value) => onPageChange(parseInt(value))}
           >
             <SelectTrigger 
-              className="h-8 w-[70px] ml-1"
+              className={`h-8 w-[70px] ml-1 ${focusRingClasses}`}
               aria-label="Jump to page"
             >
               <SelectValue placeholder="Jump" />
@@ -140,15 +149,15 @@ export function Pagination({
         <Button 
           variant="outline" 
           size="sm" 
-          className="h-8 w-8 p-0"
+          className={`h-8 w-8 p-0 ${focusRingClasses}`}
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          aria-label="Go to next page"
+          aria-label="Next page"
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-4 w-4" aria-hidden="true" />
           <span className="sr-only">Next page</span>
         </Button>
       </div>
-    </div>
+    </nav>
   );
 }

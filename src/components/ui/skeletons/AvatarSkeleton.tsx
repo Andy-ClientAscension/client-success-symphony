@@ -1,38 +1,41 @@
 
-import React from "react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import React from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface AvatarSkeletonProps {
-  size?: "sm" | "md" | "lg";
-  showLabel?: boolean;
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  withText?: boolean;
   className?: string;
 }
 
-export function AvatarSkeleton({ 
-  size = "md", 
-  showLabel = true,
-  className = ""
+export function AvatarSkeleton({
+  size = 'md',
+  withText = false,
+  className
 }: AvatarSkeletonProps) {
-  // Size classes
-  const sizeClasses = {
-    sm: "h-8 w-8",
-    md: "h-10 w-10",
-    lg: "h-14 w-14"
+  const sizeMap = {
+    xs: 'h-6 w-6',
+    sm: 'h-8 w-8',
+    md: 'h-10 w-10',
+    lg: 'h-12 w-12',
+    xl: 'h-16 w-16'
+  };
+
+  const textSizeMap = {
+    xs: 'h-2 w-12',
+    sm: 'h-3 w-16',
+    md: 'h-3 w-20',
+    lg: 'h-4 w-24',
+    xl: 'h-4 w-32'
   };
   
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
-      <Avatar className={sizeClasses[size]}>
-        <AvatarFallback>
-          <Skeleton className="h-full w-full rounded-full" />
-        </AvatarFallback>
-      </Avatar>
-      
-      {showLabel && (
+    <div className={`flex items-center space-x-2 ${className}`}>
+      <Skeleton className={`rounded-full ${sizeMap[size]}`} />
+      {withText && (
         <div className="space-y-1">
-          <Skeleton className="h-3.5 w-24" />
-          {size === "lg" && <Skeleton className="h-2.5 w-16" />}
+          <Skeleton className={textSizeMap[size]} />
+          <Skeleton className="h-2 w-16" />
         </div>
       )}
     </div>

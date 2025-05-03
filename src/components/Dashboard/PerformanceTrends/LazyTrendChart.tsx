@@ -2,6 +2,7 @@
 import React, { lazy, Suspense, useState } from "react";
 import { ChartSkeleton } from "@/components/ui/skeletons/ChartSkeleton";
 import { ErrorWithRetry } from "@/components/ui/skeletons/ErrorWithRetry";
+import { announceToScreenReader } from "@/lib/accessibility";
 
 // Lazy load the TrendChart component
 const TrendChart = lazy(() => import("./TrendChart").then(mod => ({ default: mod.TrendChart })));
@@ -27,6 +28,7 @@ export function LazyTrendChart(props: LazyTrendChartProps) {
   // Handle internal errors during loading
   const handleError = (error: Error) => {
     setHasError(error);
+    announceToScreenReader(`Error loading ${title} chart: ${error.message}`, 'assertive');
   };
   
   // Handle retry for internal errors
@@ -35,6 +37,7 @@ export function LazyTrendChart(props: LazyTrendChartProps) {
     // Also call parent retry if provided
     if (onRetry) {
       onRetry();
+      announceToScreenReader(`Retrying to load ${title} chart`, 'polite');
     }
   };
   
@@ -66,33 +69,42 @@ export function LazyTrendChart(props: LazyTrendChartProps) {
   // Show empty state if no data
   if (!data || data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 border rounded-lg bg-muted/10">
-        <p className="text-muted-foreground">No data available for {title}</p>
-        {onRetry && (
-          <button 
-            onClick={onRetry}
-            className="ml-2 text-sm text-primary underline"
-          >
-            Refresh
-          </button>
-        )}
+      <div 
+        className="flex items-center justify-center h-64 border rounded-lg bg-muted/10"
+        role="region" 
+        aria-label={`${title} - No data available`}
+      >
+        <div className="text-center">
+          <p className="text-muted-foreground">No data available for {title}</p>
+          {onRetry && (
+            <button 
+              onClick={onRetry}
+              className="ml-2 text-sm text-primary underline mt-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              aria-label="Refresh data for this chart"
+            >
+              Refresh
+            </button>
+          )}
+        </div>
       </div>
     );
   }
   
   return (
-    <Suspense fallback={<ChartSkeleton height={300} showLegend={true} />}>
-      <ErrorBoundary onError={handleError} fallback={
-        <ErrorWithRetry 
-          error={hasError || new Error("Failed to render chart")}
-          onRetry={handleRetry}
-          title={`Error Rendering ${title}`}
-          variant="compact"
-        />
-      }>
-        <TrendChart {...props} />
-      </ErrorBoundary>
-    </Suspense>
+    <div role="region" aria-label={`${title} chart`} tabIndex={0}>
+      <Suspense fallback={<ChartSkeleton height={300} showLegend={true} />}>
+        <ErrorBoundary onError={handleError} fallback={
+          <ErrorWithRetry 
+            error={hasError || new Error("Failed to render chart")}
+            onRetry={handleRetry}
+            title={`Error Rendering ${title}`}
+            variant="compact"
+          />
+        }>
+          <TrendChart {...props} />
+        </ErrorBoundary>
+      </Suspense>
+    </div>
   );
 }
 
