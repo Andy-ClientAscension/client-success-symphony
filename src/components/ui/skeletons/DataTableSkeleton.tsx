@@ -10,6 +10,8 @@ interface DataTableSkeletonProps {
   hasFilters?: boolean;
   hasFooter?: boolean;
   title?: string;
+  showHeader?: boolean; // Added this prop to match usage in DataTableWithRetry
+  className?: string;
 }
 
 export function DataTableSkeleton({
@@ -18,10 +20,12 @@ export function DataTableSkeleton({
   hasHeader = true,
   hasFilters = true,
   hasFooter = true,
-  title = 'Loading data...'
+  title = 'Loading data...',
+  showHeader = true, // Added with default value
+  className = ''
 }: DataTableSkeletonProps) {
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader className="pb-0">
         {hasHeader && (
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">

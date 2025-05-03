@@ -39,7 +39,7 @@ export function DataTableWithRetry<T>({
       <DataTableSkeleton 
         rowCount={5} 
         columnCount={columns.length}
-        showHeader={!!title}
+        hasHeader={!!title} // Changed showHeader to hasHeader
         className={className}
       />
     );
