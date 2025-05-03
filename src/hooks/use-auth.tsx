@@ -1,6 +1,6 @@
 import { useContext, useEffect } from "react";
-import { AuthContext } from "@/contexts/AuthContext";
-import type Auth from '@/types/auth';
+import { AuthContext } from "@/contexts/auth/AuthContext";
+import type { Auth } from '@/contexts/auth/types';
 import { getCachedSession, refreshCachedSessionTTL } from "@/utils/sessionCache";
 
 // Main auth hook to be used across the application
@@ -26,9 +26,8 @@ export function useAuth(): Auth.AuthContextType {
 }
 
 // Export types for backwards compatibility
-export type User = Auth.User;
+export type User = Auth.UserType;
 export type AuthContextType = Auth.AuthContextType;
-export type AuthState = Auth.AuthState;
 
 // Utility function to check if a user is authenticated
 export function useIsAuthenticated(): boolean {
@@ -37,7 +36,7 @@ export function useIsAuthenticated(): boolean {
 }
 
 // Utility function to get the current user
-export function useCurrentUser(): Auth.User | null {
+export function useCurrentUser(): Auth.UserType | null {
   const { user } = useAuth();
   return user;
 }
