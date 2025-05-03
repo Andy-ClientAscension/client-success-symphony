@@ -8,7 +8,7 @@ import { BrowserCompatibilityCheck } from "@/components/BrowserCompatibilityChec
 import { OfflineDetector } from "@/components/OfflineDetector";
 import { AuthProvider } from "@/contexts/auth";
 import { logStartupPhase } from "@/utils/errorHandling";
-import AppRoutes from "./routes";  // Changed from import { AppRoutes }
+import AppRoutes from "./routes";
 
 logStartupPhase("App.tsx: Module loading started");
 
