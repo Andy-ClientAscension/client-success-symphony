@@ -35,7 +35,7 @@ export default function Index() {
     
     const handleEmailConfirmation = async () => {
       if (accessToken) {
-        dispatch({ type: 'PROCESSING_AUTH' });
+        dispatch({ type: 'START_PROCESSING' });
         announceToScreenReader("Processing authentication", "polite");
         
         // Create a timeout to abort long-running requests

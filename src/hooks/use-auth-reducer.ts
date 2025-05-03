@@ -2,22 +2,19 @@
 import { useReducer } from 'react';
 
 export interface AuthState {
-  isCheckingAuth: boolean;
   processingAuth: boolean;
   authError: string | null;
   urlProcessed: boolean;
 }
 
 export type AuthAction = 
-  | { type: 'START_AUTH_CHECK' }
-  | { type: 'FINISH_AUTH_CHECK' }
-  | { type: 'PROCESSING_AUTH' }
+  | { type: 'START_PROCESSING' }
+  | { type: 'PROCESSING_COMPLETE' }
   | { type: 'AUTH_SUCCESS' }
   | { type: 'AUTH_ERROR'; payload: string }
   | { type: 'URL_PROCESSED' };
 
-export const initialAuthState: AuthState = {
-  isCheckingAuth: true,
+const initialAuthState: AuthState = {
   processingAuth: false,
   authError: null,
   urlProcessed: false
@@ -25,12 +22,10 @@ export const initialAuthState: AuthState = {
 
 export const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
-    case 'START_AUTH_CHECK':
-      return { ...state, isCheckingAuth: true };
-    case 'FINISH_AUTH_CHECK':
-      return { ...state, isCheckingAuth: false };
-    case 'PROCESSING_AUTH':
-      return { ...state, processingAuth: true };
+    case 'START_PROCESSING':
+      return { ...state, processingAuth: true, authError: null };
+    case 'PROCESSING_COMPLETE':
+      return { ...state, processingAuth: false };
     case 'AUTH_SUCCESS':
       return { ...state, processingAuth: false, authError: null };
     case 'AUTH_ERROR':
