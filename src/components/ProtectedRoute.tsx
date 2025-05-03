@@ -39,7 +39,8 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
     const refreshAuthWithCancellation = async () => {
       if (!isAuthenticated && !isLoading) {
         try {
-          await refreshSession({ signal: abortControllerRef.current?.signal });
+          // Fix: Call refreshSession without passing an object with signal
+          await refreshSession();
         } catch (err) {
           if (!(err instanceof DOMException && err.name === 'AbortError')) {
             console.error("Error refreshing session:", err);
