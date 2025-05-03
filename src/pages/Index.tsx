@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Layout } from "@/components/Layout/Layout";
 import { useAuth } from "@/hooks/use-auth";
@@ -7,17 +7,16 @@ import { LoadingState } from "@/components/LoadingState";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { announceToScreenReader, setFocusToElement } from "@/lib/accessibility";
+import { useAuthReducer } from '@/hooks/use-auth-reducer';
 
 // This is the landing page that redirects based on auth state
 export default function Index() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, isLoading, refreshSession } = useAuth();
-  const [processingAuth, setProcessingAuth] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(null);
-  const [urlProcessed, setUrlProcessed] = useState(false);
   const { toast } = useToast();
   const abortControllerRef = useRef<AbortController | null>(null);
+  const [state, dispatch] = useAuthReducer();
   
   // Handle access token in URL (for email confirmations)
   useEffect(() => {
@@ -26,7 +25,7 @@ export default function Index() {
     
     // Skip URL processing if we're in a non-browser environment
     if (typeof window === 'undefined') {
-      setUrlProcessed(true);
+      dispatch({ type: 'URL_PROCESSED' });
       return;
     }
     
@@ -36,7 +35,7 @@ export default function Index() {
     
     const handleEmailConfirmation = async () => {
       if (accessToken) {
-        setProcessingAuth(true);
+        dispatch({ type: 'PROCESSING_AUTH' });
         announceToScreenReader("Processing authentication", "polite");
         
         // Create a timeout to abort long-running requests
@@ -84,6 +83,8 @@ export default function Index() {
             description: "You have been successfully logged in."
           });
           
+          dispatch({ type: 'AUTH_SUCCESS' });
+          
           // Navigate to dashboard
           navigate('/dashboard', { replace: true });
         } catch (error) {
@@ -92,7 +93,10 @@ export default function Index() {
           // Don't process abort errors as real errors
           if (error instanceof DOMException && error.name === 'AbortError') {
             console.log("Authentication request was cancelled");
-            setAuthError("Authentication request was cancelled. Please try again.");
+            dispatch({ 
+              type: 'AUTH_ERROR', 
+              payload: "Authentication request was cancelled. Please try again." 
+            });
             return;
           }
           
@@ -109,7 +113,7 @@ export default function Index() {
             errorMessage = "Authentication failed";
           }
           
-          setAuthError(errorMessage);
+          dispatch({ type: 'AUTH_ERROR', payload: errorMessage });
           announceToScreenReader(`Authentication error: ${errorMessage}`, "assertive");
           
           // Show error toast
@@ -125,11 +129,10 @@ export default function Index() {
             state: { authError: errorMessage }
           });
         } finally {
-          setProcessingAuth(false);
-          setUrlProcessed(true); // Mark URL token processing as complete
+          dispatch({ type: 'URL_PROCESSED' });
         }
       } else {
-        setUrlProcessed(true); // No token in URL, mark as processed
+        dispatch({ type: 'URL_PROCESSED' });
       }
     };
     
@@ -142,13 +145,13 @@ export default function Index() {
         abortControllerRef.current = null;
       }
     };
-  }, [navigate, location.hash, toast, refreshSession]); 
+  }, [navigate, location.hash, toast, refreshSession, dispatch]); 
   
   // Standard redirection based on auth state
   useEffect(() => {
     // Only redirect after auth state is confirmed, we're not processing an access token,
     // and URL processing has completed (whether there was a token or not)
-    if (!isLoading && !processingAuth && urlProcessed) {
+    if (!isLoading && !state.processingAuth && state.urlProcessed) {
       if (isAuthenticated) {
         // Announce redirection for screen readers
         announceToScreenReader("Authentication verified, redirecting to dashboard", "polite");
@@ -161,36 +164,36 @@ export default function Index() {
         navigate('/login', { replace: true });
       }
     }
-  }, [navigate, isAuthenticated, isLoading, processingAuth, urlProcessed]);
+  }, [navigate, isAuthenticated, isLoading, state.processingAuth, state.urlProcessed]);
   
   // Set focus when processing state changes
   useEffect(() => {
-    if (!processingAuth && urlProcessed) {
+    if (!state.processingAuth && state.urlProcessed) {
       // Set focus to main content area after processing completes
       setTimeout(() => {
         setFocusToElement('main-content', '.flex.items-center.justify-center');
       }, 100);
     }
-  }, [processingAuth, urlProcessed]);
+  }, [state.processingAuth, state.urlProcessed]);
   
   return (
     <Layout>
-      {(isLoading || processingAuth) ? (
+      {(isLoading || state.processingAuth) ? (
         <div className="flex items-center justify-center h-screen">
-          <LoadingState message={processingAuth ? "Processing authentication..." : "Initializing application..."} />
+          <LoadingState message={state.processingAuth ? "Processing authentication..." : "Initializing application..."} />
           <div role="status" aria-live="polite" className="sr-only">
-            {processingAuth ? "Processing authentication" : "Initializing application"}
+            {state.processingAuth ? "Processing authentication" : "Initializing application"}
           </div>
         </div>
       ) : (
         <div id="main-content" tabIndex={-1} className="flex items-center justify-center h-screen">
-          {authError ? (
+          {state.authError ? (
             <div className="text-center space-y-2">
               <p className="text-destructive font-medium">Authentication Error</p>
-              <p className="text-sm text-muted-foreground">{authError}</p>
+              <p className="text-sm text-muted-foreground">{state.authError}</p>
               <p>Redirecting to login...</p>
               <div role="alert" aria-live="assertive" className="sr-only">
-                Authentication error: {authError}. Redirecting to login page.
+                Authentication error: {state.authError}. Redirecting to login page.
               </div>
             </div>
           ) : (

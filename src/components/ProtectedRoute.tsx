@@ -1,5 +1,5 @@
 
-import { ReactNode, useEffect, useState, useRef } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { LoadingState } from "@/components/LoadingState";
@@ -9,6 +9,7 @@ import { ValidationError } from "@/components/ValidationError";
 import { useToast } from "@/hooks/use-toast";
 import { announceToScreenReader, setFocusToElement } from "@/lib/accessibility";
 import { useAuthError } from "@/hooks/use-auth-error";
+import { useAuthReducer } from "@/hooks/use-auth-reducer";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -16,12 +17,12 @@ interface ProtectedRouteProps {
 
 function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   const location = useLocation();
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { toast } = useToast();
   const abortControllerRef = useRef<AbortController | null>(null);
   
   const { isAuthenticated, isLoading, user, refreshSession } = useAuth();
   const [error] = useAuthError();
+  const [state, dispatch] = useAuthReducer();
 
   // Setup abort controller for cancelling in-flight requests
   useEffect(() => {
@@ -29,7 +30,7 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
     
     // Short delay to ensure auth check is complete
     const timer = setTimeout(() => {
-      setIsCheckingAuth(false);
+      dispatch({ type: 'FINISH_AUTH_CHECK' });
     }, 500);
     
     // Announce authentication check to screen readers
@@ -39,7 +40,6 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
     const refreshAuthWithCancellation = async () => {
       if (!isAuthenticated && !isLoading) {
         try {
-          // Call refreshSession without arguments as per its type definition
           await refreshSession();
         } catch (err) {
           if (!(err instanceof DOMException && err.name === 'AbortError')) {
@@ -67,11 +67,11 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
         abortControllerRef.current = null;
       }
     };
-  }, [location.pathname, refreshSession, isAuthenticated, isLoading, user]);
+  }, [location.pathname, refreshSession, isAuthenticated, isLoading, user, dispatch]);
   
   // When auth status changes, announce to screen readers
   useEffect(() => {
-    if (!isLoading && !isCheckingAuth) {
+    if (!isLoading && !state.isCheckingAuth) {
       if (isAuthenticated) {
         announceToScreenReader("Authentication verified, loading content", "polite");
         
@@ -83,10 +83,10 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
         announceToScreenReader("Authentication required, redirecting to login", "assertive");
       }
     }
-  }, [isAuthenticated, isLoading, isCheckingAuth]);
+  }, [isAuthenticated, isLoading, state.isCheckingAuth]);
   
   // Show loading state while checking authentication
-  if (isLoading || isCheckingAuth) {
+  if (isLoading || state.isCheckingAuth) {
     return (
       <>
         <LoadingState message="Checking authentication..." />
