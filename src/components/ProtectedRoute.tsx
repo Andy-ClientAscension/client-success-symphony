@@ -6,7 +6,7 @@ import { LoadingState } from "@/components/LoadingState";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ValidationError } from "@/components/ValidationError";
 import { useToast } from "@/hooks/use-toast";
-import { announceToScreenReader } from "@/lib/accessibility";
+import { announceToScreenReader, setFocusToElement } from "@/lib/accessibility";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -46,6 +46,11 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
     if (!isLoading && !isCheckingAuth) {
       if (isAuthenticated) {
         announceToScreenReader("Authentication verified, loading content", "polite");
+        
+        // Set focus to main content area after auth verification
+        setTimeout(() => {
+          setFocusToElement('main-content', 'main h1');
+        }, 100);
       } else {
         announceToScreenReader("Authentication required, redirecting to login", "assertive");
       }

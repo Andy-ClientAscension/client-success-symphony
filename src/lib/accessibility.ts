@@ -1,4 +1,3 @@
-
 /**
  * Accessibility utilities for ensuring WCAG AA compliance
  */
@@ -49,6 +48,49 @@ export const announceToScreenReader = (message: string, priority: 'polite' | 'as
   setTimeout(() => {
     liveRegion.textContent = message;
   }, 50);
+};
+
+/**
+ * Set focus to a specific element, with fallback to a main content area
+ * @param elementId The ID of the element to focus, falls back to common main content IDs
+ * @param fallbackSelector CSS selector to use if elementId is not found
+ * @returns boolean indicating if focus was set successfully
+ */
+export const setFocusToElement = (elementId?: string, fallbackSelector?: string): boolean => {
+  // Try the specified element first if provided
+  if (elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.setAttribute('tabindex', '-1');
+      element.focus({ preventScroll: false });
+      return true;
+    }
+  }
+  
+  // Try common main content areas
+  const commonMainIds = ['main-content', 'main', 'content'];
+  for (const id of commonMainIds) {
+    const mainElement = document.getElementById(id);
+    if (mainElement) {
+      mainElement.setAttribute('tabindex', '-1');
+      mainElement.focus({ preventScroll: false });
+      return true;
+    }
+  }
+  
+  // If a fallback selector is provided, try that
+  if (fallbackSelector) {
+    const fallbackElement = document.querySelector(fallbackSelector) as HTMLElement;
+    if (fallbackElement) {
+      fallbackElement.setAttribute('tabindex', '-1');
+      fallbackElement.focus({ preventScroll: false });
+      return true;
+    }
+  }
+  
+  // If nothing else works, focus the body
+  document.body.focus();
+  return false;
 };
 
 /**

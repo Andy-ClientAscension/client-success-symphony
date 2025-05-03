@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { LoadingState } from "@/components/LoadingState";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { announceToScreenReader } from "@/lib/accessibility";
+import { announceToScreenReader, setFocusToElement } from "@/lib/accessibility";
 
 // This is the landing page that redirects based on auth state
 export default function Index() {
@@ -156,6 +156,16 @@ export default function Index() {
     }
   }, [navigate, isAuthenticated, isLoading, processingAuth, urlProcessed]);
   
+  // Set focus when processing state changes
+  useEffect(() => {
+    if (!processingAuth && urlProcessed) {
+      // Set focus to main content area after processing completes
+      setTimeout(() => {
+        setFocusToElement('main-content', '.flex.items-center.justify-center');
+      }, 100);
+    }
+  }, [processingAuth, urlProcessed]);
+  
   return (
     <Layout>
       {(isLoading || processingAuth) ? (
@@ -166,7 +176,7 @@ export default function Index() {
           </div>
         </div>
       ) : (
-        <div className="flex items-center justify-center h-screen">
+        <div id="main-content" tabIndex={-1} className="flex items-center justify-center h-screen">
           {authError ? (
             <div className="text-center space-y-2">
               <p className="text-destructive font-medium">Authentication Error</p>

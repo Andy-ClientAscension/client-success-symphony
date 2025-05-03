@@ -15,7 +15,7 @@ import { HeroMetrics } from "@/components/Dashboard/Metrics/HeroMetrics";
 import { StudentsData } from "@/components/StudentsData";
 import { SyncMonitorPanel } from "@/components/Dashboard/SyncStatus/SyncMonitorPanel";
 import { useAuth } from "@/hooks/use-auth";
-import { announceToScreenReader } from "@/lib/accessibility";
+import { announceToScreenReader, setFocusToElement } from "@/lib/accessibility";
 
 export default function Dashboard() {
   const {
@@ -71,6 +71,11 @@ export default function Dashboard() {
       announceToScreenReader(`Dashboard error: ${error.message}`, "assertive");
     } else {
       announceToScreenReader("Dashboard data loaded successfully", "polite");
+      
+      // Set focus to main content when dashboard is loaded
+      setTimeout(() => {
+        setFocusToElement('dashboard-content', 'h1');
+      }, 100);
     }
   }, [isLoading, error]);
 
@@ -121,7 +126,7 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <div className="space-y-6 p-6">
+      <div id="dashboard-content" tabIndex={-1} className="space-y-6 p-6">
         <div aria-live="polite" className="sr-only">
           Dashboard loaded successfully. Last updated {lastUpdated ? lastUpdated.toLocaleString() : 'recently'}.
         </div>

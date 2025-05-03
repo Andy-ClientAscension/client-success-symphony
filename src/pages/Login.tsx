@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LoginForm } from "@/components/auth/LoginForm";
 import { useToast } from "@/hooks/use-toast";
-import { announceToScreenReader } from "@/lib/accessibility";
+import { announceToScreenReader, setFocusToElement } from "@/lib/accessibility";
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -33,6 +33,16 @@ export default function Login() {
     // Announce login page loaded
     announceToScreenReader("Login page loaded", "polite");
     
+    // Set focus to main content or email input when page loads
+    setTimeout(() => {
+      const emailInput = document.getElementById('email');
+      if (emailInput) {
+        emailInput.focus();
+      } else {
+        setFocusToElement('main-content');
+      }
+    }, 100);
+    
     // Redirect to dashboard if already authenticated
     if (isAuthenticated) {
       announceToScreenReader("Already authenticated, redirecting to dashboard", "polite");
@@ -55,6 +65,16 @@ export default function Login() {
         const errorMessage = 'Login failed. Please check your credentials.';
         setError({ message: errorMessage });
         announceToScreenReader(errorMessage, "assertive");
+        
+        // Focus on error message
+        setTimeout(() => {
+          const errorElement = document.querySelector('[role="alert"]');
+          if (errorElement) {
+            (errorElement as HTMLElement).focus();
+          } else {
+            setFocusToElement('email');
+          }
+        }, 100);
       }
     } catch (err) {
       console.error('Login error:', err);
@@ -64,6 +84,14 @@ export default function Login() {
         type: 'auth'
       });
       announceToScreenReader(`Login error: ${errorMessage}`, "assertive");
+      
+      // Focus on error message
+      setTimeout(() => {
+        const errorElement = document.querySelector('[role="alert"]');
+        if (errorElement) {
+          (errorElement as HTMLElement).focus();
+        }
+      }, 100);
     } finally {
       setIsSubmitting(false);
     }
@@ -72,7 +100,7 @@ export default function Login() {
   return (
     <Layout>
       <div className="flex items-center justify-center min-h-screen">
-        <div className="w-full max-w-md p-8 space-y-8 bg-card rounded-xl shadow-lg">
+        <div id="main-content" tabIndex={-1} className="w-full max-w-md p-8 space-y-8 bg-card rounded-xl shadow-lg">
           <div className="text-center">
             <h1 className="text-2xl font-bold">Login</h1>
             <p className="text-muted-foreground">Welcome back! Please sign in to your account.</p>
