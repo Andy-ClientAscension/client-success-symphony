@@ -9,6 +9,30 @@ import { registerServiceWorker } from '@/utils/serviceWorkerRegistration';
 
 logStartupPhase("Application initialization starting");
 
+// Add resource hints for critical assets
+const addResourceHints = () => {
+  const criticalAssets = [
+    { rel: 'preload', href: '/src/components/ui/button.tsx', as: 'script' },
+    { rel: 'preload', href: '/src/components/ui/card.tsx', as: 'script' },
+    { rel: 'prefetch', href: '/src/pages/Dashboard.tsx', as: 'script' },
+    { rel: 'prefetch', href: '/src/components/templates/DashboardLayout.tsx', as: 'script' },
+    // Add font preloads if applicable
+    // { rel: 'preload', href: '/fonts/yourfont.woff2', as: 'font', type: 'font/woff2', crossorigin: 'anonymous' }
+  ];
+  
+  criticalAssets.forEach(asset => {
+    const link = document.createElement('link');
+    Object.entries(asset).forEach(([key, value]) => {
+      // @ts-ignore - Dynamic property assignment
+      link[key] = value;
+    });
+    document.head.appendChild(link);
+  });
+};
+
+// Add resource hints as early as possible
+addResourceHints();
+
 // Initialize Sentry as early as possible
 initializeSentry().then(() => {
   console.log('Sentry initialization completed');

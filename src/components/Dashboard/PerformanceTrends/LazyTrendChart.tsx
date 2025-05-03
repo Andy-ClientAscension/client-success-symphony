@@ -5,7 +5,20 @@ import { ErrorWithRetry } from "@/components/ui/skeletons/ErrorWithRetry";
 import { announceToScreenReader } from "@/lib/accessibility";
 
 // Lazy load the TrendChart component
-const TrendChart = lazy(() => import("./TrendChart").then(mod => ({ default: mod.TrendChart })));
+const TrendChart = lazy(() => {
+  // Add resource hint when we start to load the component
+  const link = document.createElement("link");
+  link.rel = "prefetch";
+  link.href = "/src/components/Dashboard/PerformanceTrends/TrendChart";
+  link.as = "script";
+  document.head.appendChild(link);
+  
+  return import("./TrendChart").then(mod => {
+    // Remove resource hint when loaded
+    document.head.removeChild(link);
+    return { default: mod.TrendChart };
+  });
+});
 
 // Props interface matching the original TrendChart component
 interface LazyTrendChartProps {

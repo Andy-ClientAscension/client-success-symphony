@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePrefetchRoutes } from "@/routes";
+import { useState, useEffect } from "react";
 
 export const navLinks = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -31,6 +32,26 @@ export function SidebarNav({ collapsed, closeSidebar }: SidebarNavProps) {
   const location = useLocation();
   const activeLinkStyle = "bg-secondary text-secondary-foreground";
   const { prefetchRoute } = usePrefetchRoutes();
+  const [prefetchedRoutes, setPrefetchedRoutes] = useState<Set<string>>(new Set());
+
+  // Prefetch initially visible routes when component mounts
+  useEffect(() => {
+    // Prefetch the first 3 routes that would be visible
+    const initialPrefetchRoutes = navLinks.slice(0, 3).map(link => link.to);
+    initialPrefetchRoutes.forEach(route => {
+      if (!prefetchedRoutes.has(route)) {
+        prefetchRoute(route);
+        setPrefetchedRoutes(prev => new Set([...prev, route]));
+      }
+    });
+  }, [prefetchRoute, prefetchedRoutes]);
+
+  const handlePrefetch = (route: string) => {
+    if (!prefetchedRoutes.has(route)) {
+      prefetchRoute(route);
+      setPrefetchedRoutes(prev => new Set([...prev, route]));
+    }
+  };
 
   return (
     <div className="flex-1 space-y-1">
@@ -44,8 +65,8 @@ export function SidebarNav({ collapsed, closeSidebar }: SidebarNavProps) {
             onClick={closeSidebar} 
             className="w-full" 
             key={link.to}
-            onMouseEnter={() => prefetchRoute(link.to)}
-            onFocus={() => prefetchRoute(link.to)}
+            onMouseEnter={() => handlePrefetch(link.to)}
+            onFocus={() => handlePrefetch(link.to)}
           >
             <Button
               variant="ghost"

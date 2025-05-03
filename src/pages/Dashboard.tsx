@@ -3,7 +3,7 @@ import React, { useEffect } from "react";
 import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { DashboardHeader } from "@/components/Dashboard/Header";
 import { Button } from "@/components/ui/button";
-import { Bug } from "lucide-react";
+import { Bug, BarChart2, Users, TrendingUp } from "lucide-react";
 import { RealtimeSyncIndicator } from "@/components/RealtimeSyncIndicator";
 import { LoadingState } from "@/components/LoadingState";
 import { useSyncedDashboard } from "@/hooks/useSyncedDashboard";
@@ -19,6 +19,8 @@ import {
   LazySyncMonitorPanel,
   LazyAccessibilityHelp
 } from "@/components/Dashboard/DashboardComponents";
+import { Card } from "@/components/ui/card";
+import { Link } from "react-router-dom";
 
 export default function Dashboard() {
   const {

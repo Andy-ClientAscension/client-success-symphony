@@ -1,5 +1,5 @@
 
-import React, { lazy, Suspense } from "react";
+import React, { lazy, Suspense, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartSkeleton } from "@/components/ui/skeletons/ChartSkeleton";
 
@@ -11,6 +11,26 @@ const NPSChart = lazy(() =>
   import(/* webpackChunkName: "nps-chart" */ "./NPSChart").then(mod => ({ default: mod.NPSChart }))
 );
 
+// Resource preload hint component
+const ChartResourceHint = ({ chartType }: { chartType: 'churn' | 'nps' }) => {
+  useEffect(() => {
+    // Add preload link for JS chunk
+    const preloadLink = document.createElement('link');
+    preloadLink.rel = 'preload';
+    preloadLink.as = 'script';
+    preloadLink.href = chartType === 'churn' 
+      ? '/src/components/Dashboard/ChurnChart.tsx'
+      : '/src/components/Dashboard/NPSChart.tsx';
+    document.head.appendChild(preloadLink);
+    
+    return () => {
+      document.head.removeChild(preloadLink);
+    };
+  }, [chartType]);
+  
+  return null;
+};
+
 export function LazyChurnChart() {
   return (
     <Card className="w-full shadow-sm">
@@ -18,6 +38,7 @@ export function LazyChurnChart() {
         <CardTitle className="text-base font-semibold">Company Churn Rate</CardTitle>
       </CardHeader>
       <CardContent className="p-3 pt-0">
+        <ChartResourceHint chartType="churn" />
         <Suspense fallback={<ChartSkeleton height={220} />}>
           <ChurnChart />
         </Suspense>
@@ -33,6 +54,7 @@ export function LazyNPSChart() {
         <CardTitle className="text-base font-semibold">NPS Tracking</CardTitle>
       </CardHeader>
       <CardContent className="p-4 pt-0">
+        <ChartResourceHint chartType="nps" />
         <Suspense fallback={<ChartSkeleton height={220} showLegend={true} />}>
           <NPSChart />
         </Suspense>

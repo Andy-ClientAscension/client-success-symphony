@@ -17,6 +17,7 @@
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
     
+    <!-- Critical CSS inline (would be generated at build time) -->
     <style>
       #root-fallback {
         display: none;
@@ -52,6 +53,16 @@
         100% { transform: rotate(360deg); }
       }
     </style>
+    
+    <!-- Resource Hints -->
+    <link rel="preload" href="/src/main.tsx" as="script" />
+    <link rel="preload" href="/src/App.tsx" as="script" />
+    <link rel="preload" href="/src/index.css" as="style" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://cdn.gpteng.co" crossorigin />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
   </head>
 
   <body>

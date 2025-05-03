@@ -1,4 +1,3 @@
-
 import React, { Suspense, lazy, useCallback } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { LoadingState } from '@/components/LoadingState';
@@ -51,20 +50,47 @@ export default function AppRoutes() {
 // Function to prefetch routes for use in navigation components
 export function usePrefetchRoutes() {
   const prefetchRoute = useCallback((route: string) => {
+    // Create a link rel=prefetch for the JavaScript bundle
+    const prefetchLink = document.createElement('link');
+    prefetchLink.rel = 'prefetch';
+    prefetchLink.as = 'script';
+    
     switch (route) {
       case '/dashboard':
-        import('@/pages/Dashboard');
+        prefetchLink.href = '/src/pages/Dashboard.tsx';
+        prefetchRoute('/clients'); // Also prefetch clients as it's likely to be visited next
         break;
       case '/analytics':
-        import('@/pages/Analytics');
+        prefetchLink.href = '/src/pages/Analytics.tsx';
+        break;
+      case '/clients':
+        prefetchLink.href = '/src/pages/Clients.tsx';
+        break;
+      case '/renewals':
+        prefetchLink.href = '/src/pages/Renewals.tsx';
         break;
       case '/login':
-        import('@/pages/Login');
+        prefetchLink.href = '/src/pages/Login.tsx';
         break;
       case '/signup':
-        import('@/pages/SignUp');
+        prefetchLink.href = '/src/pages/SignUp.tsx';
         break;
-      // Add other routes as needed
+      default:
+        // Don't create a prefetch link for unknown routes
+        return;
+    }
+    
+    // Add the prefetch link if it's not already in the document
+    const existingLink = document.querySelector(`link[rel="prefetch"][href="${prefetchLink.href}"]`);
+    if (!existingLink) {
+      document.head.appendChild(prefetchLink);
+      
+      // Remove after 10 seconds to keep the DOM clean
+      setTimeout(() => {
+        if (prefetchLink.parentNode) {
+          prefetchLink.parentNode.removeChild(prefetchLink);
+        }
+      }, 10000);
     }
   }, []);
 
