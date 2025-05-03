@@ -5,6 +5,7 @@ import Index from '@/pages/Index';
 import Login from '@/pages/Login';
 import SignUp from '@/pages/SignUp';
 import Dashboard from '@/pages/Dashboard';
+import Analytics from '@/pages/Analytics';
 import AuthCallback from '@/pages/AuthCallback';
 import NotFound from '@/pages/NotFound';
 import ResetPassword from '@/pages/ResetPassword';
@@ -20,6 +21,11 @@ export default function AppRoutes() {
       <Route path="/dashboard" element={
         <ProtectedRoute>
           <Dashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/analytics" element={
+        <ProtectedRoute>
+          <Analytics />
         </ProtectedRoute>
       } />
       <Route path="/auth-callback" element={<AuthCallback />} />
