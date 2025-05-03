@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { corsHeaders } from '@/utils/corsHeaders';
 import { cacheSession, getCachedSession, clearCachedSession } from '@/utils/sessionCache';
@@ -17,7 +16,29 @@ if (!supabaseUrl || !supabaseKey) {
 // Define the site URL for redirection handling
 const siteUrl = window.location.origin;
 
-// Initialize with proper configuration and error handling
+// Enhanced fetch function with CORS headers and timeout
+const fetchWithCors = (url: RequestInfo | URL, options?: RequestInit) => {
+  const timeout = 10000; // 10 second timeout
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  
+  // Merge existing headers with CORS headers
+  const headers = {
+    ...(options?.headers || {}),
+    ...corsHeaders,
+  };
+  
+  return fetch(url, {
+    ...options,
+    headers,
+    signal: controller.signal,
+    mode: 'cors',
+  }).finally(() => {
+    clearTimeout(id);
+  });
+};
+
+// Initialize with proper configuration for CORS and auth
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
     autoRefreshToken: true,
@@ -27,7 +48,8 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
     flowType: 'pkce'
   },
   global: {
-    headers: corsHeaders
+    headers: corsHeaders,
+    fetch: fetchWithCors
   }
 });
 
@@ -37,7 +59,7 @@ localStorage.setItem('supabase.auth.site_url', siteUrl);
 /**
  * Helper function to fetch with CORS headers
  */
-async function fetchWithCors(url: string, options: RequestInit = {}) {
+async function fetchWithCorsOriginal(url: string, options: RequestInit = {}) {
   const timeout = 5000; // 5 second timeout
   
   const controller = new AbortController();
