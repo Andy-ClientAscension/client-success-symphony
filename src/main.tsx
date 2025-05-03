@@ -7,7 +7,7 @@ import { initializeSentry } from '@/utils/sentry/config';
 import { logStartupPhase, logDetailedError } from '@/utils/errorHandling';
 import { registerServiceWorker } from '@/utils/serviceWorkerRegistration';
 import { addResourceHints, type ResourceHint } from '@/utils/resourceHints';
-import { validateEnvironmentVariables } from '@/utils/envValidator';
+import { validateEnvironmentVariables, getDevelopmentFallbacks } from '@/utils/envValidator';
 
 logStartupPhase("Application initialization starting");
 
@@ -16,6 +16,12 @@ const missingEnvVars = validateEnvironmentVariables();
 if (missingEnvVars.length > 0) {
   console.warn(`Missing environment variables: ${missingEnvVars.join(', ')}`);
   console.info('Check if you have created a .env file based on .env.example');
+  
+  if (import.meta.env.MODE === 'development') {
+    console.info('Using development fallbacks for missing environment variables');
+    const fallbacks = getDevelopmentFallbacks();
+    console.log('Development fallbacks:', fallbacks);
+  }
 }
 
 // Add resource hints for critical assets

@@ -2,10 +2,16 @@
 import { createClient } from '@supabase/supabase-js';
 import { corsHeaders } from '@/utils/corsHeaders';
 import { cacheSession, getCachedSession, clearCachedSession } from '@/utils/sessionCache';
+import { getDevelopmentFallbacks } from '@/utils/envValidator';
+
+// Get environment variables or fallbacks for development
+const envVars = import.meta.env.MODE === 'development' 
+  ? { ...getDevelopmentFallbacks(), ...import.meta.env } 
+  : import.meta.env;
 
 // Initialize the Supabase client with environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
+const supabaseUrl = envVars.VITE_SUPABASE_URL;
+const supabaseKey = envVars.VITE_SUPABASE_KEY;
 
 // Validate credentials
 if (!supabaseUrl || !supabaseKey) {
