@@ -4,6 +4,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { LoadingState } from "@/components/LoadingState";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { AuthErrorBoundary } from "@/components/AuthErrorBoundary";
 import { ValidationError } from "@/components/ValidationError";
 import { useToast } from "@/hooks/use-toast";
 import { announceToScreenReader, setFocusToElement } from "@/lib/accessibility";
@@ -134,7 +135,9 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         </div>
       }
     >
-      <ProtectedRouteContent>{children}</ProtectedRouteContent>
+      <AuthErrorBoundary>
+        <ProtectedRouteContent>{children}</ProtectedRouteContent>
+      </AuthErrorBoundary>
     </ErrorBoundary>
   );
 }

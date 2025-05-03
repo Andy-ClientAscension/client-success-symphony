@@ -7,6 +7,7 @@ import { BrowserRouter } from "react-router-dom";
 import { BrowserCompatibilityCheck } from "@/components/BrowserCompatibilityCheck";
 import { OfflineDetector } from "@/components/OfflineDetector";
 import { AuthProvider } from "@/contexts/auth";
+import { AuthErrorBoundary } from "@/components/AuthErrorBoundary";
 import { logStartupPhase } from "@/utils/errorHandling";
 import AppRoutes from "./routes";
 
@@ -33,10 +34,12 @@ function App() {
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
             <AuthProvider>
-              <BrowserCompatibilityCheck />
-              <OfflineDetector />
-              <Toaster />
-              <AppRoutes />
+              <AuthErrorBoundary>
+                <BrowserCompatibilityCheck />
+                <OfflineDetector />
+                <Toaster />
+                <AppRoutes />
+              </AuthErrorBoundary>
             </AuthProvider>
           </BrowserRouter>
         </QueryClientProvider>

@@ -1,10 +1,12 @@
+
 import { createClient } from '@supabase/supabase-js';
 import { corsHeaders } from '@/utils/corsHeaders';
 import { cacheSession, getCachedSession, clearCachedSession } from '@/utils/sessionCache';
 
-// Initialize the Supabase client
-const supabaseUrl = 'https://bajfdvphpoopkmpgzyeo.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhamZkdnBocG9vcGttcGd6eWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ3MTM5NTYsImV4cCI6MjA2MDI4OTk1Nn0.QJ7M2iBALcCy_bvJXAIbwFZ8JDh0G3O-t_IgBfDTikE';
+// Initialize the Supabase client with environment variables
+// Fallback to the hardcoded values for backward compatibility and development
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://bajfdvphpoopkmpgzyeo.supabase.co';
+const supabaseKey = import.meta.env.VITE_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhamZkdnBocG9vcGttcGd6eWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ3MTM5NTYsImV4cCI6MjA2MDI4OTk1Nn0.QJ7M2iBALcCy_bvJXAIbwFZ8JDh0G3O-t_IgBfDTikE';
 
 // Validate credentials
 if (!supabaseUrl || !supabaseKey) {
