@@ -1,8 +1,10 @@
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
 import { STORAGE_KEYS, loadData, saveData } from '@/utils/persistence';
+import { applyBatchChanges } from '@/utils/realtimeHelper';
 
 interface RealtimeConfig {
   tableName?: string;
@@ -93,34 +95,35 @@ export function useRealtimeData<T>(
         // Handle different events: INSERT, UPDATE, DELETE
         if (Array.isArray(currentData)) {
           // Handle array data (collections)
+          let updatedData: typeof currentData;
+          
           switch (payload.eventType) {
             case 'INSERT':
               const newRecord = payload.new;
               // Avoid duplicates
               if (!currentData.some((item: any) => item.id === newRecord.id)) {
-                const updatedData = [...currentData, newRecord];
+                updatedData = [...currentData, newRecord];
                 saveData(storageKey, updatedData);
                 return updatedData;
               }
               break;
               
             case 'UPDATE':
-              const updatedData = currentData.map((item: any) => 
+              updatedData = currentData.map((item: any) => 
                 item.id === payload.new.id ? { ...item, ...payload.new } : item
               );
               saveData(storageKey, updatedData);
               return updatedData;
               
             case 'DELETE':
-              const filteredData = currentData.filter((item: any) => item.id !== payload.old.id);
-              saveData(storageKey, filteredData);
-              return filteredData;
+              updatedData = currentData.filter((item: any) => item.id !== payload.old.id);
+              saveData(storageKey, updatedData);
+              return updatedData;
           }
         } else if (typeof currentData === 'object' && currentData !== null) {
           // Handle single object data
-          const newData = { ...currentData };
           if (payload.eventType === 'UPDATE') {
-            Object.assign(newData, payload.new);
+            const newData = { ...currentData, ...payload.new };
             saveData(storageKey, newData);
             return newData;
           }
@@ -255,6 +258,8 @@ export function useRealtimeData<T>(
       console.error('Error refreshing data:', err);
       if (err instanceof Error) {
         setError(err);
+      } else {
+        setError(new Error('Unknown error refreshing data'));
       }
     } finally {
       setIsLoading(false);
