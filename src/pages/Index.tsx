@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Layout } from "@/components/Layout/Layout";
@@ -177,7 +178,7 @@ export default function Index() {
       {(isLoading || processingAuth) ? (
         <div className="flex items-center justify-center h-screen">
           <LoadingState message={processingAuth ? "Processing authentication..." : "Initializing application..."} />
-          <div aria-live="polite" className="sr-only">
+          <div role="status" aria-live="polite" className="sr-only">
             {processingAuth ? "Processing authentication" : "Initializing application"}
           </div>
         </div>
@@ -188,14 +189,14 @@ export default function Index() {
               <p className="text-destructive font-medium">Authentication Error</p>
               <p className="text-sm text-muted-foreground">{authError}</p>
               <p>Redirecting to login...</p>
-              <div aria-live="assertive" className="sr-only">
+              <div role="alert" aria-live="assertive" className="sr-only">
                 Authentication error: {authError}. Redirecting to login page.
               </div>
             </div>
           ) : (
             <div>
               <p>Redirecting...</p>
-              <div aria-live="polite" className="sr-only">
+              <div role="status" aria-live="polite" className="sr-only">
                 Redirecting to appropriate page based on your authentication status.
               </div>
             </div>

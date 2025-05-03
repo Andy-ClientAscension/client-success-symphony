@@ -1,3 +1,4 @@
+
 import { ReactNode, useEffect, useState, useRef } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
@@ -89,7 +90,7 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
     return (
       <>
         <LoadingState message="Checking authentication..." />
-        <div aria-live="polite" className="sr-only">
+        <div role="status" aria-live="polite" className="sr-only">
           Checking authentication status, please wait
         </div>
       </>
@@ -109,7 +110,7 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
           message={errorMessage}
           showIcon
         />
-        <div aria-live="assertive" className="sr-only">
+        <div role="alert" aria-live="assertive" className="sr-only">
           Authentication error: {errorMessage}
         </div>
       </>
@@ -131,7 +132,7 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
     return (
       <>
         <Navigate to="/login" state={{ from: location }} replace />
-        <div aria-live="assertive" className="sr-only">
+        <div role="alert" aria-live="assertive" className="sr-only">
           Authentication required. Redirecting to login page.
         </div>
       </>
@@ -155,7 +156,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
             message="Unable to verify authentication status. Please try refreshing the page."
             showIcon
           />
-          <div aria-live="assertive" className="sr-only">
+          <div role="alert" aria-live="assertive" className="sr-only">
             Authentication error. Unable to verify authentication status. Please try refreshing the page.
           </div>
         </div>
