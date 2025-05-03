@@ -1,121 +1,90 @@
 
-import React from 'react';
-import { useApi } from '@/hooks/use-api';
+import React, { useCallback } from 'react';
+import { useApiWithRetry } from '@/hooks/use-api-with-retry';
 import { getStudents } from '@/services/api/student-service';
-import { Skeleton } from '@/components/ui/skeleton';
-import { DashboardErrorAlert } from '@/components/Dashboard/DashboardErrorAlert';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DataTableWithRetry } from '@/components/ui/DataTableWithRetry';
 import { withSentryErrorBoundary } from '@/components/SentryErrorBoundary';
-import { captureException } from '@/utils/sentry/config';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { RefreshCw } from 'lucide-react'; 
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { cn } from "@/lib/utils";
 
 function StudentsDataComponent() {
-  const { data, isLoading, error, execute } = useApi(
+  const { 
+    data, 
+    isLoading, 
+    error, 
+    retry, 
+    isRetrying 
+  } = useApiWithRetry(
     () => getStudents({ limit: 10, page: 1 }),
-    { executeOnMount: true }
+    { 
+      executeOnMount: true,
+      retryOptions: {
+        maxRetries: 3,
+        initialDelay: 1000,
+        showToastOnRetry: true
+      }
+    }
   );
 
-  const [retryCount, setRetryCount] = React.useState(0);
+  const handleRetry = useCallback(() => {
+    retry();
+  }, [retry]);
 
-  // Report error to Sentry manually if needed
-  React.useEffect(() => {
-    if (error) {
-      captureException(error, { 
-        source: 'StudentsData', 
-        context: 'data loading',
-        extra: { retryCount }
-      });
+  const columns = [
+    {
+      id: 'name',
+      header: 'Name',
+      cell: (student: any) => <span className="font-medium">{student.name}</span>
+    },
+    {
+      id: 'status',
+      header: 'Status',
+      cell: (student: any) => (
+        <Badge variant={
+          student.status === 'active' ? 'success' :
+          student.status === 'at-risk' ? 'warning' : 'default'
+        }>
+          {student.status}
+        </Badge>
+      )
+    },
+    {
+      id: 'team',
+      header: 'Team',
+      cell: (student: any) => student.team || 'Unassigned'
+    },
+    {
+      id: 'progress',
+      header: 'Progress',
+      cell: (student: any) => (
+        <div className="flex items-center gap-2">
+          <Progress 
+            value={student.progress || 0} 
+            className="h-2"
+            indicatorClassName={cn(
+              student.progress < 30 ? "bg-red-500" : 
+              student.progress < 70 ? "bg-yellow-500" : 
+              "bg-green-500"
+            )}
+          />
+          <span className="text-xs w-8 text-right">{student.progress || 0}%</span>
+        </div>
+      )
     }
-  }, [error, retryCount]);
-
-  const handleRetry = React.useCallback(() => {
-    setRetryCount(prev => prev + 1);
-    execute();
-  }, [execute]);
-
-  if (error) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex justify-between items-center">
-            <span>Students</span>
-            <button 
-              onClick={handleRetry} 
-              className="text-sm text-blue-500 hover:text-blue-700 flex items-center gap-1"
-              disabled={isLoading}
-            >
-              {isLoading ? <RefreshCw className="animate-spin h-4 w-4 mr-1" /> : null}
-              {isLoading ? 'Retrying...' : 'Retry'}
-            </button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Alert variant="destructive" className="mb-4">
-            <AlertDescription>{error.message || "Failed to load student data"}</AlertDescription>
-          </Alert>
-          <DashboardErrorAlert error={new Error(error.message)} />
-        </CardContent>
-      </Card>
-    );
-  }
+  ];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex justify-between items-center">
-          <span>Students</span>
-          <button 
-            onClick={() => execute()} 
-            className="text-sm text-blue-500 hover:text-blue-700 flex items-center gap-1"
-            disabled={isLoading}
-          >
-            {isLoading ? <RefreshCw className="animate-spin h-4 w-4 mr-1" /> : null}
-            {isLoading ? 'Refreshing...' : 'Refresh'}
-          </button>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="space-y-2">
-            <Skeleton className="h-6 w-full" />
-            <Skeleton className="h-6 w-full" />
-            <Skeleton className="h-6 w-full" />
-            <Skeleton className="h-6 w-full" />
-          </div>
-        ) : data?.data?.data?.length ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Team</TableHead>
-                <TableHead>Progress</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.data.data.map(student => (
-                <TableRow key={student.id}>
-                  <TableCell>{student.name}</TableCell>
-                  <TableCell>{student.status}</TableCell>
-                  <TableCell>{student.team || 'Unassigned'}</TableCell>
-                  <TableCell>{student.progress || 0}%</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            No students found
-          </div>
-        )}
-        
-        <div className="mt-4 text-sm text-muted-foreground">
-          {data?.data?.count ? `Showing ${data.data.data?.length || 0} of ${data.data.count} students` : ''}
-        </div>
-      </CardContent>
-    </Card>
+    <DataTableWithRetry
+      data={data?.data?.data || []}
+      columns={columns}
+      isLoading={isLoading}
+      error={error instanceof Error ? error : error ? new Error(error.message) : null}
+      onRetry={handleRetry}
+      isRetrying={isRetrying}
+      title="Students"
+      emptyMessage="No students found"
+    />
   );
 }
 

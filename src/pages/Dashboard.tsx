@@ -1,11 +1,11 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { DashboardHeader } from "@/components/Dashboard/Header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { BarChart2, Users, TrendingUp } from "lucide-react";
+import { BarChart2, Users, TrendingUp, Bug } from "lucide-react";
 import { RealtimeSyncIndicator } from "@/components/RealtimeSyncIndicator";
 import { LoadingState } from "@/components/LoadingState";
 import { useSyncedDashboard } from "@/hooks/useSyncedDashboard";
@@ -14,6 +14,9 @@ import { StudentsData } from "@/components/StudentsData";
 import { SyncMonitorPanel } from "@/components/Dashboard/SyncStatus/SyncMonitorPanel";
 import { useAuth } from "@/hooks/use-auth";
 import { announceToScreenReader, setFocusToElement } from "@/lib/accessibility";
+import { ErrorReportingModal } from "@/components/ErrorReporting/ErrorReportingModal";
+import { useErrorReporting } from "@/hooks/use-error-reporting";
+import { ErrorWithRetry } from "@/components/ui/skeletons/ErrorWithRetry";
 
 export default function Dashboard() {
   const {
@@ -25,6 +28,13 @@ export default function Dashboard() {
   } = useSyncedDashboard();
   
   const { isAuthenticated } = useAuth();
+  const { 
+    reportError, 
+    isReportingOpen, 
+    currentError, 
+    contextInfo, 
+    closeReporting 
+  } = useErrorReporting();
 
   // Set focus and announce dashboard loading to screen readers
   useEffect(() => {
@@ -39,6 +49,17 @@ export default function Dashboard() {
     }
   }, [isAuthenticated]);
 
+  // Report persistent errors that happen on dashboard level
+  useEffect(() => {
+    if (error && !isLoading && !isRefreshing) {
+      reportError(error, { 
+        context: "dashboard-load", 
+        additionalInfo: { lastUpdated }, 
+        showReportDialog: false 
+      });
+    }
+  }, [error, isLoading, isRefreshing]);
+
   // If still loading dashboard data
   if (isLoading) {
     return (
@@ -47,6 +68,32 @@ export default function Dashboard() {
           <LoadingState message="Loading dashboard data..." showProgress />
           <div aria-live="polite" className="sr-only">
             Loading dashboard data, please wait
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Show error with retry if we failed to load dashboard
+  if (error && !isLoading && !lastUpdated) {
+    return (
+      <DashboardLayout>
+        <div className="p-6 space-y-6">
+          <ErrorWithRetry
+            error={error}
+            onRetry={refreshData}
+            isRetrying={isRefreshing}
+            title="Failed to Load Dashboard"
+          />
+          <div className="text-center mt-4">
+            <Button
+              variant="outline"
+              onClick={() => reportError(error, { context: "dashboard-load-failed" })}
+              className="mx-auto"
+            >
+              <Bug className="mr-2 h-4 w-4" />
+              Report Issue
+            </Button>
           </div>
         </div>
       </DashboardLayout>
@@ -69,6 +116,17 @@ export default function Dashboard() {
           />
           <RealtimeSyncIndicator />
         </div>
+
+        {/* Show error message with retry option if there is an error but we still have cached data */}
+        {error && lastUpdated && (
+          <ErrorWithRetry
+            error={error}
+            onRetry={refreshData}
+            isRetrying={isRefreshing}
+            title="Failed to refresh data"
+            variant="compact"
+          />
+        )}
 
         {/* Sync Monitor Panel */}
         <SyncMonitorPanel />
@@ -123,6 +181,15 @@ export default function Dashboard() {
 
         {/* Recent students list */}
         <StudentsData />
+        
+        {/* Error reporting modal */}
+        <ErrorReportingModal
+          isOpen={isReportingOpen}
+          onClose={closeReporting}
+          error={currentError}
+          context={contextInfo.context}
+          additionalInfo={contextInfo.additionalInfo}
+        />
       </div>
     </DashboardLayout>
   );

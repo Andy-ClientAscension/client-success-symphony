@@ -1,6 +1,7 @@
 
-import React, { lazy, Suspense } from "react";
+import React, { lazy, Suspense, useState } from "react";
 import { ChartSkeleton } from "@/components/ui/skeletons/ChartSkeleton";
+import { ErrorWithRetry } from "@/components/ui/skeletons/ErrorWithRetry";
 
 // Lazy load the TrendChart component
 const TrendChart = lazy(() => import("./TrendChart").then(mod => ({ default: mod.TrendChart })));
@@ -14,12 +15,108 @@ interface LazyTrendChartProps {
     color: string;
   }[];
   xAxisKey: string;
+  onRetry?: () => void;
+  error?: Error | null;
+  isRetrying?: boolean;
 }
 
 export function LazyTrendChart(props: LazyTrendChartProps) {
+  const { title, data, error, onRetry, isRetrying } = props;
+  const [hasError, setHasError] = useState<Error | null>(null);
+  
+  // Handle internal errors during loading
+  const handleError = (error: Error) => {
+    setHasError(error);
+  };
+  
+  // Handle retry for internal errors
+  const handleRetry = () => {
+    setHasError(null);
+    // Also call parent retry if provided
+    if (onRetry) {
+      onRetry();
+    }
+  };
+  
+  // Show error passed from parent
+  if (error) {
+    return (
+      <ErrorWithRetry 
+        error={error}
+        onRetry={onRetry || (() => {})}
+        isRetrying={isRetrying}
+        title={`Error Loading ${title}`}
+        variant="compact"
+      />
+    );
+  }
+  
+  // Show internal error if any
+  if (hasError) {
+    return (
+      <ErrorWithRetry 
+        error={hasError}
+        onRetry={handleRetry}
+        title={`Error Rendering ${title}`}
+        variant="compact"
+      />
+    );
+  }
+  
+  // Show empty state if no data
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64 border rounded-lg bg-muted/10">
+        <p className="text-muted-foreground">No data available for {title}</p>
+        {onRetry && (
+          <button 
+            onClick={onRetry}
+            className="ml-2 text-sm text-primary underline"
+          >
+            Refresh
+          </button>
+        )}
+      </div>
+    );
+  }
+  
   return (
     <Suspense fallback={<ChartSkeleton height={300} showLegend={true} />}>
-      <TrendChart {...props} />
+      <ErrorBoundary onError={handleError} fallback={
+        <ErrorWithRetry 
+          error={hasError || new Error("Failed to render chart")}
+          onRetry={handleRetry}
+          title={`Error Rendering ${title}`}
+          variant="compact"
+        />
+      }>
+        <TrendChart {...props} />
+      </ErrorBoundary>
     </Suspense>
   );
+}
+
+// Simple ErrorBoundary component for the chart
+class ErrorBoundary extends React.Component<{
+  children: React.ReactNode;
+  onError: (error: Error) => void;
+  fallback: React.ReactNode;
+}> {
+  state = { hasError: false };
+  
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  
+  componentDidCatch(error: Error) {
+    this.props.onError(error);
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    
+    return this.props.children;
+  }
 }
