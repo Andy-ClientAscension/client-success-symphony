@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
@@ -6,8 +7,16 @@ import { initializeSentry } from '@/utils/sentry/config';
 import { logStartupPhase, logDetailedError } from '@/utils/errorHandling';
 import { registerServiceWorker } from '@/utils/serviceWorkerRegistration';
 import { addResourceHints, type ResourceHint } from '@/utils/resourceHints';
+import { validateEnvironmentVariables } from '@/utils/envValidator';
 
 logStartupPhase("Application initialization starting");
+
+// Validate environment variables
+const missingEnvVars = validateEnvironmentVariables();
+if (missingEnvVars.length > 0) {
+  console.warn(`Missing environment variables: ${missingEnvVars.join(', ')}`);
+  console.info('Check if you have created a .env file based on .env.example');
+}
 
 // Add resource hints for critical assets
 const addCriticalResourceHints = () => {
