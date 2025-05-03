@@ -8,6 +8,7 @@ import { AuthErrorBoundary } from "@/components/AuthErrorBoundary";
 import { ValidationError } from "@/components/ValidationError";
 import { useToast } from "@/hooks/use-toast";
 import { announceToScreenReader, setFocusToElement } from "@/lib/accessibility";
+import { useAuthError } from "@/hooks/use-auth-error";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -18,7 +19,8 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { toast } = useToast();
   
-  const { isAuthenticated, isLoading, error, user } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const [error] = useAuthError();
   
   useEffect(() => {
     // Log auth status for debugging
@@ -71,7 +73,7 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   }
   
   // Show error if there's an authentication error
-  if (error && error.message && !error.message.includes('offline') && !error.message.includes('network')) {
+  if (error && !error.message.includes('offline') && !error.message.includes('network')) {
     const errorMessage = error.message || "Failed to verify authentication status";
     announceToScreenReader(`Authentication error: ${errorMessage}`, "assertive");
     
