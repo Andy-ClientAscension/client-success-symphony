@@ -1,3 +1,4 @@
+
 import { useContext, useEffect } from "react";
 import { AuthContext } from "@/contexts/auth/AuthContext";
 import type { Auth } from '@/contexts/auth/types';
@@ -43,6 +44,7 @@ export function useCurrentUser(): Auth.UserType | null {
 
 // Utility function to get the login/logout functions
 export function useAuthActions() {
-  const { login, logout, register } = useAuth();
-  return { login, logout, register };
+  const { login, logout, register, refreshSession } = useAuth();
+  return { login, logout, register, refreshSession };
 }
+
