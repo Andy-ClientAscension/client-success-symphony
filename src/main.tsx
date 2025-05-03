@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
@@ -6,12 +5,13 @@ import './index.css'
 import { initializeSentry } from '@/utils/sentry/config';
 import { logStartupPhase, logDetailedError } from '@/utils/errorHandling';
 import { registerServiceWorker } from '@/utils/serviceWorkerRegistration';
+import { addResourceHints, type ResourceHint } from '@/utils/resourceHints';
 
 logStartupPhase("Application initialization starting");
 
 // Add resource hints for critical assets
-const addResourceHints = () => {
-  const criticalAssets = [
+const addCriticalResourceHints = () => {
+  const criticalAssets: ResourceHint[] = [
     { rel: 'preload', href: '/src/components/ui/button.tsx', as: 'script' },
     { rel: 'preload', href: '/src/components/ui/card.tsx', as: 'script' },
     { rel: 'prefetch', href: '/src/pages/Dashboard.tsx', as: 'script' },
@@ -20,18 +20,11 @@ const addResourceHints = () => {
     // { rel: 'preload', href: '/images/some-image.webp', as: 'image' }
   ];
   
-  criticalAssets.forEach(asset => {
-    const link = document.createElement('link');
-    Object.entries(asset).forEach(([key, value]) => {
-      // @ts-ignore - Dynamic property assignment
-      link[key] = value;
-    });
-    document.head.appendChild(link);
-  });
+  addResourceHints(criticalAssets);
 };
 
 // Add resource hints as early as possible
-addResourceHints();
+addCriticalResourceHints();
 
 // Initialize Sentry as early as possible
 initializeSentry().then(() => {
