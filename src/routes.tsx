@@ -1,3 +1,4 @@
+
 import React, { Suspense, lazy, useCallback } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { LoadingState } from '@/components/LoadingState';
@@ -13,6 +14,7 @@ const AuthCallback = lazy(() => import('@/pages/AuthCallback'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 const AuthTestingPage = lazy(() => import('@/pages/AuthTestingPage'));
+const PreLaunchChecklist = lazy(() => import('@/pages/PreLaunchChecklist'));
 
 // Loading fallback for Suspense
 const PageLoader = () => (
@@ -36,6 +38,11 @@ export default function AppRoutes() {
         <Route path="/analytics" element={
           <ProtectedRoute>
             <Analytics />
+          </ProtectedRoute>
+        } />
+        <Route path="/pre-launch" element={
+          <ProtectedRoute>
+            <PreLaunchChecklist />
           </ProtectedRoute>
         } />
         <Route path="/auth-callback" element={<AuthCallback />} />
