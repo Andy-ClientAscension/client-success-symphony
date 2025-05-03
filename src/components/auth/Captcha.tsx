@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Refresh } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 
 interface CaptchaProps {
   onVerify: (verified: boolean) => void;
@@ -132,7 +132,7 @@ export function Captcha({ onVerify, disabled = false, required = true }: Captcha
           disabled={disabled}
           className="h-8 px-2 text-xs"
         >
-          <Refresh className="h-3 w-3 mr-1" />
+          <RefreshCw className="h-3 w-3 mr-1" />
           Refresh
         </Button>
       </div>
