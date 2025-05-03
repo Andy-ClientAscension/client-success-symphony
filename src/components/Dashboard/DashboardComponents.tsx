@@ -9,8 +9,10 @@ export const HeroMetrics = lazy(() =>
     .then(mod => ({ default: mod.HeroMetrics }))
 );
 
+// For StudentsData, we need to modify the import since it's not a default export
 export const StudentsData = lazy(() => 
   import(/* webpackChunkName: "students-data" */ "@/components/StudentsData")
+    .then(mod => ({ default: mod.StudentsData }))
 );
 
 export const SyncMonitorPanel = lazy(() => 
