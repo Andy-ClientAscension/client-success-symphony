@@ -30,7 +30,7 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
     
     // Short delay to ensure auth check is complete
     const timer = setTimeout(() => {
-      dispatch({ type: 'FINISH_AUTH_CHECK' });
+      dispatch({ type: 'PROCESSING_COMPLETE' });
     }, 500);
     
     // Announce authentication check to screen readers
@@ -71,7 +71,7 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   
   // When auth status changes, announce to screen readers
   useEffect(() => {
-    if (!isLoading && !state.isCheckingAuth) {
+    if (!isLoading && !state.processingAuth) {
       if (isAuthenticated) {
         announceToScreenReader("Authentication verified, loading content", "polite");
         
@@ -83,10 +83,10 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
         announceToScreenReader("Authentication required, redirecting to login", "assertive");
       }
     }
-  }, [isAuthenticated, isLoading, state.isCheckingAuth]);
+  }, [isAuthenticated, isLoading, state.processingAuth]);
   
   // Show loading state while checking authentication
-  if (isLoading || state.isCheckingAuth) {
+  if (isLoading || state.processingAuth) {
     return (
       <>
         <LoadingState message="Checking authentication..." />
