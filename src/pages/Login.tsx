@@ -60,7 +60,8 @@ export default function Login() {
       const success = await login(email, password);
       if (success) {
         announceToScreenReader("Login successful, redirecting to dashboard", "polite");
-        navigate('/dashboard', { replace: true });
+        const from = location.state?.from?.pathname || '/dashboard';
+        navigate(from, { replace: true });
       } else {
         const errorMessage = 'Login failed. Please check your credentials.';
         setError({ message: errorMessage });
@@ -97,8 +98,9 @@ export default function Login() {
     }
   };
 
+  // Create a custom login layout component that doesn't show the sidebar
   return (
-    <Layout>
+    <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
       <div className="flex items-center justify-center min-h-screen">
         <div id="main-content" tabIndex={-1} className="w-full max-w-md p-8 space-y-8 bg-card rounded-xl shadow-lg">
           <div className="text-center">
@@ -121,6 +123,6 @@ export default function Login() {
           </div>
         </div>
       </div>
-    </Layout>
+    </div>
   );
 }

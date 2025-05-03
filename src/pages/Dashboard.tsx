@@ -1,15 +1,13 @@
 
 import React, { useEffect } from "react";
-import { Layout } from "@/components/Layout/Layout";
-import { DashboardHeader } from "@/components/Dashboard/DashboardHeader";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DashboardLayout } from "@/components/templates/DashboardLayout";
+import { DashboardHeader } from "@/components/Dashboard/Header";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { BarChart2, Users, FileText, TrendingUp, RefreshCw } from "lucide-react";
+import { BarChart2, Users, TrendingUp } from "lucide-react";
 import { RealtimeSyncIndicator } from "@/components/RealtimeSyncIndicator";
 import { LoadingState } from "@/components/LoadingState";
-import { AlertCircle } from "lucide-react";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { useSyncedDashboard } from "@/hooks/useSyncedDashboard";
 import { HeroMetrics } from "@/components/Dashboard/Metrics/HeroMetrics";
 import { StudentsData } from "@/components/StudentsData";
@@ -19,9 +17,6 @@ import { announceToScreenReader, setFocusToElement } from "@/lib/accessibility";
 
 export default function Dashboard() {
   const {
-    clients,
-    clientCounts,
-    npsScore,
     isLoading,
     error,
     refreshData,
@@ -31,101 +26,35 @@ export default function Dashboard() {
   
   const { isAuthenticated } = useAuth();
 
-  // Prefetch critical dashboard resources when authenticated
+  // Set focus and announce dashboard loading to screen readers
   useEffect(() => {
     if (isAuthenticated) {
       // Announce dashboard is loading to screen readers
       announceToScreenReader("Dashboard is loading", "polite");
-      
-      // Prefetch important chart components
-      const prefetchResources = async () => {
-        console.log("Prefetching critical dashboard resources...");
-        
-        // Prefetch chart components
-        const chartPromises = [
-          import('@/components/Dashboard/ChartLibrary').catch(err => 
-            console.log("Optional resource not available:", err.message)),
-          import('@/components/Dashboard/DataTable').catch(err => 
-            console.log("Optional resource not available:", err.message)),
-          // Add more critical components as needed
-        ];
-        
-        try {
-          await Promise.allSettled(chartPromises);
-          console.log("Dashboard resources prefetching complete");
-          announceToScreenReader("Dashboard resources loaded", "polite");
-        } catch (error) {
-          console.log("Some resources failed to prefetch:", error);
-        }
-      };
-      
-      prefetchResources();
-    }
-  }, [isAuthenticated]);
-
-  // Announce loading state changes to screen readers
-  useEffect(() => {
-    if (isLoading) {
-      announceToScreenReader("Loading dashboard data", "polite");
-    } else if (error) {
-      announceToScreenReader(`Dashboard error: ${error.message}`, "assertive");
-    } else {
-      announceToScreenReader("Dashboard data loaded successfully", "polite");
       
       // Set focus to main content when dashboard is loaded
       setTimeout(() => {
         setFocusToElement('dashboard-content', 'h1');
       }, 100);
     }
-  }, [isLoading, error]);
+  }, [isAuthenticated]);
 
-  // Announce refresh actions to screen readers
-  useEffect(() => {
-    if (isRefreshing) {
-      announceToScreenReader("Refreshing dashboard data", "polite");
-    }
-  }, [isRefreshing]);
-
+  // If still loading dashboard data
   if (isLoading) {
     return (
-      <Layout>
+      <DashboardLayout>
         <div className="flex items-center justify-center h-64">
           <LoadingState message="Loading dashboard data..." showProgress />
           <div aria-live="polite" className="sr-only">
             Loading dashboard data, please wait
           </div>
         </div>
-      </Layout>
-    );
-  }
-
-  if (error && clients.length === 0) {
-    return (
-      <Layout>
-        <Card className="border-destructive">
-          <CardContent className="pt-6">
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Error Loading Dashboard</AlertTitle>
-              <AlertDescription>
-                {error.message || "Failed to load dashboard data"}
-              </AlertDescription>
-            </Alert>
-            <Button onClick={refreshData} className="mt-4">
-              <RefreshCw className="mr-2 h-4 w-4" /> Try Again
-            </Button>
-            <div aria-live="assertive" className="sr-only">
-              Error loading dashboard: {error.message || "Failed to load dashboard data"}. 
-              Please try refreshing the data.
-            </div>
-          </CardContent>
-        </Card>
-      </Layout>
+      </DashboardLayout>
     );
   }
 
   return (
-    <Layout>
+    <DashboardLayout>
       <div id="dashboard-content" tabIndex={-1} className="space-y-6 p-6">
         <div aria-live="polite" className="sr-only">
           Dashboard loaded successfully. Last updated {lastUpdated ? lastUpdated.toLocaleString() : 'recently'}.
@@ -140,16 +69,6 @@ export default function Dashboard() {
           />
           <RealtimeSyncIndicator />
         </div>
-
-        {error && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Sync Warning</AlertTitle>
-            <AlertDescription>
-              {error.message}. Using cached data. Click refresh to try again.
-            </AlertDescription>
-          </Alert>
-        )}
 
         {/* Sync Monitor Panel */}
         <SyncMonitorPanel />
@@ -205,6 +124,6 @@ export default function Dashboard() {
         {/* Recent students list */}
         <StudentsData />
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 }
