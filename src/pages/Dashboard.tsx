@@ -1,24 +1,24 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { DashboardHeader } from "@/components/Dashboard/Header";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { BarChart2, Users, TrendingUp, Bug } from "lucide-react";
+import { Bug } from "lucide-react";
 import { RealtimeSyncIndicator } from "@/components/RealtimeSyncIndicator";
 import { LoadingState } from "@/components/LoadingState";
 import { useSyncedDashboard } from "@/hooks/useSyncedDashboard";
-import { HeroMetrics } from "@/components/Dashboard/Metrics/HeroMetrics";
-import { StudentsData } from "@/components/StudentsData";
-import { SyncMonitorPanel } from "@/components/Dashboard/SyncStatus/SyncMonitorPanel";
 import { useAuth } from "@/hooks/use-auth";
 import { ErrorReportingModal } from "@/components/ErrorReporting/ErrorReportingModal";
 import { useErrorReporting } from "@/hooks/use-error-reporting";
 import { ErrorWithRetry } from "@/components/ui/skeletons/ErrorWithRetry";
 import { AccessibilityManager } from "@/components/Dashboard/Accessibility/AccessibilityManager";
-import { AccessibilityHelp } from "@/components/Dashboard/Accessibility/AccessibilityHelp";
 import { focusRingClasses } from "@/lib/accessibility";
+import { 
+  LazyHeroMetrics, 
+  LazyStudentsData,
+  LazySyncMonitorPanel,
+  LazyAccessibilityHelp
+} from "@/components/Dashboard/DashboardComponents";
 
 export default function Dashboard() {
   const {
@@ -112,12 +112,12 @@ export default function Dashboard() {
           )}
 
           {/* Sync Monitor Panel */}
-          <SyncMonitorPanel />
+          <LazySyncMonitorPanel />
 
           {/* Key Metrics Section */}
           <section aria-labelledby="metrics-heading">
             <h2 id="metrics-heading" className="sr-only">Key performance metrics</h2>
-            <HeroMetrics className="mb-6" />
+            <LazyHeroMetrics className="mb-6" />
           </section>
 
           {/* Quick links section */}
@@ -180,7 +180,7 @@ export default function Dashboard() {
           {/* Recent students list */}
           <section aria-labelledby="students-heading">
             <h2 id="students-heading" className="sr-only">Recent students</h2>
-            <StudentsData />
+            <LazyStudentsData />
           </section>
           
           {/* Error reporting modal */}
@@ -193,7 +193,7 @@ export default function Dashboard() {
           />
           
           {/* Accessibility help component */}
-          <AccessibilityHelp />
+          <LazyAccessibilityHelp />
         </div>
       </AccessibilityManager>
     </DashboardLayout>

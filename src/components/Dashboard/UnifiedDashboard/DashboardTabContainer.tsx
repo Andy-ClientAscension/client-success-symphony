@@ -1,15 +1,33 @@
 
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { DashboardOverviewTab } from "./DashboardOverviewTab";
-import { CompanyMetricsTab } from "../CompanyMetrics/CompanyMetricsTab";
-import { TeamAnalyticsTab } from "../TeamAnalytics/TeamAnalyticsTab";
-import { AIInsightsTab } from "./AIInsightsTab";
 import { BarChart2, PieChart, LineChart, Bot } from "lucide-react";
 import { KeyboardNavigationGuide } from "../Accessibility/KeyboardNavigationGuide";
 import { SkipLink } from "../Accessibility/SkipLink";
 import { focusRingClasses } from "@/lib/accessibility";
 import { reducedMotionConfig } from "@/lib/accessibility";
+import { LoadingState } from "@/components/LoadingState";
+
+// Lazy load tab content components
+const DashboardOverviewTab = lazy(() => 
+  import(/* webpackChunkName: "overview-tab" */ "./DashboardOverviewTab").then(mod => ({ default: mod.DashboardOverviewTab }))
+);
+const CompanyMetricsTab = lazy(() => 
+  import(/* webpackChunkName: "company-metrics-tab" */ "../CompanyMetrics/CompanyMetricsTab").then(mod => ({ default: mod.CompanyMetricsTab }))
+);
+const TeamAnalyticsTab = lazy(() => 
+  import(/* webpackChunkName: "team-analytics-tab" */ "../TeamAnalytics/TeamAnalyticsTab").then(mod => ({ default: mod.TeamAnalyticsTab }))
+);
+const AIInsightsTab = lazy(() => 
+  import(/* webpackChunkName: "ai-insights-tab" */ "./AIInsightsTab").then(mod => ({ default: mod.AIInsightsTab }))
+);
+
+// Tab content loaders
+const TabContentLoader = () => (
+  <div className="w-full py-8">
+    <LoadingState message="Loading content..." showProgress />
+  </div>
+);
 
 export function DashboardTabContainer({
   activeTab,
@@ -97,7 +115,9 @@ export function DashboardTabContainer({
             aria-label="Overview Content"
             className={animationClass}
           >
-            <DashboardOverviewTab clients={clients} clientMetrics={clientMetrics} />
+            <Suspense fallback={<TabContentLoader />}>
+              <DashboardOverviewTab clients={clients} clientMetrics={clientMetrics} />
+            </Suspense>
           </TabsContent>
           <TabsContent 
             value="company-metrics" 
@@ -105,7 +125,9 @@ export function DashboardTabContainer({
             aria-label="Company Metrics Content"
             className={animationClass}
           >
-            <CompanyMetricsTab clients={clients} />
+            <Suspense fallback={<TabContentLoader />}>
+              <CompanyMetricsTab clients={clients} />
+            </Suspense>
           </TabsContent>
           <TabsContent 
             value="team-analytics" 
@@ -113,7 +135,9 @@ export function DashboardTabContainer({
             aria-label="Team Analytics Content"
             className={animationClass}
           >
-            <TeamAnalyticsTab clients={clients} />
+            <Suspense fallback={<TabContentLoader />}>
+              <TeamAnalyticsTab clients={clients} />
+            </Suspense>
           </TabsContent>
           <TabsContent 
             value="ai-insights" 
@@ -121,17 +145,19 @@ export function DashboardTabContainer({
             aria-label="AI Insights Content"
             className={animationClass}
           >
-            <AIInsightsTab
-              predictions={predictions}
-              insights={aiInsights}
-              isAnalyzing={isAnalyzing}
-              error={aiError}
-              comparisons={comparisons}
-              handleRefreshData={handleRefreshData}
-              cancelAnalysis={cancelAnalysis}
-              trendData={trendData}
-              lastAnalyzed={lastAnalyzed}
-            />
+            <Suspense fallback={<TabContentLoader />}>
+              <AIInsightsTab
+                predictions={predictions}
+                insights={aiInsights}
+                isAnalyzing={isAnalyzing}
+                error={aiError}
+                comparisons={comparisons}
+                handleRefreshData={handleRefreshData}
+                cancelAnalysis={cancelAnalysis}
+                trendData={trendData}
+                lastAnalyzed={lastAnalyzed}
+              />
+            </Suspense>
           </TabsContent>
         </div>
       </Tabs>

@@ -3,9 +3,13 @@ import React, { lazy, Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartSkeleton } from "@/components/ui/skeletons/ChartSkeleton";
 
-// Lazy load chart components
-const ChurnChart = lazy(() => import("./ChurnChart").then(mod => ({ default: mod.ChurnChart })));
-const NPSChart = lazy(() => import("./NPSChart").then(mod => ({ default: mod.NPSChart })));
+// Lazy load chart components with appropriate chunk names
+const ChurnChart = lazy(() => 
+  import(/* webpackChunkName: "churn-chart" */ "./ChurnChart").then(mod => ({ default: mod.ChurnChart }))
+);
+const NPSChart = lazy(() => 
+  import(/* webpackChunkName: "nps-chart" */ "./NPSChart").then(mod => ({ default: mod.NPSChart }))
+);
 
 export function LazyChurnChart() {
   return (

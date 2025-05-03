@@ -1,37 +1,72 @@
 
-import React from 'react';
+import React, { Suspense, lazy, useCallback } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import Index from '@/pages/Index';
-import Login from '@/pages/Login';
-import SignUp from '@/pages/SignUp';
-import Dashboard from '@/pages/Dashboard';
-import Analytics from '@/pages/Analytics';
-import AuthCallback from '@/pages/AuthCallback';
-import NotFound from '@/pages/NotFound';
-import ResetPassword from '@/pages/ResetPassword';
-import AuthTestingPage from '@/pages/AuthTestingPage';
+import { LoadingState } from '@/components/LoadingState';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+
+// Lazy load page components
+const Index = lazy(() => import('@/pages/Index'));
+const Login = lazy(() => import('@/pages/Login'));
+const SignUp = lazy(() => import('@/pages/SignUp'));
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const Analytics = lazy(() => import('@/pages/Analytics'));
+const AuthCallback = lazy(() => import('@/pages/AuthCallback'));
+const NotFound = lazy(() => import('@/pages/NotFound'));
+const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
+const AuthTestingPage = lazy(() => import('@/pages/AuthTestingPage'));
+
+// Loading fallback for Suspense
+const PageLoader = () => (
+  <div className="flex items-center justify-center h-screen">
+    <LoadingState message="Loading page..." showProgress />
+  </div>
+);
 
 export default function AppRoutes() {
   return (
-    <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<SignUp />} />
-      <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <Dashboard />
-        </ProtectedRoute>
-      } />
-      <Route path="/analytics" element={
-        <ProtectedRoute>
-          <Analytics />
-        </ProtectedRoute>
-      } />
-      <Route path="/auth-callback" element={<AuthCallback />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/auth-testing" element={<AuthTestingPage />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/analytics" element={
+          <ProtectedRoute>
+            <Analytics />
+          </ProtectedRoute>
+        } />
+        <Route path="/auth-callback" element={<AuthCallback />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/auth-testing" element={<AuthTestingPage />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
   );
+}
+
+// Function to prefetch routes for use in navigation components
+export function usePrefetchRoutes() {
+  const prefetchRoute = useCallback((route: string) => {
+    switch (route) {
+      case '/dashboard':
+        import('@/pages/Dashboard');
+        break;
+      case '/analytics':
+        import('@/pages/Analytics');
+        break;
+      case '/login':
+        import('@/pages/Login');
+        break;
+      case '/signup':
+        import('@/pages/SignUp');
+        break;
+      // Add other routes as needed
+    }
+  }, []);
+
+  return { prefetchRoute };
 }

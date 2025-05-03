@@ -7,6 +7,7 @@ import {
   Brain, BarChart2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePrefetchRoutes } from "@/routes";
 
 export const navLinks = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -29,6 +30,7 @@ interface SidebarNavProps {
 export function SidebarNav({ collapsed, closeSidebar }: SidebarNavProps) {
   const location = useLocation();
   const activeLinkStyle = "bg-secondary text-secondary-foreground";
+  const { prefetchRoute } = usePrefetchRoutes();
 
   return (
     <div className="flex-1 space-y-1">
@@ -37,7 +39,14 @@ export function SidebarNav({ collapsed, closeSidebar }: SidebarNavProps) {
         const isActive = location.pathname === link.to;
 
         return (
-          <Link to={link.to} onClick={closeSidebar} className="w-full" key={link.to}>
+          <Link 
+            to={link.to} 
+            onClick={closeSidebar} 
+            className="w-full" 
+            key={link.to}
+            onMouseEnter={() => prefetchRoute(link.to)}
+            onFocus={() => prefetchRoute(link.to)}
+          >
             <Button
               variant="ghost"
               className={cn(
