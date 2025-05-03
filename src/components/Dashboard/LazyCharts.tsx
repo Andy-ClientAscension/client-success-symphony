@@ -14,17 +14,17 @@ const NPSChart = lazy(() =>
 // Resource preload hint component
 const ChartResourceHint = ({ chartType }: { chartType: 'churn' | 'nps' }) => {
   useEffect(() => {
-    // Add preload link for JS chunk
-    const preloadLink = document.createElement('link');
-    preloadLink.rel = 'preload';
-    preloadLink.as = 'script';
-    preloadLink.href = chartType === 'churn' 
+    // Preload the component when it's about to be needed
+    const link = document.createElement('link');
+    link.rel = 'prefetch';
+    link.as = 'script';
+    link.href = chartType === 'churn' 
       ? '/src/components/Dashboard/ChurnChart.tsx'
       : '/src/components/Dashboard/NPSChart.tsx';
-    document.head.appendChild(preloadLink);
+    document.head.appendChild(link);
     
     return () => {
-      document.head.removeChild(preloadLink);
+      document.head.removeChild(link);
     };
   }, [chartType]);
   

@@ -16,8 +16,8 @@ const addResourceHints = () => {
     { rel: 'preload', href: '/src/components/ui/card.tsx', as: 'script' },
     { rel: 'prefetch', href: '/src/pages/Dashboard.tsx', as: 'script' },
     { rel: 'prefetch', href: '/src/components/templates/DashboardLayout.tsx', as: 'script' },
-    // Add font preloads if applicable
-    // { rel: 'preload', href: '/fonts/yourfont.woff2', as: 'font', type: 'font/woff2', crossorigin: 'anonymous' }
+    // Add conversion to WebP for images if applicable
+    // { rel: 'preload', href: '/images/some-image.webp', as: 'image' }
   ];
   
   criticalAssets.forEach(asset => {
