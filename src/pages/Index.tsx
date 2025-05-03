@@ -22,7 +22,6 @@ export default function Index() {
   useEffect(() => {
     // Create a new abort controller for this effect
     abortControllerRef.current = new AbortController();
-    const signal = abortControllerRef.current.signal;
     
     // Skip URL processing if we're in a non-browser environment
     if (typeof window === 'undefined') {
@@ -50,7 +49,7 @@ export default function Index() {
         try {
           console.log("Found access token in URL, setting session");
           
-          // Fix: Fix the setSession call by passing the correct parameters
+          // Set session with correct parameters
           const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: hashParams.get('refresh_token') || '',
@@ -61,7 +60,6 @@ export default function Index() {
           if (error) throw error;
           
           // Validate that the session was actually set correctly by fetching the user
-          // Fix: Remove the signal from getUser call
           const { data: userData, error: userError } = await supabase.auth.getUser();
           
           if (userError || !userData?.user) {
@@ -77,7 +75,6 @@ export default function Index() {
           }
           
           // Refresh auth context to ensure it's in sync with Supabase
-          // Fix: Call refreshSession without passing an object with signal
           await refreshSession();
           
           // Show success toast

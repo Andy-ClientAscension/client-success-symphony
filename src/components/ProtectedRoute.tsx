@@ -1,4 +1,3 @@
-
 import { ReactNode, useEffect, useState, useRef } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
@@ -39,7 +38,7 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
     const refreshAuthWithCancellation = async () => {
       if (!isAuthenticated && !isLoading) {
         try {
-          // Fix: Call refreshSession without passing an object with signal
+          // Call refreshSession without arguments as per its type definition
           await refreshSession();
         } catch (err) {
           if (!(err instanceof DOMException && err.name === 'AbortError')) {
@@ -67,7 +66,7 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
         abortControllerRef.current = null;
       }
     };
-  }, [location.pathname, refreshSession]);
+  }, [location.pathname, refreshSession, isAuthenticated, isLoading, user]);
   
   // When auth status changes, announce to screen readers
   useEffect(() => {
