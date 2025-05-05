@@ -2,7 +2,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { getAllClients, getClientsCountByStatus, getAverageNPS, getChurnData } from "@/lib/data";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAutoSync } from "@/hooks/useAutoSync";
 
 export const DATA_KEYS = {
@@ -16,18 +16,21 @@ export const DATA_KEYS = {
 export function useSyncedDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isInitialDataFetched, setIsInitialDataFetched] = useState(false);
+  const [errorState, setErrorState] = useState<Error | null>(null);
   const { triggerSync, isSyncing } = useAutoSync();
 
   // Get all clients with automatic background refresh
   const clientsQuery = useQuery({
     queryKey: [DATA_KEYS.CLIENTS],
     queryFn: getAllClients,
-    staleTime: 10000, // 10 seconds
-    refetchInterval: 30000, // 30 seconds
+    staleTime: 30000, // 30 seconds
     refetchOnWindowFocus: true,
-    retry: 3,
+    retry: 2,
     meta: {
       onError: (error: Error) => {
+        console.error("Clients query error:", error);
+        setErrorState(error);
         toast({
           title: "Error fetching clients",
           description: error.message,
@@ -41,12 +44,13 @@ export function useSyncedDashboard() {
   const countQuery = useQuery({
     queryKey: [DATA_KEYS.CLIENT_COUNTS],
     queryFn: getClientsCountByStatus,
-    staleTime: 10000, // 10 seconds
-    refetchInterval: 30000, // 30 seconds
+    staleTime: 30000, // 30 seconds
     refetchOnWindowFocus: true,
-    retry: 3,
+    retry: 2,
     meta: {
       onError: (error: Error) => {
+        console.error("Count query error:", error);
+        setErrorState(error);
         toast({
           title: "Error fetching client counts",
           description: error.message,
@@ -60,12 +64,13 @@ export function useSyncedDashboard() {
   const npsQuery = useQuery({
     queryKey: [DATA_KEYS.NPS_DATA],
     queryFn: getAverageNPS,
-    staleTime: 10000, // 10 seconds
-    refetchInterval: 60000, // 60 seconds (less frequent for NPS)
+    staleTime: 60000, // 60 seconds (less frequent for NPS)
     refetchOnWindowFocus: true,
-    retry: 3,
+    retry: 2,
     meta: {
       onError: (error: Error) => {
+        console.error("NPS query error:", error);
+        setErrorState(error);
         toast({
           title: "Error fetching NPS data",
           description: error.message,
@@ -79,12 +84,13 @@ export function useSyncedDashboard() {
   const churnQuery = useQuery({
     queryKey: [DATA_KEYS.CHURN_DATA],
     queryFn: getChurnData,
-    staleTime: 10000, // 10 seconds
-    refetchInterval: 60000, // 60 seconds (less frequent for churn data)
+    staleTime: 60000, // 60 seconds (less frequent for churn data)
     refetchOnWindowFocus: true,
-    retry: 3,
+    retry: 2,
     meta: {
       onError: (error: Error) => {
+        console.error("Churn query error:", error);
+        setErrorState(error);
         toast({
           title: "Error fetching churn data",
           description: error.message,
@@ -94,8 +100,21 @@ export function useSyncedDashboard() {
     }
   });
 
+  // Mark initial data as fetched when at least clients data is available
+  useEffect(() => {
+    if (clientsQuery.data && !isInitialDataFetched) {
+      console.log("Initial dashboard data fetched successfully");
+      setIsInitialDataFetched(true);
+    }
+  }, [clientsQuery.data, isInitialDataFetched]);
+
   // Force refresh all data using the auto-sync engine
   const refreshAllData = async () => {
+    console.log("Manual refresh of dashboard data initiated");
+    
+    // Clear any previous errors when manually refreshing
+    setErrorState(null);
+    
     // First invalidate queries to ensure React Query fetches fresh data
     queryClient.invalidateQueries({ queryKey: [DATA_KEYS.CLIENTS] });
     queryClient.invalidateQueries({ queryKey: [DATA_KEYS.CLIENT_COUNTS] });
@@ -103,12 +122,19 @@ export function useSyncedDashboard() {
     queryClient.invalidateQueries({ queryKey: [DATA_KEYS.CHURN_DATA] });
     
     // Then trigger a comprehensive auto-sync
-    await triggerSync();
+    try {
+      await triggerSync();
+      console.log("Manual refresh completed successfully");
+    } catch (error) {
+      console.error("Error during manual refresh:", error);
+      setErrorState(error instanceof Error ? error : new Error(String(error)));
+    }
   };
 
   // Monitor online/offline status for reconnection
   useEffect(() => {
     const handleOnline = async () => {
+      console.log("Network connection restored, refreshing data");
       refreshAllData();
       toast({
         title: "Back online",
@@ -116,15 +142,45 @@ export function useSyncedDashboard() {
       });
     };
 
-    window.addEventListener('online', handleOnline);
-    return () => window.removeEventListener('online', handleOnline);
-  }, []);
+    const handleOffline = () => {
+      console.log("Network connection lost");
+      toast({
+        title: "Connection lost",
+        description: "You are currently offline. Some features may be unavailable.",
+        variant: "destructive",
+      });
+    };
 
-  const isLoading = clientsQuery.isLoading || countQuery.isLoading || npsQuery.isLoading || churnQuery.isLoading;
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [toast]);
+
+  // Handle errors centrally
+  useEffect(() => {
+    if (clientsQuery.error || countQuery.error || npsQuery.error || churnQuery.error) {
+      const firstError = clientsQuery.error || countQuery.error || npsQuery.error || churnQuery.error;
+      setErrorState(firstError instanceof Error ? firstError : new Error(String(firstError)));
+    } else if (!clientsQuery.error && !countQuery.error && !npsQuery.error && !churnQuery.error) {
+      // Clear error state if all queries are successful
+      setErrorState(null);
+    }
+  }, [clientsQuery.error, countQuery.error, npsQuery.error, churnQuery.error]);
+
+  // Combined loading state that properly reflects when data is ready
+  const isLoading = (
+    (clientsQuery.isLoading && !isInitialDataFetched) || 
+    (countQuery.isLoading && !countQuery.data) || 
+    (npsQuery.isLoading && !npsQuery.data) || 
+    (churnQuery.isLoading && !churnQuery.data)
+  );
+
   const isRefreshing = isSyncing || clientsQuery.isFetching || countQuery.isFetching || npsQuery.isFetching || churnQuery.isFetching;
   
-  const error = clientsQuery.error || countQuery.error || npsQuery.error || churnQuery.error;
-
   // Calculate the latest update timestamp
   const getLastUpdated = () => {
     const timestamps = [
@@ -144,8 +200,9 @@ export function useSyncedDashboard() {
     churnData: churnQuery.data || [],
     isLoading,
     isRefreshing,
-    error: error instanceof Error ? error : null,
+    error: errorState,
     refreshData: refreshAllData,
-    lastUpdated: getLastUpdated()
+    lastUpdated: getLastUpdated(),
+    isInitialDataFetched
   };
 }

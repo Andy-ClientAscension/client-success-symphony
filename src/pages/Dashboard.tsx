@@ -1,13 +1,16 @@
-import React, { useEffect, Suspense, lazy } from "react";
+
+import React, { useEffect, Suspense, lazy, useState } from "react";
 import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { LoadingState } from "@/components/LoadingState";
 import { ErrorWithRetry } from "@/components/ui/skeletons/ErrorWithRetry";
 import { useErrorReporting } from "@/hooks/use-error-reporting";
-import { useOptimizedDashboard } from "@/hooks/use-optimized-dashboard";
+import { useSmartLoading } from "@/hooks/useSmartLoading";
+import { useSyncedDashboard } from "@/hooks/useSyncedDashboard";
 import { AccessibilityManager } from "@/components/Dashboard/Accessibility/AccessibilityManager";
 import { focusRingClasses } from "@/lib/accessibility";
 import { Bug } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 // Use React.lazy for component code-splitting
 const DashboardHeader = lazy(() => import("@/components/Dashboard/Header").then(mod => ({ default: mod.DashboardHeader })));
@@ -26,14 +29,23 @@ const ComponentLoader = ({ message = "Loading component..." }) => (
 );
 
 export default function Dashboard() {
-  // Use the optimized dashboard hook
+  const [initializingDone, setInitializingDone] = useState(false);
+  const { toast } = useToast();
+  
+  // Use the synced dashboard hook for better data handling
   const {
-    isLoading,
+    isLoading: dataIsLoading,
     error,
     refreshData,
     isRefreshing,
     lastUpdated
-  } = useOptimizedDashboard();
+  } = useSyncedDashboard();
+  
+  // Use smart loading to prevent flashes
+  const { isLoading } = useSmartLoading(dataIsLoading, { 
+    minLoadingTime: 1000, 
+    priority: 1 
+  });
   
   const { 
     reportError, 
@@ -42,6 +54,17 @@ export default function Dashboard() {
     contextInfo, 
     closeReporting 
   } = useErrorReporting();
+  
+  // Set initialization as done after first render
+  useEffect(() => {
+    // Small timeout to ensure UI has time to stabilize
+    const timer = setTimeout(() => {
+      setInitializingDone(true);
+      console.log("Dashboard initialization complete");
+    }, 1500);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   // Report persistent errors that happen on dashboard level
   useEffect(() => {
@@ -54,12 +77,27 @@ export default function Dashboard() {
     }
   }, [error, isLoading, isRefreshing, reportError, lastUpdated]);
 
+  // Add verbose logging to help debug loading state issues
+  useEffect(() => {
+    console.log("Dashboard loading state:", {
+      dataIsLoading,
+      isLoading,
+      isRefreshing,
+      initializingDone,
+      error: error ? 'Error exists' : 'No error',
+      lastUpdated: lastUpdated?.toISOString() || 'none'
+    });
+  }, [dataIsLoading, isLoading, isRefreshing, initializingDone, error, lastUpdated]);
+
   // If still loading dashboard data
-  if (isLoading) {
+  if (isLoading && !initializingDone) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64" aria-live="polite">
-          <LoadingState message="Loading dashboard data..." showProgress />
+          <LoadingState 
+            message="Loading dashboard data..." 
+            showProgress 
+          />
         </div>
       </DashboardLayout>
     );

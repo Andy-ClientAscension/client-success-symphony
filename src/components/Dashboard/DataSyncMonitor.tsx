@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { RealtimeSyncIndicator } from "@/components/RealtimeSyncIndicator";
+import RealtimeSyncIndicator from "@/components/RealtimeSyncIndicator";
 
 export function DataSyncMonitor() {
   const { toast } = useToast();
