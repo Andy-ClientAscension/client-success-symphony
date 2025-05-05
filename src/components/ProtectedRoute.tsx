@@ -1,3 +1,4 @@
+
 import { ReactNode, useEffect, useRef } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
@@ -19,6 +20,7 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   const location = useLocation();
   const { toast } = useToast();
   const abortControllerRef = useRef<AbortController | null>(null);
+  const refreshAttemptedRef = useRef(false);
   
   const { isAuthenticated, isLoading, user, refreshSession } = useAuth();
   const [error] = useAuthError();
@@ -48,9 +50,10 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
       prefetchRoute('/dashboard');
     }
     
-    // Optionally refresh session with cancellation support
+    // Optionally refresh session with cancellation support - ONLY ONCE
     const refreshAuthWithCancellation = async () => {
-      if (!isAuthenticated && !isLoading) {
+      if (!isAuthenticated && !isLoading && !refreshAttemptedRef.current) {
+        refreshAttemptedRef.current = true; // Mark as attempted to prevent loops
         try {
           await refreshSession();
         } catch (err) {
