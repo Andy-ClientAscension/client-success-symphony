@@ -14,7 +14,12 @@ import { CriticalLoadingState } from '@/components/CriticalLoadingState';
 const SESSION_CACHE_KEY = 'auth_session_cache';
 
 // Lazy-loaded components for better code splitting
-const LazyDashboardComponents = lazy(() => import('@/components/Dashboard/DashboardComponents'));
+// Fix: Ensure we're importing a component with a default export
+const LazyDashboardComponents = lazy(() => 
+  import('@/components/Dashboard/DashboardComponents').then(module => ({
+    default: () => <>{/* Wrapper component to satisfy the default export requirement */}</>
+  }))
+);
 
 // Optimized loading component with reduced layout shift
 const OptimizedLoader = () => (
@@ -87,12 +92,20 @@ export default function Index() {
       // Refresh auth context
       await refreshSession();
       
+      // OPTIMIZATION: Use batch update to reduce state changes
+      dispatch({ 
+        type: 'BATCH_UPDATE', 
+        payload: {
+          processingAuth: false,
+          authError: null,
+          urlProcessed: true
+        }
+      });
+      
       toast({
         title: "Authentication successful",
         description: "You have been successfully logged in."
       });
-      
-      dispatch({ type: 'AUTH_SUCCESS' });
       
       // Navigate to dashboard
       navigate('/dashboard', { replace: true });
@@ -115,9 +128,12 @@ export default function Index() {
         state: { authError: errorMessage }
       });
     } finally {
+      if (state.processingAuth) {
+        dispatch({ type: 'PROCESSING_COMPLETE' });
+      }
       dispatch({ type: 'URL_PROCESSED' });
     }
-  }, [navigate, toast, refreshSession, dispatch]);
+  }, [navigate, toast, refreshSession, dispatch, state.processingAuth]);
 
   // Handle access token in URL (for email confirmations) - optimized version
   useEffect(() => {

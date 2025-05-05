@@ -1,33 +1,26 @@
 
-import { useEffect, useRef } from 'react';
-import { measureWebVitals, reportWebVitals } from '@/utils/performance/webVitalsReporter';
-import { logStartupPhase } from '@/utils/errorHandling';
+import React, { useEffect } from 'react';
+import { measureWebVitals } from '@/utils/performance/webVitalsReporter';
 
-interface WebVitalsMonitorProps {
-  enabled?: boolean;
-}
-
-/**
- * A component that monitors web vitals metrics when mounted
- * This should be added near the root of the application
- */
-export function WebVitalsMonitor({ enabled = true }: WebVitalsMonitorProps) {
-  const isMonitoring = useRef(false);
-  
+export function WebVitalsMonitor() {
   useEffect(() => {
-    if (!enabled || isMonitoring.current) return;
-    
-    try {
-      logStartupPhase("Web Vitals monitoring started");
-      isMonitoring.current = true;
-      measureWebVitals(reportWebVitals);
-    } catch (error) {
-      console.error("Failed to initialize Web Vitals monitoring:", error);
+    // Only measure web vitals in production or when explicitly enabled
+    if (import.meta.env.PROD || localStorage.getItem('enable_web_vitals_monitoring') === 'true') {
+      // Optimize web vitals loading by using a slight delay after critical content
+      const timeoutId = setTimeout(() => {
+        // Use dynamic import for web-vitals to avoid impacting initial load time
+        import('web-vitals').then(() => {
+          measureWebVitals();
+          console.log('Web vitals monitoring started');
+        }).catch(err => {
+          console.error('Failed to load web-vitals:', err);
+        });
+      }, 2000); // Delay web vitals measurement to prioritize content loading
+      
+      return () => clearTimeout(timeoutId);
     }
-    
-    // We don't cleanup because web-vitals registers one-time observers
-  }, [enabled]);
-  
+  }, []);
+
   // This component doesn't render anything
   return null;
 }
