@@ -91,7 +91,7 @@ async function fetchWithCorsOriginal(url: string, options: RequestInit = {}) {
       headers: {
         ...(options.headers || {}),
         ...corsHeaders,
-        'apikey': supabaseKey // Required for Supabase
+        'apikey': envVars.VITE_SUPABASE_KEY // Fixed: Use envVars.VITE_SUPABASE_KEY instead of supabaseKey
       },
       signal: controller.signal,
       mode: 'cors'
