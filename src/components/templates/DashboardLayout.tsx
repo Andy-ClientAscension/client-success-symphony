@@ -2,7 +2,7 @@
 import { Layout } from "@/components/Layout/Layout";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
-import { LoadingState } from "@/components/LoadingState";
+import { CriticalLoadingState } from "@/components/CriticalLoadingState";
 import type { ReactNode } from "react";
 
 interface DashboardLayoutProps {
@@ -14,11 +14,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   
   // Show loading state while checking authentication
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <LoadingState message="Checking authentication..." />
-      </div>
-    );
+    return <CriticalLoadingState message="Checking authentication..." />;
   }
   
   // Redirect if not authenticated

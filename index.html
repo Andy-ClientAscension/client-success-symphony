@@ -17,8 +17,9 @@
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
     
-    <!-- Critical CSS inline (would be generated at build time) -->
+    <!-- Enhanced Critical CSS inline for faster page rendering -->
     <style>
+      /* Base loading styles */
       #root-fallback {
         display: none;
         padding: 20px;
@@ -51,6 +52,55 @@
       @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
+      }
+      
+      /* Additional critical styles to prevent layout shifts */
+      body, html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+      }
+      
+      #root {
+        height: 100%;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .auth-container {
+        display: flex;
+        min-height: 100vh;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .auth-card {
+        width: 100%;
+        max-width: 420px;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
+      
+      /* Dark mode styles */
+      @media (prefers-color-scheme: dark) {
+        body {
+          background-color: #111827;
+          color: #e5e7eb;
+        }
+        
+        .spinner {
+          border-color: rgba(255, 255, 255, 0.1);
+          border-top-color: #90cdf4;
+        }
+        
+        #root-fallback {
+          background-color: #3f2729;
+          color: #fbd5d5;
+          border-color: #f05252;
+        }
       }
     </style>
     
