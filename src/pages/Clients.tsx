@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout/Layout";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -20,12 +19,15 @@ export default function Clients() {
   const [isLoading, setIsLoading] = useState(true);
   const [clients, setClients] = useState<Client[]>([]);
   const [error, setError] = useState<string | null>(null);
+  // New state for advanced filtering
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const navigate = useNavigate();
   const { toast } = useToast();
   const { loadPersistedData } = useKanbanStore();
   const initializationAttempted = useRef(false);
   const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
+  
   // Use smart loading to provide better UX
   const { isLoading: showLoading, forceShowLoading } = useSmartLoading(isLoading, {
     minLoadingTime: 1000,
@@ -228,6 +230,33 @@ export default function Clients() {
       });
     }
   }, [activeTab]);
+  
+  // Handle search query changes
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  }, []);
+  
+  // Handle status filter changes
+  const handleStatusFilterChange = useCallback((value: string) => {
+    setStatusFilter(value);
+  }, []);
+
+  // Apply filters to get filtered client count
+  const filteredClients = useCallback(() => {
+    if (!clients.length) return [];
+    
+    return clients.filter(client => {
+      // Filter by search query
+      const matchesSearch = !searchQuery || 
+        client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (client.csm && client.csm.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      // Filter by status
+      const matchesStatus = statusFilter === "all" || client.status === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [clients, searchQuery, statusFilter]);
 
   const getStatusSummary = () => {
     if (!clients.length) return null;
@@ -290,6 +319,8 @@ export default function Clients() {
   }
 
   console.log("Rendering main clients UI, isLoading:", isLoading);
+  const filteredClientsList = filteredClients();
+  
   return (
     <Layout>
       <div className="mb-4">
@@ -297,8 +328,12 @@ export default function Clients() {
       </div>
       <Card className="p-6">
         <ClientsHeader 
-          clientCount={clients.length} 
-          onAddNewClient={handleAddNewClient} 
+          clientCount={filteredClientsList.length} 
+          onAddNewClient={handleAddNewClient}
+          searchQuery={searchQuery}
+          statusFilter={statusFilter}
+          onSearchChange={handleSearchChange}
+          onStatusFilterChange={handleStatusFilterChange}
         />
         
         {getStatusSummary()}
