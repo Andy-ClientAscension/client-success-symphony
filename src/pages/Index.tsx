@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Layout } from "@/components/Layout/Layout";
 import { useAuth } from "@/hooks/use-auth";
@@ -10,8 +10,6 @@ import { announceToScreenReader } from "@/lib/accessibility";
 
 // This is the landing page that redirects based on auth state
 export default function Index() {
-  console.log('[Index] Component rendering');
-  
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, isLoading, refreshSession } = useAuth();
@@ -19,17 +17,7 @@ export default function Index() {
   const [navigationAttempted, setNavigationAttempted] = useState(false);
   const [processingToken, setProcessingToken] = useState(false);
   
-  // Log current state on every render for debugging
-  console.log('[Index] Current state:', { 
-    isAuthenticated, 
-    isLoading,
-    navigationAttempted,
-    processingToken,
-    location: location.pathname,
-    hash: location.hash
-  });
-  
-  // Emergency timeout - navigate after 3 seconds regardless of state
+  // Emergency timeout to ensure navigation happens - reduced to be more responsive
   useEffect(() => {
     const emergencyTimeout = setTimeout(() => {
       if (!navigationAttempted) {
@@ -46,32 +34,12 @@ export default function Index() {
           description: "Redirected automatically after delay"
         });
       }
-    }, 3000);
+    }, 1500); // Reduced from 3000ms for faster feedback
     
     return () => clearTimeout(emergencyTimeout);
   }, [navigate, isAuthenticated, toast, navigationAttempted]);
   
-  // Navigation logic - separated from token processing
-  useEffect(() => {
-    // Skip if we've already attempted navigation or are processing tokens
-    if (navigationAttempted || processingToken) return;
-    
-    // Only attempt navigation when auth state is determined (loading completed)
-    if (!isLoading) {
-      console.log('[Index] Auth loading complete, proceeding with navigation');
-      setNavigationAttempted(true);
-      
-      if (isAuthenticated) {
-        console.log('[Index] User authenticated - navigating to dashboard');
-        navigate('/dashboard', { replace: true });
-      } else {
-        console.log('[Index] User not authenticated - navigating to login');
-        navigate('/login', { replace: true });
-      }
-    }
-  }, [isAuthenticated, isLoading, navigate, navigationAttempted, processingToken]);
-
-  // Token processor - completely separate effect
+  // Separate effect for token processing to prevent conflicts with navigation logic
   useEffect(() => {
     // Skip if already processed or processing
     if (processingToken || typeof window === 'undefined') return;
@@ -90,6 +58,7 @@ export default function Index() {
     
     const processToken = async () => {
       try {
+        console.log("[Index] Processing access token from URL");
         const { data, error } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken,
@@ -97,8 +66,10 @@ export default function Index() {
         
         if (error) throw error;
         
+        // Clean up URL before navigation
         window.history.replaceState(null, '', window.location.pathname);
         
+        // Refresh session to update state
         await refreshSession();
         
         toast({
@@ -131,9 +102,39 @@ export default function Index() {
       }
     };
     
-    processToken();
-  }, [location.hash, navigate, toast, refreshSession]);
+    // Use a small delay to avoid potential race conditions
+    const tokenTimer = setTimeout(processToken, 10);
+    return () => clearTimeout(tokenTimer);
+  }, [navigate, refreshSession, toast]);
   
+  // Separate, simplified navigation logic in its own effect
+  useEffect(() => {
+    // Skip if we've already attempted navigation or are processing tokens
+    if (navigationAttempted || processingToken || isLoading) return;
+    
+    const navigateBasedOnAuth = () => {
+      console.log('[Index] Navigating based on auth state:', { isAuthenticated, isLoading });
+      setNavigationAttempted(true);
+      
+      if (isAuthenticated) {
+        console.log('[Index] User authenticated - navigating to dashboard');
+        navigate('/dashboard', { replace: true });
+      } else {
+        console.log('[Index] User not authenticated - navigating to login');
+        navigate('/login', { replace: true });
+      }
+    };
+    
+    // Small delay to ensure auth state is stable
+    const navTimer = setTimeout(navigateBasedOnAuth, 100);
+    return () => clearTimeout(navTimer);
+  }, [isAuthenticated, isLoading, navigate, navigationAttempted, processingToken]);
+
+  // Announce loading state to screen readers
+  useEffect(() => {
+    announceToScreenReader("Checking authentication status and redirecting", "polite");
+  }, []);
+
   return (
     <Layout>
       <div id="main-content" tabIndex={-1} className="flex items-center justify-center h-screen">

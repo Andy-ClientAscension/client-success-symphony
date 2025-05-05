@@ -1,5 +1,5 @@
 
-import { ReactNode, useEffect, useRef } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { LoadingState } from "@/components/LoadingState";
@@ -21,6 +21,8 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   const { toast } = useToast();
   const abortControllerRef = useRef<AbortController | null>(null);
   const refreshAttemptedRef = useRef(false);
+  const authCheckTimeoutRef = useRef<number | null>(null);
+  const [forceRender, setForceRender] = useState(false);
   
   const { isAuthenticated, isLoading, user, refreshSession } = useAuth();
   const [error] = useAuthError();
@@ -31,9 +33,13 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
     abortControllerRef.current = new AbortController();
     
     // Short delay to ensure auth check is complete
-    const timer = setTimeout(() => {
+    authCheckTimeoutRef.current = window.setTimeout(() => {
       dispatch({ type: 'PROCESSING_COMPLETE' });
-    }, 500);
+      // After 1s, force a re-render if we're still loading
+      if (isLoading) {
+        setForceRender(true);
+      }
+    }, 1000);
     
     // Announce authentication check to screen readers
     announceToScreenReader("Verifying authentication status", "polite");
@@ -50,6 +56,23 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
       prefetchRoute('/dashboard');
     }
     
+    // Clean up function
+    return () => {
+      if (authCheckTimeoutRef.current) {
+        clearTimeout(authCheckTimeoutRef.current);
+        authCheckTimeoutRef.current = null;
+      }
+      
+      // Cancel any in-flight requests when component unmounts
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    };
+  }, [location.pathname, dispatch]);
+  
+  // Handle session refresh once - don't put this in the main useEffect to avoid dependencies
+  useEffect(() => {
     // Optionally refresh session with cancellation support - ONLY ONCE
     const refreshAuthWithCancellation = async () => {
       if (!isAuthenticated && !isLoading && !refreshAttemptedRef.current) {
@@ -65,24 +88,7 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
     };
     
     refreshAuthWithCancellation();
-    
-    // Log auth status for debugging
-    console.log("ProtectedRoute: Auth check at path", location.pathname, { 
-      isAuthenticated, 
-      isLoading, 
-      userId: user?.id,
-      userEmail: user?.email 
-    });
-    
-    return () => {
-      clearTimeout(timer);
-      // Cancel any in-flight requests when component unmounts
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-        abortControllerRef.current = null;
-      }
-    };
-  }, [location.pathname, refreshSession, isAuthenticated, isLoading, user, dispatch]);
+  }, [isAuthenticated, isLoading, refreshSession]);
   
   // When auth status changes, announce to screen readers
   useEffect(() => {
@@ -101,7 +107,7 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   }, [isAuthenticated, isLoading, state.processingAuth]);
   
   // Show loading state while checking authentication
-  if (isLoading || state.processingAuth) {
+  if ((isLoading || state.processingAuth) && !forceRender) {
     return (
       <>
         <LoadingState message="Checking authentication..." />

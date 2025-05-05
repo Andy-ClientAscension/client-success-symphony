@@ -6,7 +6,6 @@ import { getCachedSession, refreshCachedSessionTTL } from "@/utils/sessionCache"
 
 // Main auth hook to be used across the application
 export function useAuth(): Auth.AuthContextType {
-  console.log('[useAuth] Hook called');
   const context = useContext(AuthContext);
   const refreshedRef = useRef(false);
   
@@ -24,9 +23,8 @@ export function useAuth(): Auth.AuthContextType {
   }, [context?.isAuthenticated, context?.session]);
   
   if (context === undefined) {
-    const error = new Error("useAuth must be used within an AuthProvider");
-    console.error('[useAuth] Context error:', error);
-    // Instead of throwing, return a safe fallback
+    console.error('[useAuth] Context error: useAuth must be used within an AuthProvider');
+    // Return a safe fallback that won't cause loops
     return {
       isAuthenticated: false,
       isLoading: false,
@@ -65,20 +63,17 @@ export type AuthContextType = Auth.AuthContextType;
 // Utility function to check if a user is authenticated
 export function useIsAuthenticated(): boolean {
   const { isAuthenticated } = useAuth();
-  console.log('[useIsAuthenticated] Result:', isAuthenticated);
   return isAuthenticated;
 }
 
 // Utility function to get the current user
 export function useCurrentUser(): Auth.UserType | null {
   const { user } = useAuth();
-  console.log('[useCurrentUser] User exists:', !!user);
   return user;
 }
 
 // Utility function to get the login/logout functions
 export function useAuthActions() {
-  console.log('[useAuthActions] Hook called');
   const { login, logout, register, refreshSession } = useAuth();
   return { login, logout, register, refreshSession };
 }

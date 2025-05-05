@@ -12,11 +12,11 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { isAuthenticated, isLoading } = useAuth();
-  const [showLoading, setShowLoading] = useState(true);
+  const [showLoading, setShowLoading] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const initialCheckDoneRef = useRef(false);
   
-  // Initial check with a short delay to prevent flash
+  // Initial check with a shorter delay to prevent flash
   useEffect(() => {
     if (initialCheckDoneRef.current) return;
     
@@ -24,15 +24,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     const initialTimer = setTimeout(() => {
       setShowLoading(isLoading);
       initialCheckDoneRef.current = true;
-    }, 50);
+    }, 25); // Reduced from 50ms
     
-    // Safety timeout to prevent infinite loading - reduced to 2s
+    // Safety timeout to prevent infinite loading
     const timeoutTimer = setTimeout(() => {
       if (isLoading) {
         console.warn("Authentication check taking too long, showing timeout");
         setLoadingTimeout(true);
       }
-    }, 2000);
+    }, 1000); // Reduced from 2000ms for faster feedback
     
     return () => {
       clearTimeout(initialTimer);
@@ -52,28 +52,30 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       const forceTimeout = setTimeout(() => {
         console.warn("Forcing DashboardLayout loading to complete");
         setShowLoading(false);
-      }, 2000); // Forced completion after 2 seconds
+      }, 1500); // Reduced from 2000ms for faster response
       
       return () => clearTimeout(forceTimeout);
     }
   }, [showLoading]);
   
-  // Show loading state while checking authentication
+  // If authenticated status is known and user is not authenticated, redirect immediately
+  if (!isLoading && !isAuthenticated) {
+    console.log("User not authenticated, redirecting to login");
+    return <Navigate to="/login" replace />;
+  }
+  
+  // Show loading state while checking authentication but only if needed
   if (showLoading && isLoading) {
     return (
       <CriticalLoadingState 
         message="Checking authentication..." 
         fallbackAction={loadingTimeout ? handleSessionTimeout : undefined}
-        timeout={2000} // Reduced from 5000ms
+        timeout={1000} // Reduced from 2000ms
         isBlocking={false}
       />
     );
   }
   
-  // Redirect if not authenticated
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  
+  // User is authenticated or we've forced continue - proceed to render content
   return <Layout>{children}</Layout>;
 }

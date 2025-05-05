@@ -23,52 +23,63 @@ const initialAuthState: AuthState = {
 };
 
 export const authReducer = (state: AuthState, action: AuthAction): AuthState => {
-  console.log('[AuthReducer] Action:', action.type, action);
+  // Only log actions in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[AuthReducer] Action:', action.type, action);
+  }
   
-  let newState: AuthState;
-  
+  // Prevent unnecessary state changes to avoid re-renders
   switch (action.type) {
     case 'START_PROCESSING':
       // Only update if not already processing
       if (state.processingAuth) return state;
-      newState = { ...state, processingAuth: true, authError: null };
-      break;
+      return { ...state, processingAuth: true, authError: null };
+      
     case 'PROCESSING_COMPLETE':
       // Only update if currently processing
       if (!state.processingAuth) return state;
-      newState = { ...state, processingAuth: false };
-      break;
+      return { ...state, processingAuth: false };
+      
     case 'AUTH_SUCCESS':
-      newState = { ...state, processingAuth: false, authError: null };
-      break;
+      // Check if this would cause a state change
+      if (!state.processingAuth && state.authError === null) return state;
+      return { ...state, processingAuth: false, authError: null };
+      
     case 'AUTH_ERROR':
-      newState = { ...state, processingAuth: false, authError: action.payload };
-      break;
+      // Only update if error message is different
+      if (!state.processingAuth && state.authError === action.payload) return state;
+      return { ...state, processingAuth: false, authError: action.payload };
+      
     case 'URL_PROCESSED':
       // Only update if not already processed
       if (state.urlProcessed) return state;
-      newState = { ...state, urlProcessed: true };
-      break;
+      return { ...state, urlProcessed: true };
+      
     case 'CLEANUP':
-      newState = initialAuthState;
-      break;
+      // Only update if different from initial state
+      if (state.processingAuth === initialAuthState.processingAuth && 
+          state.authError === initialAuthState.authError &&
+          state.urlProcessed === initialAuthState.urlProcessed) {
+        return state;
+      }
+      return initialAuthState;
+      
     case 'BATCH_UPDATE':
-      // Prevent unnecessary updates by comparing with current state
-      const hasChanges = Object.entries(action.payload).some(
-        ([key, value]) => state[key as keyof AuthState] !== value
-      );
+      // Only update if there are actual changes
+      let hasChanges = false;
+      for (const key in action.payload) {
+        if (state[key as keyof AuthState] !== action.payload[key as keyof Partial<AuthState>]) {
+          hasChanges = true;
+          break;
+        }
+      }
+      
       if (!hasChanges) return state;
-      newState = { ...state, ...action.payload };
-      break;
+      return { ...state, ...action.payload };
+      
     default:
       return state;
   }
-  
-  // Only log if there's an actual state change
-  if (newState !== state) {
-    console.log('[AuthReducer] State updated:', { previous: state, new: newState });
-  }
-  return newState;
 };
 
 export const useAuthReducer = () => {
@@ -76,7 +87,6 @@ export const useAuthReducer = () => {
   const instanceRef = useRef<ReturnType<typeof useReducer> | null>(null);
   
   if (!initializedRef.current) {
-    console.log('[useAuthReducer] Creating new reducer instance');
     initializedRef.current = true;
     instanceRef.current = useReducer(authReducer, initialAuthState);
   }
