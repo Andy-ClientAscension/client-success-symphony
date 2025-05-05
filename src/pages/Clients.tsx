@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/Layout/Layout";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
@@ -7,9 +8,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useKanbanStore } from "@/utils/kanbanStore";
 import { STORAGE_KEYS, loadData, saveData } from "@/utils/persistence";
 import { LoadingState } from "@/components/LoadingState";
+import { CriticalLoadingState } from "@/components/CriticalLoadingState";
 import { getAllClients, Client } from "@/lib/data";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { DataSyncMonitor } from "@/components/Dashboard/DataSyncMonitor";
 
 export default function Clients() {
   const [activeTab, setActiveTab] = useState("all");
@@ -42,7 +45,6 @@ export default function Clients() {
           
           if (defaultClients && defaultClients.length > 0) {
             console.log(`Loaded ${defaultClients.length} default clients`);
-            await Promise.resolve(); // Simulate async to ensure consistent patterns
             saveData(STORAGE_KEYS.CLIENTS, defaultClients);
             saveData(STORAGE_KEYS.CLIENT_STATUS, defaultClients);
             setClients(defaultClients);
@@ -72,6 +74,7 @@ export default function Clients() {
       // Load the kanban data - keep this in a separate try/catch to isolate errors
       try {
         await loadPersistedData();
+        console.log("Kanban data loaded successfully");
       } catch (kanbanError) {
         console.error("Error loading kanban data:", kanbanError);
         // Don't block the UI if kanban data can't be loaded
@@ -90,14 +93,20 @@ export default function Clients() {
         variant: "destructive",
       });
     } finally {
+      console.log("Setting isLoading to false after initialization");
       setIsLoading(false);
-      console.log("Client data initialization complete");
     }
   }, [loadPersistedData, toast]);
 
   // Initialize data only once on component mount
   useEffect(() => {
-    initializeClientData();
+    console.log("Clients component mounted, calling initializeClientData");
+    initializeClientData()
+      .catch(err => {
+        console.error("Unhandled error during client data initialization:", err);
+        setIsLoading(false); // Ensure loading state is cleared even if there's an error
+        setError("An unexpected error occurred. Please refresh the page.");
+      });
   }, [initializeClientData]);
 
   // Optimize storage event handling with debouncing
@@ -190,15 +199,18 @@ export default function Clients() {
     );
   };
 
-  if (isLoading) {
+  // Use a more immediate loading indicator first
+  if (isLoading && !clients.length) {
+    console.log("Rendering initial loading state");
     return (
       <Layout>
-        <LoadingState message="Loading clients data..." size="lg" />
+        <CriticalLoadingState message="Loading clients..." />
       </Layout>
     );
   }
 
   if (error) {
+    console.log("Rendering error state");
     return (
       <Layout>
         <Card className="p-6">
@@ -217,8 +229,12 @@ export default function Clients() {
     );
   }
 
+  console.log("Rendering main clients UI, isLoading:", isLoading);
   return (
     <Layout>
+      <div className="mb-4">
+        <DataSyncMonitor />
+      </div>
       <Card className="p-6">
         <ClientsHeader 
           clientCount={clients.length} 

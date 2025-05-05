@@ -11,11 +11,9 @@ interface CriticalLoadingStateProps {
  */
 export function CriticalLoadingState({ message = "Loading..." }: CriticalLoadingStateProps) {
   return (
-    <div className="loading-state">
-      <div className="flex flex-col items-center justify-center">
-        <div className="loading-spinner mb-4" />
-        <p className="text-lg font-medium text-foreground">{message}</p>
-      </div>
+    <div className="flex flex-col items-center justify-center min-h-[300px] p-8">
+      <div className="animate-spin h-12 w-12 border-4 border-red-600 border-t-transparent rounded-full mb-4"></div>
+      <p className="text-lg font-medium text-foreground">{message}</p>
     </div>
   );
 }

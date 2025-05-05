@@ -85,13 +85,17 @@ export function useClientList({ statusFilter }: UseClientListProps) {
   // Clear initialization state once clients are loaded
   useEffect(() => {
     if (isInitializing && !isClientsLoading) {
+      console.log("useClientList: Finished initializing, clients loaded");
       setIsInitializing(false);
     }
   }, [isClientsLoading, isInitializing]);
 
   // Filter clients when any related state changes
   useEffect(() => {
-    if (isInitializing) return;
+    if (isInitializing) {
+      console.log("useClientList: Still initializing, skipping filter");
+      return;
+    }
     
     const persistEnabled = localStorage.getItem("persistDashboard") === "true";
     
@@ -102,6 +106,7 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     }
     
     let filtered = validateClients(clients);
+    console.log(`useClientList: Filtering ${filtered.length} clients with statusFilter:`, statusFilter);
     
     if (statusFilter) {
       filtered = filtered.filter(client => client.status === statusFilter);
@@ -122,6 +127,7 @@ export function useClientList({ statusFilter }: UseClientListProps) {
       );
     }
 
+    console.log(`useClientList: Filtered to ${filtered.length} clients`);
     setFilteredClients(filtered);
     
     // Reset to page 1 when filters change
