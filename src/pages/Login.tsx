@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LoginForm } from "@/components/auth/LoginForm";
@@ -71,14 +71,23 @@ export default function Login() {
     }
   }, [apiError]);
 
+  // Memoize the redirect callback to prevent recreation on each render
+  const redirectToDashboard = useCallback(() => {
+    console.log('[Login] Redirecting to dashboard');
+    announceToScreenReader("Already authenticated, redirecting to dashboard", "polite");
+    navigate('/dashboard', { replace: true });
+  }, [navigate]);
+
   // Redirect to dashboard if already authenticated
   useEffect(() => {
+    // Only redirect if explicitly authenticated and not loading
     if (isAuthenticated && !isLoading) {
-      console.log('[Login] User already authenticated, redirecting to dashboard');
-      announceToScreenReader("Already authenticated, redirecting to dashboard", "polite");
-      navigate('/dashboard', { replace: true });
+      console.log('[Login] User already authenticated, scheduling redirect');
+      // Use setTimeout to avoid potential render loops
+      const redirectTimer = setTimeout(redirectToDashboard, 100);
+      return () => clearTimeout(redirectTimer);
     }
-  }, [isAuthenticated, isLoading, navigate]);
+  }, [isAuthenticated, isLoading, redirectToDashboard]);
   
   // Set focus and announce page loaded (separated from redirect logic)
   useEffect(() => {
@@ -87,7 +96,7 @@ export default function Login() {
     announceToScreenReader("Login page loaded", "polite");
     
     // Set focus to main content or email input when page loads
-    setTimeout(() => {
+    const focusTimer = setTimeout(() => {
       const emailInput = document.getElementById('email');
       if (emailInput) {
         console.log('[Login] Setting focus to email input');
@@ -97,9 +106,10 @@ export default function Login() {
         setFocusToElement('main-content');
       }
     }, 100);
+    
+    return () => clearTimeout(focusTimer);
   }, []);
 
-  // Create a custom login layout component that doesn't show the sidebar
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
       <div className="flex items-center justify-center min-h-screen">

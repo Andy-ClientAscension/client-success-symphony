@@ -1,5 +1,5 @@
 
-import { useReducer } from 'react';
+import { useReducer, useRef } from 'react';
 
 export interface AuthState {
   processingAuth: boolean;
@@ -53,17 +53,35 @@ export const authReducer = (state: AuthState, action: AuthAction): AuthState => 
       newState = initialAuthState;
       break;
     case 'BATCH_UPDATE':
+      // Prevent unnecessary updates by comparing with current state
+      const hasChanges = Object.entries(action.payload).some(
+        ([key, value]) => state[key as keyof AuthState] !== value
+      );
+      if (!hasChanges) return state;
       newState = { ...state, ...action.payload };
       break;
     default:
       return state;
   }
   
-  console.log('[AuthReducer] State updated:', { previous: state, new: newState });
+  // Only log if there's an actual state change
+  if (newState !== state) {
+    console.log('[AuthReducer] State updated:', { previous: state, new: newState });
+  }
   return newState;
 };
 
 export const useAuthReducer = () => {
   console.log('[useAuthReducer] Hook initialized');
+  const initializedRef = useRef(false);
+  
+  // Prevent re-initializing the reducer which could cause update loops
+  if (!initializedRef.current) {
+    initializedRef.current = true;
+    console.log('[useAuthReducer] Creating new reducer instance');
+    return useReducer(authReducer, initialAuthState);
+  }
+  
+  console.log('[useAuthReducer] Using existing reducer instance');
   return useReducer(authReducer, initialAuthState);
 };

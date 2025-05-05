@@ -1,5 +1,5 @@
 
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { AuthContext } from "@/contexts/auth/AuthContext";
 import type { Auth } from '@/contexts/auth/types';
 import { getCachedSession, refreshCachedSessionTTL } from "@/utils/sessionCache";
@@ -8,14 +8,17 @@ import { getCachedSession, refreshCachedSessionTTL } from "@/utils/sessionCache"
 export function useAuth(): Auth.AuthContextType {
   console.log('[useAuth] Hook called');
   const context = useContext(AuthContext);
+  const refreshedRef = useRef(false);
   
   useEffect(() => {
     // Only run TTL refresh if we have an authenticated session
-    if (context?.isAuthenticated && context?.session) {
+    // And only do it once per component mount
+    if (context?.isAuthenticated && context?.session && !refreshedRef.current) {
       console.log('[useAuth] Refreshing cached session TTL');
       const cachedSession = getCachedSession();
       if (cachedSession) {
         refreshCachedSessionTTL();
+        refreshedRef.current = true; // Mark as refreshed to prevent infinite loops
       }
     }
   }, [context?.isAuthenticated, context?.session]);
