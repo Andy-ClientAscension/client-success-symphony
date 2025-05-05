@@ -11,7 +11,7 @@ interface CriticalLoadingStateProps {
 }
 
 /**
- * An enhanced loading state component with timeout handling
+ * An enhanced loading state component with improved timeout handling
  * to prevent users from being stuck in loading states indefinitely.
  */
 export function CriticalLoadingState({ 
@@ -23,6 +23,7 @@ export function CriticalLoadingState({
   const [showTimeout, setShowTimeout] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [showFallbackButton, setShowFallbackButton] = useState(false);
+  const [autoFallbackTriggered, setAutoFallbackTriggered] = useState(false);
   const timeoutThreshold = timeout;
   const intervalRef = useRef<number | null>(null);
   const fallbackTimeoutRef = useRef<number | null>(null);
@@ -64,23 +65,32 @@ export function CriticalLoadingState({
           intervalRef.current = null;
         }
       }
-    }, 500); // Check frequently
+    }, 250); // Check more frequently
     
     // Set a delayed timeout to show the fallback button
     if (fallbackAction) {
       fallbackTimeoutRef.current = window.setTimeout(() => {
         if (!isUnmountedRef.current) {
+          console.log("[CriticalLoadingState] Showing fallback button");
           setShowFallbackButton(true);
         }
-      }, timeoutThreshold + 1000);
+      }, Math.min(timeoutThreshold, 2000)); // Show button more quickly
       
-      // Set super aggressive auto-fallback after 2x the threshold
+      // Set more aggressive auto-fallback
       autoFallbackRef.current = window.setTimeout(() => {
-        if (!isUnmountedRef.current) {
-          console.warn("Auto triggering fallback after extended wait");
-          fallbackAction();
+        if (!isUnmountedRef.current && !autoFallbackTriggered) {
+          console.warn("[CriticalLoadingState] Auto triggering fallback after timeout");
+          setAutoFallbackTriggered(true);
+          
+          if (fallbackAction) {
+            try {
+              fallbackAction();
+            } catch (error) {
+              console.error("[CriticalLoadingState] Error in fallback action:", error);
+            }
+          }
         }
-      }, timeoutThreshold * 1.5); // More aggressive auto-fallback
+      }, Math.min(timeoutThreshold * 1.2, 3000)); // More aggressive auto-fallback
     }
     
     // Cleanup function
@@ -100,12 +110,26 @@ export function CriticalLoadingState({
         autoFallbackRef.current = null;
       }
     };
-  }, []);
+  }, [timeoutThreshold, fallbackAction, autoFallbackTriggered]);
+
+  // Handle fallback action with error boundary
+  const handleFallback = () => {
+    if (fallbackAction) {
+      try {
+        fallbackAction();
+      } catch (error) {
+        console.error("[CriticalLoadingState] Error in fallback action:", error);
+      }
+    }
+  };
 
   return (
-    <div className={`flex flex-col items-center justify-center min-h-[300px] p-8 ${
-      isBlocking ? 'fixed inset-0 bg-background/80 backdrop-blur-sm z-50' : ''
-    }`} data-testid="critical-loading-state">
+    <div 
+      className={`flex flex-col items-center justify-center min-h-[300px] p-8 ${
+        isBlocking ? 'fixed inset-0 bg-background/80 backdrop-blur-sm z-50' : ''
+      }`} 
+      data-testid="critical-loading-state"
+    >
       <Spinner size="lg" className="mb-4" />
       <p className="text-lg font-medium text-foreground">{message}</p>
       <p className="text-sm text-muted-foreground mt-2">
@@ -116,7 +140,7 @@ export function CriticalLoadingState({
       
       {showTimeout && showFallbackButton && fallbackAction && (
         <Button 
-          onClick={fallbackAction}
+          onClick={handleFallback}
           className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
         >
           Continue Anyway
@@ -129,8 +153,8 @@ export function CriticalLoadingState({
         </div>
       )}
       
-      {/* Show elapsed time indicator after 2 seconds */}
-      {elapsedTime > 2000 && !showTimeout && (
+      {/* Show elapsed time indicator after 1 second */}
+      {elapsedTime > 1000 && !showTimeout && (
         <div className="mt-4 text-xs text-muted-foreground">
           {Math.floor(elapsedTime / 1000)}s elapsed
         </div>

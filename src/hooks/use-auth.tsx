@@ -1,5 +1,5 @@
 
-import { useContext, useEffect, useRef } from "react";
+import { useContext, useEffect, useRef, useCallback } from "react";
 import { AuthContext } from "@/contexts/auth/AuthContext";
 import type { Auth } from '@/contexts/auth/types';
 import { getCachedSession, refreshCachedSessionTTL } from "@/utils/sessionCache";
@@ -9,6 +9,25 @@ export function useAuth(): Auth.AuthContextType {
   const context = useContext(AuthContext);
   const refreshedRef = useRef(false);
   const initializedRef = useRef(false);
+  const lastRefreshTimeRef = useRef<number | null>(null);
+  
+  // Memoize the refresh session function to avoid unnecessary reloads
+  const optimizedRefreshSession = useCallback(async () => {
+    const now = Date.now();
+    // Prevent multiple refresh attempts within 5 seconds
+    if (lastRefreshTimeRef.current && (now - lastRefreshTimeRef.current < 5000)) {
+      console.log('[useAuth] Skipping refresh, last refresh too recent');
+      return Promise.resolve();
+    }
+    
+    console.log('[useAuth] Running session refresh');
+    lastRefreshTimeRef.current = now;
+    
+    if (context?.refreshSession) {
+      return context.refreshSession();
+    }
+    return Promise.resolve();
+  }, [context]);
   
   useEffect(() => {
     // Skip if we've already initialized this hook instance
@@ -25,7 +44,7 @@ export function useAuth(): Auth.AuthContextType {
         refreshedRef.current = true; // Mark as refreshed to prevent infinite loops
       }
     }
-  }, []);
+  }, [context?.isAuthenticated, context?.session]);
   
   if (context === undefined) {
     console.error('[useAuth] Context error: useAuth must be used within an AuthProvider');
@@ -58,7 +77,11 @@ export function useAuth(): Auth.AuthContextType {
     };
   }
   
-  return context;
+  // Override the refreshSession method with our optimized version
+  return {
+    ...context,
+    refreshSession: optimizedRefreshSession
+  };
 }
 
 // Export types for backwards compatibility

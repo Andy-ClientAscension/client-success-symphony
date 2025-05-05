@@ -1,10 +1,13 @@
 
-import { useReducer, useRef } from 'react';
+import { useReducer, useRef, useEffect } from 'react';
 
 export interface AuthState {
   processingAuth: boolean;
   authError: string | null;
   urlProcessed: boolean;
+  status: 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error' | 'timed-out';
+  navigationAttempted: boolean;
+  timeoutLevel: number;
 }
 
 export type AuthAction = 
@@ -13,32 +16,77 @@ export type AuthAction =
   | { type: 'AUTH_SUCCESS' }
   | { type: 'AUTH_ERROR'; payload: string }
   | { type: 'URL_PROCESSED' }
+  | { type: 'TIMEOUT'; level: number }
+  | { type: 'NAVIGATION_ATTEMPTED' }
   | { type: 'CLEANUP' }
   | { type: 'BATCH_UPDATE'; payload: Partial<AuthState> };
 
 const initialAuthState: AuthState = {
   processingAuth: false,
   authError: null,
-  urlProcessed: false
+  urlProcessed: false,
+  status: 'idle',
+  navigationAttempted: false,
+  timeoutLevel: 0
 };
 
 export const authReducer = (state: AuthState, action: AuthAction): AuthState => {
-  // Use a more direct approach to reduce re-renders
   switch (action.type) {
     case 'START_PROCESSING':
-      return state.processingAuth ? state : { ...state, processingAuth: true, authError: null };
+      return {
+        ...state,
+        processingAuth: true,
+        authError: null,
+        status: 'loading'
+      };
       
     case 'PROCESSING_COMPLETE':
-      return state.processingAuth ? { ...state, processingAuth: false } : state;
+      return {
+        ...state,
+        processingAuth: false,
+        status: state.status === 'loading' ? 'idle' : state.status
+      };
       
     case 'AUTH_SUCCESS':
-      return { ...state, processingAuth: false, authError: null };
+      return {
+        ...state,
+        processingAuth: false,
+        authError: null,
+        status: 'authenticated'
+      };
       
     case 'AUTH_ERROR':
-      return { ...state, processingAuth: false, authError: action.payload };
+      return {
+        ...state,
+        processingAuth: false,
+        authError: action.payload,
+        status: 'error'
+      };
       
     case 'URL_PROCESSED':
-      return state.urlProcessed ? state : { ...state, urlProcessed: true };
+      return {
+        ...state,
+        urlProcessed: true
+      };
+
+    case 'TIMEOUT':
+      // Only increase timeout level if the new level is higher
+      if (action.level <= state.timeoutLevel) {
+        return state;
+      }
+      
+      return {
+        ...state,
+        timeoutLevel: action.level,
+        status: 'timed-out',
+        processingAuth: false
+      };
+      
+    case 'NAVIGATION_ATTEMPTED':
+      return {
+        ...state,
+        navigationAttempted: true
+      };
       
     case 'CLEANUP':
       return initialAuthState;
@@ -51,13 +99,52 @@ export const authReducer = (state: AuthState, action: AuthAction): AuthState => 
   }
 };
 
-// Custom hook that ensures only one reducer instance
+// Enhanced auth reducer hook with automatic timeout progression
 export const useAuthReducer = () => {
-  const memoizedReducer = useRef<ReturnType<typeof useReducer> | null>(null);
+  const reducerRef = useRef<ReturnType<typeof useReducer> | null>(null);
   
-  if (memoizedReducer.current === null) {
-    memoizedReducer.current = useReducer(authReducer, initialAuthState);
+  if (reducerRef.current === null) {
+    reducerRef.current = useReducer(authReducer, initialAuthState);
   }
   
-  return memoizedReducer.current;
+  const [state, dispatch] = reducerRef.current;
+  
+  // Set up tiered timeout system that automatically progresses through timeout levels
+  useEffect(() => {
+    const timeouts: NodeJS.Timeout[] = [];
+    
+    if (state.status === 'loading' && !state.navigationAttempted) {
+      // Level 1 timeout (500ms) - Quick check to catch stuck loading states
+      const level1 = setTimeout(() => {
+        console.log("[AuthReducer] Level 1 timeout reached (500ms)");
+        // Only dispatch if we're still loading
+        if (state.status === 'loading') {
+          dispatch({ type: 'TIMEOUT', level: 1 });
+        }
+      }, 500);
+      
+      // Level 2 timeout (1.5s) - Force exit from loading state
+      const level2 = setTimeout(() => {
+        console.log("[AuthReducer] Level 2 timeout reached (1.5s)");
+        dispatch({ type: 'TIMEOUT', level: 2 });
+        dispatch({ type: 'PROCESSING_COMPLETE' });
+      }, 1500);
+      
+      // Level 3 timeout (3s) - Emergency timeout, force navigation attempt
+      const level3 = setTimeout(() => {
+        console.log("[AuthReducer] Level 3 timeout reached (3s). Forcing navigation.");
+        dispatch({ type: 'TIMEOUT', level: 3 });
+        dispatch({ type: 'NAVIGATION_ATTEMPTED' });
+      }, 3000);
+      
+      timeouts.push(level1, level2, level3);
+    }
+    
+    // Clean up all timeouts when component unmounts or when state changes
+    return () => {
+      timeouts.forEach(clearTimeout);
+    };
+  }, [state.status, state.navigationAttempted, dispatch]);
+  
+  return [state, dispatch] as const;
 };
