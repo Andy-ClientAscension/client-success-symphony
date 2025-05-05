@@ -18,40 +18,9 @@ export default function Index() {
   const [processingToken, setProcessingToken] = useState(false);
   const navigationTimeoutRef = useRef<number | null>(null);
   const tokenProcessingRef = useRef(false);
+  const authStateStableRef = useRef(false);
   
-  // Emergency timeout to ensure navigation happens - reduced to be more responsive
-  useEffect(() => {
-    // Only set up emergency timeout if we haven't already navigated
-    if (navigationAttempted) return;
-    
-    console.log("[Index] Setting up emergency navigation timeout");
-    navigationTimeoutRef.current = window.setTimeout(() => {
-      if (!navigationAttempted) {
-        console.warn("[Index] Emergency navigation triggered after timeout");
-        setNavigationAttempted(true);
-        
-        // Force navigation regardless of auth state
-        const targetPath = isAuthenticated ? '/dashboard' : '/login';
-        console.log(`[Index] Emergency timeout: Forcing navigation to ${targetPath}`);
-        navigate(targetPath, { replace: true });
-        
-        toast({
-          title: "Navigation completed",
-          description: "Redirected automatically after delay"
-        });
-      }
-    }, 1500); // Reduced from 3000ms for faster feedback
-    
-    return () => {
-      if (navigationTimeoutRef.current) {
-        clearTimeout(navigationTimeoutRef.current);
-        navigationTimeoutRef.current = null;
-      }
-    };
-  // Use ref pattern to prevent dependency on navigationAttempted changing
-  }, []); 
-  
-  // Separate effect for token processing
+  // Process access token from URL if present
   useEffect(() => {
     // Skip if already processed or processing
     if (tokenProcessingRef.current || typeof window === 'undefined') return;
@@ -60,7 +29,11 @@ export default function Index() {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = hashParams.get('access_token');
     
-    if (!accessToken) return;
+    if (!accessToken) {
+      // No token in URL, mark token processing as complete
+      tokenProcessingRef.current = true;
+      return;
+    }
     
     // Process the access token
     console.log("[Index] Processing access token from URL");
@@ -112,24 +85,35 @@ export default function Index() {
         setProcessingToken(false);
       }
     })();
-    
-    // Use empty dependency array since we use refs for state tracking
   }, []);
   
-  // Separate simplified navigation logic with retry mechanism
+  // Handle standard navigation based on auth state
   useEffect(() => {
     // Skip if navigation already attempted or currently processing tokens
     if (navigationAttempted || processingToken) return;
     
+    // Emergency timeout to ensure navigation happens after 1.5s
+    if (navigationTimeoutRef.current === null) {
+      navigationTimeoutRef.current = window.setTimeout(() => {
+        console.warn("[Index] Emergency navigation triggered after timeout");
+        if (!navigationAttempted) {
+          setNavigationAttempted(true);
+          
+          // Force navigation regardless of auth state
+          const targetPath = isAuthenticated ? '/dashboard' : '/login';
+          console.log(`[Index] Emergency timeout: Forcing navigation to ${targetPath}`);
+          navigate(targetPath, { replace: true });
+        }
+      }, 1500); // Short timeout for emergency fallback
+    }
+    
     // Don't immediately navigate during loading to prevent flickering
     if (isLoading) {
-      const shortDelay = setTimeout(() => {
-        // If still loading after delay, we'll wait for the emergency timeout
-        console.log('[Index] Auth still loading after delay, waiting longer');
-      }, 200);
-      
-      return () => clearTimeout(shortDelay);
+      return;
     }
+    
+    // Mark that we have stable auth state
+    authStateStableRef.current = true;
     
     // Auth state is stable, navigate based on auth status
     console.log('[Index] Navigating based on auth state:', { isAuthenticated, isLoading });
@@ -142,9 +126,17 @@ export default function Index() {
       console.log('[Index] User not authenticated - navigating to login');
       navigate('/login', { replace: true });
     }
-    
-    // Use specific dependencies that won't cause unnecessary re-renders
   }, [isAuthenticated, isLoading, processingToken, navigationAttempted, navigate]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (navigationTimeoutRef.current) {
+        clearTimeout(navigationTimeoutRef.current);
+        navigationTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   // Announce loading state to screen readers
   useEffect(() => {

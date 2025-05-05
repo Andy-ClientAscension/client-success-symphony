@@ -16,40 +16,48 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const initialCheckDoneRef = useRef(false);
   const forceTimeoutRef = useRef<number | null>(null);
+  const initialCheckTimerRef = useRef<number | null>(null);
+  const loadingTimerRef = useRef<number | null>(null);
   
   // Initial check with a shorter delay to prevent flash
   useEffect(() => {
     if (initialCheckDoneRef.current) return;
     
     // Very short delay to prevent flash
-    const initialTimer = setTimeout(() => {
+    initialCheckTimerRef.current = window.setTimeout(() => {
       setShowLoading(isLoading);
       initialCheckDoneRef.current = true;
-    }, 25); // Reduced from 50ms
+    }, 25); // Very short delay
     
     // Safety timeout to prevent infinite loading
-    const timeoutTimer = setTimeout(() => {
+    loadingTimerRef.current = window.setTimeout(() => {
       if (isLoading) {
         console.warn("Authentication check taking too long, showing timeout");
         setLoadingTimeout(true);
       }
-    }, 1000); // Reduced from 2000ms for faster feedback
+    }, 750); // Reduced timeout
     
-    // Always force continue after 3 seconds max
+    // Always force continue after 2 seconds max
     forceTimeoutRef.current = window.setTimeout(() => {
       console.warn("Force continuing after max timeout");
       setShowLoading(false);
-    }, 3000);
+      initialCheckDoneRef.current = true;
+    }, 2000);
     
     return () => {
-      clearTimeout(initialTimer);
-      clearTimeout(timeoutTimer);
+      if (initialCheckTimerRef.current) {
+        clearTimeout(initialCheckTimerRef.current);
+        initialCheckTimerRef.current = null;
+      }
+      if (loadingTimerRef.current) {
+        clearTimeout(loadingTimerRef.current);
+        loadingTimerRef.current = null;
+      }
       if (forceTimeoutRef.current) {
         clearTimeout(forceTimeoutRef.current);
         forceTimeoutRef.current = null;
       }
     };
-  // Removed dependencies to avoid re-renders, using refs instead
   }, []);
   
   // Handle session loading timeouts by continuing anyway
@@ -57,18 +65,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     console.warn("Auth session loading timeout, forcing continue");
     setShowLoading(false);
   }, []);
-  
-  // Force navigation after a short delay if still loading
-  useEffect(() => {
-    if (!showLoading) return;
-    
-    const forceTimeout = setTimeout(() => {
-      console.warn("Forcing DashboardLayout loading to complete");
-      setShowLoading(false);
-    }, 1500); // Reduced from 2000ms for faster response
-    
-    return () => clearTimeout(forceTimeout);
-  }, [showLoading]);
   
   // If authenticated status is known and user is not authenticated, redirect immediately
   if (!isLoading && !isAuthenticated) {
@@ -82,7 +78,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <CriticalLoadingState 
         message="Checking authentication..." 
         fallbackAction={loadingTimeout ? handleSessionTimeout : undefined}
-        timeout={1000} // Reduced from 2000ms
+        timeout={750} // Reduced timeout
         isBlocking={false}
       />
     );

@@ -8,8 +8,13 @@ import { getCachedSession, refreshCachedSessionTTL } from "@/utils/sessionCache"
 export function useAuth(): Auth.AuthContextType {
   const context = useContext(AuthContext);
   const refreshedRef = useRef(false);
+  const initializedRef = useRef(false);
   
   useEffect(() => {
+    // Skip if we've already initialized this hook instance
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+    
     // Only run TTL refresh if we have an authenticated session
     // And only do it once per component mount
     if (context?.isAuthenticated && context?.session && !refreshedRef.current) {
@@ -20,8 +25,6 @@ export function useAuth(): Auth.AuthContextType {
         refreshedRef.current = true; // Mark as refreshed to prevent infinite loops
       }
     }
-  // Explicitly remove context from dependencies to prevent re-renders
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
   if (context === undefined) {
