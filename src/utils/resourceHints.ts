@@ -4,6 +4,13 @@
  * These optimizations help improve performance across the app
  */
 
+export interface ResourceHint {
+  rel: 'preload' | 'prefetch' | 'preconnect';
+  href: string;
+  as?: string;
+  crossOrigin?: boolean;
+}
+
 /**
  * Creates a preload link for critical resources
  */
@@ -54,6 +61,38 @@ export function preconnect(url: string, crossorigin: boolean = false): void {
   if (!document.head.querySelector(`link[rel="preconnect"][href="${url}"]`)) {
     document.head.appendChild(link);
   }
+}
+
+/**
+ * Sets up preconnections to domains used in the app
+ */
+export function setupPreconnections(): void {
+  // Common third-party domains for analytics, fonts, APIs, etc.
+  preconnect('https://fonts.googleapis.com');
+  preconnect('https://fonts.gstatic.com', true);
+  preconnect('https://api.yourapp.com');
+  preconnect('https://cdn.yourcdn.com');
+}
+
+/**
+ * Add multiple resource hints at once
+ */
+export function addResourceHints(hints: ResourceHint[]): void {
+  if (typeof document === 'undefined') return;
+  
+  hints.forEach(hint => {
+    switch (hint.rel) {
+      case 'preload':
+        preloadResource(hint.href, hint.as || 'script');
+        break;
+      case 'prefetch':
+        prefetchResource(hint.href);
+        break;
+      case 'preconnect':
+        preconnect(hint.href, hint.crossOrigin || false);
+        break;
+    }
+  });
 }
 
 /**
