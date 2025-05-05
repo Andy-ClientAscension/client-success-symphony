@@ -42,10 +42,12 @@ export function useAuth(): Auth.AuthContextType {
       }),
       refreshSession: async () => {
         console.log('[useAuth] Fallback refreshSession called');
+        return Promise.resolve();
       },
       login: async () => false,
       logout: async () => {
         console.log('[useAuth] Fallback logout called');
+        return Promise.resolve();
       },
       register: async () => ({ success: false, message: "Auth context not available" }),
       validateInviteCode: async () => false,

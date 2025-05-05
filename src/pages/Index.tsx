@@ -17,19 +17,19 @@ export default function Index() {
   const { isAuthenticated, isLoading, refreshSession } = useAuth();
   const { toast } = useToast();
   const [navigationAttempted, setNavigationAttempted] = useState(false);
-  const [processingAuth, setProcessingAuth] = useState(false);
+  const [processingToken, setProcessingToken] = useState(false);
   
   // Log current state on every render for debugging
   console.log('[Index] Current state:', { 
     isAuthenticated, 
     isLoading,
     navigationAttempted,
-    processingAuth,
+    processingToken,
     location: location.pathname,
     hash: location.hash
   });
   
-  // Simple emergency timeout - navigate after 3 seconds regardless of state
+  // Emergency timeout - navigate after 3 seconds regardless of state
   useEffect(() => {
     const emergencyTimeout = setTimeout(() => {
       if (!navigationAttempted) {
@@ -51,15 +51,10 @@ export default function Index() {
     return () => clearTimeout(emergencyTimeout);
   }, [navigate, isAuthenticated, toast, navigationAttempted]);
   
-  // Simplified navigation logic - navigate when auth state is known
+  // Navigation logic - separated from token processing
   useEffect(() => {
-    // Skip if we've already attempted navigation or are processing auth
-    if (navigationAttempted || processingAuth) return;
-    
-    console.log('[Index] Navigation effect checking auth state:', {
-      isAuthenticated,
-      isLoading
-    });
+    // Skip if we've already attempted navigation or are processing tokens
+    if (navigationAttempted || processingToken) return;
     
     // Only attempt navigation when auth state is determined (loading completed)
     if (!isLoading) {
@@ -74,49 +69,36 @@ export default function Index() {
         navigate('/login', { replace: true });
       }
     }
-  }, [isAuthenticated, isLoading, navigate, navigationAttempted, processingAuth]);
+  }, [isAuthenticated, isLoading, navigate, navigationAttempted, processingToken]);
 
-  // Handle access token in URL (for email confirmations) - completely separate from main navigation
+  // Token processor - completely separate effect
   useEffect(() => {
-    // Skip if we're not in a browser or already processing
-    if (typeof window === 'undefined' || processingAuth) return;
-    
-    console.log('[Index] Checking URL for auth tokens');
+    // Skip if already processed or processing
+    if (processingToken || typeof window === 'undefined') return;
     
     // Check for auth token in URL
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = hashParams.get('access_token');
     
     if (!accessToken) {
-      console.log('[Index] No access token found in URL');
       return;
     }
     
-    // Process the authentication token (completely separate flow)
-    console.log('[Index] Found access token in URL, processing authentication');
-    setProcessingAuth(true);
+    // Process the access token
+    setProcessingToken(true);
     const refreshToken = hashParams.get('refresh_token') || '';
     
-    // Process auth async
-    const processAuth = async () => {
+    const processToken = async () => {
       try {
-        console.log('[Index] Setting session with tokens');
-        
         const { data, error } = await supabase.auth.setSession({
           access_token: accessToken,
-          refresh_token: refreshToken || '',
+          refresh_token: refreshToken,
         });
         
         if (error) throw error;
         
-        console.log("[Index] Session validated successfully");
-        announceToScreenReader("Authentication successful", "polite");
-        
-        // Clear the URL hash
         window.history.replaceState(null, '', window.location.pathname);
-        console.log('[Index] Cleared URL hash');
         
-        // Refresh auth context
         await refreshSession();
         
         toast({
@@ -145,13 +127,12 @@ export default function Index() {
           state: { authError: errorMessage }
         });
       } finally {
-        setProcessingAuth(false);
+        setProcessingToken(false);
       }
     };
     
-    // Start processing but don't await (let it run in background)
-    processAuth();
-  }, [location.hash, navigate, toast, refreshSession, processingAuth]);
+    processToken();
+  }, [location.hash, navigate, toast, refreshSession]);
   
   return (
     <Layout>

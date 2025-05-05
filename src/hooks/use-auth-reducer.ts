@@ -72,16 +72,14 @@ export const authReducer = (state: AuthState, action: AuthAction): AuthState => 
 };
 
 export const useAuthReducer = () => {
-  console.log('[useAuthReducer] Hook initialized');
   const initializedRef = useRef(false);
+  const instanceRef = useRef<ReturnType<typeof useReducer> | null>(null);
   
-  // Prevent re-initializing the reducer which could cause update loops
   if (!initializedRef.current) {
-    initializedRef.current = true;
     console.log('[useAuthReducer] Creating new reducer instance');
-    return useReducer(authReducer, initialAuthState);
+    initializedRef.current = true;
+    instanceRef.current = useReducer(authReducer, initialAuthState);
   }
   
-  console.log('[useAuthReducer] Using existing reducer instance');
-  return useReducer(authReducer, initialAuthState);
+  return instanceRef.current;
 };

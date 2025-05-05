@@ -1,10 +1,11 @@
 
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import { AuthContext } from '@/contexts/auth/AuthContext';
 import type { Auth } from '@/contexts/auth/types';
 
 export function useAuth() {
   const context = useContext(AuthContext);
+  const refreshAttemptedRef = useRef(false);
   
   if (context === undefined) {
     console.error('useAuth called outside of AuthProvider context');
@@ -23,9 +24,9 @@ export function useAuth() {
         status: 'invalid' as const, 
         message: "Auth context not available" 
       }),
-      refreshSession: async () => {},
+      refreshSession: async () => Promise.resolve(),
       login: async () => false,
-      logout: async () => {},
+      logout: async () => Promise.resolve(),
       register: async () => ({ success: false, message: "Auth context not available" }),
       validateInviteCode: async () => false,
       sessionExpiryTime: null
