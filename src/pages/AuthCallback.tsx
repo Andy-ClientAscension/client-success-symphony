@@ -19,6 +19,7 @@ export default function AuthCallback() {
     // Handle the OAuth callback
     const handleAuthCallback = async () => {
       try {
+        // OPTIMIZATION: Fetch session with minimal delay
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {

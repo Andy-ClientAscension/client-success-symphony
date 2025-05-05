@@ -65,19 +65,24 @@ export default function Index() {
       try {
         console.log("Found access token in URL, setting session");
         
-        // Set session with correct parameters
-        const { data, error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: hashParams.get('refresh_token') || '',
-        });
+        // OPTIMIZATION: Run session setting and user validation in parallel
+        const [sessionResult, userResult] = await Promise.all([
+          supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: hashParams.get('refresh_token') || '',
+          }),
+          // Pre-fetch user data in parallel with session setting
+          supabase.auth.getUser()
+        ]);
         
         clearTimeout(timeoutId);
         
+        const { data, error } = sessionResult;
+        const { data: userData, error: userError } = userResult;
+        
         if (error) throw error;
         
-        // Validate session
-        const { data: userData, error: userError } = await supabase.auth.getUser();
-        
+        // Validate user data
         if (userError || !userData?.user) {
           throw userError || new Error("Failed to fetch user after session set");
         }
