@@ -21,26 +21,49 @@ export default function Index() {
   // Preload critical dashboard assets when authentication is being processed
   useEffect(() => {
     if (state.processingAuth) {
+      // Create a controller for resource loading operations
+      const controller = new AbortController();
+      const signal = controller.signal;
+      
       // Prefetch critical components that will be needed after auth
       const prefetchComponents = async () => {
-        // Preload dashboard components in parallel
+        // Preload dashboard components in parallel with abort signal
         const componentPromises = [
-          import(/* webpackChunkName: "dashboard-core" */ '@/components/Dashboard/DashboardComponents'),
-          import(/* webpackChunkName: "chart-library" */ '@/components/Dashboard/ChartLibrary'),
-          import(/* webpackChunkName: "lazy-charts" */ '@/components/Dashboard/LazyCharts'),
+          import(/* webpackChunkName: "dashboard-core" */ '@/components/Dashboard/DashboardComponents')
+            .catch(err => {
+              if (!signal.aborted) console.warn('Failed to preload component:', err);
+              return null;
+            }),
+          import(/* webpackChunkName: "chart-library" */ '@/components/Dashboard/ChartLibrary')
+            .catch(err => {
+              if (!signal.aborted) console.warn('Failed to preload component:', err);
+              return null;
+            }),
+          import(/* webpackChunkName: "lazy-charts" */ '@/components/Dashboard/LazyCharts')
+            .catch(err => {
+              if (!signal.aborted) console.warn('Failed to preload component:', err);
+              return null;
+            }),
         ];
         
         try {
           await Promise.all(componentPromises);
-          console.log('Critical dashboard components prefetched successfully');
+          if (!signal.aborted) {
+            console.log('Critical dashboard components prefetched successfully');
+          }
         } catch (error) {
-          console.warn('Non-critical error during prefetch:', error);
+          if (!signal.aborted) {
+            console.warn('Non-critical error during prefetch:', error);
+          }
           // Don't throw, this is just a prefetch optimization
         }
       };
       
       // Add resource hints to head
       const addResourceHints = () => {
+        // Create elements that will be cleaned up when component unmounts
+        const createdElements: HTMLLinkElement[] = [];
+        
         const hints = [
           { rel: 'preload', href: '/src/components/Dashboard/Metrics/HeroMetrics.tsx', as: 'script' },
           { rel: 'prefetch', href: '/src/components/Dashboard/Metrics/MetricsCards.tsx', as: 'script' },
@@ -56,12 +79,29 @@ export default function Index() {
           link.href = hint.href;
           if (hint.as) link.setAttribute('as', hint.as);
           document.head.appendChild(link);
+          createdElements.push(link);
         });
+        
+        // Return cleanup function to remove created elements
+        return () => {
+          createdElements.forEach(element => {
+            if (element.parentNode) {
+              element.parentNode.removeChild(element);
+            }
+          });
+        };
       };
       
       // Execute prefetch strategies
       prefetchComponents();
-      addResourceHints();
+      const removeResourceHints = addResourceHints();
+      
+      // Return cleanup function
+      return () => {
+        controller.abort('Component unmounted or auth state changed');
+        removeResourceHints();
+        console.log('Cleaned up prefetch resources');
+      };
     }
   }, [state.processingAuth]);
   
@@ -78,8 +118,15 @@ export default function Index() {
   
   // Handle access token in URL (for email confirmations)
   useEffect(() => {
+    // Cleanup existing controller if there is one
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort('New effect run');
+      abortControllerRef.current = null;
+    }
+    
     // Create a new abort controller for this effect
     abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
     
     // Skip URL processing if we're in a non-browser environment
     if (typeof window === 'undefined') {
@@ -109,21 +156,29 @@ export default function Index() {
       let isTimedOut = false;
       const timeoutId = setTimeout(() => {
         isTimedOut = true;
-        toast({
-          title: "Authentication is taking longer than expected",
-          description: "Please wait a bit longer while we complete the process...",
-          variant: "default"
-        });
+        if (!signal.aborted) {
+          toast({
+            title: "Authentication is taking longer than expected",
+            description: "Please wait a bit longer while we complete the process...",
+            variant: "default"
+          });
+        }
         
         // Grace period timeout
         setTimeout(() => {
-          if (abortControllerRef.current) {
+          if (abortControllerRef.current && !signal.aborted) {
             abortControllerRef.current.abort('Timeout exceeded after grace period');
           }
         }, GRACE_PERIOD_MS);
       }, INITIAL_TIMEOUT_MS);
       
       try {
+        // Check if aborted early
+        if (signal.aborted) {
+          console.log("Operation aborted before starting");
+          return;
+        }
+        
         console.log("Found access token in URL, setting session");
         
         // OPTIMIZATION: Run session setting and user validation in parallel
@@ -139,6 +194,12 @@ export default function Index() {
         // Clear timeout as we got the response
         clearTimeout(timeoutId);
         
+        // Check if aborted during request
+        if (signal.aborted) {
+          console.log("Operation aborted during setSession");
+          return;
+        }
+        
         const { data, error } = sessionResult;
         const { data: userData, error: userError } = userResult;
         
@@ -153,23 +214,27 @@ export default function Index() {
         announceToScreenReader("Authentication successful", "polite");
         
         // Clear the URL hash
-        if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined' && !signal.aborted) {
           window.history.replaceState(null, '', window.location.pathname);
         }
         
         // Refresh auth context
-        await refreshSession();
+        if (!signal.aborted) {
+          await refreshSession();
+        }
         
-        // Show success toast
-        toast({
-          title: "Authentication successful",
-          description: "You have been successfully logged in."
-        });
-        
-        dispatch({ type: 'AUTH_SUCCESS' });
-        
-        // Navigate to dashboard
-        navigate('/dashboard', { replace: true });
+        // Show success toast if not aborted
+        if (!signal.aborted) {
+          toast({
+            title: "Authentication successful",
+            description: "You have been successfully logged in."
+          });
+          
+          dispatch({ type: 'AUTH_SUCCESS' });
+          
+          // Navigate to dashboard
+          navigate('/dashboard', { replace: true });
+        }
       } catch (error) {
         // Clear timeout as we got an error
         clearTimeout(timeoutId);
@@ -177,10 +242,12 @@ export default function Index() {
         // Don't process abort errors as real errors
         if (error instanceof DOMException && error.name === 'AbortError') {
           console.log("Authentication request was cancelled");
-          dispatch({ 
-            type: 'AUTH_ERROR', 
-            payload: "Authentication request was cancelled. Please try again." 
-          });
+          if (!signal.aborted) {
+            dispatch({ 
+              type: 'AUTH_ERROR', 
+              payload: "Authentication request was cancelled. Please try again." 
+            });
+          }
           return;
         }
         
@@ -191,22 +258,24 @@ export default function Index() {
           errorMessage = "Authentication request timed out. This could be due to network issues. Please try again.";
         }
         
-        dispatch({ type: 'AUTH_ERROR', payload: errorMessage });
-        announceToScreenReader(`Authentication error: ${errorMessage}`, "assertive");
-        
-        toast({
-          title: "Authentication Error",
-          description: errorMessage,
-          variant: "destructive",
-        });
-        
-        navigate('/login', { 
-          replace: true,
-          state: { authError: errorMessage }
-        });
+        if (!signal.aborted) {
+          dispatch({ type: 'AUTH_ERROR', payload: errorMessage });
+          announceToScreenReader(`Authentication error: ${errorMessage}`, "assertive");
+          
+          toast({
+            title: "Authentication Error",
+            description: errorMessage,
+            variant: "destructive",
+          });
+          
+          navigate('/login', { 
+            replace: true,
+            state: { authError: errorMessage }
+          });
+        }
       } finally {
         // If we timed out but eventually completed, show a resolved message
-        if (isTimedOut) {
+        if (isTimedOut && !signal.aborted) {
           toast({
             title: "Authentication completed",
             description: "Thank you for your patience.",
@@ -222,7 +291,7 @@ export default function Index() {
     // Cleanup function
     return () => {
       if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
+        abortControllerRef.current.abort('Component unmounted');
         abortControllerRef.current = null;
       }
     };

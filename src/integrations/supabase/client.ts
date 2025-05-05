@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { corsHeaders } from '@/utils/corsHeaders';
 import { cacheSession, getCachedSession, clearCachedSession } from '@/utils/sessionCache';
 import { getDevelopmentFallbacks } from '@/utils/envValidator';
+import { isAborted } from '@/utils/abortUtils';
 
 // Singleton instance
 let supabaseInstance = null;
@@ -32,9 +33,23 @@ export const getSupabaseClient = () => {
 
   // Enhanced fetch function with CORS headers and timeout
   const fetchWithCors = (url: RequestInfo | URL, options?: RequestInit) => {
-    const timeout = 10000; // 10 second timeout
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), timeout);
+    // Use existing abort controller if provided, otherwise create a new one
+    const existingSignal = options?.signal;
+    const controller = existingSignal ? null : new AbortController();
+    const signal = existingSignal || controller?.signal;
+    
+    // Set a timeout for the request if we created a controller
+    let timeoutId: number | undefined;
+    
+    if (controller) {
+      const timeout = 10000; // 10 second timeout
+      timeoutId = setTimeout(() => {
+        // Only abort if not already aborted
+        if (!isAborted(signal)) {
+          controller.abort('Request timeout');
+        }
+      }, timeout);
+    }
     
     // Merge existing headers with CORS headers
     const headers = {
@@ -42,13 +57,17 @@ export const getSupabaseClient = () => {
       ...corsHeaders,
     };
     
+    // Execute the fetch with our custom signal
     return fetch(url, {
       ...options,
       headers,
-      signal: controller.signal,
+      signal,
       mode: 'cors',
     }).finally(() => {
-      clearTimeout(id);
+      // Clear the timeout when fetch completes (success or error)
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     });
   };
 
@@ -80,10 +99,22 @@ export const supabase = getSupabaseClient();
  * Helper function to fetch with CORS headers
  */
 async function fetchWithCorsOriginal(url: string, options: RequestInit = {}) {
-  const timeout = 5000; // 5 second timeout
+  // Use existing abort controller if provided, otherwise create a new one
+  const existingSignal = options?.signal;
+  const controller = existingSignal ? null : new AbortController();
+  const signal = existingSignal || controller?.signal;
   
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
+  // Set a timeout if we created our own controller
+  let timeoutId: number | undefined;
+  
+  if (controller) {
+    const timeout = 5000; // 5 second timeout
+    timeoutId = setTimeout(() => {
+      if (!isAborted(signal)) {
+        controller.abort('Request timeout');
+      }
+    }, timeout);
+  }
   
   try {
     const response = await fetch(url, {
@@ -93,15 +124,32 @@ async function fetchWithCorsOriginal(url: string, options: RequestInit = {}) {
         ...corsHeaders,
         'apikey': envVars.VITE_SUPABASE_KEY // Fixed: Use envVars.VITE_SUPABASE_KEY instead of supabaseKey
       },
-      signal: controller.signal,
+      signal,
       mode: 'cors'
     });
     
-    clearTimeout(id);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    
     return response;
   } catch (error) {
-    clearTimeout(id);
-    throw error;
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    
+    // Rethrow non-abort errors
+    if (!(error instanceof DOMException && error.name === 'AbortError')) {
+      throw error;
+    }
+    
+    // For abort errors, rethrow only if it wasn't our own abort
+    if (existingSignal) {
+      throw error;
+    }
+    
+    // Otherwise, create a more informative timeout error
+    throw new Error('Request timed out after 5000ms');
   }
 }
 

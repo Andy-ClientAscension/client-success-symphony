@@ -12,7 +12,8 @@ export type AuthAction =
   | { type: 'PROCESSING_COMPLETE' }
   | { type: 'AUTH_SUCCESS' }
   | { type: 'AUTH_ERROR'; payload: string }
-  | { type: 'URL_PROCESSED' };
+  | { type: 'URL_PROCESSED' }
+  | { type: 'CLEANUP' };
 
 const initialAuthState: AuthState = {
   processingAuth: false,
@@ -32,6 +33,8 @@ export const authReducer = (state: AuthState, action: AuthAction): AuthState => 
       return { ...state, processingAuth: false, authError: action.payload };
     case 'URL_PROCESSED':
       return { ...state, urlProcessed: true };
+    case 'CLEANUP':
+      return initialAuthState; // Reset to initial state for clean unmount
     default:
       return state;
   }

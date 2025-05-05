@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
@@ -15,8 +16,19 @@ export default function AuthCallback() {
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
+    // Clean up previous controller if it exists
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort('New effect run');
+      abortControllerRef.current = null;
+    }
+    
+    // Create new controller for this effect
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+    
     // Preload critical dashboard resources as soon as the auth callback page loads
     preloadPageResources('dashboard');
     
@@ -32,20 +44,34 @@ export default function AuthCallback() {
         
         // Set a timeout to show a "taking longer than expected" message
         timeoutId = window.setTimeout(() => {
-          setIsLongRequest(true);
-          toast({
-            title: "Authentication is taking longer than expected",
-            description: "Please wait a bit longer while we complete the process...",
-            variant: "default"
-          });
+          if (!signal.aborted) {
+            setIsLongRequest(true);
+            toast({
+              title: "Authentication is taking longer than expected",
+              description: "Please wait a bit longer while we complete the process...",
+              variant: "default"
+            });
+          }
         }, INITIAL_TIMEOUT_MS);
         
         // Main authentication flow
+        // Check for abort before starting
+        if (signal.aborted) {
+          console.log("Auth callback aborted before starting");
+          return;
+        }
+        
         // OPTIMIZATION: Fetch session with minimal delay
         const { data, error } = await supabase.auth.getSession();
         
         // Clear the initial timeout since we got a response
         if (timeoutId) clearTimeout(timeoutId);
+        
+        // Check for abort after request
+        if (signal.aborted) {
+          console.log("Auth callback aborted after getSession");
+          return;
+        }
         
         if (error) {
           throw error;
@@ -54,28 +80,52 @@ export default function AuthCallback() {
         // Check if we have a session
         if (data.session) {
           setSuccess(true);
-          toast({
-            title: 'Login Successful',
-            description: 'You have successfully logged in.',
-          });
+          
+          if (!signal.aborted) {
+            toast({
+              title: 'Login Successful',
+              description: 'You have successfully logged in.',
+            });
+          }
           
           // Preload dashboard components while showing success message
           try {
-            await Promise.all([
-              import(/* webpackChunkName: "dashboard-core" */ '@/components/Dashboard/DashboardComponents'),
-              import(/* webpackChunkName: "metrics" */ '@/components/Dashboard/Metrics/MetricsOverview')
-            ]);
-            console.log('Dashboard components preloaded successfully');
+            if (!signal.aborted) {
+              await Promise.all([
+                import(/* webpackChunkName: "dashboard-core" */ '@/components/Dashboard/DashboardComponents')
+                  .catch(err => {
+                    if (!signal.aborted) console.warn('Failed to preload component:', err);
+                    return null;
+                  }),
+                import(/* webpackChunkName: "metrics" */ '@/components/Dashboard/Metrics/MetricsOverview')
+                  .catch(err => {
+                    if (!signal.aborted) console.warn('Failed to preload component:', err);
+                    return null;
+                  })
+              ]);
+              
+              if (!signal.aborted) {
+                console.log('Dashboard components preloaded successfully');
+              }
+            }
           } catch (e) {
             // Non-critical error, don't block navigation
-            console.warn('Failed to preload some components:', e);
+            if (!signal.aborted) {
+              console.warn('Failed to preload some components:', e);
+            }
           }
           
           // Redirect after a short delay to show success message
-          setTimeout(() => {
-            navigate('/dashboard');
+          const redirectId = setTimeout(() => {
+            if (!signal.aborted) {
+              navigate('/dashboard');
+            }
           }, 1500);
-          return;
+          
+          // Clean up redirect timeout if component unmounts
+          return () => {
+            clearTimeout(redirectId);
+          };
         }
 
         // If no session, check URL for error parameters
@@ -93,28 +143,59 @@ export default function AuthCallback() {
         if (timeoutId) clearTimeout(timeoutId);
         if (graceTimeoutId) clearTimeout(graceTimeoutId);
         
+        // Skip processing if we're already aborted
+        if (signal.aborted) {
+          console.log('Auth callback abort during error handling');
+          return;
+        }
+        
+        // Don't process abort errors as user-facing errors
+        if (err instanceof DOMException && err.name === 'AbortError') {
+          console.log('Auth callback request was aborted');
+          return;
+        }
+        
         console.error('Auth callback error:', err);
-        setError(err instanceof Error ? err.message : 'Authentication failed');
+        const errorMessage = err instanceof Error ? err.message : 'Authentication failed';
+        setError(errorMessage);
         
         // Redirect back to login after showing error
-        setTimeout(() => {
-          navigate('/login');
+        const errorRedirectId = setTimeout(() => {
+          if (!signal.aborted) {
+            navigate('/login');
+          }
         }, 3000);
+        
+        // Clean up error redirect timeout if component unmounts
+        return () => {
+          clearTimeout(errorRedirectId);
+        };
       } finally {
         // If we showed the "taking longer" message but eventually completed,
         // show a resolved message
-        if (isLongRequest) {
+        if (isLongRequest && !signal.aborted) {
           toast({
             title: "Authentication completed",
             description: "Thank you for your patience.",
             variant: "default"
           });
         }
-        setIsLoading(false);
+        
+        if (!signal.aborted) {
+          setIsLoading(false);
+        }
       }
     };
 
     handleAuthCallback();
+    
+    // Clean up function
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort('Component unmounted');
+        abortControllerRef.current = null;
+      }
+    };
   }, [navigate, toast]);
   
   return (
