@@ -13,7 +13,7 @@ import { SessionValidator } from "@/components/SessionValidator";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { NavigationProgressBar } from "@/components/ui/progress-bar";
 import { WebVitalsMonitor, PerformanceDebugger } from "@/components/performance";
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { CriticalLoadingState } from "@/components/CriticalLoadingState";
 import AppRoutes from "./routes";
 
@@ -32,6 +32,44 @@ const queryClient = new QueryClient({
   },
 });
 
+// App initialization component to prevent render loops
+function AppInitializer({ children }: { children: React.ReactNode }) {
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [initTimeout, setInitTimeout] = useState(false);
+  
+  useEffect(() => {
+    // Mark as initialized immediately to avoid loading flicker for simple cases
+    const timer = setTimeout(() => setIsInitialized(true), 300);
+    
+    // Set a timeout flag after 10 seconds to avoid infinite loading
+    const timeoutTimer = setTimeout(() => setInitTimeout(true), 10000);
+    
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(timeoutTimer);
+    };
+  }, []);
+  
+  // Force continue if initialization takes too long
+  useEffect(() => {
+    if (initTimeout && !isInitialized) {
+      console.warn("App initialization taking too long, forcing continue");
+      setIsInitialized(true);
+    }
+  }, [initTimeout, isInitialized]);
+  
+  if (!isInitialized) {
+    return (
+      <CriticalLoadingState 
+        message="Starting application..."
+        fallbackAction={() => setIsInitialized(true)}
+      />
+    );
+  }
+  
+  return <>{children}</>;
+}
+
 function App() {
   logStartupPhase("App component rendering");
 
@@ -40,22 +78,24 @@ function App() {
       <ThemeProvider defaultTheme="system" storageKey="vite-react-theme">
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <Suspense fallback={<CriticalLoadingState message="Loading application..." />}>
-              <AuthProvider>
-                <AuthErrorBoundary>
-                  <SessionValidator>
-                    <WebVitalsMonitor />
-                    <PerformanceDebugger visible={process.env.NODE_ENV === 'development'} />
-                    <NavigationProgressBar variant="brand" />
-                    <BrowserCompatibilityCheck />
-                    <OfflineDetector />
-                    <OfflineBanner position="bottom" />
-                    <Toaster />
-                    <AppRoutes />
-                  </SessionValidator>
-                </AuthErrorBoundary>
-              </AuthProvider>
-            </Suspense>
+            <AppInitializer>
+              <Suspense fallback={<CriticalLoadingState message="Loading application..." />}>
+                <AuthProvider>
+                  <AuthErrorBoundary>
+                    <SessionValidator>
+                      <WebVitalsMonitor />
+                      <PerformanceDebugger visible={process.env.NODE_ENV === 'development'} />
+                      <NavigationProgressBar variant="brand" />
+                      <BrowserCompatibilityCheck />
+                      <OfflineDetector />
+                      <OfflineBanner position="bottom" />
+                      <Toaster />
+                      <AppRoutes />
+                    </SessionValidator>
+                  </AuthErrorBoundary>
+                </AuthProvider>
+              </Suspense>
+            </AppInitializer>
           </BrowserRouter>
         </QueryClientProvider>
       </ThemeProvider>
