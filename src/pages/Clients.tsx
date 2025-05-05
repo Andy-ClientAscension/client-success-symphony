@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout/Layout";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -30,6 +29,12 @@ export default function Clients() {
     minLoadingTime: 1000,
     priority: 1
   });
+  
+  // Keep a ref to the latest clients to avoid stale closure issues
+  const clientsRef = useRef(clients);
+  useEffect(() => {
+    clientsRef.current = clients;
+  }, [clients]);
   
   // Fix: Properly handle async/sync data operations with error handling
   const initializeClientData = useCallback(async () => {
@@ -95,7 +100,7 @@ export default function Clients() {
         toast({
           title: "Warning",
           description: "Kanban board data couldn't be loaded properly.",
-          variant: "default", // Fixed the invalid variant "warning" to "default"
+          variant: "default",
         });
       }
     } catch (error) {
@@ -123,7 +128,7 @@ export default function Clients() {
       });
   }, [initializeClientData]);
 
-  // Optimize storage event handling with debouncing
+  // Optimize storage event handling with debouncing and fix stale closure
   useEffect(() => {
     let debounceTimer: NodeJS.Timeout | null = null;
     
@@ -145,7 +150,9 @@ export default function Clients() {
           // Reload clients from storage
           try {
             const updatedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
-            if (updatedClients && updatedClients.length > 0) {
+            // Compare with the current reference to avoid unnecessary updates
+            if (updatedClients && updatedClients.length > 0 && 
+                JSON.stringify(updatedClients) !== JSON.stringify(clientsRef.current)) {
               setClients(updatedClients);
             }
             
@@ -169,7 +176,7 @@ export default function Clients() {
       window.removeEventListener('storageRestored', handleStorageChange as EventListener);
       if (debounceTimer) clearTimeout(debounceTimer);
     };
-  }, []);
+  }, []); // Removed the clients dependency since we're using the ref
 
   const handleAddNewClient = useCallback(() => {
     navigate("/add-client");

@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Client, getAllClients } from '@/lib/data';
 import { STORAGE_KEYS, saveData, loadData, deleteClientsGlobally } from '@/utils/persistence';
 import { useToast } from "@/hooks/use-toast";
@@ -39,6 +38,12 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     STORAGE_KEYS.CLIENTS, 
     defaultClients
   );
+  
+  // Keep a ref to the latest clients to avoid stale closure issues
+  const clientsRef = useRef(clients);
+  useEffect(() => {
+    clientsRef.current = clients;
+  }, [clients]);
   
   // Use smart loading to prevent flashing
   const { isLoading: showLoading } = useSmartLoading(isClientsLoading || isInitializing, {
