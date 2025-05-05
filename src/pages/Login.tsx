@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { Layout } from "@/components/Layout/Layout";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LoginForm } from "@/components/auth/LoginForm";
@@ -12,13 +11,14 @@ export default function Login() {
   console.log('[Login] Component rendering');
   
   const [error, setError] = useState<{ message: string; type?: string } | null>(null);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   
   console.log('[Login] State:', {
     isAuthenticated,
+    isLoading,
     hasError: !!error,
     locationState: location.state
   });
@@ -71,6 +71,16 @@ export default function Login() {
     }
   }, [apiError]);
 
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      console.log('[Login] User already authenticated, redirecting to dashboard');
+      announceToScreenReader("Already authenticated, redirecting to dashboard", "polite");
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, isLoading, navigate]);
+  
+  // Set focus and announce page loaded (separated from redirect logic)
   useEffect(() => {
     // Announce login page loaded
     console.log('[Login] Page loaded effect triggered');
@@ -87,14 +97,7 @@ export default function Login() {
         setFocusToElement('main-content');
       }
     }, 100);
-    
-    // Redirect to dashboard if already authenticated
-    if (isAuthenticated) {
-      console.log('[Login] User already authenticated, redirecting to dashboard');
-      announceToScreenReader("Already authenticated, redirecting to dashboard", "polite");
-      navigate('/dashboard', { replace: true });
-    }
-  }, [isAuthenticated, navigate]);
+  }, []);
 
   // Create a custom login layout component that doesn't show the sidebar
   return (

@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, lazy, Suspense, useCallback } from 'react';
+import React, { useEffect, useRef, lazy, Suspense, useCallback, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Layout } from "@/components/Layout/Layout";
 import { useAuth } from "@/hooks/use-auth";
@@ -9,9 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { announceToScreenReader, setFocusToElement } from "@/lib/accessibility";
 import { useAuthReducer } from '@/hooks/use-auth-reducer';
 import { CriticalLoadingState } from '@/components/CriticalLoadingState';
-
-// Session cache key for improved persistence
-const SESSION_CACHE_KEY = 'auth_session_cache';
 
 // Optimized loading component with reduced layout shift
 const OptimizedLoader = () => (
@@ -51,192 +48,76 @@ export default function Index() {
   const { toast } = useToast();
   const abortControllerRef = useRef<AbortController | null>(null);
   const [state, dispatch] = useAuthReducer();
-  const authTimeoutRef = useRef<number | null>(null);
+  const [navigationAttempted, setNavigationAttempted] = useState(false);
   
   // Log current state on every render
   console.log('[Index] Current state:', { 
     authState: state, 
     isAuthenticated, 
     isLoading,
+    navigationAttempted,
     location: location.pathname,
     hash: location.hash
   });
   
-  // Single consolidated timeout for emergency navigation
+  // Simple emergency timeout - navigate after 4 seconds regardless of state
   useEffect(() => {
-    console.log('[Index] Setting up emergency navigation timeout');
-    
-    // Clear any existing timeout
-    if (authTimeoutRef.current) {
-      clearTimeout(authTimeoutRef.current);
-      console.log('[Index] Cleared previous emergency timeout');
-    }
-    
-    // Set a single consolidated safety timeout - force navigate after 4 seconds
-    authTimeoutRef.current = window.setTimeout(() => {
-      console.warn("[Index] Auth process taking too long, forcing navigation");
-      dispatch({ type: 'URL_PROCESSED' });
-      dispatch({ type: 'PROCESSING_COMPLETE' });
-      
-      // Force navigation regardless of auth state
-      const targetPath = isAuthenticated ? '/dashboard' : '/login';
-      console.log(`[Index] Emergency timeout: Forcing navigation to ${targetPath}`);
-      navigate(isAuthenticated ? '/dashboard' : '/login', { replace: true });
-      
-      // Notify the user
-      toast({
-        title: "Navigation completed",
-        description: "Redirected automatically after delay"
-      });
-      
-    }, 4000); // Single consolidated timeout
-    
-    return () => {
-      if (authTimeoutRef.current) {
-        clearTimeout(authTimeoutRef.current);
-        console.log('[Index] Cleanup: Cleared emergency timeout on unmount');
+    const emergencyTimeout = setTimeout(() => {
+      if (!navigationAttempted) {
+        console.warn("[Index] Emergency navigation triggered after timeout");
+        setNavigationAttempted(true);
+        
+        // Force navigation regardless of auth state
+        const targetPath = isAuthenticated ? '/dashboard' : '/login';
+        console.log(`[Index] Emergency timeout: Forcing navigation to ${targetPath}`);
+        navigate(targetPath, { replace: true });
+        
+        toast({
+          title: "Navigation completed",
+          description: "Redirected automatically after delay"
+        });
       }
-    };
-  }, [navigate, dispatch, isAuthenticated, toast]);
+    }, 3000);
+    
+    return () => clearTimeout(emergencyTimeout);
+  }, [navigate, isAuthenticated, toast, navigationAttempted]);
   
-  // OPTIMIZATION: Modified navigation logic - navigate when EITHER condition is met
+  // Simplified navigation logic - navigate when auth state is known
   useEffect(() => {
-    console.log('[Index] Navigation effect triggered with:', {
-      processingAuth: state.processingAuth,
-      urlProcessed: state.urlProcessed,
+    // Skip if we've already attempted navigation
+    if (navigationAttempted) return;
+    
+    console.log('[Index] Navigation effect checking auth state:', {
       isAuthenticated,
       isLoading
     });
     
-    if (!state.processingAuth || state.urlProcessed) {
-      console.log('[Index] Navigation conditions met - proceeding with navigation');
+    // Only attempt navigation when auth state is determined (loading completed)
+    if (!isLoading) {
+      console.log('[Index] Auth loading complete, proceeding with navigation');
+      setNavigationAttempted(true);
       
       if (isAuthenticated) {
         console.log('[Index] User authenticated - navigating to dashboard');
         navigate('/dashboard', { replace: true });
-      } else if (!isLoading) {
-        console.log('[Index] User not authenticated and not loading - navigating to login');
-        navigate('/login', { replace: true });
       } else {
-        console.log('[Index] Still loading auth state - not navigating yet');
+        console.log('[Index] User not authenticated - navigating to login');
+        navigate('/login', { replace: true });
       }
-    } else {
-      console.log('[Index] Navigation conditions not met yet - waiting');
     }
-  }, [navigate, isAuthenticated, isLoading, state.processingAuth, state.urlProcessed]);
+  }, [isAuthenticated, isLoading, navigate, navigationAttempted]);
 
-  // Process authentication with parallelized requests
-  const processAuth = useCallback(async (accessToken: string, refreshToken: string) => {
-    console.log('[Index] processAuth started with tokens:', { accessToken: !!accessToken, refreshToken: !!refreshToken });
-    
-    dispatch({ type: 'START_PROCESSING' });
-    announceToScreenReader("Processing authentication", "polite");
-    
-    try {
-      console.log('[Index] Running session setting and user validation in parallel');
-      // OPTIMIZATION: Run session setting and user validation in parallel
-      const [sessionResult, userResult] = await Promise.all([
-        supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken || '',
-        }),
-        // Pre-fetch user data in parallel with session setting
-        supabase.auth.getUser()
-      ]);
-      
-      const { data, error } = sessionResult;
-      const { data: userData, error: userError } = userResult;
-      
-      console.log('[Index] Session setting results:', { 
-        sessionSuccess: !error,
-        userSuccess: !userError,
-        userId: userData?.user?.id || 'none'
-      });
-      
-      if (error) throw error;
-      
-      // Validate user data
-      if (userError || !userData?.user) {
-        console.error('[Index] User validation failed:', userError || 'No user data');
-        throw userError || new Error("Failed to fetch user after session set");
-      }
-      
-      console.log("[Index] Session validated successfully");
-      announceToScreenReader("Authentication successful", "polite");
-      
-      // Clear the URL hash
-      if (typeof window !== 'undefined') {
-        window.history.replaceState(null, '', window.location.pathname);
-        console.log('[Index] Cleared URL hash');
-      }
-      
-      // Refresh auth context - use the imported refreshSession from useAuth()
-      console.log('[Index] Refreshing auth session');
-      await refreshSession();
-      
-      // OPTIMIZATION: Use batch update to reduce state changes
-      console.log('[Index] Dispatching batch update for successful auth');
-      dispatch({ 
-        type: 'BATCH_UPDATE', 
-        payload: {
-          processingAuth: false,
-          authError: null,
-          urlProcessed: true
-        }
-      });
-      
-      toast({
-        title: "Authentication successful",
-        description: "You have been successfully logged in."
-      });
-      
-      // Navigate to dashboard
-      console.log('[Index] Navigating to dashboard after successful auth');
-      navigate('/dashboard', { replace: true });
-    } catch (error) {
-      console.error("[Index] Error setting session from URL:", error);
-      
-      const errorMessage = error instanceof Error ? error.message : "Authentication failed";
-      
-      dispatch({ type: 'AUTH_ERROR', payload: errorMessage });
-      
-      // Ensure both state flags are updated even on error
-      console.log('[Index] Dispatching PROCESSING_COMPLETE and URL_PROCESSED after auth error');
-      dispatch({ type: 'PROCESSING_COMPLETE' });
-      dispatch({ type: 'URL_PROCESSED' });
-      
-      announceToScreenReader(`Authentication error: ${errorMessage}`, "assertive");
-      
-      toast({
-        title: "Authentication Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
-      
-      console.log('[Index] Navigating to login page after auth error');
-      navigate('/login', { 
-        replace: true,
-        state: { authError: errorMessage }
-      });
-    }
-  }, [navigate, toast, refreshSession, dispatch]);
-
-  // Handle access token in URL (for email confirmations) - optimized version
+  // Handle access token in URL (for email confirmations)
   useEffect(() => {
-    console.log('[Index] Checking URL for auth tokens');
+    // Skip if we're not in a browser
+    if (typeof window === 'undefined') return;
     
-    // OPTIMIZATION: Early return for non-browser environments
-    if (typeof window === 'undefined') {
-      console.log('[Index] Non-browser environment detected, marking URL as processed');
-      dispatch({ type: 'URL_PROCESSED' });
-      return;
-    }
+    console.log('[Index] Checking URL for auth tokens');
     
     // Cleanup existing controller
     if (abortControllerRef.current) {
       abortControllerRef.current.abort('New effect run');
       abortControllerRef.current = null;
-      console.log('[Index] Aborted previous token processing');
     }
     
     // Create a new abort controller
@@ -247,24 +128,74 @@ export default function Index() {
     const accessToken = hashParams.get('access_token');
     
     if (!accessToken) {
-      console.log('[Index] No access token found in URL, marking URL as processed');
-      dispatch({ type: 'URL_PROCESSED' });
+      console.log('[Index] No access token found in URL');
       return;
     }
     
     // Process the authentication token
     console.log('[Index] Found access token in URL, processing authentication');
     const refreshToken = hashParams.get('refresh_token') || '';
-    processAuth(accessToken, refreshToken);
+    
+    // Function to process authentication
+    const processAuth = async () => {
+      try {
+        console.log('[Index] Setting session with tokens');
+        
+        const { data, error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || '',
+        });
+        
+        if (error) throw error;
+        
+        console.log("[Index] Session validated successfully");
+        announceToScreenReader("Authentication successful", "polite");
+        
+        // Clear the URL hash
+        window.history.replaceState(null, '', window.location.pathname);
+        console.log('[Index] Cleared URL hash');
+        
+        // Refresh auth context
+        await refreshSession();
+        
+        toast({
+          title: "Authentication successful",
+          description: "You have been successfully logged in."
+        });
+        
+        // Navigate to dashboard
+        setNavigationAttempted(true);
+        navigate('/dashboard', { replace: true });
+      } catch (error) {
+        console.error("[Index] Error setting session from URL:", error);
+        
+        const errorMessage = error instanceof Error ? error.message : "Authentication failed";
+        
+        toast({
+          title: "Authentication Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        
+        // Navigate to login page with error
+        setNavigationAttempted(true);
+        navigate('/login', { 
+          replace: true,
+          state: { authError: errorMessage }
+        });
+      }
+    };
+    
+    // Process auth async
+    processAuth();
     
     return () => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort('Component unmounted');
         abortControllerRef.current = null;
-        console.log('[Index] Cleanup: Aborted token processing on unmount');
       }
     };
-  }, [location.hash, processAuth, dispatch]);
+  }, [location.hash, navigate, toast, refreshSession]);
   
   return (
     <Layout>

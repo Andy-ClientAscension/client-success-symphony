@@ -29,9 +29,13 @@ export const authReducer = (state: AuthState, action: AuthAction): AuthState => 
   
   switch (action.type) {
     case 'START_PROCESSING':
+      // Only update if not already processing
+      if (state.processingAuth) return state;
       newState = { ...state, processingAuth: true, authError: null };
       break;
     case 'PROCESSING_COMPLETE':
+      // Only update if currently processing
+      if (!state.processingAuth) return state;
       newState = { ...state, processingAuth: false };
       break;
     case 'AUTH_SUCCESS':
@@ -41,6 +45,8 @@ export const authReducer = (state: AuthState, action: AuthAction): AuthState => 
       newState = { ...state, processingAuth: false, authError: action.payload };
       break;
     case 'URL_PROCESSED':
+      // Only update if not already processed
+      if (state.urlProcessed) return state;
       newState = { ...state, urlProcessed: true };
       break;
     case 'CLEANUP':
@@ -50,7 +56,7 @@ export const authReducer = (state: AuthState, action: AuthAction): AuthState => 
       newState = { ...state, ...action.payload };
       break;
     default:
-      newState = state;
+      return state;
   }
   
   console.log('[AuthReducer] State updated:', { previous: state, new: newState });

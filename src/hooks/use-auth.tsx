@@ -10,22 +10,15 @@ export function useAuth(): Auth.AuthContextType {
   const context = useContext(AuthContext);
   
   useEffect(() => {
-    console.log('[useAuth] Context state:', { 
-      isAuthenticated: context?.isAuthenticated,
-      isLoading: context?.isLoading,
-      user: context?.user ? 'exists' : 'null',
-      session: context?.session ? 'exists' : 'null',
-      lastAuthEvent: context?.lastAuthEvent
-    });
-    
-    // Refresh the TTL of cached session when hook is used
-    // This keeps frequently used sessions in cache longer
-    const cachedSession = getCachedSession();
-    if (cachedSession && context?.isAuthenticated) {
+    // Only run TTL refresh if we have an authenticated session
+    if (context?.isAuthenticated && context?.session) {
       console.log('[useAuth] Refreshing cached session TTL');
-      refreshCachedSessionTTL();
+      const cachedSession = getCachedSession();
+      if (cachedSession) {
+        refreshCachedSessionTTL();
+      }
     }
-  }, [context?.isAuthenticated, context?.isLoading, context?.user, context?.session, context?.lastAuthEvent]);
+  }, [context?.isAuthenticated, context?.session]);
   
   if (context === undefined) {
     const error = new Error("useAuth must be used within an AuthProvider");
