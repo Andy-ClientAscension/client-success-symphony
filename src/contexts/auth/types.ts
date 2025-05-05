@@ -36,7 +36,7 @@ export namespace Auth {
     error: Error | null;
     login: (email: string, password: string) => Promise<boolean>;
     register: (email: string, password: string, inviteCode: string) => Promise<{ success: boolean; message: string }>;
-    logout: () => void;
+    logout: () => Promise<void>;
     validateInviteCode: (code: string) => Promise<boolean>;
     refreshSession: () => Promise<void>;
     verifyMagicLink: (token: string) => Promise<{

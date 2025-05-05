@@ -13,10 +13,21 @@ export function useAuth() {
       isAuthenticated: false,
       isLoading: false,
       user: null,
+      session: null,
+      error: null,
+      tokenValidationState: 'unknown',
+      lastAuthEvent: null,
+      verifyMagicLink: async () => ({ 
+        success: false, 
+        status: 'invalid' as const, 
+        message: "Auth context not available" 
+      }),
       refreshSession: async () => {},
       login: async () => false,
       logout: async () => {},
-      register: async () => ({ success: false, message: "Auth context not available" })
+      register: async () => ({ success: false, message: "Auth context not available" }),
+      validateInviteCode: async () => false,
+      sessionExpiryTime: null
     };
   }
   

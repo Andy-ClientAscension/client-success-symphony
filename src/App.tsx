@@ -1,4 +1,3 @@
-
 import { SentryRouteErrorBoundary } from "@/components/SentryErrorBoundary";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -46,7 +45,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
     toast({
       title: "App initialized with warnings",
       description: "Some components may not be fully loaded. Refresh if you encounter issues.",
-      variant: "warning",
+      variant: "default",
     });
   }, [toast]);
   

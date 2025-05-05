@@ -20,7 +20,27 @@ export function useAuth(): Auth.AuthContextType {
   if (context === undefined) {
     const error = new Error("useAuth must be used within an AuthProvider");
     console.error(error);
-    throw error;
+    // Instead of throwing, return a safe fallback
+    return {
+      isAuthenticated: false,
+      isLoading: false,
+      user: null,
+      session: null,
+      error: null,
+      tokenValidationState: 'unknown' as const,
+      lastAuthEvent: null,
+      verifyMagicLink: async () => ({ 
+        success: false, 
+        status: 'invalid' as const, 
+        message: "Auth context not available" 
+      }),
+      refreshSession: async () => {},
+      login: async () => false,
+      logout: async () => {},
+      register: async () => ({ success: false, message: "Auth context not available" }),
+      validateInviteCode: async () => false,
+      sessionExpiryTime: null
+    };
   }
   
   return context;
