@@ -6,7 +6,7 @@ import './index.css'
 import { initializeSentry } from '@/utils/sentry/config';
 import { logStartupPhase, logDetailedError } from '@/utils/errorHandling';
 import { registerServiceWorker } from '@/utils/serviceWorkerRegistration';
-import { addResourceHints, type ResourceHint } from '@/utils/resourceHints';
+import { addResourceHints, type ResourceHint, setupPreconnections } from '@/utils/resourceHints';
 import { validateEnvironmentVariables, getDevelopmentFallbacks } from '@/utils/envValidator';
 
 logStartupPhase("Application initialization starting");
@@ -23,6 +23,9 @@ if (missingEnvVars.length > 0) {
     console.log('Development fallbacks:', fallbacks);
   }
 }
+
+// Set up preconnections to domains we'll use
+setupPreconnections();
 
 // Add resource hints for critical assets
 const addCriticalResourceHints = () => {
@@ -113,3 +116,4 @@ try {
     </div>
   `;
 }
+

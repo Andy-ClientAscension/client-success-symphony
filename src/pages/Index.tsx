@@ -18,6 +18,53 @@ export default function Index() {
   const abortControllerRef = useRef<AbortController | null>(null);
   const [state, dispatch] = useAuthReducer();
   
+  // Preload critical dashboard assets when authentication is being processed
+  useEffect(() => {
+    if (state.processingAuth) {
+      // Prefetch critical components that will be needed after auth
+      const prefetchComponents = async () => {
+        // Preload dashboard components in parallel
+        const componentPromises = [
+          import(/* webpackChunkName: "dashboard-core" */ '@/components/Dashboard/DashboardComponents'),
+          import(/* webpackChunkName: "chart-library" */ '@/components/Dashboard/ChartLibrary'),
+          import(/* webpackChunkName: "lazy-charts" */ '@/components/Dashboard/LazyCharts'),
+        ];
+        
+        try {
+          await Promise.all(componentPromises);
+          console.log('Critical dashboard components prefetched successfully');
+        } catch (error) {
+          console.warn('Non-critical error during prefetch:', error);
+          // Don't throw, this is just a prefetch optimization
+        }
+      };
+      
+      // Add resource hints to head
+      const addResourceHints = () => {
+        const hints = [
+          { rel: 'preload', href: '/src/components/Dashboard/Metrics/HeroMetrics.tsx', as: 'script' },
+          { rel: 'prefetch', href: '/src/components/Dashboard/Metrics/MetricsCards.tsx', as: 'script' },
+        ];
+        
+        hints.forEach(hint => {
+          // Skip if already exists
+          const existingHint = document.querySelector(`link[rel="${hint.rel}"][href="${hint.href}"]`);
+          if (existingHint) return;
+          
+          const link = document.createElement('link');
+          link.rel = hint.rel;
+          link.href = hint.href;
+          if (hint.as) link.setAttribute('as', hint.as);
+          document.head.appendChild(link);
+        });
+      };
+      
+      // Execute prefetch strategies
+      prefetchComponents();
+      addResourceHints();
+    }
+  }, [state.processingAuth]);
+  
   // Immediate redirection for faster loading based on auth state
   useEffect(() => {
     if (!isLoading && !state.processingAuth && state.urlProcessed) {

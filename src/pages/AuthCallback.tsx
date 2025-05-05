@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,6 +6,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { preloadPageResources } from '@/utils/resourceHints';
 
 export default function AuthCallback() {
   const [error, setError] = useState<string | null>(null);
@@ -17,6 +17,9 @@ export default function AuthCallback() {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Preload critical dashboard resources as soon as the auth callback page loads
+    preloadPageResources('dashboard');
+    
     // Handle the OAuth callback
     const handleAuthCallback = async () => {
       let timeoutId: number | undefined;
@@ -55,6 +58,18 @@ export default function AuthCallback() {
             title: 'Login Successful',
             description: 'You have successfully logged in.',
           });
+          
+          // Preload dashboard components while showing success message
+          try {
+            await Promise.all([
+              import(/* webpackChunkName: "dashboard-core" */ '@/components/Dashboard/DashboardComponents'),
+              import(/* webpackChunkName: "metrics" */ '@/components/Dashboard/Metrics/MetricsOverview')
+            ]);
+            console.log('Dashboard components preloaded successfully');
+          } catch (e) {
+            // Non-critical error, don't block navigation
+            console.warn('Failed to preload some components:', e);
+          }
           
           // Redirect after a short delay to show success message
           setTimeout(() => {

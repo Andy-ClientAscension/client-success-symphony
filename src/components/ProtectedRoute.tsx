@@ -1,4 +1,3 @@
-
 import { ReactNode, useEffect, useRef } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
@@ -10,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { announceToScreenReader, setFocusToElement } from "@/lib/accessibility";
 import { useAuthError } from "@/hooks/use-auth-error";
 import { useAuthReducer } from "@/hooks/use-auth-reducer";
+import { preloadPageResources, prefetchRoute } from "@/utils/resourceHints";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -35,6 +35,18 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
     
     // Announce authentication check to screen readers
     announceToScreenReader("Verifying authentication status", "polite");
+    
+    // Preload resources based on current route
+    const currentPath = location.pathname.split('/')[1] || 'dashboard';
+    preloadPageResources(currentPath);
+    
+    // Prefetch likely next routes based on current route
+    if (currentPath === 'dashboard') {
+      prefetchRoute('/clients');
+      prefetchRoute('/analytics');
+    } else if (currentPath === 'clients') {
+      prefetchRoute('/dashboard');
+    }
     
     // Optionally refresh session with cancellation support
     const refreshAuthWithCancellation = async () => {
