@@ -54,13 +54,27 @@ export default function Index() {
       dispatch({ type: 'START_PROCESSING' });
       announceToScreenReader("Processing authentication", "polite");
       
+      // Improved timeout strategy with staggered timeouts
+      const INITIAL_TIMEOUT_MS = 5000; // Reduced from 10s to 5s
+      const GRACE_PERIOD_MS = 2000; // Additional buffer
+
       // Create a timeout to abort long-running requests
-      const TIMEOUT_MS = 10000; // 10 seconds timeout
+      let isTimedOut = false;
       const timeoutId = setTimeout(() => {
-        if (abortControllerRef.current) {
-          abortControllerRef.current.abort('Timeout exceeded');
-        }
-      }, TIMEOUT_MS);
+        isTimedOut = true;
+        toast({
+          title: "Authentication is taking longer than expected",
+          description: "Please wait a bit longer while we complete the process...",
+          variant: "default"
+        });
+        
+        // Grace period timeout
+        setTimeout(() => {
+          if (abortControllerRef.current) {
+            abortControllerRef.current.abort('Timeout exceeded after grace period');
+          }
+        }, GRACE_PERIOD_MS);
+      }, INITIAL_TIMEOUT_MS);
       
       try {
         console.log("Found access token in URL, setting session");
@@ -75,6 +89,7 @@ export default function Index() {
           supabase.auth.getUser()
         ]);
         
+        // Clear timeout as we got the response
         clearTimeout(timeoutId);
         
         const { data, error } = sessionResult;
@@ -109,6 +124,7 @@ export default function Index() {
         // Navigate to dashboard
         navigate('/dashboard', { replace: true });
       } catch (error) {
+        // Clear timeout as we got an error
         clearTimeout(timeoutId);
         
         // Don't process abort errors as real errors
@@ -142,6 +158,14 @@ export default function Index() {
           state: { authError: errorMessage }
         });
       } finally {
+        // If we timed out but eventually completed, show a resolved message
+        if (isTimedOut) {
+          toast({
+            title: "Authentication completed",
+            description: "Thank you for your patience.",
+            variant: "default"
+          });
+        }
         dispatch({ type: 'URL_PROCESSED' });
       }
     };

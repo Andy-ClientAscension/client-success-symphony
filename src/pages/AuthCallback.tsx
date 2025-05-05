@@ -5,12 +5,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, CheckCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AuthCallback() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLongRequest, setIsLongRequest] = useState(false);
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -18,9 +19,30 @@ export default function AuthCallback() {
   useEffect(() => {
     // Handle the OAuth callback
     const handleAuthCallback = async () => {
+      let timeoutId: number | undefined;
+      let graceTimeoutId: number | undefined;
+      
       try {
+        // Setup staggered timeout handling
+        const INITIAL_TIMEOUT_MS = 5000; // Reduced initial timeout
+        const GRACE_PERIOD_MS = 2000; // Additional grace period
+        
+        // Set a timeout to show a "taking longer than expected" message
+        timeoutId = window.setTimeout(() => {
+          setIsLongRequest(true);
+          toast({
+            title: "Authentication is taking longer than expected",
+            description: "Please wait a bit longer while we complete the process...",
+            variant: "default"
+          });
+        }, INITIAL_TIMEOUT_MS);
+        
+        // Main authentication flow
         // OPTIMIZATION: Fetch session with minimal delay
         const { data, error } = await supabase.auth.getSession();
+        
+        // Clear the initial timeout since we got a response
+        if (timeoutId) clearTimeout(timeoutId);
         
         if (error) {
           throw error;
@@ -52,6 +74,10 @@ export default function AuthCallback() {
           throw new Error('Authentication failed for unknown reason. Please try again.');
         }
       } catch (err) {
+        // Clear any pending timeouts
+        if (timeoutId) clearTimeout(timeoutId);
+        if (graceTimeoutId) clearTimeout(graceTimeoutId);
+        
         console.error('Auth callback error:', err);
         setError(err instanceof Error ? err.message : 'Authentication failed');
         
@@ -60,6 +86,15 @@ export default function AuthCallback() {
           navigate('/login');
         }, 3000);
       } finally {
+        // If we showed the "taking longer" message but eventually completed,
+        // show a resolved message
+        if (isLongRequest) {
+          toast({
+            title: "Authentication completed",
+            description: "Thank you for your patience.",
+            variant: "default"
+          });
+        }
         setIsLoading(false);
       }
     };
@@ -76,7 +111,17 @@ export default function AuthCallback() {
               <>
                 <Spinner size="lg" />
                 <p className="text-lg font-medium">Completing authentication...</p>
-                <p className="text-sm text-gray-500">Please wait while we finish the login process.</p>
+                {isLongRequest ? (
+                  <Alert className="bg-yellow-50 border-yellow-200">
+                    <Clock className="h-5 w-5 text-yellow-600" />
+                    <AlertDescription className="text-yellow-800 mt-2">
+                      <p className="font-medium">Authentication is taking longer than usual</p>
+                      <p className="text-sm mt-1">Please wait while we complete the process.</p>
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <p className="text-sm text-gray-500">Please wait while we finish the login process.</p>
+                )}
               </>
             )}
             
