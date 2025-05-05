@@ -1,11 +1,11 @@
-import React, { useRef } from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
+
+import React from "react";
 import { Client } from "@/lib/data";
-import { ResponsiveTable } from "../Shared/ResponsiveTable";
 import { ResponsiveGrid } from "../Shared/ResponsiveGrid";
 import { ClientKanbanView } from "../ClientKanbanView";
 import { Badge } from "@/components/ui/badge";
 import { VirtualizedClientList } from "./VirtualizedClientList";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ClientListContentProps {
   viewMode: 'table' | 'kanban';
@@ -23,6 +23,7 @@ interface ClientListContentProps {
   itemsPerPage: number;
   indexOfFirstItem: number;
   indexOfLastItem: number;
+  isLoading?: boolean;
 }
 
 export function ClientListContent({
@@ -40,7 +41,8 @@ export function ClientListContent({
   totalItems,
   itemsPerPage,
   indexOfFirstItem,
-  indexOfLastItem
+  indexOfLastItem,
+  isLoading = false
 }: ClientListContentProps) {
   const getStatusBadge = (status: Client['status']) => {
     const colorMap = {
@@ -139,21 +141,30 @@ export function ClientListContent({
         >
           <button
             className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:outline-none"
-            onClick={() => onViewDetails(client)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewDetails(client);
+            }}
             aria-label={`View details for ${client.name}`}
           >
             View
           </button>
           <button
             className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:outline-none"
-            onClick={() => onEditMetrics(client)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditMetrics(client);
+            }}
             aria-label={`Edit metrics for ${client.name}`}
           >
             Edit
           </button>
           <button
             className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:outline-none"
-            onClick={() => onUpdateNPS(client)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onUpdateNPS(client);
+            }}
             aria-label={`Update NPS for ${client.name}`}
           >
             NPS
@@ -168,6 +179,7 @@ export function ClientListContent({
     <div 
       role="region" 
       aria-label="Client List"
+      data-testid="client-list-content"
     >
       {viewMode === 'table' ? (
         <VirtualizedClientList
@@ -187,6 +199,7 @@ export function ClientListContent({
             startIndex: indexOfFirstItem,
             endIndex: indexOfLastItem
           }}
+          isLoading={isLoading}
         />
       ) : (
         <ResponsiveGrid
@@ -196,11 +209,21 @@ export function ClientListContent({
           role="region"
           aria-label="Client kanban board"
         >
-          <ClientKanbanView 
-            clients={currentItems} 
-            onEditMetrics={onEditMetrics} 
-            onUpdateNPS={onUpdateNPS} 
-          />
+          {isLoading ? (
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={`skeleton-${i}`} className="p-4 border rounded-md">
+                <Skeleton className="h-6 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2 mb-1" />
+                <Skeleton className="h-4 w-1/3" />
+              </div>
+            ))
+          ) : (
+            <ClientKanbanView 
+              clients={currentItems} 
+              onEditMetrics={onEditMetrics} 
+              onUpdateNPS={onUpdateNPS} 
+            />
+          )}
         </ResponsiveGrid>
       )}
     </div>

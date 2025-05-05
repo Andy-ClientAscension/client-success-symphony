@@ -3,6 +3,7 @@ import React, { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Client } from "@/lib/data";
 import { VirtualizedClientRow } from "./VirtualizedClientRow";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface PaginationProps {
   currentPage: number;
@@ -23,6 +24,7 @@ interface VirtualizedClientListProps {
   onEditMetrics: (client: Client) => void;
   onUpdateNPS: (client: Client) => void;
   paginationProps: PaginationProps;
+  isLoading?: boolean;
 }
 
 export function VirtualizedClientList({
@@ -33,16 +35,31 @@ export function VirtualizedClientList({
   onViewDetails,
   onEditMetrics,
   onUpdateNPS,
-  paginationProps
+  paginationProps,
+  isLoading = false
 }: VirtualizedClientListProps) {
   const tableContainerRef = useRef<HTMLDivElement>(null);
   
   const rowVirtualizer = useVirtualizer({
-    count: clients.length,
+    count: isLoading ? 5 : clients.length || 0,
     getScrollElement: () => tableContainerRef.current,
     estimateSize: () => 60, // Estimated row height
     overscan: 5, // Number of items to render before and after the visible area
   });
+
+  // If we have no clients and are not loading, show empty state
+  if (!isLoading && (!clients || clients.length === 0)) {
+    return (
+      <div className="border rounded-lg mb-4 p-6 text-center">
+        <p className="text-muted-foreground">No clients found</p>
+      </div>
+    );
+  }
+
+  // Handler for row clicks
+  const handleRowClick = (client: Client) => {
+    onViewDetails(client);
+  };
 
   // Pagination controls
   const renderPagination = () => {
@@ -52,16 +69,22 @@ export function VirtualizedClientList({
       <div className="flex items-center justify-between py-4 px-2">
         <div>
           <p className="text-sm text-muted-foreground">
-            Showing <span className="font-medium">{startIndex + 1}</span> to{" "}
-            <span className="font-medium">{endIndex}</span> of{" "}
-            <span className="font-medium">{totalItems}</span> clients
+            {isLoading ? (
+              <Skeleton className="w-40 h-4" />
+            ) : (
+              <>
+                Showing <span className="font-medium">{startIndex + 1}</span> to{" "}
+                <span className="font-medium">{endIndex}</span> of{" "}
+                <span className="font-medium">{totalItems}</span> clients
+              </>
+            )}
           </p>
         </div>
         <div className="flex gap-1">
           <button
             className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50"
             onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 1}
+            disabled={currentPage === 1 || isLoading}
           >
             Previous
           </button>
@@ -85,8 +108,9 @@ export function VirtualizedClientList({
                       pageNum === currentPage ? "bg-primary text-primary-foreground" : "hover:bg-gray-100 dark:hover:bg-gray-800"
                     }`}
                     onClick={() => onPageChange(pageNum)}
+                    disabled={isLoading}
                   >
-                    {pageNum}
+                    {isLoading ? <Skeleton className="w-4 h-4" /> : pageNum}
                   </button>
                 );
               }
@@ -96,7 +120,7 @@ export function VirtualizedClientList({
           <button
             className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50"
             onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
+            disabled={currentPage === totalPages || isLoading}
           >
             Next
           </button>
@@ -127,21 +151,36 @@ export function VirtualizedClientList({
               </tr>
             </thead>
             <tbody>
-              {rowVirtualizer.getVirtualItems().map((virtualRow) => (
-                <VirtualizedClientRow
-                  key={clients[virtualRow.index].id}
-                  client={clients[virtualRow.index]}
-                  columns={columns}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: `${virtualRow.size}px`,
-                    transform: `translateY(${virtualRow.start}px)`,
-                  }}
-                />
-              ))}
+              {isLoading ? (
+                // Loading state
+                Array.from({ length: 5 }).map((_, idx) => (
+                  <tr key={`skeleton-${idx}`} className="animate-pulse">
+                    {columns.map((column) => (
+                      <td key={`skeleton-${idx}-${column.key}`} className="py-3 px-4">
+                        <Skeleton className="h-6 w-full" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : (
+                // Virtualized rows
+                rowVirtualizer.getVirtualItems().map((virtualRow) => (
+                  <VirtualizedClientRow
+                    key={clients[virtualRow.index]?.id || `virtual-row-${virtualRow.index}`}
+                    client={clients[virtualRow.index]}
+                    columns={columns}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: `${virtualRow.size}px`,
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                    onClick={handleRowClick}
+                  />
+                ))
+              )}
             </tbody>
           </table>
           <div style={{ height: `${rowVirtualizer.getTotalSize()}px` }} />
