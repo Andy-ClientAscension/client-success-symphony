@@ -1,9 +1,10 @@
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStateMachineContext } from '@/contexts/auth-state-machine';
 import { useToast } from '@/hooks/use-toast';
 import { getCachedSession, cacheSession, clearCachedSession } from '@/utils/sessionCache';
+import { safeAbort, createAbortController } from '@/utils/abortUtils';
 
 // Grace periods (in ms) before retrying various operations
 const REFRESH_DEBOUNCE = 2000;  // Minimum time between refreshes
@@ -28,8 +29,19 @@ export function useSessionCoordination() {
   const refreshPromiseRef = useRef<Promise<boolean> | null>(null);
   const refreshAttemptsRef = useRef<number>(0);
   const backoffTimeRef = useRef<number>(BACKOFF_INITIAL);
+  const abortControllerRef = useRef<AbortController | null>(null);
   
-  // Optimized session refresh with debouncing and caching
+  // Clean up abort controller on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        safeAbort(abortControllerRef.current, 'Component unmounted');
+        abortControllerRef.current = null;
+      }
+    };
+  }, []);
+  
+  // Optimized session refresh with debouncing, caching and abort control
   const refreshSession = useCallback(async (forceRefresh = false): Promise<boolean> => {
     const now = Date.now();
     
@@ -48,14 +60,33 @@ export function useSessionCoordination() {
       return Promise.resolve(cachedSession !== null || isAuthenticated === true);
     }
     
+    // Abort any previous ongoing request
+    if (abortControllerRef.current) {
+      safeAbort(abortControllerRef.current, 'New session refresh requested');
+    }
+
+    // Create a new abort controller for this request
+    const { controller, signal } = createAbortController();
+    abortControllerRef.current = controller;
+    
     // Create new refresh promise
     console.log(`[SessionCoordination] Starting session refresh, forceRefresh=${forceRefresh}`);
     refreshPromiseRef.current = (async (): Promise<boolean> => {
       try {
         lastRefreshTimeRef.current = now;
         
+        // Exit early if abort was requested
+        if (signal.aborted) {
+          throw new Error('Session refresh aborted');
+        }
+        
         // Try to use the new state machine's session check
         const isValid = await checkSession(forceRefresh);
+        
+        // Check if abort was requested during the operation
+        if (signal.aborted) {
+          throw new Error('Session refresh aborted after check');
+        }
         
         if (isValid) {
           console.log("[SessionCoordination] Session refresh successful");
@@ -64,7 +95,12 @@ export function useSessionCoordination() {
           
           // Cache the session for future quick access
           try {
+            if (signal.aborted) return false;
+            
             const { data } = await supabase.auth.getSession(); 
+            
+            if (signal.aborted) return false;
+            
             if (data.session) {
               cacheSession(data.session);
             }
@@ -80,6 +116,12 @@ export function useSessionCoordination() {
         clearCachedSession();
         return false;
       } catch (error) {
+        // Don't process errors if already aborted
+        if (signal.aborted) {
+          console.log("[SessionCoordination] Session refresh aborted, skipping error handling");
+          return false;
+        }
+        
         console.error("[SessionCoordination] Session refresh error:", error);
         
         // Implement exponential backoff for retries
@@ -93,7 +135,8 @@ export function useSessionCoordination() {
         if (refreshAttemptsRef.current <= 2 && 
             error instanceof Error && 
             !error.message.includes('timeout') &&
-            !error.message.includes('cancel')) {
+            !error.message.includes('cancel') &&
+            !error.message.includes('abort')) {
           toast({
             title: "Session Refresh Error",
             description: error.message,
@@ -105,6 +148,11 @@ export function useSessionCoordination() {
       } finally {
         // Clear the promise ref so future refreshes can occur
         refreshPromiseRef.current = null;
+        
+        // Clear the controller reference if this is still the active controller
+        if (abortControllerRef.current === controller) {
+          abortControllerRef.current = null;
+        }
       }
     })();
     
@@ -121,9 +169,28 @@ export function useSessionCoordination() {
     // Dispatch to update state right away
     dispatch({ type: 'SESSION_CHECK_START' });
     
+    // Abort any previous ongoing request
+    if (abortControllerRef.current) {
+      safeAbort(abortControllerRef.current, 'New session verification requested');
+    }
+
+    // Create a new abort controller for this request
+    const { controller, signal } = createAbortController();
+    abortControllerRef.current = controller;
+    
     try {
+      // Exit early if abort was requested
+      if (signal.aborted) {
+        throw new Error('Session verification aborted');
+      }
+      
       // Force a fresh session check
       const result = await refreshSession(true);
+      
+      // Check if abort was requested during the operation
+      if (signal.aborted) {
+        throw new Error('Session verification aborted after refresh');
+      }
       
       if (result) {
         toast({
@@ -140,6 +207,12 @@ export function useSessionCoordination() {
         return false;
       }
     } catch (error) {
+      // Don't process errors if already aborted
+      if (signal.aborted) {
+        console.log("[SessionCoordination] Session verification aborted, skipping error handling");
+        return false;
+      }
+      
       console.error("Session verification error:", error);
       toast({
         title: "Verification Error",
@@ -147,6 +220,11 @@ export function useSessionCoordination() {
         variant: "destructive"
       });
       return false;
+    } finally {
+      // Clear the controller reference if this is still the active controller
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+      }
     }
   }, [dispatch, refreshSession, toast]);
   

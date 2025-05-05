@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Layout } from "@/components/Layout/Layout";
@@ -7,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { announceToScreenReader } from "@/lib/accessibility";
 import { useAuthStateMachineContext } from '@/contexts/auth-state-machine';
 import { useSessionCoordination } from '@/hooks/use-session-coordination';
+import { safeAbort, createAbortController } from "@/utils/abortUtils";
 
 // This is the landing page that redirects based on auth state
 export default function Index() {
@@ -14,6 +16,7 @@ export default function Index() {
   const location = useLocation();
   const { toast } = useToast();
   const processedUrlRef = useRef<boolean>(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
   
   // Get the auth state machine context with all its methods
   const authContext = useAuthStateMachineContext();
@@ -21,13 +24,23 @@ export default function Index() {
     state: authState, 
     dispatch, 
     isAuthenticated,
-    authenticateWithToken  // This is properly typed now
+    authenticateWithToken
   } = authContext;
   
   const { 
     refreshSession, 
     checkSession 
   } = useSessionCoordination();
+
+  // Clean up abort controller on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        safeAbort(abortControllerRef.current, 'Component unmounted');
+        abortControllerRef.current = null;
+      }
+    };
+  }, []);
   
   // Process access token from URL if present (only once)
   useEffect(() => {
@@ -48,18 +61,47 @@ export default function Index() {
     // Flag as processed immediately to prevent duplicate processing
     processedUrlRef.current = true;
     
-    // Process the access token
+    // Process the access token with abort control
     console.log("[Index] Processing access token from URL");
     const refreshToken = hashParams.get('refresh_token') || '';
+    
+    // Abort any previous ongoing request
+    if (abortControllerRef.current) {
+      safeAbort(abortControllerRef.current, 'New token authentication requested');
+    }
+
+    // Create a new abort controller for this request
+    const { controller, signal } = createAbortController();
+    abortControllerRef.current = controller;
     
     // Clean up URL before authentication attempt
     window.history.replaceState(null, '', window.location.pathname);
     
-    // Use the new authentication helper
-    authenticateWithToken(accessToken, refreshToken)
-      .catch(error => {
-        console.error("[Index] Error in token authentication:", error);
-      });
+    // Use the new authentication helper with abort signal handling
+    const processToken = async () => {
+      try {
+        if (signal.aborted) return;
+        
+        await authenticateWithToken(accessToken, refreshToken);
+        
+        // Check if aborted during API call
+        if (signal.aborted) {
+          console.log("[Index] Token authentication aborted after API call");
+          return;
+        }
+      } catch (error) {
+        if (!signal.aborted) {
+          console.error("[Index] Error in token authentication:", error);
+        }
+      } finally {
+        // Clear the reference if this is still the active controller
+        if (abortControllerRef.current === controller) {
+          abortControllerRef.current = null;
+        }
+      }
+    };
+    
+    processToken();
     
   }, [navigate, authenticateWithToken, toast]);
   
@@ -74,10 +116,29 @@ export default function Index() {
     if (authState === 'initializing' && !isAuthenticated) {
       console.log("[Index] Initializing auth state machine");
       
-      // Start session check with the state machine
-      checkSession(false).catch(error => {
-        console.error("[Index] Error checking session:", error);
-      });
+      // Create a separate abort controller for session check
+      const { controller, signal } = createAbortController();
+      
+      const checkAuthSession = async () => {
+        try {
+          if (signal.aborted) return;
+          
+          await checkSession(false);
+          
+          if (signal.aborted) {
+            console.log("[Index] Session check aborted after API call");
+          }
+        } catch (error) {
+          if (!signal.aborted) {
+            console.error("[Index] Error checking session:", error);
+          }
+        } finally {
+          // No need to clear reference as this is a one-time check
+          controller.abort('Operation completed');
+        }
+      };
+      
+      checkAuthSession();
     }
     
     // Handle authenticated state

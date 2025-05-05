@@ -1,9 +1,10 @@
 
-import React, { createContext, useContext, useCallback } from "react";
+import React, { createContext, useContext, useCallback, useRef, useEffect } from "react";
 import { useAuthStateMachine } from "@/hooks/use-auth-state-machine";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Session, AuthError } from '@supabase/supabase-js';
+import { safeAbort, createAbortController } from "@/utils/abortUtils";
 
 // Create context with default values
 const AuthStateMachineContext = createContext<ReturnType<typeof useAuthStateMachine> | undefined>(undefined);
@@ -13,11 +14,36 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
   const { toast } = useToast();
   const authStateMachine = useAuthStateMachine();
   const { dispatch, withAuthTimeout } = authStateMachine;
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Cleanup function for aborting ongoing requests
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        safeAbort(abortControllerRef.current, 'Component unmounted');
+        abortControllerRef.current = null;
+      }
+    };
+  }, []);
   
-  // Enhanced session check that uses our timeout mechanisms
+  // Enhanced session check that uses our timeout mechanisms and abort controls
   const checkSession = useCallback(async (forceRefresh = false) => {
+    // Abort any previous ongoing request
+    if (abortControllerRef.current) {
+      safeAbort(abortControllerRef.current, 'New session check requested');
+    }
+
+    // Create a new abort controller for this request
+    const { controller, signal } = createAbortController();
+    abortControllerRef.current = controller;
+    
     try {
       dispatch({ type: 'SESSION_CHECK_START' });
+      
+      // If component has unmounted or a new request has started, exit early
+      if (signal.aborted) {
+        throw new Error('Session check aborted');
+      }
       
       // Fix: Properly type the response from getSession
       const { data, error } = await withAuthTimeout<{
@@ -27,6 +53,11 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
         supabase.auth.getSession(),
         2000
       );
+
+      // Check if abort was requested during the API call
+      if (signal.aborted) {
+        throw new Error('Session check aborted after API call');
+      }
       
       if (error) {
         console.error("Session check error:", error);
@@ -41,7 +72,7 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
         dispatch({ type: 'SESSION_CHECK_SUCCESS' });
         
         // Only show toast on forced refresh
-        if (forceRefresh) {
+        if (forceRefresh && !signal.aborted) {
           toast({
             title: "Session verified",
             description: "Your authentication has been refreshed",
@@ -56,8 +87,15 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
     } catch (error) {
       console.error("Session check exception:", error);
       
+      // Don't process errors if already aborted
+      if (signal.aborted) {
+        console.log("Session check aborted, skipping error handling");
+        return false;
+      }
+      
       // Show toast only for non-timeout errors
-      if (error instanceof Error && !error.message.includes('timed out') && !error.message.includes('cancelled')) {
+      if (error instanceof Error && !error.message.includes('timed out') && 
+          !error.message.includes('cancelled') && !error.message.includes('aborted')) {
         toast({
           title: "Authentication Error",
           description: error instanceof Error ? error.message : "Failed to verify session",
@@ -71,13 +109,32 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
       });
       
       return false;
+    } finally {
+      // Clear the reference if this is still the active controller
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+      }
     }
   }, [dispatch, withAuthTimeout, toast]);
   
-  // Enhanced authentication helper with timeout handling
+  // Enhanced authentication helper with timeout and abort handling
   const authenticateWithToken = useCallback(async (accessToken: string, refreshToken?: string) => {
+    // Abort any previous ongoing request
+    if (abortControllerRef.current) {
+      safeAbort(abortControllerRef.current, 'New authentication requested');
+    }
+
+    // Create a new abort controller for this request
+    const { controller, signal } = createAbortController();
+    abortControllerRef.current = controller;
+    
     try {
       dispatch({ type: 'TOKEN_CHECK_START' });
+      
+      // Exit early if abort was requested
+      if (signal.aborted) {
+        throw new Error('Authentication aborted');
+      }
       
       // Fix: Properly type the response from setSession
       const { data, error } = await withAuthTimeout<{
@@ -91,22 +148,37 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
         3000
       );
       
+      // Check if abort was requested during the API call
+      if (signal.aborted) {
+        throw new Error('Authentication aborted after API call');
+      }
+      
       if (error) {
         throw error;
       }
       
       if (data.session) {
         dispatch({ type: 'AUTHENTICATE_SUCCESS' });
-        toast({
-          title: "Authentication successful",
-          description: "You have been logged in successfully"
-        });
+        
+        if (!signal.aborted) {
+          toast({
+            title: "Authentication successful",
+            description: "You have been logged in successfully"
+          });
+        }
+        
         return true;
       } else {
         throw new Error("No session returned from authentication");
       }
     } catch (error) {
       console.error("Token authentication error:", error);
+      
+      // Don't process errors if already aborted
+      if (signal && signal.aborted) {
+        console.log("Authentication aborted, skipping error handling");
+        return false;
+      }
       
       toast({
         title: "Authentication Error",
@@ -120,11 +192,25 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
       });
       
       return false;
+    } finally {
+      // Clear the reference if this is still the active controller
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+      }
     }
   }, [dispatch, withAuthTimeout, toast]);
   
-  // Enhanced logout with timeout and state management
+  // Enhanced logout with timeout, abort control and state management
   const logout = useCallback(async () => {
+    // Abort any previous ongoing request
+    if (abortControllerRef.current) {
+      safeAbort(abortControllerRef.current, 'Logout requested');
+    }
+
+    // Create a new abort controller for this request
+    const { controller, signal } = createAbortController();
+    abortControllerRef.current = controller;
+    
     try {
       // Note: we don't dispatch a specific logout action as this is handled by Supabase's
       // auth state change event which will trigger a SESSION_CHECK_FAILURE
@@ -134,14 +220,27 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
         2000
       );
       
-      toast({
-        title: "Logged out successfully",
-        description: "You have been logged out of your account"
-      });
+      // Check if abort was requested during the API call
+      if (signal.aborted) {
+        throw new Error('Logout aborted');
+      }
+      
+      if (!signal.aborted) {
+        toast({
+          title: "Logged out successfully",
+          description: "You have been logged out of your account"
+        });
+      }
       
       return true;
     } catch (error) {
       console.error("Logout error:", error);
+      
+      // Don't process errors if already aborted
+      if (signal.aborted) {
+        console.log("Logout aborted, skipping error handling");
+        return false;
+      }
       
       toast({
         title: "Logout Error",
@@ -150,6 +249,11 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
       });
       
       return false;
+    } finally {
+      // Clear the reference if this is still the active controller
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+      }
     }
   }, [withAuthTimeout, toast]);
   
