@@ -20,15 +20,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     // Short delay to prevent flash
     const initialTimer = setTimeout(() => {
       setShowLoading(isLoading);
-    }, 200);
+    }, 100); // Reduced from 200ms
     
-    // Safety timeout to prevent infinite loading - reduced from 8s to 5s
+    // Safety timeout to prevent infinite loading - reduced from 5s to 3s
     const timeoutTimer = setTimeout(() => {
       if (isLoading) {
         console.warn("Authentication check taking too long, showing timeout");
         setLoadingTimeout(true);
       }
-    }, 5000);
+    }, 3000);
     
     return () => {
       clearTimeout(initialTimer);
@@ -42,13 +42,25 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     setShowLoading(false);
   }, []);
   
+  // Force navigation after a delay if still loading
+  useEffect(() => {
+    if (showLoading) {
+      const forceTimeout = setTimeout(() => {
+        console.warn("Forcing DashboardLayout loading to complete");
+        setShowLoading(false);
+      }, 4000); // Forced completion after 4 seconds
+      
+      return () => clearTimeout(forceTimeout);
+    }
+  }, [showLoading]);
+  
   // Show loading state while checking authentication
   if (showLoading) {
     return (
       <CriticalLoadingState 
         message="Checking authentication..." 
         fallbackAction={loadingTimeout ? handleSessionTimeout : undefined}
-        timeout={5000}
+        timeout={2500} // Reduced from 5000ms
         isBlocking={false}
       />
     );

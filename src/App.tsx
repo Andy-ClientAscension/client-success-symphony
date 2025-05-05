@@ -51,15 +51,15 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
   
   useEffect(() => {
     // Mark as initialized soon to avoid loading flicker for simple cases
-    const timer = setTimeout(() => setIsInitialized(true), 500);
+    const timer = setTimeout(() => setIsInitialized(true), 250); // Reduced from 500ms to 250ms
     
-    // Set a timeout flag after 5 seconds to avoid infinite loading
+    // Set a timeout flag after 3 seconds to avoid infinite loading
     const timeoutTimer = setTimeout(() => {
       if (!isInitialized) {
         console.warn("App initialization taking too long, showing timeout");
         setInitTimeout(true);
       }
-    }, 5000);
+    }, 3000); // Reduced from 5s to 3s
     
     return () => {
       clearTimeout(timer);
@@ -71,10 +71,10 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (initTimeout && !isInitialized) {
       console.warn("App initialization taking too long, forcing continue");
-      // Set a final timeout that will force continue after showing timeout for 5 seconds
+      // Set a final timeout that will force continue after showing timeout for 2 seconds
       const forceTimer = setTimeout(() => {
         handleForceContinue();
-      }, 5000);
+      }, 2000); // Reduced from 5s to 2s
       
       return () => clearTimeout(forceTimer);
     }
@@ -85,7 +85,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
       <CriticalLoadingState 
         message="Starting application..."
         fallbackAction={initTimeout ? handleForceContinue : undefined}
-        timeout={5000}
+        timeout={2000} // Reduced from 5000ms to 2000ms
       />
     );
   }
@@ -102,7 +102,7 @@ function App() {
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
             <AppInitializer>
-              <Suspense fallback={<CriticalLoadingState message="Loading application..." timeout={5000} />}>
+              <Suspense fallback={<CriticalLoadingState message="Loading application..." timeout={3000} />}>
                 <AuthProvider>
                   <AuthErrorBoundary>
                     <SessionValidator>

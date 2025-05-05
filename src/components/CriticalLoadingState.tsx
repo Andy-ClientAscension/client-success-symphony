@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 
 interface CriticalLoadingStateProps {
   message?: string;
@@ -16,7 +17,7 @@ interface CriticalLoadingStateProps {
 export function CriticalLoadingState({ 
   message = "Loading...", 
   isBlocking = true,
-  timeout = 15000, // 15 seconds default timeout
+  timeout = 8000, // Reduced default timeout from 15s to 8s
   fallbackAction
 }: CriticalLoadingStateProps) {
   const [showTimeout, setShowTimeout] = useState(false);
@@ -47,14 +48,14 @@ export function CriticalLoadingState({
         setShowTimeout(true);
         clearInterval(intervalRef.current as number);
       }
-    }, 1000);
+    }, 500); // Check more frequently (500ms instead of 1000ms)
     
-    // Set a delayed timeout to show the fallback button (after 2 extra seconds)
+    // Set a delayed timeout to show the fallback button (after 1 extra second)
     fallbackTimeoutRef.current = window.setTimeout(() => {
       if (fallbackAction) {
         setShowFallbackButton(true);
       }
-    }, timeoutThreshold + 2000);
+    }, timeoutThreshold + 1000); // Reduced from 2s to 1s
     
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
@@ -68,7 +69,7 @@ export function CriticalLoadingState({
       const autoFallbackTimer = setTimeout(() => {
         console.warn("Auto triggering fallback after extended wait");
         fallbackAction();
-      }, 10000); // 10 seconds after showing timeout
+      }, 5000); // Reduced from 10s to 5s
       
       return () => clearTimeout(autoFallbackTimer);
     }
@@ -78,7 +79,7 @@ export function CriticalLoadingState({
     <div className={`flex flex-col items-center justify-center min-h-[300px] p-8 ${
       isBlocking ? 'fixed inset-0 bg-background/80 backdrop-blur-sm z-50' : ''
     }`} data-testid="critical-loading-state">
-      <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full mb-4"></div>
+      <Spinner size="lg" className="mb-4" />
       <p className="text-lg font-medium text-foreground">{message}</p>
       <p className="text-sm text-muted-foreground mt-2">
         {showTimeout 
@@ -101,8 +102,8 @@ export function CriticalLoadingState({
         </div>
       )}
       
-      {/* Show elapsed time indicator after 3 seconds */}
-      {elapsedTime > 3000 && !showTimeout && (
+      {/* Show elapsed time indicator after 2 seconds */}
+      {elapsedTime > 2000 && !showTimeout && (
         <div className="mt-4 text-xs text-muted-foreground">
           {Math.floor(elapsedTime / 1000)}s elapsed
         </div>

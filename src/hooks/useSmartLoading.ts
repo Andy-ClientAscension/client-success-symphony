@@ -10,6 +10,8 @@ interface SmartLoadingOptions {
   loadingDelay?: number;
   /** Priority level that affects loading behavior (1-5, 1 is highest) */
   priority?: 1 | 2 | 3 | 4 | 5;
+  /** Force completion after this time regardless of loading state */
+  forceCompletionTime?: number;
 }
 
 /**
@@ -17,19 +19,22 @@ interface SmartLoadingOptions {
  * - Prevents loading flashes for fast operations
  * - Ensures minimum loading time for better UX
  * - Prioritizes critical UI components
+ * - Includes safety timeouts to prevent infinite loading
  */
 export function useSmartLoading(isLoading: boolean, options: SmartLoadingOptions = {}) {
   const {
     initialState = false,
     minLoadingTime = 500,
     loadingDelay = 150,
-    priority = 3
+    priority = 3,
+    forceCompletionTime = 5000, // Safety timeout to prevent infinite loading
   } = options;
 
   const [showLoading, setShowLoading] = useState(initialState);
   const [loadingStartTime, setLoadingStartTime] = useState<number | null>(null);
   const [delayTimeout, setDelayTimeout] = useState<NodeJS.Timeout | null>(null);
   const [minTimeTimeout, setMinTimeTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [safetyTimeoutFired, setSafetyTimeoutFired] = useState(false);
 
   // Calculate actual delay based on priority
   // Higher priority = shorter delay
@@ -46,6 +51,19 @@ export function useSmartLoading(isLoading: boolean, options: SmartLoadingOptions
       if (minTimeTimeout) clearTimeout(minTimeTimeout);
     };
   }, [delayTimeout, minTimeTimeout]);
+
+  // Safety timeout to prevent infinite loading
+  useEffect(() => {
+    if (isLoading && !safetyTimeoutFired) {
+      const safetyTimeout = setTimeout(() => {
+        console.warn("SmartLoading safety timeout triggered - forcing loading to complete");
+        setShowLoading(false);
+        setSafetyTimeoutFired(true);
+      }, forceCompletionTime);
+      
+      return () => clearTimeout(safetyTimeout);
+    }
+  }, [isLoading, safetyTimeoutFired, forceCompletionTime]);
 
   // Handle changes to isLoading
   useEffect(() => {
@@ -75,7 +93,10 @@ export function useSmartLoading(isLoading: boolean, options: SmartLoadingOptions
         
         // If minimum time hasn't elapsed, wait until it has
         if (timeElapsed < actualMinLoadingTime) {
-          const remainingTime = actualMinLoadingTime - timeElapsed;
+          const remainingTime = Math.min(
+            actualMinLoadingTime - timeElapsed,
+            1000 // Cap at 1 second to prevent extremely long loading states
+          );
           
           const timeout = setTimeout(() => {
             setShowLoading(false);
@@ -101,8 +122,15 @@ export function useSmartLoading(isLoading: boolean, options: SmartLoadingOptions
     setLoadingStartTime(Date.now());
   }, []);
 
+  // Force complete loading regardless of minimum time
+  const forceCompleteLoading = useCallback(() => {
+    setShowLoading(false);
+    setLoadingStartTime(null);
+  }, []);
+
   return { 
     isLoading: showLoading,
-    forceShowLoading 
+    forceShowLoading,
+    forceCompleteLoading
   };
 }

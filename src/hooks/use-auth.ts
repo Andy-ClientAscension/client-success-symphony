@@ -1,6 +1,7 @@
 
 import { useContext, useEffect } from 'react';
 import { AuthContext } from '@/contexts/auth/AuthContext';
+import type { Auth } from '@/contexts/auth/types';
 
 export function useAuth() {
   const context = useContext(AuthContext);
@@ -15,7 +16,7 @@ export function useAuth() {
       user: null,
       session: null,
       error: null,
-      tokenValidationState: 'unknown',
+      tokenValidationState: 'unknown' as const,
       lastAuthEvent: null,
       verifyMagicLink: async () => ({ 
         success: false, 

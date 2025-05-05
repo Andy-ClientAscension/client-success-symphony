@@ -1,4 +1,3 @@
-
 import { useContext, useEffect } from "react";
 import { AuthContext } from "@/contexts/auth/AuthContext";
 import type { Auth } from '@/contexts/auth/types';
@@ -12,10 +11,10 @@ export function useAuth(): Auth.AuthContextType {
     // Refresh the TTL of cached session when hook is used
     // This keeps frequently used sessions in cache longer
     const cachedSession = getCachedSession();
-    if (cachedSession && context.isAuthenticated) {
+    if (cachedSession && context?.isAuthenticated) {
       refreshCachedSessionTTL();
     }
-  }, [context.isAuthenticated]);
+  }, [context?.isAuthenticated]);
   
   if (context === undefined) {
     const error = new Error("useAuth must be used within an AuthProvider");
@@ -67,4 +66,3 @@ export function useAuthActions() {
   const { login, logout, register, refreshSession } = useAuth();
   return { login, logout, register, refreshSession };
 }
-
