@@ -14,7 +14,7 @@ export type AuthAction =
   | { type: 'AUTH_ERROR'; payload: string }
   | { type: 'URL_PROCESSED' }
   | { type: 'CLEANUP' }
-  | { type: 'BATCH_UPDATE'; payload: Partial<AuthState> }; // Added batch update action type
+  | { type: 'BATCH_UPDATE'; payload: Partial<AuthState> };
 
 const initialAuthState: AuthState = {
   processingAuth: false,
@@ -35,9 +35,9 @@ export const authReducer = (state: AuthState, action: AuthAction): AuthState => 
     case 'URL_PROCESSED':
       return { ...state, urlProcessed: true };
     case 'CLEANUP':
-      return initialAuthState; // Reset to initial state for clean unmount
+      return initialAuthState;
     case 'BATCH_UPDATE':
-      return { ...state, ...action.payload }; // Apply all updates in a single render cycle
+      return { ...state, ...action.payload };
     default:
       return state;
   }
