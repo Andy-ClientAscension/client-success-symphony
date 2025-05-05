@@ -11,7 +11,7 @@ import { verifyErrorBoundaries } from "@/utils/prelaunch/verifyErrorBoundaries";
 import { verifyCacheInvalidation, forceCacheRefresh } from "@/utils/prelaunch/verifyCacheInvalidation";
 import { verifyBackupRestore, createFullBackup, validateBackupIntegrity } from "@/utils/prelaunch/verifyBackupRestore";
 import { verifyMonitoringAlerts, testAlertSystem } from "@/utils/prelaunch/verifyMonitoringAlerts";
-import { verifyRouteRefresh, applyRouteRefreshFixes } from "@/utils/prelaunch/verifyRouteRefresh";
+import { verifyRouteRefresh, applyRouteRefreshFixes, RouteRefreshResult } from "@/utils/prelaunch/verifyRouteRefresh";
 import { toast } from "@/hooks/use-toast";
 
 interface VerificationState {

@@ -3,7 +3,7 @@
  * Utility to verify route refreshing functionality
  */
 
-interface RouteRefreshResult {
+export interface RouteRefreshResult {
   route: string;
   refreshWorking: boolean;
   cacheCleared: boolean;
