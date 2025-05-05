@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, lazy, Suspense, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Layout } from "@/components/Layout/Layout";
@@ -80,9 +79,9 @@ export default function Index() {
     };
   }, [navigate, dispatch, isAuthenticated, toast]);
   
-  // OPTIMIZATION: Immediate redirection based on auth state
+  // OPTIMIZATION: Modified navigation logic - navigate when EITHER condition is met
   useEffect(() => {
-    if (!state.processingAuth && state.urlProcessed) {
+    if (!state.processingAuth || state.urlProcessed) {
       if (isAuthenticated) {
         navigate('/dashboard', { replace: true });
       } else if (!isLoading) {
