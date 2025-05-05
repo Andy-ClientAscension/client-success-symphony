@@ -4,7 +4,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { CriticalLoadingState } from "@/components/CriticalLoadingState";
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -22,13 +22,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       setShowLoading(isLoading);
     }, 200);
     
-    // Safety timeout to prevent infinite loading
+    // Safety timeout to prevent infinite loading - reduced from 8s to 5s
     const timeoutTimer = setTimeout(() => {
       if (isLoading) {
         console.warn("Authentication check taking too long, showing timeout");
         setLoadingTimeout(true);
       }
-    }, 8000);
+    }, 5000);
     
     return () => {
       clearTimeout(initialTimer);
@@ -37,10 +37,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [isLoading]);
   
   // Handle auth session loading timeouts by continuing anyway
-  const handleSessionTimeout = () => {
-    console.warn("Auth session loading timeout, continuing anyway");
+  const handleSessionTimeout = useCallback(() => {
+    console.warn("Auth session loading timeout, forcing continue");
     setShowLoading(false);
-  };
+  }, []);
   
   // Show loading state while checking authentication
   if (showLoading) {
@@ -48,7 +48,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <CriticalLoadingState 
         message="Checking authentication..." 
         fallbackAction={loadingTimeout ? handleSessionTimeout : undefined}
-        timeout={8000}
+        timeout={5000}
+        isBlocking={false}
       />
     );
   }

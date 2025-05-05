@@ -1,11 +1,24 @@
 
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { AuthContext } from '@/contexts/auth/AuthContext';
 
 export function useAuth() {
   const context = useContext(AuthContext);
+  
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    console.error('useAuth called outside of AuthProvider context');
+    // Instead of throwing an error which might crash the app,
+    // return a safe fallback that won't cause loops
+    return {
+      isAuthenticated: false,
+      isLoading: false,
+      user: null,
+      refreshSession: async () => {},
+      login: async () => false,
+      logout: async () => {},
+      register: async () => ({ success: false, message: "Auth context not available" })
+    };
   }
+  
   return context;
 }

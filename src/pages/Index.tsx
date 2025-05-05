@@ -13,18 +13,10 @@ import { CriticalLoadingState } from '@/components/CriticalLoadingState';
 // Session cache key for improved persistence
 const SESSION_CACHE_KEY = 'auth_session_cache';
 
-// Lazy-loaded components for better code splitting
-// Fix: Ensure we're importing a component with a default export
-const LazyDashboardComponents = lazy(() => 
-  import('@/components/Dashboard/DashboardComponents').then(module => ({
-    default: () => <>{/* Wrapper component to satisfy the default export requirement */}</>
-  }))
-);
-
 // Optimized loading component with reduced layout shift
 const OptimizedLoader = () => (
   <div className="flex items-center justify-center h-screen" aria-live="polite">
-    <CriticalLoadingState message="Preparing your experience..." />
+    <CriticalLoadingState message="Preparing your experience..." timeout={5000} />
   </div>
 );
 
@@ -54,6 +46,37 @@ export default function Index() {
   const { toast } = useToast();
   const abortControllerRef = useRef<AbortController | null>(null);
   const [state, dispatch] = useAuthReducer();
+  const authTimeoutRef = useRef<number | null>(null);
+  
+  // Force navigation after delay to prevent being stuck
+  useEffect(() => {
+    // Clear any existing timeout
+    if (authTimeoutRef.current) {
+      clearTimeout(authTimeoutRef.current);
+    }
+    
+    // Set a safety timeout - force navigate after 10 seconds
+    authTimeoutRef.current = window.setTimeout(() => {
+      if (!state.urlProcessed || state.processingAuth) {
+        console.warn("Auth process taking too long, forcing navigation");
+        dispatch({ type: 'URL_PROCESSED' });
+        dispatch({ type: 'PROCESSING_COMPLETE' });
+        
+        // If still not authenticated after timeout, go to login
+        if (!isAuthenticated) {
+          navigate('/login', { replace: true });
+        } else {
+          navigate('/dashboard', { replace: true });
+        }
+      }
+    }, 10000);
+    
+    return () => {
+      if (authTimeoutRef.current) {
+        clearTimeout(authTimeoutRef.current);
+      }
+    };
+  }, [isAuthenticated, navigate, state.urlProcessed, state.processingAuth, dispatch]);
   
   // Process authentication with parallelized requests
   const processAuth = useCallback(async (accessToken: string, refreshToken: string) => {
@@ -175,32 +198,19 @@ export default function Index() {
   
   // OPTIMIZATION: Immediate redirection based on auth state
   useEffect(() => {
-    if (!isLoading && !state.processingAuth && state.urlProcessed) {
-      if (isAuthenticated) {
-        navigate('/dashboard', { replace: true });
-      } else {
-        navigate('/login', { replace: true });
+    // Force redirection if taking too long
+    const redirectTimer = setTimeout(() => {
+      if (!state.processingAuth && state.urlProcessed) {
+        if (isAuthenticated) {
+          navigate('/dashboard', { replace: true });
+        } else {
+          navigate('/login', { replace: true });
+        }
       }
-    }
+    }, 1000); // Lower timeout for more responsive redirection
+    
+    return () => clearTimeout(redirectTimer);
   }, [navigate, isAuthenticated, isLoading, state.processingAuth, state.urlProcessed]);
-  
-  // Accessibility focus management
-  useEffect(() => {
-    if (!state.processingAuth && state.urlProcessed) {
-      setTimeout(() => {
-        setFocusToElement('main-content', '.flex.items-center.justify-center');
-      }, 100);
-    }
-  }, [state.processingAuth, state.urlProcessed]);
-  
-  // Preload dashboard resources
-  useEffect(() => {
-    if (isAuthenticated || state.processingAuth) {
-      // Prefetch critical components in the background
-      import('@/components/Dashboard/DashboardComponents').catch(() => {});
-      import('@/components/Dashboard/ChartLibrary').catch(() => {});
-    }
-  }, [isAuthenticated, state.processingAuth]);
 
   return (
     <Layout>

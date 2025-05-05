@@ -13,9 +13,10 @@ import { SessionValidator } from "@/components/SessionValidator";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { NavigationProgressBar } from "@/components/ui/progress-bar";
 import { WebVitalsMonitor, PerformanceDebugger } from "@/components/performance";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
 import { CriticalLoadingState } from "@/components/CriticalLoadingState";
 import AppRoutes from "./routes";
+import { useToast } from "@/hooks/use-toast";
 
 logStartupPhase("App.tsx: Module loading started");
 
@@ -36,33 +37,56 @@ const queryClient = new QueryClient({
 function AppInitializer({ children }: { children: React.ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [initTimeout, setInitTimeout] = useState(false);
+  const { toast } = useToast();
+  
+  // Force continue handler
+  const handleForceContinue = useCallback(() => {
+    console.warn("Forcing app initialization to continue");
+    setIsInitialized(true);
+    toast({
+      title: "App initialized with warnings",
+      description: "Some components may not be fully loaded. Refresh if you encounter issues.",
+      variant: "warning",
+    });
+  }, [toast]);
   
   useEffect(() => {
-    // Mark as initialized immediately to avoid loading flicker for simple cases
-    const timer = setTimeout(() => setIsInitialized(true), 300);
+    // Mark as initialized soon to avoid loading flicker for simple cases
+    const timer = setTimeout(() => setIsInitialized(true), 500);
     
-    // Set a timeout flag after 10 seconds to avoid infinite loading
-    const timeoutTimer = setTimeout(() => setInitTimeout(true), 10000);
+    // Set a timeout flag after 5 seconds to avoid infinite loading
+    const timeoutTimer = setTimeout(() => {
+      if (!isInitialized) {
+        console.warn("App initialization taking too long, showing timeout");
+        setInitTimeout(true);
+      }
+    }, 5000);
     
     return () => {
       clearTimeout(timer);
       clearTimeout(timeoutTimer);
     };
-  }, []);
+  }, [isInitialized]);
   
   // Force continue if initialization takes too long
   useEffect(() => {
     if (initTimeout && !isInitialized) {
       console.warn("App initialization taking too long, forcing continue");
-      setIsInitialized(true);
+      // Set a final timeout that will force continue after showing timeout for 5 seconds
+      const forceTimer = setTimeout(() => {
+        handleForceContinue();
+      }, 5000);
+      
+      return () => clearTimeout(forceTimer);
     }
-  }, [initTimeout, isInitialized]);
+  }, [initTimeout, isInitialized, handleForceContinue]);
   
   if (!isInitialized) {
     return (
       <CriticalLoadingState 
         message="Starting application..."
-        fallbackAction={() => setIsInitialized(true)}
+        fallbackAction={initTimeout ? handleForceContinue : undefined}
+        timeout={5000}
       />
     );
   }
@@ -79,7 +103,7 @@ function App() {
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
             <AppInitializer>
-              <Suspense fallback={<CriticalLoadingState message="Loading application..." />}>
+              <Suspense fallback={<CriticalLoadingState message="Loading application..." timeout={5000} />}>
                 <AuthProvider>
                   <AuthErrorBoundary>
                     <SessionValidator>

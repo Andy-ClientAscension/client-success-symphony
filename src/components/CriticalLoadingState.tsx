@@ -1,5 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Button } from '@/components/ui/button';
 
 interface CriticalLoadingStateProps {
   message?: string;
@@ -20,23 +21,58 @@ export function CriticalLoadingState({
 }: CriticalLoadingStateProps) {
   const [showTimeout, setShowTimeout] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [showFallbackButton, setShowFallbackButton] = useState(false);
   const timeoutThreshold = timeout;
+  const intervalRef = useRef<number | null>(null);
+  const fallbackTimeoutRef = useRef<number | null>(null);
   
   // Set up timeout detection
   useEffect(() => {
     const startTime = Date.now();
-    const intervalId = setInterval(() => {
+    
+    // Clear any existing intervals first to prevent duplicates
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+    if (fallbackTimeoutRef.current) {
+      clearTimeout(fallbackTimeoutRef.current);
+    }
+    
+    // Set up new interval for tracking elapsed time
+    intervalRef.current = window.setInterval(() => {
       const elapsed = Date.now() - startTime;
       setElapsedTime(elapsed);
       
       if (elapsed > timeoutThreshold) {
         setShowTimeout(true);
-        clearInterval(intervalId);
+        clearInterval(intervalRef.current as number);
       }
     }, 1000);
     
-    return () => clearInterval(intervalId);
-  }, [timeoutThreshold]);
+    // Set a delayed timeout to show the fallback button (after 2 extra seconds)
+    fallbackTimeoutRef.current = window.setTimeout(() => {
+      if (fallbackAction) {
+        setShowFallbackButton(true);
+      }
+    }, timeoutThreshold + 2000);
+    
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (fallbackTimeoutRef.current) clearTimeout(fallbackTimeoutRef.current);
+    };
+  }, [timeoutThreshold, fallbackAction]);
+
+  // Automatically trigger fallback after a very long wait if user hasn't clicked
+  useEffect(() => {
+    if (showTimeout && fallbackAction) {
+      const autoFallbackTimer = setTimeout(() => {
+        console.warn("Auto triggering fallback after extended wait");
+        fallbackAction();
+      }, 10000); // 10 seconds after showing timeout
+      
+      return () => clearTimeout(autoFallbackTimer);
+    }
+  }, [showTimeout, fallbackAction]);
 
   return (
     <div className={`flex flex-col items-center justify-center min-h-[300px] p-8 ${
@@ -50,13 +86,13 @@ export function CriticalLoadingState({
           : "Please wait while data is being loaded..."}
       </p>
       
-      {showTimeout && fallbackAction && (
-        <button 
+      {showTimeout && showFallbackButton && fallbackAction && (
+        <Button 
           onClick={fallbackAction}
           className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
         >
           Continue Anyway
-        </button>
+        </Button>
       )}
 
       {showTimeout && !fallbackAction && (
@@ -65,8 +101,8 @@ export function CriticalLoadingState({
         </div>
       )}
       
-      {/* Show elapsed time indicator after 5 seconds */}
-      {elapsedTime > 5000 && !showTimeout && (
+      {/* Show elapsed time indicator after 3 seconds */}
+      {elapsedTime > 3000 && !showTimeout && (
         <div className="mt-4 text-xs text-muted-foreground">
           {Math.floor(elapsedTime / 1000)}s elapsed
         </div>
