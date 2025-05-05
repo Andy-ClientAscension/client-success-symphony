@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, getSupabaseClient } from "@/integrations/supabase/client";
 import { updateSentryUser } from "@/utils/sentry/config";
 import { validateInviteCode } from "./inviteCodeUtils";
 import { Auth, User } from "./types";
@@ -8,6 +8,8 @@ export const refreshAuthState = async (): Promise<void> => {
   try {
     console.log("Refreshing auth state from Supabase");
     
+    // Use the singleton client
+    const supabase = getSupabaseClient();
     const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
     
     if (sessionError) {

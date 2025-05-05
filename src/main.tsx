@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
@@ -8,6 +7,7 @@ import { logStartupPhase, logDetailedError } from '@/utils/errorHandling';
 import { registerServiceWorker } from '@/utils/serviceWorkerRegistration';
 import { addResourceHints, type ResourceHint, setupPreconnections } from '@/utils/resourceHints';
 import { validateEnvironmentVariables, getDevelopmentFallbacks } from '@/utils/envValidator';
+import { getSupabaseClient } from '@/integrations/supabase/client';
 
 logStartupPhase("Application initialization starting");
 
@@ -22,6 +22,14 @@ if (missingEnvVars.length > 0) {
     const fallbacks = getDevelopmentFallbacks();
     console.log('Development fallbacks:', fallbacks);
   }
+}
+
+// Initialize Supabase client early to preconnect with auth endpoint
+try {
+  getSupabaseClient();
+  console.log('Supabase client initialized successfully');
+} catch (error) {
+  console.error('Failed to initialize Supabase client:', error);
 }
 
 // Set up preconnections to domains we'll use
@@ -116,4 +124,3 @@ try {
     </div>
   `;
 }
-

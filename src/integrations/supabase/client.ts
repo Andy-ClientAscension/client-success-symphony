@@ -1,66 +1,80 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { corsHeaders } from '@/utils/corsHeaders';
 import { cacheSession, getCachedSession, clearCachedSession } from '@/utils/sessionCache';
 import { getDevelopmentFallbacks } from '@/utils/envValidator';
+
+// Singleton instance
+let supabaseInstance = null;
 
 // Get environment variables or fallbacks for development
 const envVars = import.meta.env.MODE === 'development' 
   ? { ...getDevelopmentFallbacks(), ...import.meta.env } 
   : import.meta.env;
 
-// Initialize the Supabase client with environment variables
-const supabaseUrl = envVars.VITE_SUPABASE_URL;
-const supabaseKey = envVars.VITE_SUPABASE_KEY;
+// Memoized client creation function
+export const getSupabaseClient = () => {
+  if (supabaseInstance) {
+    return supabaseInstance;
+  }
 
-// Validate credentials
-if (!supabaseUrl || !supabaseKey) {
-  console.error('Supabase credentials not configured!');
-  throw new Error('Authentication service unavailable. Please check .env configuration.');
-}
+  // Initialize the Supabase client with environment variables
+  const supabaseUrl = envVars.VITE_SUPABASE_URL;
+  const supabaseKey = envVars.VITE_SUPABASE_KEY;
 
-// Define the site URL for redirection handling
-const siteUrl = window.location.origin;
+  // Validate credentials
+  if (!supabaseUrl || !supabaseKey) {
+    console.error('Supabase credentials not configured!');
+    throw new Error('Authentication service unavailable. Please check .env configuration.');
+  }
 
-// Enhanced fetch function with CORS headers and timeout
-const fetchWithCors = (url: RequestInfo | URL, options?: RequestInit) => {
-  const timeout = 10000; // 10 second timeout
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-  
-  // Merge existing headers with CORS headers
-  const headers = {
-    ...(options?.headers || {}),
-    ...corsHeaders,
+  // Define the site URL for redirection handling
+  const siteUrl = window.location.origin;
+
+  // Enhanced fetch function with CORS headers and timeout
+  const fetchWithCors = (url: RequestInfo | URL, options?: RequestInit) => {
+    const timeout = 10000; // 10 second timeout
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    
+    // Merge existing headers with CORS headers
+    const headers = {
+      ...(options?.headers || {}),
+      ...corsHeaders,
+    };
+    
+    return fetch(url, {
+      ...options,
+      headers,
+      signal: controller.signal,
+      mode: 'cors',
+    }).finally(() => {
+      clearTimeout(id);
+    });
   };
-  
-  return fetch(url, {
-    ...options,
-    headers,
-    signal: controller.signal,
-    mode: 'cors',
-  }).finally(() => {
-    clearTimeout(id);
+
+  // Create the singleton instance
+  supabaseInstance = createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      storage: localStorage,
+      detectSessionInUrl: true,
+      flowType: 'pkce'
+    },
+    global: {
+      headers: corsHeaders,
+      fetch: fetchWithCors
+    }
   });
+
+  // Configure the site URL in localStorage for Supabase
+  localStorage.setItem('supabase.auth.site_url', siteUrl);
+
+  return supabaseInstance;
 };
 
-// Initialize with proper configuration for CORS and auth
-export const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    storage: localStorage,
-    detectSessionInUrl: true,
-    flowType: 'pkce'
-  },
-  global: {
-    headers: corsHeaders,
-    fetch: fetchWithCors
-  }
-});
-
-// Configure the site URL in localStorage for Supabase
-localStorage.setItem('supabase.auth.site_url', siteUrl);
+// Export the singleton instance for direct imports
+export const supabase = getSupabaseClient();
 
 /**
  * Helper function to fetch with CORS headers
