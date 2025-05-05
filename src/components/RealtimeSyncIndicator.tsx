@@ -133,3 +133,6 @@ export function RealtimeSyncIndicator() {
     </div>
   );
 }
+
+// Add a default export to fix the import issue in Dashboard.tsx
+export default RealtimeSyncIndicator;

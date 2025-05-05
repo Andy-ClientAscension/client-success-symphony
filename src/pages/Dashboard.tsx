@@ -1,4 +1,3 @@
-
 import React, { useEffect, Suspense, lazy } from "react";
 import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { LoadingState } from "@/components/LoadingState";
@@ -12,12 +11,12 @@ import { Button } from "@/components/ui/button";
 
 // Use React.lazy for component code-splitting
 const DashboardHeader = lazy(() => import("@/components/Dashboard/Header").then(mod => ({ default: mod.DashboardHeader })));
-const RealtimeSyncIndicator = lazy(() => import("@/components/RealtimeSyncIndicator").then(mod => ({ default: mod.default })));
+const RealtimeSyncIndicator = lazy(() => import("@/components/RealtimeSyncIndicator"));
 const LazyHeroMetrics = lazy(() => import("@/components/Dashboard/DashboardComponents").then(mod => ({ default: mod.LazyHeroMetrics })));
 const LazyStudentsData = lazy(() => import("@/components/Dashboard/DashboardComponents").then(mod => ({ default: mod.LazyStudentsData })));
 const LazySyncMonitorPanel = lazy(() => import("@/components/Dashboard/DashboardComponents").then(mod => ({ default: mod.LazySyncMonitorPanel })));
 const LazyAccessibilityHelp = lazy(() => import("@/components/Dashboard/DashboardComponents").then(mod => ({ default: mod.LazyAccessibilityHelp })));
-const QuickLinks = lazy(() => import("@/components/Dashboard/QuickLinks").then(mod => ({ default: mod.default })));
+const QuickLinks = lazy(() => import("@/components/Dashboard/QuickLinks"));
 
 // Fallback component for Suspense
 const ComponentLoader = ({ message = "Loading component..." }) => (
