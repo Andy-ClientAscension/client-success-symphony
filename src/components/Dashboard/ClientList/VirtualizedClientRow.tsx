@@ -23,7 +23,9 @@ export function VirtualizedClientRow({
       style={style}
       onClick={() => onClick?.(client)}
       role="row"
-      aria-rowindex={client.id}
+      // Convert client.id to a number if it's a string with a number value, 
+      // or use a numeric index or 0 as fallback
+      aria-rowindex={Number(client.id) || 0}
     >
       {columns.map((column) => (
         <td
