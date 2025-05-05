@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Client, getAllClients } from '@/lib/data';
 import { STORAGE_KEYS, saveData, loadData, deleteClientsGlobally } from '@/utils/persistence';
@@ -11,7 +12,7 @@ interface UseClientListProps {
   statusFilter?: Client['status'];
 }
 
-export function useClientList({ statusFilter }: UseClientListProps) {
+export function useClientList({ statusFilter }: UseClientListProps = {}) {
   const { toast } = useToast();
   const kanbanStore = useKanbanStore();
   const [isInitializing, setIsInitializing] = useState(true);
@@ -71,6 +72,7 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     };
   }, [toast]);
   
+  // UI state
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [metricsModalOpen, setMetricsModalOpen] = useState(false);
@@ -86,14 +88,14 @@ export function useClientList({ statusFilter }: UseClientListProps) {
   const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
   
   // Create a function to update clients (we'll use manual storage updates)
-  const setClients = (updatedClients: Client[]) => {
+  const setClients = useCallback((updatedClients: Client[]) => {
     console.log(`Saving ${updatedClients.length} clients to storage`);
     saveData(STORAGE_KEYS.CLIENTS, updatedClients);
     // Dispatch a custom event to notify other components of the change
     window.dispatchEvent(new CustomEvent('storageUpdated', { 
       detail: { key: STORAGE_KEYS.CLIENTS } 
     }));
-  };
+  }, []);
 
   // Clear initialization state once clients are loaded
   useEffect(() => {
@@ -103,66 +105,87 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     }
   }, [isClientsLoading, isInitializing]);
 
-  // Filter clients when any related state changes
+  // Filter clients when any related state changes - debounced for better performance
+  const debouncedFilterTimer = useRef<NodeJS.Timeout | null>(null);
+  
   useEffect(() => {
-    if (isInitializing) {
-      console.log("useClientList: Still initializing, skipping filter");
-      return;
+    // Cancel previous debounce timer if exists
+    if (debouncedFilterTimer.current) {
+      clearTimeout(debouncedFilterTimer.current);
     }
     
-    const persistEnabled = localStorage.getItem("persistDashboard") === "true";
-    
-    if (persistEnabled && clients !== defaultClients) {
-      const validatedClients = validateClients(clients);
-      saveData(STORAGE_KEYS.CLIENTS, validatedClients);
-      saveData(STORAGE_KEYS.CLIENT_STATUS, validatedClients);
-    }
-    
-    let filtered = validateClients(clients);
-    console.log(`useClientList: Filtering ${filtered.length} clients with statusFilter:`, statusFilter);
-    
-    if (statusFilter) {
-      filtered = filtered.filter(client => client.status === statusFilter);
-    }
+    // Debounce filtering to avoid excessive re-renders during typing
+    debouncedFilterTimer.current = setTimeout(() => {
+      if (isInitializing) {
+        console.log("useClientList: Still initializing, skipping filter");
+        return;
+      }
+      
+      const persistEnabled = localStorage.getItem("persistDashboard") === "true";
+      
+      if (persistEnabled && clients !== defaultClients) {
+        const validatedClients = validateClients(clients);
+        saveData(STORAGE_KEYS.CLIENTS, validatedClients);
+        saveData(STORAGE_KEYS.CLIENT_STATUS, validatedClients);
+      }
+      
+      let filtered = validateClients(clients);
+      console.log(`useClientList: Filtering ${filtered.length} clients with statusFilter:`, statusFilter);
+      
+      if (statusFilter) {
+        filtered = filtered.filter(client => client.status === statusFilter);
+      }
 
-    if (selectedTeam !== "all") {
-      filtered = filtered.filter(client => {
-        const clientTeam = client.team || ""; 
-        return clientTeam.toLowerCase() === selectedTeam.toLowerCase();
-      });
-    }
+      if (selectedTeam !== "all") {
+        filtered = filtered.filter(client => {
+          const clientTeam = client.team || ""; 
+          return clientTeam.toLowerCase() === selectedTeam.toLowerCase();
+        });
+      }
 
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(client => 
-        client.name.toLowerCase().includes(query) || 
-        (client.csm && client.csm.toLowerCase().includes(query))
-      );
-    }
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        filtered = filtered.filter(client => 
+          client.name.toLowerCase().includes(query) || 
+          (client.csm && client.csm.toLowerCase().includes(query))
+        );
+      }
 
-    console.log(`useClientList: Filtered to ${filtered.length} clients`);
-    setFilteredClients(filtered);
+      console.log(`useClientList: Filtered to ${filtered.length} clients`);
+      setFilteredClients(filtered);
+      
+      // Reset to page 1 when filters change
+      setCurrentPage(1);
+    }, 300); // 300ms debounce
     
-    // Reset to page 1 when filters change
-    setCurrentPage(1);
+    return () => {
+      if (debouncedFilterTimer.current) {
+        clearTimeout(debouncedFilterTimer.current);
+      }
+    };
   }, [clients, selectedTeam, statusFilter, searchQuery, defaultClients, isInitializing]);
 
   // Calculate pagination
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
-  const currentItems = filteredClients.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-  const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
+  const currentItems = useMemo(() => {
+    return filteredClients.slice(indexOfFirstItem, indexOfLastItem);
+  }, [filteredClients, indexOfFirstItem, indexOfLastItem]);
+  
+  const totalPages = useMemo(() => {
+    return Math.ceil(filteredClients.length / itemsPerPage);
+  }, [filteredClients.length, itemsPerPage]);
 
-  const handlePageChange = (page: number) => {
+  const handlePageChange = useCallback((page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, Math.ceil(filteredClients.length / itemsPerPage))));
-  };
+  }, [filteredClients.length, itemsPerPage]);
 
-  const handleItemsPerPageChange = (value: number) => {
+  const handleItemsPerPageChange = useCallback((value: number) => {
     setItemsPerPage(value);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleSelectClient = (clientId: string) => {
+  const handleSelectClient = useCallback((clientId: string) => {
     setSelectedClientIds(prev => {
       if (prev.includes(clientId)) {
         return prev.filter(id => id !== clientId);
@@ -170,28 +193,28 @@ export function useClientList({ statusFilter }: UseClientListProps) {
         return [...prev, clientId];
       }
     });
-  };
+  }, []);
   
-  const handleSelectAll = () => {
+  const handleSelectAll = useCallback(() => {
     const currentItems = filteredClients.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
     setSelectedClientIds(prev => 
       prev.length === currentItems.length ? [] : currentItems.map(client => client.id)
     );
-  };
+  }, [filteredClients, currentPage, itemsPerPage]);
 
-  const handleTeamChange = (value: string) => {
+  const handleTeamChange = useCallback((value: string) => {
     setSelectedTeam(value);
-  };
+  }, []);
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-  };
+  }, []);
 
-  const handleViewModeChange = (mode: 'table' | 'kanban') => {
+  const handleViewModeChange = useCallback((mode: 'table' | 'kanban') => {
     setViewMode(mode);
-  };
+  }, []);
 
-  const deleteClients = (clientIdsToDelete: string[]) => {
+  const deleteClients = useCallback((clientIdsToDelete: string[]) => {
     deleteClientsGlobally(clientIdsToDelete);
     
     setSelectedClientIds([]);
@@ -200,9 +223,9 @@ export function useClientList({ statusFilter }: UseClientListProps) {
       title: "Clients Deleted",
       description: `${clientIdsToDelete.length} client(s) have been removed from all dashboards.`,
     });
-  };
+  }, [toast]);
 
-  const updateClientStatus = (clientIds: string[], newStatus: Client['status']) => {
+  const updateClientStatus = useCallback((clientIds: string[], newStatus: Client['status']) => {
     const updatedClients = clients.map(client => {
       if (clientIds.includes(client.id)) {
         return { ...client, status: newStatus };
@@ -234,7 +257,7 @@ export function useClientList({ statusFilter }: UseClientListProps) {
       title: "Status Updated",
       description: `${clientIds.length} client(s) status updated to ${newStatus}.`,
     });
-  };
+  }, [clients, kanbanStore, setClients, toast]);
 
   return {
     clients,

@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/Layout/Layout";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -23,6 +24,7 @@ export default function Clients() {
   const { toast } = useToast();
   const { loadPersistedData } = useKanbanStore();
   const initializationAttempted = useRef(false);
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Use smart loading to provide better UX
   const { isLoading: showLoading, forceShowLoading } = useSmartLoading(isLoading, {
@@ -35,6 +37,40 @@ export default function Clients() {
   useEffect(() => {
     clientsRef.current = clients;
   }, [clients]);
+
+  // Set a loading timeout to prevent infinite loading states
+  useEffect(() => {
+    if (isLoading) {
+      loadingTimeoutRef.current = setTimeout(() => {
+        console.log("Loading timeout reached, forcing loading to complete");
+        setIsLoading(false);
+        
+        // If we still don't have clients, try one last time to get them from storage or defaults
+        if (clients.length === 0) {
+          try {
+            const storedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
+            if (storedClients && storedClients.length > 0) {
+              setClients(storedClients);
+            } else {
+              const defaultClients = getAllClients();
+              if (defaultClients && defaultClients.length > 0) {
+                setClients(defaultClients);
+                saveData(STORAGE_KEYS.CLIENTS, defaultClients);
+              }
+            }
+          } catch (e) {
+            console.error("Error in loading timeout fallback:", e);
+          }
+        }
+      }, 10000); // 10 second timeout as a safety net
+      
+      return () => {
+        if (loadingTimeoutRef.current) {
+          clearTimeout(loadingTimeoutRef.current);
+        }
+      };
+    }
+  }, [isLoading, clients.length]);
   
   // Fix: Properly handle async/sync data operations with error handling
   const initializeClientData = useCallback(async () => {

@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { Client } from "@/lib/data";
 import { ResponsiveTable } from "../Shared/ResponsiveTable";
 import { ResponsiveGrid } from "../Shared/ResponsiveGrid";
 import { ClientKanbanView } from "../ClientKanbanView";
 import { Badge } from "@/components/ui/badge";
+import { VirtualizedClientList } from "./VirtualizedClientList";
 
 interface ClientListContentProps {
   viewMode: 'table' | 'kanban';
@@ -168,16 +170,15 @@ export function ClientListContent({
       aria-label="Client List"
     >
       {viewMode === 'table' ? (
-        <ResponsiveTable
-          data={currentItems}
+        <VirtualizedClientList
+          clients={currentItems}
           columns={getColumns()}
-          keyExtractor={(client: Client) => client.id}
-          emptyMessage="No clients found matching your filters."
-          className="border rounded-lg mb-4"
-          stripedRows={true}
-          hoverable={true}
-          roundedBorders={true}
-          pagination={{
+          selectedClientIds={selectedClientIds}
+          onSelectClient={onSelectClient}
+          onViewDetails={onViewDetails}
+          onEditMetrics={onEditMetrics}
+          onUpdateNPS={onUpdateNPS}
+          paginationProps={{
             currentPage,
             totalPages,
             onPageChange,
