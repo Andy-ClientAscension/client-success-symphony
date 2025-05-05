@@ -1,18 +1,18 @@
 
 import { Layout } from "@/components/Layout/Layout";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ClientsTabs } from "@/components/Dashboard/ClientsTabs";
 import { ClientsHeader } from "@/components/Dashboard/ClientsHeader";
 import { useToast } from "@/hooks/use-toast";
 import { useKanbanStore } from "@/utils/kanbanStore";
 import { STORAGE_KEYS, loadData, saveData } from "@/utils/persistence";
-import { LoadingState } from "@/components/LoadingState";
 import { CriticalLoadingState } from "@/components/CriticalLoadingState";
 import { getAllClients, Client } from "@/lib/data";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DataSyncMonitor } from "@/components/Dashboard/DataSyncMonitor";
+import { useSmartLoading } from "@/hooks/useSmartLoading";
 
 export default function Clients() {
   const [activeTab, setActiveTab] = useState("all");
@@ -23,11 +23,25 @@ export default function Clients() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { loadPersistedData } = useKanbanStore();
+  const initializationAttempted = useRef(false);
 
+  // Use smart loading to provide better UX
+  const { isLoading: showLoading, forceShowLoading } = useSmartLoading(isLoading, {
+    minLoadingTime: 1000,
+    priority: 1
+  });
+  
   // Fix: Properly handle async/sync data operations with error handling
   const initializeClientData = useCallback(async () => {
+    if (initializationAttempted.current) {
+      console.log("Initialization already attempted, skipping");
+      return;
+    }
+    
     console.log("Initializing client data...");
+    initializationAttempted.current = true;
     setIsLoading(true);
+    forceShowLoading();
     setError(null);
     
     try {
@@ -81,7 +95,7 @@ export default function Clients() {
         toast({
           title: "Warning",
           description: "Kanban board data couldn't be loaded properly.",
-          variant: "default",
+          variant: "default", // Fixed the invalid variant "warning" to "default"
         });
       }
     } catch (error) {
@@ -96,7 +110,7 @@ export default function Clients() {
       console.log("Setting isLoading to false after initialization");
       setIsLoading(false);
     }
-  }, [loadPersistedData, toast]);
+  }, [loadPersistedData, toast, forceShowLoading]);
 
   // Initialize data only once on component mount
   useEffect(() => {
@@ -200,11 +214,11 @@ export default function Clients() {
   };
 
   // Use a more immediate loading indicator first
-  if (isLoading && !clients.length) {
+  if (showLoading && !clients.length) {
     console.log("Rendering initial loading state");
     return (
       <Layout>
-        <CriticalLoadingState message="Loading clients..." />
+        <CriticalLoadingState message="Loading clients..." isBlocking={true} />
       </Layout>
     );
   }
@@ -218,7 +232,10 @@ export default function Clients() {
             <h2 className="text-2xl font-bold text-destructive">Error Loading Data</h2>
             <p>{error}</p>
             <button 
-              onClick={() => initializeClientData()}
+              onClick={() => {
+                initializationAttempted.current = false;
+                initializeClientData();
+              }}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
             >
               Retry

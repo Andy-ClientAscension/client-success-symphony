@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { Client, getAllClients } from '@/lib/data';
 import { STORAGE_KEYS, saveData, loadData, deleteClientsGlobally } from '@/utils/persistence';
@@ -5,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useKanbanStore } from "@/utils/kanbanStore";
 import { validateClients } from '@/utils/clientValidation';
 import { useRealtimeData } from '@/utils/dataSyncService';
+import { useSmartLoading } from '@/hooks/useSmartLoading';
 
 interface UseClientListProps {
   statusFilter?: Client['status'];
@@ -32,12 +34,18 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     }
   }, [toast]);
   
-  // Use the realtime data hook for clients
-  // Fix: Removed third argument as useRealtimeData expects only 1-2 arguments
+  // Use the realtime data hook for clients with proper arguments
   const [clients, isClientsLoading] = useRealtimeData<Client[]>(
     STORAGE_KEYS.CLIENTS, 
     defaultClients
   );
+  
+  // Use smart loading to prevent flashing
+  const { isLoading: showLoading } = useSmartLoading(isClientsLoading || isInitializing, {
+    minLoadingTime: 800,
+    loadingDelay: 200,
+    priority: 1
+  });
   
   // Handle errors separately
   useEffect(() => {
@@ -259,6 +267,6 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     handleViewModeChange,
     deleteClients,
     updateClientStatus,
-    isLoading: isClientsLoading || isInitializing
+    isLoading: showLoading
   };
 }
