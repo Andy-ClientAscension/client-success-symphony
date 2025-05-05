@@ -30,6 +30,10 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
 
   // Setup abort controller for cancelling in-flight requests
   useEffect(() => {
+    // Create new abort controller
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
     abortControllerRef.current = new AbortController();
     
     // Short delay to ensure auth check is complete
@@ -56,8 +60,8 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
       prefetchRoute('/dashboard');
     }
     
-    // Clean up function
     return () => {
+      // Clean up function
       if (authCheckTimeoutRef.current) {
         clearTimeout(authCheckTimeoutRef.current);
         authCheckTimeoutRef.current = null;
@@ -69,7 +73,7 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
         abortControllerRef.current = null;
       }
     };
-  }, [location.pathname, dispatch]);
+  }, [location.pathname]); // Removed dispatch from dependencies to prevent loops
   
   // Handle session refresh once - don't put this in the main useEffect to avoid dependencies
   useEffect(() => {
@@ -88,7 +92,23 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
     };
     
     refreshAuthWithCancellation();
-  }, [isAuthenticated, isLoading, refreshSession]);
+  }, []); // Removed dependencies to prevent loops, using refs instead
+  
+  // Set a guaranteed timeout to exit loading state
+  useEffect(() => {
+    // Force exit loading after 2.5 seconds no matter what
+    const forceExitTimeout = setTimeout(() => {
+      if (isLoading || state.processingAuth) {
+        console.warn("[ProtectedRoute] Force exiting loading state after timeout");
+        if (state.processingAuth) {
+          dispatch({ type: 'PROCESSING_COMPLETE' });
+        }
+        setForceRender(true);
+      }
+    }, 2500);
+    
+    return () => clearTimeout(forceExitTimeout);
+  }, []); // No dependencies to ensure this only runs once
   
   // When auth status changes, announce to screen readers
   useEffect(() => {

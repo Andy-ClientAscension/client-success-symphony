@@ -26,10 +26,13 @@ export function CriticalLoadingState({
   const timeoutThreshold = timeout;
   const intervalRef = useRef<number | null>(null);
   const fallbackTimeoutRef = useRef<number | null>(null);
+  const autoFallbackRef = useRef<number | null>(null);
+  const startTimeRef = useRef(Date.now());
   
-  // Set up timeout detection
+  // Set up timeout detection with safer implementation
   useEffect(() => {
-    const startTime = Date.now();
+    // Store start time in ref to avoid dependency
+    startTimeRef.current = Date.now();
     
     // Clear any existing intervals first to prevent duplicates
     if (intervalRef.current) {
@@ -38,42 +41,52 @@ export function CriticalLoadingState({
     if (fallbackTimeoutRef.current) {
       clearTimeout(fallbackTimeoutRef.current);
     }
+    if (autoFallbackRef.current) {
+      clearTimeout(autoFallbackRef.current);
+    }
     
     // Set up new interval for tracking elapsed time
     intervalRef.current = window.setInterval(() => {
-      const elapsed = Date.now() - startTime;
+      const elapsed = Date.now() - startTimeRef.current;
       setElapsedTime(elapsed);
       
       if (elapsed > timeoutThreshold) {
         setShowTimeout(true);
-        clearInterval(intervalRef.current as number);
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
       }
     }, 500); // Check more frequently (500ms instead of 1000ms)
     
     // Set a delayed timeout to show the fallback button (after 1 extra second)
-    fallbackTimeoutRef.current = window.setTimeout(() => {
-      if (fallbackAction) {
+    if (fallbackAction) {
+      fallbackTimeoutRef.current = window.setTimeout(() => {
         setShowFallbackButton(true);
-      }
-    }, timeoutThreshold + 1000); // Reduced from 2s to 1s
-    
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      if (fallbackTimeoutRef.current) clearTimeout(fallbackTimeoutRef.current);
-    };
-  }, [timeoutThreshold, fallbackAction]);
-
-  // Automatically trigger fallback after a very long wait if user hasn't clicked
-  useEffect(() => {
-    if (showTimeout && fallbackAction) {
-      const autoFallbackTimer = setTimeout(() => {
+      }, timeoutThreshold + 1000); // Reduced from 2s to 1s
+      
+      // Set super aggressive auto-fallback after 2x the threshold
+      autoFallbackRef.current = window.setTimeout(() => {
         console.warn("Auto triggering fallback after extended wait");
         fallbackAction();
-      }, 5000); // Reduced from 10s to 5s
-      
-      return () => clearTimeout(autoFallbackTimer);
+      }, timeoutThreshold * 2); 
     }
-  }, [showTimeout, fallbackAction]);
+    
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      if (fallbackTimeoutRef.current) {
+        clearTimeout(fallbackTimeoutRef.current);
+        fallbackTimeoutRef.current = null;
+      }
+      if (autoFallbackRef.current) {
+        clearTimeout(autoFallbackRef.current);
+        autoFallbackRef.current = null;
+      }
+    };
+  }, []); // Remove ALL dependencies to prevent re-renders
 
   return (
     <div className={`flex flex-col items-center justify-center min-h-[300px] p-8 ${

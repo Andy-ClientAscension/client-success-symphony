@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Layout } from "@/components/Layout/Layout";
 import { useAuth } from "@/hooks/use-auth";
@@ -16,10 +16,16 @@ export default function Index() {
   const { toast } = useToast();
   const [navigationAttempted, setNavigationAttempted] = useState(false);
   const [processingToken, setProcessingToken] = useState(false);
+  const navigationTimeoutRef = useRef<number | null>(null);
+  const tokenProcessingRef = useRef(false);
   
   // Emergency timeout to ensure navigation happens - reduced to be more responsive
   useEffect(() => {
-    const emergencyTimeout = setTimeout(() => {
+    // Only set up emergency timeout if we haven't already navigated
+    if (navigationAttempted) return;
+    
+    console.log("[Index] Setting up emergency navigation timeout");
+    navigationTimeoutRef.current = window.setTimeout(() => {
       if (!navigationAttempted) {
         console.warn("[Index] Emergency navigation triggered after timeout");
         setNavigationAttempted(true);
@@ -36,29 +42,34 @@ export default function Index() {
       }
     }, 1500); // Reduced from 3000ms for faster feedback
     
-    return () => clearTimeout(emergencyTimeout);
-  }, [navigate, isAuthenticated, toast, navigationAttempted]);
+    return () => {
+      if (navigationTimeoutRef.current) {
+        clearTimeout(navigationTimeoutRef.current);
+        navigationTimeoutRef.current = null;
+      }
+    };
+  // Use ref pattern to prevent dependency on navigationAttempted changing
+  }, []); 
   
-  // Separate effect for token processing to prevent conflicts with navigation logic
+  // Separate effect for token processing
   useEffect(() => {
     // Skip if already processed or processing
-    if (processingToken || typeof window === 'undefined') return;
+    if (tokenProcessingRef.current || typeof window === 'undefined') return;
     
     // Check for auth token in URL
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = hashParams.get('access_token');
     
-    if (!accessToken) {
-      return;
-    }
+    if (!accessToken) return;
     
     // Process the access token
+    console.log("[Index] Processing access token from URL");
+    tokenProcessingRef.current = true;
     setProcessingToken(true);
     const refreshToken = hashParams.get('refresh_token') || '';
     
-    const processToken = async () => {
+    (async () => {
       try {
-        console.log("[Index] Processing access token from URL");
         const { data, error } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken,
@@ -100,35 +111,40 @@ export default function Index() {
       } finally {
         setProcessingToken(false);
       }
-    };
+    })();
     
-    // Use a small delay to avoid potential race conditions
-    const tokenTimer = setTimeout(processToken, 10);
-    return () => clearTimeout(tokenTimer);
-  }, [navigate, refreshSession, toast]);
+    // Use empty dependency array since we use refs for state tracking
+  }, []);
   
-  // Separate, simplified navigation logic in its own effect
+  // Separate simplified navigation logic with retry mechanism
   useEffect(() => {
-    // Skip if we've already attempted navigation or are processing tokens
-    if (navigationAttempted || processingToken || isLoading) return;
+    // Skip if navigation already attempted or currently processing tokens
+    if (navigationAttempted || processingToken) return;
     
-    const navigateBasedOnAuth = () => {
-      console.log('[Index] Navigating based on auth state:', { isAuthenticated, isLoading });
-      setNavigationAttempted(true);
+    // Don't immediately navigate during loading to prevent flickering
+    if (isLoading) {
+      const shortDelay = setTimeout(() => {
+        // If still loading after delay, we'll wait for the emergency timeout
+        console.log('[Index] Auth still loading after delay, waiting longer');
+      }, 200);
       
-      if (isAuthenticated) {
-        console.log('[Index] User authenticated - navigating to dashboard');
-        navigate('/dashboard', { replace: true });
-      } else {
-        console.log('[Index] User not authenticated - navigating to login');
-        navigate('/login', { replace: true });
-      }
-    };
+      return () => clearTimeout(shortDelay);
+    }
     
-    // Small delay to ensure auth state is stable
-    const navTimer = setTimeout(navigateBasedOnAuth, 100);
-    return () => clearTimeout(navTimer);
-  }, [isAuthenticated, isLoading, navigate, navigationAttempted, processingToken]);
+    // Auth state is stable, navigate based on auth status
+    console.log('[Index] Navigating based on auth state:', { isAuthenticated, isLoading });
+    setNavigationAttempted(true);
+    
+    if (isAuthenticated) {
+      console.log('[Index] User authenticated - navigating to dashboard');
+      navigate('/dashboard', { replace: true });
+    } else {
+      console.log('[Index] User not authenticated - navigating to login');
+      navigate('/login', { replace: true });
+    }
+    
+    // Use specific dependencies that won't cause unnecessary re-renders
+  }, [isAuthenticated, isLoading, processingToken, navigationAttempted, navigate]);
 
   // Announce loading state to screen readers
   useEffect(() => {

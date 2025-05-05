@@ -20,7 +20,9 @@ export function useAuth(): Auth.AuthContextType {
         refreshedRef.current = true; // Mark as refreshed to prevent infinite loops
       }
     }
-  }, [context?.isAuthenticated, context?.session]);
+  // Explicitly remove context from dependencies to prevent re-renders
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   if (context === undefined) {
     console.error('[useAuth] Context error: useAuth must be used within an AuthProvider');

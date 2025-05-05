@@ -23,11 +23,6 @@ const initialAuthState: AuthState = {
 };
 
 export const authReducer = (state: AuthState, action: AuthAction): AuthState => {
-  // Only log actions in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[AuthReducer] Action:', action.type, action);
-  }
-  
   // Prevent unnecessary state changes to avoid re-renders
   switch (action.type) {
     case 'START_PROCESSING':
@@ -82,6 +77,7 @@ export const authReducer = (state: AuthState, action: AuthAction): AuthState => 
   }
 };
 
+// Using a useMemo-like pattern to ensure we only create one reducer instance
 export const useAuthReducer = () => {
   const initializedRef = useRef(false);
   const instanceRef = useRef<ReturnType<typeof useReducer> | null>(null);
@@ -91,5 +87,6 @@ export const useAuthReducer = () => {
     instanceRef.current = useReducer(authReducer, initialAuthState);
   }
   
-  return instanceRef.current;
+  // This is safe because we only create the reducer once
+  return instanceRef.current!;
 };

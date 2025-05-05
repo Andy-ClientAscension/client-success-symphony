@@ -15,6 +15,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [showLoading, setShowLoading] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const initialCheckDoneRef = useRef(false);
+  const forceTimeoutRef = useRef<number | null>(null);
   
   // Initial check with a shorter delay to prevent flash
   useEffect(() => {
@@ -34,11 +35,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       }
     }, 1000); // Reduced from 2000ms for faster feedback
     
+    // Always force continue after 3 seconds max
+    forceTimeoutRef.current = window.setTimeout(() => {
+      console.warn("Force continuing after max timeout");
+      setShowLoading(false);
+    }, 3000);
+    
     return () => {
       clearTimeout(initialTimer);
       clearTimeout(timeoutTimer);
+      if (forceTimeoutRef.current) {
+        clearTimeout(forceTimeoutRef.current);
+        forceTimeoutRef.current = null;
+      }
     };
-  }, [isLoading]);
+  // Removed dependencies to avoid re-renders, using refs instead
+  }, []);
   
   // Handle session loading timeouts by continuing anyway
   const handleSessionTimeout = useCallback(() => {
@@ -48,14 +60,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   
   // Force navigation after a short delay if still loading
   useEffect(() => {
-    if (showLoading) {
-      const forceTimeout = setTimeout(() => {
-        console.warn("Forcing DashboardLayout loading to complete");
-        setShowLoading(false);
-      }, 1500); // Reduced from 2000ms for faster response
-      
-      return () => clearTimeout(forceTimeout);
-    }
+    if (!showLoading) return;
+    
+    const forceTimeout = setTimeout(() => {
+      console.warn("Forcing DashboardLayout loading to complete");
+      setShowLoading(false);
+    }, 1500); // Reduced from 2000ms for faster response
+    
+    return () => clearTimeout(forceTimeout);
   }, [showLoading]);
   
   // If authenticated status is known and user is not authenticated, redirect immediately
