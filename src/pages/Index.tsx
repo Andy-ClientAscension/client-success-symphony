@@ -25,18 +25,6 @@ const MainContent = () => {
   const { isLoading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   
-  // Emergency fallback to bypass loading states
-  useEffect(() => {
-    const emergencyTimer = setTimeout(() => {
-      if (isLoading) {
-        console.warn("Emergency navigation triggered from MainContent");
-        navigate(isAuthenticated ? '/dashboard' : '/login', { replace: true });
-      }
-    }, 2000); // 2 second emergency timeout
-    
-    return () => clearTimeout(emergencyTimer);
-  }, [isLoading, isAuthenticated, navigate]);
-  
   return (
     <div id="main-content" tabIndex={-1} className="flex items-center justify-center h-screen">
       {isLoading ? (
@@ -61,14 +49,14 @@ export default function Index() {
   const [state, dispatch] = useAuthReducer();
   const authTimeoutRef = useRef<number | null>(null);
   
-  // Force navigation after delay to prevent being stuck
+  // Single consolidated timeout for emergency navigation
   useEffect(() => {
     // Clear any existing timeout
     if (authTimeoutRef.current) {
       clearTimeout(authTimeoutRef.current);
     }
     
-    // Set a safety timeout - force navigate after 5 seconds
+    // Set a single consolidated safety timeout - force navigate after 4 seconds
     authTimeoutRef.current = window.setTimeout(() => {
       console.warn("Auth process taking too long, forcing navigation");
       dispatch({ type: 'URL_PROCESSED' });
@@ -77,14 +65,20 @@ export default function Index() {
       // Force navigation regardless of auth state
       navigate(isAuthenticated ? '/dashboard' : '/login', { replace: true });
       
-    }, 5000); // Reduced from 10s to 5s
+      // Notify the user
+      toast({
+        title: "Navigation completed",
+        description: "Redirected automatically after delay"
+      });
+      
+    }, 4000); // Single consolidated timeout
     
     return () => {
       if (authTimeoutRef.current) {
         clearTimeout(authTimeoutRef.current);
       }
     };
-  }, [navigate, dispatch]);
+  }, [navigate, dispatch, isAuthenticated, toast]);
   
   // OPTIMIZATION: Immediate redirection based on auth state
   useEffect(() => {
@@ -96,16 +90,6 @@ export default function Index() {
       }
     }
   }, [navigate, isAuthenticated, isLoading, state.processingAuth, state.urlProcessed]);
-
-  // Fallback navigation - safety net
-  useEffect(() => {
-    const emergencyRedirect = setTimeout(() => {
-      console.warn("Emergency redirect triggered from Index");
-      navigate(isAuthenticated ? '/dashboard' : '/login', { replace: true });
-    }, 3500);
-    
-    return () => clearTimeout(emergencyRedirect);
-  }, [navigate, isAuthenticated]);
 
   // Process authentication with parallelized requests
   const processAuth = useCallback(async (accessToken: string, refreshToken: string) => {
