@@ -1,12 +1,12 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Layout } from "@/components/Layout/Layout";
 import { LoadingState } from "@/components/LoadingState";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { announceToScreenReader } from "@/lib/accessibility";
-import { useAuthStateMachine } from '@/hooks/use-auth-state-machine';
+import { useAuthStateMachineContext } from '@/contexts/auth-state-machine';
 import { useSessionCoordination } from '@/hooks/use-session-coordination';
 
 // This is the landing page that redirects based on auth state
@@ -14,11 +14,25 @@ export default function Index() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { state, dispatch, isAuthenticated } = useAuthStateMachine();
-  const { checkSession, refreshSession } = useSessionCoordination();
+  const processedUrlRef = useRef<boolean>(false);
   
-  // Process access token from URL if present
+  // Get the new authentication state machine
+  const { 
+    state: authState, 
+    dispatch, 
+    isAuthenticated,
+    authenticateWithToken 
+  } = useAuthStateMachineContext();
+  
+  const { 
+    refreshSession, 
+    checkSession 
+  } = useSessionCoordination();
+  
+  // Process access token from URL if present (only once)
   useEffect(() => {
+    if (processedUrlRef.current) return;
+    
     console.log("[Index] Checking for auth token in URL");
     
     // Check for auth token in URL
@@ -27,68 +41,66 @@ export default function Index() {
     
     if (!accessToken) {
       console.log("[Index] No access token in URL");
+      processedUrlRef.current = true;
       return;
     }
     
+    // Flag as processed immediately to prevent duplicate processing
+    processedUrlRef.current = true;
+    
     // Process the access token
     console.log("[Index] Processing access token from URL");
-    dispatch({ type: 'TOKEN_CHECK_START' });
     const refreshToken = hashParams.get('refresh_token') || '';
     
-    (async () => {
-      try {
-        const { data, error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
-        
-        if (error) throw error;
-        
-        // Clean up URL before navigation
-        window.history.replaceState(null, '', window.location.pathname);
-        
-        // Refresh session to update state
-        await refreshSession(true);
-        
-        toast({
-          title: "Authentication successful",
-          description: "You have been successfully logged in."
-        });
-        
-        // Force navigation to dashboard
-        dispatch({ type: 'AUTHENTICATE_SUCCESS' });
-      } catch (error) {
-        console.error("[Index] Error setting session from URL:", error);
-        
-        const errorMessage = error instanceof Error ? error.message : "Authentication failed";
-        
-        toast({
-          title: "Authentication Error",
-          description: errorMessage,
-          variant: "destructive",
-        });
-        
-        // Navigate to login page with error
-        dispatch({ 
-          type: 'AUTHENTICATE_FAILURE', 
-          error: error instanceof Error ? error : new Error(errorMessage) 
-        });
-        
-        navigate('/login', { 
-          replace: true,
-          state: { authError: errorMessage }
-        });
-      }
-    })();
-  }, [navigate, dispatch, refreshSession, toast]);
+    // Clean up URL before authentication attempt
+    window.history.replaceState(null, '', window.location.pathname);
+    
+    // Use the new authentication helper
+    authenticateWithToken(accessToken, refreshToken)
+      .catch(error => {
+        console.error("[Index] Error in token authentication:", error);
+      });
+    
+  }, [navigate, authenticateWithToken, toast]);
+  
+  // Initialize auth state and handle redirects
+  useEffect(() => {
+    // Skip if we're already processing auth
+    if (authState === 'checking_token' || authState === 'checking_session') {
+      return;
+    }
+    
+    // Initialize auth state if needed
+    if (authState === 'initializing' && !isAuthenticated) {
+      console.log("[Index] Initializing auth state machine");
+      
+      // Start session check with the state machine
+      checkSession(false).catch(error => {
+        console.error("[Index] Error checking session:", error);
+      });
+    }
+    
+    // Handle authenticated state
+    if (isAuthenticated === true && authState === 'authenticated') {
+      console.log("[Index] User is authenticated, redirecting to dashboard");
+      navigate('/dashboard', { replace: true });
+    }
+    
+    // Handle unauthenticated state with a slight delay to allow for race conditions
+    if (isAuthenticated === false && authState === 'unauthenticated') {
+      console.log("[Index] User is not authenticated, redirecting to login");
+      navigate('/login', { replace: true });
+    }
+    
+  }, [authState, isAuthenticated, navigate, checkSession]);
   
   // Log current auth state information
   useEffect(() => {
     console.log('[Index] Auth state:', { 
-      state,
+      state: authState,
       isAuthenticated 
     });
-  }, [state, isAuthenticated]);
+  }, [authState, isAuthenticated]);
 
   // Announce loading state to screen readers
   useEffect(() => {

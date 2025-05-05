@@ -6,24 +6,35 @@ import { CriticalLoadingState } from "@/components/CriticalLoadingState";
 import type { ReactNode } from "react";
 import { useEffect, useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuthStateMachine } from "@/hooks/use-auth-state-machine";
+import { useAuthStateMachineContext } from "@/contexts/auth-state-machine";
+import { useSessionCoordination } from "@/hooks/use-session-coordination";
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated: legacyIsAuthenticated, isLoading: legacyIsLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [showLoading, setShowLoading] = useState(false);
   const initialCheckDoneRef = useRef(false);
-  const { state, timeoutLevel, processingAuth, isAuthenticated: stateMachineAuthenticated } = useAuthStateMachine();
+  
+  // Get data from our new state machine
+  const { 
+    state, 
+    timeoutLevel, 
+    processingAuth, 
+    isAuthenticated: stateMachineAuthenticated
+  } = useAuthStateMachineContext();
+  
+  const { refreshSession } = useSessionCoordination();
   
   // Merge authentication state between old and new systems for compatibility
-  // This allows for a gradual migration to the new state machine
-  const effectiveIsAuthenticated = isAuthenticated || stateMachineAuthenticated === true;
-  const effectiveIsLoading = isLoading || processingAuth;
+  // Use OR logic to be more permissive during transition period
+  const effectiveIsAuthenticated = legacyIsAuthenticated || stateMachineAuthenticated === true;
+  // Use OR logic for loading to ensure we show loading state during transition
+  const effectiveIsLoading = legacyIsLoading || processingAuth;
   
   // Initial check with a shorter delay to prevent flash
   useEffect(() => {
@@ -31,14 +42,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     
     // Very short delay to prevent flash
     const initialCheckTimerId = setTimeout(() => {
-      setShowLoading(effectiveIsLoading && !timeoutLevel);
+      // Only show loading if we're still checking and haven't timed out
+      setShowLoading(effectiveIsLoading && timeoutLevel === 0);
       initialCheckDoneRef.current = true;
+      
+      // If we're not authenticated, try a quick session refresh
+      if (!effectiveIsAuthenticated && !effectiveIsLoading) {
+        refreshSession().catch(err => 
+          console.error("Error refreshing session in DashboardLayout:", err)
+        );
+      }
     }, 50); // Extremely short delay
     
     return () => {
       clearTimeout(initialCheckTimerId);
     };
-  }, [effectiveIsLoading, timeoutLevel]);
+  }, [effectiveIsLoading, effectiveIsAuthenticated, timeoutLevel, refreshSession]);
   
   // Handle force continue for stuck loading states
   const handleForceContinue = () => {

@@ -1,7 +1,8 @@
-
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { withTimeout } from '@/utils/error/timeoutUtils';
+import { announceToScreenReader } from '@/lib/accessibility';
 
 export type AuthState = 
   | 'initializing' 
@@ -10,23 +11,26 @@ export type AuthState =
   | 'authenticated'
   | 'unauthenticated'
   | 'error'
-  | 'timeout_level_1'
-  | 'timeout_level_2'
-  | 'timeout_level_3'
-  | 'navigation_triggered';
+  | 'timeout_soft'  // Level 1 timeout - continue but warn
+  | 'timeout_hard'  // Level 2 timeout - force continue
+  | 'timeout_fatal' // Level 3 timeout - force navigate
+  | 'navigation_triggered'
+  | 'navigation_completed';
 
 export type AuthAction =
-  | { type: 'START_INIT' }
+  | { type: 'INIT' }
   | { type: 'TOKEN_CHECK_START' }
   | { type: 'TOKEN_CHECK_SUCCESS' }
-  | { type: 'TOKEN_CHECK_FAILURE' }
+  | { type: 'TOKEN_CHECK_FAILURE'; error?: Error }
   | { type: 'SESSION_CHECK_START' }
   | { type: 'SESSION_CHECK_SUCCESS' }
-  | { type: 'SESSION_CHECK_FAILURE' }
+  | { type: 'SESSION_CHECK_FAILURE'; error?: Error }
   | { type: 'AUTHENTICATE_SUCCESS' }
-  | { type: 'AUTHENTICATE_FAILURE', error?: Error }
-  | { type: 'TIMEOUT', level: 1 | 2 | 3 }
-  | { type: 'TRIGGER_NAVIGATION', destination: string }
+  | { type: 'AUTHENTICATE_FAILURE'; error?: Error }
+  | { type: 'TIMEOUT'; level: 1 | 2 | 3 }
+  | { type: 'NAVIGATE'; destination: string }
+  | { type: 'NAVIGATION_COMPLETE' }
+  | { type: 'CANCEL'; reason?: string }
   | { type: 'RESET' };
 
 interface AuthStateMachineState {
@@ -39,6 +43,9 @@ interface AuthStateMachineState {
   navigationAttempted: boolean;
   navigationDestination: string | null;
   isAuthenticated: boolean | null;
+  operationId: number;  // Track the current operation to handle race conditions
+  lastOperation: string | null;
+  errorCount: number;   // Track error count for recovery mechanisms
 }
 
 const initialState: AuthStateMachineState = {
@@ -50,27 +57,56 @@ const initialState: AuthStateMachineState = {
   processingAuth: false,
   navigationAttempted: false,
   navigationDestination: null,
-  isAuthenticated: null
+  isAuthenticated: null,
+  operationId: 0,
+  lastOperation: null,
+  errorCount: 0
 };
 
-export function useAuthStateMachine(defaultAuthenticatedRedirect = '/dashboard', defaultUnauthenticatedRedirect = '/login') {
+export function useAuthStateMachine(
+  defaultAuthenticatedRedirect = '/dashboard', 
+  defaultUnauthenticatedRedirect = '/login',
+  options = { 
+    enableProgressiveTimeouts: true,
+    timeoutLevels: [300, 800, 1500], // Timeout thresholds in ms
+    navigationLock: true,            // Prevent multiple navigations
+    autoNavigate: true               // Auto-navigate based on auth state
+  }
+) {
   const [state, setState] = useState<AuthStateMachineState>(initialState);
   const timeoutIdsRef = useRef<NodeJS.Timeout[]>([]);
   const navigationLockRef = useRef<boolean>(false);
   const operationIdRef = useRef<number>(0);
+  const abortControllersRef = useRef<Map<number, AbortController>>(new Map());
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Clean up all timeouts on unmount
+  // Clean up all timeouts
   const clearAllTimeouts = useCallback(() => {
-    timeoutIdsRef.current.forEach(id => clearTimeout(id));
+    timeoutIdsRef.current.forEach(clearTimeout);
     timeoutIdsRef.current = [];
   }, []);
   
+  // Cancel all pending operations
+  const cancelAllOperations = useCallback(() => {
+    // Cancel all abort controllers
+    abortControllersRef.current.forEach(controller => {
+      try {
+        controller.abort('Operation cancelled');
+      } catch (err) {
+        console.error('Error aborting controller:', err);
+      }
+    });
+    abortControllersRef.current.clear();
+    
+    // Clear all timeouts
+    clearAllTimeouts();
+  }, [clearAllTimeouts]);
+  
   // Create timeout with automatic cleanup registration
-  const createTimeout = useCallback((callback: () => void, ms: number) => {
+  const createTimeout = useCallback((callback: () => void, ms: number): NodeJS.Timeout => {
     const id = setTimeout(() => {
-      // Remove this timeout ID from the list when it executes
+      // Remove from the list when it executes
       timeoutIdsRef.current = timeoutIdsRef.current.filter(i => i !== id);
       callback();
     }, ms);
@@ -79,247 +115,396 @@ export function useAuthStateMachine(defaultAuthenticatedRedirect = '/dashboard',
     return id;
   }, []);
   
-  // State machine dispatch function
+  // Enhanced state machine dispatch function
   const dispatch = useCallback((action: AuthAction) => {
-    const currentOpId = ++operationIdRef.current;
+    const now = Date.now();
+    const newOperationId = ++operationIdRef.current;
+    
+    // Create a new AbortController for this operation
+    if (['INIT', 'TOKEN_CHECK_START', 'SESSION_CHECK_START'].includes(action.type)) {
+      const controller = new AbortController();
+      abortControllersRef.current.set(newOperationId, controller);
+    }
     
     setState(prevState => {
-      const now = Date.now();
-      let nextState: Partial<AuthStateMachineState> = { transitionTime: now };
-      
       console.log(`[Auth State Machine] Action: ${action.type}, Current state: ${prevState.state}`);
       
+      // Start with common state updates
+      const baseNextState: Partial<AuthStateMachineState> = { 
+        transitionTime: now,
+        previousState: prevState.state,
+        operationId: newOperationId,
+        lastOperation: action.type
+      };
+      
       switch (action.type) {
-        case 'START_INIT':
-          nextState = {
-            ...nextState,
+        case 'INIT':
+          return {
+            ...prevState,
+            ...baseNextState,
             state: 'initializing',
-            previousState: prevState.state,
+            processingAuth: true,
+            error: null,
+            errorCount: 0
+          };
+          
+        case 'TOKEN_CHECK_START':
+          return {
+            ...prevState,
+            ...baseNextState,
+            state: 'checking_token',
             processingAuth: true,
             error: null
           };
-          break;
-          
-        case 'TOKEN_CHECK_START':
-          nextState = {
-            ...nextState,
-            state: 'checking_token',
-            previousState: prevState.state,
-            processingAuth: true
-          };
-          break;
           
         case 'TOKEN_CHECK_SUCCESS':
-          nextState = {
-            ...nextState,
+          return {
+            ...prevState,
+            ...baseNextState,
             state: 'checking_session',
-            previousState: prevState.state,
-            processingAuth: true
+            processingAuth: true,
+            error: null
           };
-          break;
           
         case 'TOKEN_CHECK_FAILURE':
-          nextState = {
-            ...nextState,
-            state: 'unauthenticated',
-            previousState: prevState.state,
+          return {
+            ...prevState,
+            ...baseNextState,
+            state: action.error ? 'error' : 'unauthenticated',
             processingAuth: false,
-            isAuthenticated: false
+            error: action.error || null,
+            isAuthenticated: false,
+            errorCount: action.error ? prevState.errorCount + 1 : prevState.errorCount
           };
-          break;
           
         case 'SESSION_CHECK_START':
-          nextState = {
-            ...nextState,
+          return {
+            ...prevState,
+            ...baseNextState,
             state: 'checking_session',
-            previousState: prevState.state,
             processingAuth: true
           };
-          break;
           
         case 'SESSION_CHECK_SUCCESS':
-          nextState = {
-            ...nextState,
+          return {
+            ...prevState,
+            ...baseNextState,
             state: 'authenticated',
-            previousState: prevState.state,
-            processingAuth: false,
-            isAuthenticated: true
-          };
-          break;
-          
-        case 'SESSION_CHECK_FAILURE':
-          nextState = {
-            ...nextState,
-            state: 'unauthenticated',
-            previousState: prevState.state,
-            processingAuth: false,
-            isAuthenticated: false
-          };
-          break;
-          
-        case 'AUTHENTICATE_SUCCESS':
-          nextState = {
-            ...nextState,
-            state: 'authenticated',
-            previousState: prevState.state,
             processingAuth: false,
             error: null,
-            isAuthenticated: true
+            isAuthenticated: true,
+            errorCount: 0  // Reset error count on success
           };
-          break;
+          
+        case 'SESSION_CHECK_FAILURE':
+          return {
+            ...prevState,
+            ...baseNextState,
+            state: action.error ? 'error' : 'unauthenticated',
+            processingAuth: false,
+            error: action.error || null,
+            isAuthenticated: false,
+            errorCount: action.error ? prevState.errorCount + 1 : prevState.errorCount
+          };
+          
+        case 'AUTHENTICATE_SUCCESS':
+          return {
+            ...prevState,
+            ...baseNextState,
+            state: 'authenticated',
+            processingAuth: false,
+            error: null,
+            isAuthenticated: true,
+            errorCount: 0  // Reset error count on success
+          };
           
         case 'AUTHENTICATE_FAILURE':
-          nextState = {
-            ...nextState,
+          return {
+            ...prevState,
+            ...baseNextState,
             state: 'error',
-            previousState: prevState.state,
             processingAuth: false,
             error: action.error || new Error('Authentication failed'),
-            isAuthenticated: false
+            isAuthenticated: false,
+            errorCount: prevState.errorCount + 1
           };
-          break;
           
         case 'TIMEOUT':
           // Only increase timeout level if the new level is higher
           if (action.level <= prevState.timeoutLevel) {
-            return prevState; // No change if timeout level didn't increase
+            return prevState; // No change needed
           }
           
-          nextState = {
-            ...nextState,
-            state: `timeout_level_${action.level}` as AuthState,
-            previousState: prevState.state,
-            timeoutLevel: action.level,
-            processingAuth: action.level >= 3 ? false : prevState.processingAuth,
-          };
-          break;
+          const timeoutState: AuthState = 
+            action.level === 1 ? 'timeout_soft' :
+            action.level === 2 ? 'timeout_hard' : 'timeout_fatal';
           
-        case 'TRIGGER_NAVIGATION':
-          nextState = {
-            ...nextState,
+          return {
+            ...prevState,
+            ...baseNextState,
+            state: timeoutState,
+            timeoutLevel: action.level,
+            // Force processing to false on fatal timeout
+            processingAuth: action.level < 3 ? prevState.processingAuth : false
+          };
+          
+        case 'NAVIGATE':
+          return {
+            ...prevState,
+            ...baseNextState,
             state: 'navigation_triggered',
-            previousState: prevState.state,
             navigationAttempted: true,
             navigationDestination: action.destination,
             processingAuth: false
           };
-          break;
+          
+        case 'NAVIGATION_COMPLETE':
+          return {
+            ...prevState,
+            ...baseNextState,
+            state: 'navigation_completed',
+            navigationAttempted: true,
+            processingAuth: false
+          };
+          
+        case 'CANCEL':
+          // Cancel keeps the current auth state but stops processing
+          return {
+            ...prevState,
+            ...baseNextState,
+            processingAuth: false,
+            error: prevState.error || (action.reason ? new Error(action.reason) : null)
+          };
           
         case 'RESET':
-          clearAllTimeouts();
-          return initialState;
+          cancelAllOperations();
+          return {
+            ...initialState,
+            transitionTime: now,
+            operationId: newOperationId
+          };
           
         default:
           return prevState;
       }
-      
-      return { ...prevState, ...nextState };
     });
     
     // Return the operation ID for tracking
-    return currentOpId;
-  }, [clearAllTimeouts]);
+    return newOperationId;
+  }, [cancelAllOperations]);
   
-  // Set up tiered timeout system with progressive timeouts
+  // Set up unified, progressive timeout system
   useEffect(() => {
-    // Clear previous timeouts when state changes to avoid duplicate timeouts
+    // Clean up previous timeouts when state changes
     clearAllTimeouts();
     
-    // Only set timeouts for states that should progress automatically
-    const shouldSetTimeouts = ['initializing', 'checking_token', 'checking_session'].includes(state.state);
+    if (!options.enableProgressiveTimeouts) return;
     
-    if (shouldSetTimeouts && !state.navigationAttempted) {
-      // Level 1 timeout (300ms) - Quick timeout for initial checks
+    // Only set timeouts for states that should have automatic timeouts
+    const shouldSetTimeouts = [
+      'initializing', 
+      'checking_token', 
+      'checking_session'
+    ].includes(state.state) && !state.navigationAttempted;
+    
+    if (shouldSetTimeouts) {
+      // Level 1 timeout (soft) - Just warn but continue
       createTimeout(() => {
-        dispatch({ type: 'TIMEOUT', level: 1 });
-      }, 300);
-      
-      // Level 2 timeout (800ms) - Medium timeout for slower operations
-      createTimeout(() => {
-        dispatch({ type: 'TIMEOUT', level: 2 });
-      }, 800);
-      
-      // Level 3 timeout (1500ms) - Final timeout that forces progress
-      createTimeout(() => {
-        // If we're still in a processing state after 1.5s, force completion
         if (state.processingAuth) {
-          console.warn("[Auth State Machine] Level 3 timeout reached. Forcing auth completion.");
+          console.log("[Auth State Machine] Soft timeout reached");
+          dispatch({ type: 'TIMEOUT', level: 1 });
+          
+          // Show a mild toast if still processing
+          if (state.processingAuth) {
+            toast({
+              title: "Still verifying...",
+              description: "Authentication is taking longer than expected",
+              variant: "default"
+            });
+          }
+        }
+      }, options.timeoutLevels[0]);
+      
+      // Level 2 timeout (hard) - Force continue with best guess
+      createTimeout(() => {
+        if (state.processingAuth) {
+          console.warn("[Auth State Machine] Hard timeout reached");
+          dispatch({ type: 'TIMEOUT', level: 2 });
+          
+          // Add accessibility announcement
+          announceToScreenReader(
+            "Authentication is taking longer than expected. Continuing with best guess state.",
+            "polite"
+          );
+          
+          // Show toast only once
+          if (!state.timeoutLevel) {
+            toast({
+              title: "Authentication delay",
+              description: "Taking longer than expected, continuing anyway",
+              variant: "default"
+            });
+          }
+        }
+      }, options.timeoutLevels[1]);
+      
+      // Level 3 timeout (fatal) - Force navigation to prevent stuck state
+      createTimeout(() => {
+        if (state.processingAuth) {
+          console.error("[Auth State Machine] Fatal timeout reached, forcing completion");
           dispatch({ type: 'TIMEOUT', level: 3 });
           
-          // Force destination based on most likely state
+          // Emergency toast for user feedback
+          toast({
+            title: "Authentication timeout",
+            description: "We'll continue with best guess authentication state",
+            variant: "default"
+          });
+          
+          // Force destination based on most likely state with fallback
           const destination = state.isAuthenticated === true ? 
             defaultAuthenticatedRedirect : defaultUnauthenticatedRedirect;
             
-          // Emergency toast for user feedback
-          toast({
-            title: "Authentication check timeout",
-            description: "Navigation continuing with best guess authentication state."
-          });
-          
-          // Forced navigation after timeout
-          dispatch({ type: 'TRIGGER_NAVIGATION', destination });
+          // Force navigation after timeout
+          dispatch({ type: 'NAVIGATE', destination });
         }
-      }, 1500);
+      }, options.timeoutLevels[2]);
     }
     
-    return () => {
-      clearAllTimeouts();
-    };
-  }, [state.state, state.processingAuth, state.navigationAttempted, state.isAuthenticated, 
-      dispatch, createTimeout, clearAllTimeouts, toast, defaultAuthenticatedRedirect, defaultUnauthenticatedRedirect]);
+    // Clean up timeouts if component unmounts or state changes
+    return clearAllTimeouts;
+  }, [
+    state.state, 
+    state.processingAuth, 
+    state.navigationAttempted, 
+    state.isAuthenticated,
+    state.timeoutLevel,
+    dispatch, 
+    createTimeout, 
+    clearAllTimeouts, 
+    toast, 
+    options.enableProgressiveTimeouts,
+    options.timeoutLevels,
+    defaultAuthenticatedRedirect, 
+    defaultUnauthenticatedRedirect
+  ]);
   
   // Handle navigation based on auth state
   useEffect(() => {
-    // Prevent navigation in some states
+    if (!options.autoNavigate) return;
+    
+    // Skip navigation for certain states
     if (state.state === 'initializing' || navigationLockRef.current) {
       return;
     }
     
-    // Automated navigation based on authentication state when it becomes definitive
+    // Navigation function with locking mechanism
+    const navigateWithLock = (destination: string, replace = true) => {
+      if (!options.navigationLock || !navigationLockRef.current) {
+        navigationLockRef.current = true;
+        console.log(`[Auth State Machine] Navigating to: ${destination}`);
+        
+        try {
+          navigate(destination, { replace });
+          dispatch({ type: 'NAVIGATION_COMPLETE' });
+        } catch (err) {
+          console.error('Navigation error:', err);
+          // Release lock if navigation fails
+          navigationLockRef.current = false;
+        }
+      }
+    };
+    
+    // Automated navigation based on authentication state
     if (state.state === 'authenticated' && !state.navigationAttempted) {
-      navigationLockRef.current = true;
-      console.log('[Auth State Machine] Navigating to dashboard (authenticated)');
-      dispatch({ type: 'TRIGGER_NAVIGATION', destination: defaultAuthenticatedRedirect });
-      navigate(defaultAuthenticatedRedirect, { replace: true });
+      navigateWithLock(defaultAuthenticatedRedirect);
     } 
     else if (state.state === 'unauthenticated' && !state.navigationAttempted) {
-      navigationLockRef.current = true;
-      console.log('[Auth State Machine] Navigating to login (unauthenticated)');
-      dispatch({ type: 'TRIGGER_NAVIGATION', destination: defaultUnauthenticatedRedirect });
-      navigate(defaultUnauthenticatedRedirect, { replace: true });
+      navigateWithLock(defaultUnauthenticatedRedirect);
     }
     else if (state.state === 'navigation_triggered' && state.navigationDestination) {
-      navigationLockRef.current = true;
-      console.log(`[Auth State Machine] Explicit navigation to: ${state.navigationDestination}`);
-      navigate(state.navigationDestination, { replace: true });
+      navigateWithLock(state.navigationDestination);
     }
-    else if (state.timeoutLevel >= 3 && !state.navigationAttempted) {
-      // Force navigation after level 3 timeout
-      navigationLockRef.current = true;
+    else if (state.state === 'timeout_fatal' && !state.navigationAttempted) {
+      // Force navigation after fatal timeout
       const destination = state.isAuthenticated === true ? 
         defaultAuthenticatedRedirect : defaultUnauthenticatedRedirect;
       console.warn(`[Auth State Machine] Emergency navigation to: ${destination} after timeout`);
-      dispatch({ type: 'TRIGGER_NAVIGATION', destination });
-      navigate(destination, { replace: true });
+      navigateWithLock(destination);
     }
     
-    // Reset navigation lock after each navigation attempt
-    return () => {
+    // Short timeout to release navigation lock for retry attempts
+    const lockReleaseTimer = setTimeout(() => {
       navigationLockRef.current = false;
+    }, 300);
+    
+    return () => {
+      clearTimeout(lockReleaseTimer);
     };
-  }, [state.state, state.isAuthenticated, state.navigationAttempted, state.navigationDestination, 
-      state.timeoutLevel, navigate, dispatch, defaultAuthenticatedRedirect, defaultUnauthenticatedRedirect]);
+  }, [
+    state.state, 
+    state.isAuthenticated, 
+    state.navigationAttempted, 
+    state.navigationDestination,
+    navigate, 
+    dispatch, 
+    defaultAuthenticatedRedirect, 
+    defaultUnauthenticatedRedirect,
+    options.autoNavigate,
+    options.navigationLock
+  ]);
   
-  // Helper function to perform manual navigation
-  const navigateTo = useCallback((destination: string, replace: boolean = true) => {
+  // Enhanced version of navigateTo with operation tracking
+  const navigateTo = useCallback((destination: string, options = { replace: true }) => {
     if (!navigationLockRef.current) {
       navigationLockRef.current = true;
-      dispatch({ type: 'TRIGGER_NAVIGATION', destination });
-      navigate(destination, { replace });
+      dispatch({ type: 'NAVIGATE', destination });
+      
+      try {
+        navigate(destination, { replace: options.replace });
+        dispatch({ type: 'NAVIGATION_COMPLETE' });
+      } catch (err) {
+        console.error('Navigation error:', err);
+        navigationLockRef.current = false;
+      }
     }
   }, [navigate, dispatch]);
   
+  // Create a function that wraps async operations with timeout and aborts
+  const withAuthTimeout = useCallback(async <T>(
+    promise: Promise<T>, 
+    timeoutMs = 2000, 
+    operationId?: number
+  ): Promise<T> => {
+    const currentOpId = operationId || state.operationId;
+    const controller = abortControllersRef.current.get(currentOpId);
+    
+    if (!controller) {
+      throw new Error('No abort controller found for operation');
+    }
+    
+    try {
+      // Use the withTimeout utility to add a timeout to the promise
+      return await withTimeout(
+        promise, 
+        timeoutMs, 
+        'Operation timed out'
+      );
+    } catch (error) {
+      // If aborted, throw a cleaner error
+      if (controller.signal.aborted) {
+        throw new Error('Operation was cancelled');
+      }
+      throw error;
+    } finally {
+      // Clean up the controller
+      abortControllersRef.current.delete(currentOpId);
+    }
+  }, [state.operationId]);
+  
+  // Return the enhanced interface
   return {
+    // State properties
     state: state.state,
     previousState: state.previousState,
     error: state.error,
@@ -327,8 +512,15 @@ export function useAuthStateMachine(defaultAuthenticatedRedirect = '/dashboard',
     processingAuth: state.processingAuth,
     navigationAttempted: state.navigationAttempted,
     isAuthenticated: state.isAuthenticated,
+    operationId: state.operationId,
+    lastOperation: state.lastOperation,
+    errorCount: state.errorCount,
+    
+    // Actions
     dispatch,
     navigateTo,
+    withAuthTimeout,
+    cancelAllOperations,
     resetAuthState: useCallback(() => dispatch({ type: 'RESET' }), [dispatch])
   };
 }

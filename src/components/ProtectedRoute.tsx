@@ -10,8 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { announceToScreenReader, setFocusToElement } from "@/lib/accessibility";
 import { useAuthError } from "@/hooks/use-auth-error";
 import { preloadPageResources, prefetchRoute } from "@/utils/resourceHints";
-import { useAuthStateMachine } from "@/hooks/use-auth-state-machine";
-import { useSessionCoordination } from "@/hooks/use-session-coordination";
+import { useAuthStateMachineContext } from '@/contexts/auth-state-machine';
+import { useSessionCoordination } from '@/hooks/use-session-coordination';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -23,12 +23,14 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   
   // Get auth state from both legacy and new systems
   const { isAuthenticated: legacyIsAuthenticated, isLoading: legacyIsLoading } = useAuth();
-  const { state: authState, processingAuth, isAuthenticated: newIsAuthenticated } = useAuthStateMachine();
-  const { checkSession } = useSessionCoordination();
+  const { state: authState, processingAuth, isAuthenticated: newIsAuthenticated } = useAuthStateMachineContext();
+  const { checkSession, shouldRefreshSession } = useSessionCoordination();
   const [error] = useAuthError();
   
   // Merge authentication state for compatibility during migration
+  // Use OR logic to be more permissive during transition
   const isAuthenticated = legacyIsAuthenticated || newIsAuthenticated === true;
+  // Use OR logic for loading to be more cautious during transition
   const isLoading = legacyIsLoading || processingAuth || authState === 'initializing';
   
   // Setup preloading resources
@@ -51,15 +53,24 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   
   // Single-attempt session check (if needed)
   useEffect(() => {
+    // Skip if already authenticated or loading
+    if (isAuthenticated || isLoading) return;
+
+    // Skip if we shouldn't refresh
+    if (!shouldRefreshSession()) return;
+    
     // Wait a tiny bit to avoid race conditions with other auth checks
     const timer = setTimeout(() => {
       if (!isAuthenticated && !isLoading) {
-        checkSession();
+        console.log("[ProtectedRoute] Initiating session check");
+        checkSession().catch(err => 
+          console.error("[ProtectedRoute] Session check error:", err)
+        );
       }
     }, 50);
     
     return () => clearTimeout(timer);
-  }, [isAuthenticated, isLoading, checkSession]);
+  }, [isAuthenticated, isLoading, checkSession, shouldRefreshSession]);
   
   // When auth status changes, announce to screen readers
   useEffect(() => {
@@ -78,7 +89,7 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   }, [isAuthenticated, isLoading]);
   
   // Show loading state while checking authentication
-  if (isLoading && (authState === 'initializing' || authState === 'checking_token' || authState === 'checking_session')) {
+  if (isLoading) {
     return (
       <>
         <LoadingState message="Checking authentication..." />
