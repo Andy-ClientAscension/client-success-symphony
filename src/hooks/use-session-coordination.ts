@@ -1,4 +1,3 @@
-
 import { useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStateMachineContext } from '@/contexts/auth-state-machine';
@@ -16,9 +15,11 @@ export function useSessionCoordination() {
     state, 
     isAuthenticated, 
     processingAuth,
-    checkSession,
     dispatch
   } = useAuthStateMachineContext();
+  
+  // Get the checkSession method from the context
+  const { checkSession } = useAuthStateMachineContext();
   
   // Tracking refs for preventing duplicate operations
   const lastRefreshTimeRef = useRef<number>(0);

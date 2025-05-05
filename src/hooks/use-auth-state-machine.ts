@@ -63,6 +63,29 @@ const initialState: AuthStateMachineState = {
   errorCount: 0
 };
 
+// Create a return type interface that can be used for context typing
+export interface AuthStateMachineReturn {
+  // State properties
+  state: AuthState;
+  previousState: AuthState | null;
+  error: Error | null;
+  timeoutLevel: number;
+  processingAuth: boolean;
+  navigationAttempted: boolean;
+  navigationDestination: string | null;
+  isAuthenticated: boolean | null;
+  operationId: number;
+  lastOperation: string | null;
+  errorCount: number;
+  
+  // Actions
+  dispatch: (action: AuthAction) => number;
+  navigateTo: (destination: string, options?: { replace: boolean }) => void;
+  withAuthTimeout: <T>(promise: Promise<T>, timeoutMs?: number, operationId?: number) => Promise<T>;
+  cancelAllOperations: () => void;
+  resetAuthState: () => void;
+}
+
 export function useAuthStateMachine(
   defaultAuthenticatedRedirect = '/dashboard', 
   defaultUnauthenticatedRedirect = '/login',
@@ -72,7 +95,7 @@ export function useAuthStateMachine(
     navigationLock: true,            // Prevent multiple navigations
     autoNavigate: true               // Auto-navigate based on auth state
   }
-) {
+): AuthStateMachineReturn {
   const [state, setState] = useState<AuthStateMachineState>(initialState);
   const timeoutIdsRef = useRef<NodeJS.Timeout[]>([]);
   const navigationLockRef = useRef<boolean>(false);
@@ -511,6 +534,7 @@ export function useAuthStateMachine(
     timeoutLevel: state.timeoutLevel,
     processingAuth: state.processingAuth,
     navigationAttempted: state.navigationAttempted,
+    navigationDestination: state.navigationDestination,
     isAuthenticated: state.isAuthenticated,
     operationId: state.operationId,
     lastOperation: state.lastOperation,

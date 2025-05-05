@@ -1,4 +1,3 @@
-
 import { ReactNode, useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
@@ -23,7 +22,8 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   
   // Get auth state from both legacy and new systems
   const { isAuthenticated: legacyIsAuthenticated, isLoading: legacyIsLoading } = useAuth();
-  const { state: authState, processingAuth, isAuthenticated: newIsAuthenticated } = useAuthStateMachineContext();
+  const authContext = useAuthStateMachineContext();
+  const { state: authState, processingAuth, isAuthenticated: newIsAuthenticated } = authContext;
   const { checkSession, shouldRefreshSession } = useSessionCoordination();
   const [error] = useAuthError();
   

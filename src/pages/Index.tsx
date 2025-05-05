@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Layout } from "@/components/Layout/Layout";
@@ -16,13 +15,14 @@ export default function Index() {
   const { toast } = useToast();
   const processedUrlRef = useRef<boolean>(false);
   
-  // Get the new authentication state machine
+  // Get the auth state machine context with all its methods
+  const authContext = useAuthStateMachineContext();
   const { 
     state: authState, 
     dispatch, 
     isAuthenticated,
-    authenticateWithToken 
-  } = useAuthStateMachineContext();
+    authenticateWithToken  // This is properly typed now
+  } = authContext;
   
   const { 
     refreshSession, 

@@ -3,6 +3,7 @@ import React, { createContext, useContext, useCallback } from "react";
 import { useAuthStateMachine } from "@/hooks/use-auth-state-machine";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Session, AuthError } from '@supabase/supabase-js';
 
 // Create context with default values
 const AuthStateMachineContext = createContext<ReturnType<typeof useAuthStateMachine> | undefined>(undefined);

@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout/Layout";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
@@ -6,8 +5,8 @@ import { CriticalLoadingState } from "@/components/CriticalLoadingState";
 import type { ReactNode } from "react";
 import { useEffect, useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuthStateMachineContext } from "@/contexts/auth-state-machine";
-import { useSessionCoordination } from "@/hooks/use-session-coordination";
+import { useAuthStateMachineContext } from '@/contexts/auth-state-machine';
+import { useSessionCoordination } from '@/hooks/use-session-coordination';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -20,13 +19,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [showLoading, setShowLoading] = useState(false);
   const initialCheckDoneRef = useRef(false);
   
-  // Get data from our new state machine
+  // Get data from our properly typed state machine
+  const authContext = useAuthStateMachineContext();
   const { 
     state, 
     timeoutLevel, 
     processingAuth, 
-    isAuthenticated: stateMachineAuthenticated
-  } = useAuthStateMachineContext();
+    isAuthenticated: stateMachineAuthenticated 
+  } = authContext;
   
   const { refreshSession } = useSessionCoordination();
   
