@@ -60,3 +60,26 @@ export function createTimeoutSignal(timeoutMs: number = 10000) {
 export function isAborted(signal: AbortSignal | null | undefined): boolean {
   return Boolean(signal && signal.aborted);
 }
+
+/**
+ * Performs a full cleanup of abort controller, timeout, and state
+ * @param {AbortController | null} controller The controller to abort
+ * @param {Function} dispatch Redux/useReducer dispatch function
+ * @param {NodeJS.Timeout | undefined} timeoutId Optional timeout ID to clear
+ */
+export function performFullCleanup(
+  controller: AbortController | null, 
+  dispatch: React.Dispatch<any>,
+  timeoutId?: NodeJS.Timeout
+) {
+  // Clear any pending timeouts
+  if (timeoutId) {
+    clearTimeout(timeoutId);
+  }
+  
+  // Abort any in-flight requests
+  safeAbort(controller, 'Component unmounted or cleanup requested');
+  
+  // Reset auth state via reducer
+  dispatch({ type: 'CLEANUP' });
+}
