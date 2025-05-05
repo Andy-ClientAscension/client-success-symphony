@@ -5,8 +5,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { CriticalLoadingState } from "@/components/CriticalLoadingState";
 import type { ReactNode } from "react";
 import { useEffect, useState, useRef } from "react";
-import { useAuthReducer } from "@/hooks/use-auth-reducer";
 import { useToast } from "@/hooks/use-toast";
+import { useAuthStateMachine } from "@/hooks/use-auth-state-machine";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -18,23 +18,27 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { toast } = useToast();
   const [showLoading, setShowLoading] = useState(false);
   const initialCheckDoneRef = useRef(false);
-  const [state, dispatch] = useAuthReducer();
-  const navigationAttemptedRef = useRef(false);
+  const { state, timeoutLevel, processingAuth, isAuthenticated: stateMachineAuthenticated } = useAuthStateMachine();
+  
+  // Merge authentication state between old and new systems for compatibility
+  // This allows for a gradual migration to the new state machine
+  const effectiveIsAuthenticated = isAuthenticated || stateMachineAuthenticated === true;
+  const effectiveIsLoading = isLoading || processingAuth;
   
   // Initial check with a shorter delay to prevent flash
   useEffect(() => {
-    if (initialCheckDoneRef.current || navigationAttemptedRef.current) return;
+    if (initialCheckDoneRef.current) return;
     
     // Very short delay to prevent flash
     const initialCheckTimerId = setTimeout(() => {
-      setShowLoading(isLoading && !state.timeoutLevel);
+      setShowLoading(effectiveIsLoading && !timeoutLevel);
       initialCheckDoneRef.current = true;
     }, 50); // Extremely short delay
     
     return () => {
       clearTimeout(initialCheckTimerId);
     };
-  }, [isLoading, state.timeoutLevel]);
+  }, [effectiveIsLoading, timeoutLevel]);
   
   // Handle force continue for stuck loading states
   const handleForceContinue = () => {
@@ -46,41 +50,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       description: "Loading took longer than expected. Continuing anyway.",
       duration: 3000,
     });
-    
-    // Mark as completed to avoid stuck states
-    dispatch({ type: 'TIMEOUT', level: 3 });
-    dispatch({ type: 'PROCESSING_COMPLETE' });
   };
   
-  // Emergency navigation for stuck states
-  useEffect(() => {
-    // Skip if we've already navigated or there's no issue
-    if (navigationAttemptedRef.current || (!isLoading && (isAuthenticated || state.timeoutLevel >= 2))) {
-      return;
-    }
-    
-    // Emergency navigation after 2.5s if we're still undecided
-    const emergencyTimeoutId = setTimeout(() => {
-      if (!navigationAttemptedRef.current && (!isAuthenticated || state.timeoutLevel >= 2)) {
-        console.warn("DashboardLayout: Emergency redirect to login after timeout");
-        navigationAttemptedRef.current = true;
-        navigate('/login', { replace: true });
-      }
-    }, 2500);
-    
-    return () => {
-      clearTimeout(emergencyTimeoutId);
-    };
-  }, [isAuthenticated, isLoading, state.timeoutLevel, navigate]);
-  
   // If authenticated status is known and user is not authenticated, redirect immediately
-  if (!isLoading && !isAuthenticated) {
+  if (!effectiveIsLoading && !effectiveIsAuthenticated) {
     console.log("User not authenticated, redirecting to login");
     return <Navigate to="/login" replace />;
   }
   
   // Show loading state while checking authentication but only if needed
-  if (showLoading && (isLoading || state.status === 'loading')) {
+  if (showLoading && (effectiveIsLoading || state === 'checking_session' || state === 'checking_token')) {
     return (
       <CriticalLoadingState 
         message="Checking authentication..." 

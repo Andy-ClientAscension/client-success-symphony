@@ -16,6 +16,7 @@ import { Suspense, useEffect, useState, useCallback } from "react";
 import { CriticalLoadingState } from "@/components/CriticalLoadingState";
 import AppRoutes from "./routes";
 import { useToast } from "@/hooks/use-toast";
+import { AuthStateMachineProvider } from "@/contexts/auth-state-machine";
 
 logStartupPhase("App.tsx: Module loading started");
 
@@ -25,7 +26,7 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: true,
-      staleTime: 10000, // Reduced to 10 seconds to make data refresh faster
+      staleTime: 10000,
       gcTime: 10 * 60 * 1000,
       refetchInterval: 30000,
     },
@@ -51,7 +52,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
   
   useEffect(() => {
     // Mark as initialized soon to avoid loading flicker for simple cases
-    const timer = setTimeout(() => setIsInitialized(true), 250); // Reduced from 500ms to 250ms
+    const timer = setTimeout(() => setIsInitialized(true), 250);
     
     // Set a timeout flag after 3 seconds to avoid infinite loading
     const timeoutTimer = setTimeout(() => {
@@ -59,7 +60,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
         console.warn("App initialization taking too long, showing timeout");
         setInitTimeout(true);
       }
-    }, 3000); // Reduced from 5s to 3s
+    }, 3000);
     
     return () => {
       clearTimeout(timer);
@@ -74,7 +75,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
       // Set a final timeout that will force continue after showing timeout for 2 seconds
       const forceTimer = setTimeout(() => {
         handleForceContinue();
-      }, 2000); // Reduced from 5s to 2s
+      }, 2000);
       
       return () => clearTimeout(forceTimer);
     }
@@ -85,7 +86,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
       <CriticalLoadingState 
         message="Starting application..."
         fallbackAction={initTimeout ? handleForceContinue : undefined}
-        timeout={2000} // Reduced from 5000ms to 2000ms
+        timeout={2000}
       />
     );
   }
@@ -104,18 +105,20 @@ function App() {
             <AppInitializer>
               <Suspense fallback={<CriticalLoadingState message="Loading application..." timeout={3000} />}>
                 <AuthProvider>
-                  <AuthErrorBoundary>
-                    <SessionValidator>
-                      <WebVitalsMonitor />
-                      <PerformanceDebugger visible={process.env.NODE_ENV === 'development'} />
-                      <NavigationProgressBar variant="brand" />
-                      <BrowserCompatibilityCheck />
-                      <OfflineDetector />
-                      <OfflineBanner position="bottom" />
-                      <Toaster />
-                      <AppRoutes />
-                    </SessionValidator>
-                  </AuthErrorBoundary>
+                  <AuthStateMachineProvider>
+                    <AuthErrorBoundary>
+                      <SessionValidator>
+                        <WebVitalsMonitor />
+                        <PerformanceDebugger visible={process.env.NODE_ENV === 'development'} />
+                        <NavigationProgressBar variant="brand" />
+                        <BrowserCompatibilityCheck />
+                        <OfflineDetector />
+                        <OfflineBanner position="bottom" />
+                        <Toaster />
+                        <AppRoutes />
+                      </SessionValidator>
+                    </AuthErrorBoundary>
+                  </AuthStateMachineProvider>
                 </AuthProvider>
               </Suspense>
             </AppInitializer>

@@ -1,5 +1,5 @@
 
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { LoadingState } from "@/components/LoadingState";
@@ -9,8 +9,9 @@ import { ValidationError } from "@/components/ValidationError";
 import { useToast } from "@/hooks/use-toast";
 import { announceToScreenReader, setFocusToElement } from "@/lib/accessibility";
 import { useAuthError } from "@/hooks/use-auth-error";
-import { useAuthReducer } from "@/hooks/use-auth-reducer";
 import { preloadPageResources, prefetchRoute } from "@/utils/resourceHints";
+import { useAuthStateMachine } from "@/hooks/use-auth-state-machine";
+import { useSessionCoordination } from "@/hooks/use-session-coordination";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -19,23 +20,19 @@ interface ProtectedRouteProps {
 function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   const location = useLocation();
   const { toast } = useToast();
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const refreshAttemptedRef = useRef(false);
-  const [forceRender, setForceRender] = useState(false);
-  const navigationAttemptedRef = useRef(false);
   
-  const { isAuthenticated, isLoading, refreshSession } = useAuth();
+  // Get auth state from both legacy and new systems
+  const { isAuthenticated: legacyIsAuthenticated, isLoading: legacyIsLoading } = useAuth();
+  const { state: authState, processingAuth, isAuthenticated: newIsAuthenticated } = useAuthStateMachine();
+  const { checkSession } = useSessionCoordination();
   const [error] = useAuthError();
-  const [state, dispatch] = useAuthReducer();
-
-  // Setup abort controller for cancelling in-flight requests
+  
+  // Merge authentication state for compatibility during migration
+  const isAuthenticated = legacyIsAuthenticated || newIsAuthenticated === true;
+  const isLoading = legacyIsLoading || processingAuth || authState === 'initializing';
+  
+  // Setup preloading resources
   useEffect(() => {
-    // Create new abort controller
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    abortControllerRef.current = new AbortController();
-    
     // Announce authentication check to screen readers
     announceToScreenReader("Verifying authentication status", "polite");
     
@@ -50,42 +47,23 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
     } else if (currentPath === 'clients') {
       prefetchRoute('/dashboard');
     }
-    
-    return () => {
-      // Cancel any in-flight requests when component unmounts
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-        abortControllerRef.current = null;
-      }
-    };
-  }, [location.pathname]); // Removed dispatch from dependencies to prevent loops
+  }, [location.pathname]);
   
-  // Single-attempt session refresh (if needed)
+  // Single-attempt session check (if needed)
   useEffect(() => {
-    // Optionally refresh session with cancellation support - ONLY ONCE
-    const refreshAuthWithCancellation = async () => {
-      if (!isAuthenticated && !isLoading && !refreshAttemptedRef.current) {
-        refreshAttemptedRef.current = true; // Mark as attempted to prevent loops
-        dispatch({ type: 'START_PROCESSING' });
-        
-        try {
-          await refreshSession();
-          dispatch({ type: 'PROCESSING_COMPLETE' });
-        } catch (err) {
-          dispatch({ type: 'PROCESSING_COMPLETE' });
-          if (!(err instanceof DOMException && err.name === 'AbortError')) {
-            console.error("Error refreshing session:", err);
-          }
-        }
+    // Wait a tiny bit to avoid race conditions with other auth checks
+    const timer = setTimeout(() => {
+      if (!isAuthenticated && !isLoading) {
+        checkSession();
       }
-    };
+    }, 50);
     
-    refreshAuthWithCancellation();
-  }, []); // Keep empty to run once
+    return () => clearTimeout(timer);
+  }, [isAuthenticated, isLoading, checkSession]);
   
   // When auth status changes, announce to screen readers
   useEffect(() => {
-    if (!isLoading && !state.processingAuth) {
+    if (!isLoading) {
       if (isAuthenticated) {
         announceToScreenReader("Authentication verified, loading content", "polite");
         
@@ -93,15 +71,14 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
         setTimeout(() => {
           setFocusToElement('main-content', 'main h1');
         }, 100);
-      } else if (!navigationAttemptedRef.current) {
-        navigationAttemptedRef.current = true;
+      } else {
         announceToScreenReader("Authentication required, redirecting to login", "assertive");
       }
     }
-  }, [isAuthenticated, isLoading, state.processingAuth]);
+  }, [isAuthenticated, isLoading]);
   
   // Show loading state while checking authentication
-  if ((isLoading || state.processingAuth) && !forceRender && state.timeoutLevel < 2) {
+  if (isLoading && (authState === 'initializing' || authState === 'checking_token' || authState === 'checking_session')) {
     return (
       <>
         <LoadingState message="Checking authentication..." />
