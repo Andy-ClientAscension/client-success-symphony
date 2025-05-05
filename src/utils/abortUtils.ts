@@ -37,7 +37,8 @@ export function createTimeoutSignal(timeoutMs: number = 10000) {
   const controller = new AbortController();
   const signal = controller.signal;
   
-  const timeoutId = setTimeout(() => {
+  // Using NodeJS.Timeout type for browser and Node.js compatibility
+  const timeoutId: NodeJS.Timeout = setTimeout(() => {
     if (!signal.aborted) {
       controller.abort('Timeout');
     }

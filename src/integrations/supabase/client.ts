@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import { corsHeaders } from '@/utils/corsHeaders';
 import { cacheSession, getCachedSession, clearCachedSession } from '@/utils/sessionCache';
@@ -39,7 +40,7 @@ export const getSupabaseClient = () => {
     const signal = existingSignal || controller?.signal;
     
     // Set a timeout for the request if we created a controller
-    let timeoutId: number | undefined;
+    let timeoutId: NodeJS.Timeout | undefined;
     
     if (controller) {
       const timeout = 10000; // 10 second timeout
@@ -105,7 +106,7 @@ async function fetchWithCorsOriginal(url: string, options: RequestInit = {}) {
   const signal = existingSignal || controller?.signal;
   
   // Set a timeout if we created our own controller
-  let timeoutId: number | undefined;
+  let timeoutId: NodeJS.Timeout | undefined;
   
   if (controller) {
     const timeout = 5000; // 5 second timeout
@@ -122,7 +123,7 @@ async function fetchWithCorsOriginal(url: string, options: RequestInit = {}) {
       headers: {
         ...(options.headers || {}),
         ...corsHeaders,
-        'apikey': envVars.VITE_SUPABASE_KEY // Fixed: Use envVars.VITE_SUPABASE_KEY instead of supabaseKey
+        'apikey': envVars.VITE_SUPABASE_KEY // Fixed: Using envVars.VITE_SUPABASE_KEY instead of supabaseKey
       },
       signal,
       mode: 'cors'
