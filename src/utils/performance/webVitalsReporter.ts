@@ -15,7 +15,7 @@ export interface WebVitalMetric extends Metric {
  */
 export function reportWebVitals(metric: WebVitalMetric): void {
   // Always log to console in development
-  if (process.env.NODE_ENV !== 'production') {
+  if (import.meta.env.DEV) {
     console.log(`Web Vital: ${metric.name}`, metric);
     return;
   }
@@ -54,7 +54,7 @@ export function reportWebVitals(metric: WebVitalMetric): void {
     });
     
     // Show toast for poor metrics in development
-    if (process.env.NODE_ENV === 'development' && metric.rating === 'poor') {
+    if (import.meta.env.DEV && metric.rating === 'poor') {
       toast({
         title: `Poor ${metric.name} Performance`,
         description: `Value: ${metric.value.toFixed(2)} (Rating: Poor)`,
@@ -110,4 +110,3 @@ export function getRating(name: MetricName, value: number): 'good' | 'needs-impr
   if (value <= thresholds.poor) return 'needs-improvement';
   return 'poor';
 }
-

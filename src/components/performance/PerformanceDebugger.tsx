@@ -13,28 +13,36 @@ export function PerformanceDebugger({ visible = false }: PerformanceDebuggerProp
   const [metrics, setMetrics] = useState<Record<string, WebVitalMetric | undefined>>({});
   
   useEffect(() => {
-    if (!visible || process.env.NODE_ENV === 'production') return;
+    if (!visible || import.meta.env.PROD) return;
     
-    const { onCLS, onFCP, onFID, onINP, onLCP, onTTFB } = require('web-vitals');
-    
-    const updateMetric = (metric: WebVitalMetric) => {
-      setMetrics(prev => ({
-        ...prev,
-        [metric.name]: metric
-      }));
+    const loadWebVitals = async () => {
+      try {
+        // Dynamic import the web-vitals library
+        const webVitals = await import('web-vitals');
+        
+        const updateMetric = (metric: WebVitalMetric) => {
+          setMetrics(prev => ({
+            ...prev,
+            [metric.name]: metric
+          }));
+        };
+        
+        // Measure all vitals
+        webVitals.onCLS(updateMetric);
+        webVitals.onFCP(updateMetric);
+        webVitals.onFID(updateMetric);
+        webVitals.onINP(updateMetric);
+        webVitals.onLCP(updateMetric);
+        webVitals.onTTFB(updateMetric);
+      } catch (error) {
+        console.error('Failed to load web-vitals:', error);
+      }
     };
     
-    // Measure all vitals
-    onCLS(updateMetric);
-    onFCP(updateMetric);
-    onFID(updateMetric);
-    onINP(updateMetric);
-    onLCP(updateMetric);
-    onTTFB(updateMetric);
-    
+    loadWebVitals();
   }, [visible]);
   
-  if (!visible || process.env.NODE_ENV === 'production') return null;
+  if (!visible || import.meta.env.PROD) return null;
   
   const getBadgeColor = (rating?: 'good' | 'needs-improvement' | 'poor') => {
     if (rating === 'good') return 'bg-green-500';
