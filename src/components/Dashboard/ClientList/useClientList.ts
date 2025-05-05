@@ -33,20 +33,30 @@ export function useClientList({ statusFilter }: UseClientListProps) {
   }, [toast]);
   
   // Use the realtime data hook for clients
+  // Fix: Removed third argument as useRealtimeData expects only 1-2 arguments
   const [clients, isClientsLoading] = useRealtimeData<Client[]>(
     STORAGE_KEYS.CLIENTS, 
-    defaultClients,
-    {
-      onError: (error) => {
-        console.error("Error in realtime data hook:", error);
-        toast({
-          title: "Data Sync Error",
-          description: "There was a problem syncing client data.",
-          variant: "destructive",
-        });
-      }
-    }
+    defaultClients
   );
+  
+  // Handle errors separately
+  useEffect(() => {
+    const handleError = (error: any) => {
+      console.error("Error in realtime data hook:", error);
+      toast({
+        title: "Data Sync Error",
+        description: "There was a problem syncing client data.",
+        variant: "destructive",
+      });
+    };
+
+    // Add error event listener
+    window.addEventListener('dataSync:error', handleError);
+    
+    return () => {
+      window.removeEventListener('dataSync:error', handleError);
+    };
+  }, [toast]);
   
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);

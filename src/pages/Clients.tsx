@@ -78,7 +78,7 @@ export default function Clients() {
         toast({
           title: "Warning",
           description: "Kanban board data couldn't be loaded properly.",
-          variant: "warning",
+          variant: "default",
         });
       }
     } catch (error) {
