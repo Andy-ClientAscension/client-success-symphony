@@ -1,3 +1,4 @@
+
 import { useContext, useEffect } from "react";
 import { AuthContext } from "@/contexts/auth/AuthContext";
 import type { Auth } from '@/contexts/auth/types';
@@ -5,20 +6,30 @@ import { getCachedSession, refreshCachedSessionTTL } from "@/utils/sessionCache"
 
 // Main auth hook to be used across the application
 export function useAuth(): Auth.AuthContextType {
+  console.log('[useAuth] Hook called');
   const context = useContext(AuthContext);
   
   useEffect(() => {
+    console.log('[useAuth] Context state:', { 
+      isAuthenticated: context?.isAuthenticated,
+      isLoading: context?.isLoading,
+      user: context?.user ? 'exists' : 'null',
+      session: context?.session ? 'exists' : 'null',
+      lastAuthEvent: context?.lastAuthEvent
+    });
+    
     // Refresh the TTL of cached session when hook is used
     // This keeps frequently used sessions in cache longer
     const cachedSession = getCachedSession();
     if (cachedSession && context?.isAuthenticated) {
+      console.log('[useAuth] Refreshing cached session TTL');
       refreshCachedSessionTTL();
     }
-  }, [context?.isAuthenticated]);
+  }, [context?.isAuthenticated, context?.isLoading, context?.user, context?.session, context?.lastAuthEvent]);
   
   if (context === undefined) {
     const error = new Error("useAuth must be used within an AuthProvider");
-    console.error(error);
+    console.error('[useAuth] Context error:', error);
     // Instead of throwing, return a safe fallback
     return {
       isAuthenticated: false,
@@ -33,9 +44,13 @@ export function useAuth(): Auth.AuthContextType {
         status: 'invalid' as const, 
         message: "Auth context not available" 
       }),
-      refreshSession: async () => {},
+      refreshSession: async () => {
+        console.log('[useAuth] Fallback refreshSession called');
+      },
       login: async () => false,
-      logout: async () => {},
+      logout: async () => {
+        console.log('[useAuth] Fallback logout called');
+      },
       register: async () => ({ success: false, message: "Auth context not available" }),
       validateInviteCode: async () => false,
       sessionExpiryTime: null
@@ -52,17 +67,20 @@ export type AuthContextType = Auth.AuthContextType;
 // Utility function to check if a user is authenticated
 export function useIsAuthenticated(): boolean {
   const { isAuthenticated } = useAuth();
+  console.log('[useIsAuthenticated] Result:', isAuthenticated);
   return isAuthenticated;
 }
 
 // Utility function to get the current user
 export function useCurrentUser(): Auth.UserType | null {
   const { user } = useAuth();
+  console.log('[useCurrentUser] User exists:', !!user);
   return user;
 }
 
 // Utility function to get the login/logout functions
 export function useAuthActions() {
+  console.log('[useAuthActions] Hook called');
   const { login, logout, register, refreshSession } = useAuth();
   return { login, logout, register, refreshSession };
 }

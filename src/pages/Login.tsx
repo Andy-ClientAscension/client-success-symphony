@@ -9,11 +9,19 @@ import { announceToScreenReader, setFocusToElement } from "@/lib/accessibility";
 import { useLoginForm } from "@/hooks/use-login-form";
 
 export default function Login() {
+  console.log('[Login] Component rendering');
+  
   const [error, setError] = useState<{ message: string; type?: string } | null>(null);
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  
+  console.log('[Login] State:', {
+    isAuthenticated,
+    hasError: !!error,
+    locationState: location.state
+  });
   
   // Use the enhanced login form hook
   const {
@@ -37,19 +45,23 @@ export default function Login() {
   
   // Check for auth error passed from Index page
   useEffect(() => {
+    console.log('[Login] Checking for auth errors in location state');
     const state = location.state as { authError?: string } | undefined;
     if (state?.authError) {
+      console.log('[Login] Found auth error in state:', state.authError);
       setError({ message: state.authError });
       announceToScreenReader(`Authentication error: ${state.authError}`, "assertive");
       
       // Clear the state so error doesn't persist on refresh
       window.history.replaceState({}, document.title);
+      console.log('[Login] Cleared location state');
     }
   }, [location.state]);
 
   // Show API errors from the hook
   useEffect(() => {
     if (apiError) {
+      console.log('[Login] API error detected:', apiError);
       setError({ 
         message: apiError.message, 
         type: apiError.code ? String(apiError.code) : undefined 
@@ -61,20 +73,24 @@ export default function Login() {
 
   useEffect(() => {
     // Announce login page loaded
+    console.log('[Login] Page loaded effect triggered');
     announceToScreenReader("Login page loaded", "polite");
     
     // Set focus to main content or email input when page loads
     setTimeout(() => {
       const emailInput = document.getElementById('email');
       if (emailInput) {
+        console.log('[Login] Setting focus to email input');
         emailInput.focus();
       } else {
+        console.log('[Login] Setting focus to main content');
         setFocusToElement('main-content');
       }
     }, 100);
     
     // Redirect to dashboard if already authenticated
     if (isAuthenticated) {
+      console.log('[Login] User already authenticated, redirecting to dashboard');
       announceToScreenReader("Already authenticated, redirecting to dashboard", "polite");
       navigate('/dashboard', { replace: true });
     }

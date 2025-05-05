@@ -23,26 +23,41 @@ const initialAuthState: AuthState = {
 };
 
 export const authReducer = (state: AuthState, action: AuthAction): AuthState => {
+  console.log('[AuthReducer] Action:', action.type, action);
+  
+  let newState: AuthState;
+  
   switch (action.type) {
     case 'START_PROCESSING':
-      return { ...state, processingAuth: true, authError: null };
+      newState = { ...state, processingAuth: true, authError: null };
+      break;
     case 'PROCESSING_COMPLETE':
-      return { ...state, processingAuth: false };
+      newState = { ...state, processingAuth: false };
+      break;
     case 'AUTH_SUCCESS':
-      return { ...state, processingAuth: false, authError: null };
+      newState = { ...state, processingAuth: false, authError: null };
+      break;
     case 'AUTH_ERROR':
-      return { ...state, processingAuth: false, authError: action.payload };
+      newState = { ...state, processingAuth: false, authError: action.payload };
+      break;
     case 'URL_PROCESSED':
-      return { ...state, urlProcessed: true };
+      newState = { ...state, urlProcessed: true };
+      break;
     case 'CLEANUP':
-      return initialAuthState;
+      newState = initialAuthState;
+      break;
     case 'BATCH_UPDATE':
-      return { ...state, ...action.payload };
+      newState = { ...state, ...action.payload };
+      break;
     default:
-      return state;
+      newState = state;
   }
+  
+  console.log('[AuthReducer] State updated:', { previous: state, new: newState });
+  return newState;
 };
 
 export const useAuthReducer = () => {
+  console.log('[useAuthReducer] Hook initialized');
   return useReducer(authReducer, initialAuthState);
 };
