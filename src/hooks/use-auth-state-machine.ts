@@ -84,6 +84,11 @@ export interface AuthStateMachineReturn {
   withAuthTimeout: <T>(promise: Promise<T>, timeoutMs?: number, operationId?: number) => Promise<T>;
   cancelAllOperations: () => void;
   resetAuthState: () => void;
+  
+  // Added methods from context
+  checkSession: (forceRefresh?: boolean) => Promise<boolean>;
+  authenticateWithToken: (accessToken: string, refreshToken?: string) => Promise<boolean>;
+  logout: () => Promise<boolean>;
 }
 
 export function useAuthStateMachine(
@@ -545,6 +550,11 @@ export function useAuthStateMachine(
     navigateTo,
     withAuthTimeout,
     cancelAllOperations,
-    resetAuthState: useCallback(() => dispatch({ type: 'RESET' }), [dispatch])
+    resetAuthState: useCallback(() => dispatch({ type: 'RESET' }), [dispatch]),
+    
+    // These methods will be implemented in the context provider
+    checkSession: async () => false,
+    authenticateWithToken: async () => false,
+    logout: async () => false
   };
 }

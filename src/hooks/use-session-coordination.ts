@@ -1,3 +1,4 @@
+
 import { useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStateMachineContext } from '@/contexts/auth-state-machine';
@@ -19,6 +20,7 @@ export function useSessionCoordination() {
   } = useAuthStateMachineContext();
   
   // Get the checkSession method from the context
+  // Using destructuring to get the method directly with proper typing
   const { checkSession } = useAuthStateMachineContext();
   
   // Tracking refs for preventing duplicate operations

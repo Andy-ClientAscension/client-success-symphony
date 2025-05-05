@@ -19,7 +19,11 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
     try {
       dispatch({ type: 'SESSION_CHECK_START' });
       
-      const { data, error } = await withAuthTimeout(
+      // Fix: Properly type the response from getSession
+      const { data, error } = await withAuthTimeout<{
+        data: { session: Session | null },
+        error: AuthError | null
+      }>(
         supabase.auth.getSession(),
         2000
       );
@@ -75,7 +79,11 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
     try {
       dispatch({ type: 'TOKEN_CHECK_START' });
       
-      const { data, error } = await withAuthTimeout(
+      // Fix: Properly type the response from setSession
+      const { data, error } = await withAuthTimeout<{
+        data: { session: Session | null, user: any | null },
+        error: AuthError | null
+      }>(
         supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken || '',
