@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, lazy, Suspense, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Layout } from "@/components/Layout/Layout";
@@ -54,7 +55,7 @@ const MainContent = () => {
 export default function Index() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, refreshSession } = useAuth();
   const { toast } = useToast();
   const abortControllerRef = useRef<AbortController | null>(null);
   const [state, dispatch] = useAuthReducer();
@@ -140,7 +141,7 @@ export default function Index() {
         window.history.replaceState(null, '', window.location.pathname);
       }
       
-      // Refresh auth context
+      // Refresh auth context - use the imported refreshSession from useAuth()
       await refreshSession();
       
       // OPTIMIZATION: Use batch update to reduce state changes
