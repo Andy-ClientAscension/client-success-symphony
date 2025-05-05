@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout/Layout";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
@@ -22,8 +21,9 @@ export default function Clients() {
   const { toast } = useToast();
   const { loadPersistedData } = useKanbanStore();
 
-  // Optimize client data initialization
+  // Fix: Properly handle async/sync data operations with error handling
   const initializeClientData = useCallback(async () => {
+    console.log("Initializing client data...");
     setIsLoading(true);
     setError(null);
     
@@ -35,15 +35,32 @@ export default function Clients() {
       const storedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
       
       if (!storedClients || !Array.isArray(storedClients) || storedClients.length === 0) {
-        // Load default clients from data.ts if no clients in storage
-        const defaultClients = getAllClients();
-        
-        if (defaultClients && defaultClients.length > 0) {
-          saveData(STORAGE_KEYS.CLIENTS, defaultClients);
-          saveData(STORAGE_KEYS.CLIENT_STATUS, defaultClients);
-          setClients(defaultClients);
+        // Load default clients - wrapped in a try/catch to handle potential async issues
+        try {
+          // Get default clients - this is synchronous now but could be async in future
+          const defaultClients = getAllClients();
+          
+          if (defaultClients && defaultClients.length > 0) {
+            console.log(`Loaded ${defaultClients.length} default clients`);
+            await Promise.resolve(); // Simulate async to ensure consistent patterns
+            saveData(STORAGE_KEYS.CLIENTS, defaultClients);
+            saveData(STORAGE_KEYS.CLIENT_STATUS, defaultClients);
+            setClients(defaultClients);
+          } else {
+            console.warn("No default clients returned from getAllClients()");
+            setClients([]);
+          }
+        } catch (dataError) {
+          console.error("Error loading default client data:", dataError);
+          toast({
+            title: "Data Loading Error",
+            description: "Failed to load default client data.",
+            variant: "destructive",
+          });
+          setClients([]);
         }
       } else {
+        console.log(`Loaded ${storedClients.length} clients from storage`);
         setClients(storedClients);
         
         // Ensure client data is saved to client status as well for new users
@@ -52,15 +69,20 @@ export default function Clients() {
         }
       }
       
-      // Load the kanban data
+      // Load the kanban data - keep this in a separate try/catch to isolate errors
       try {
         await loadPersistedData();
-      } catch (error) {
-        console.error("Error loading kanban data:", error);
+      } catch (kanbanError) {
+        console.error("Error loading kanban data:", kanbanError);
         // Don't block the UI if kanban data can't be loaded
+        toast({
+          title: "Warning",
+          description: "Kanban board data couldn't be loaded properly.",
+          variant: "warning",
+        });
       }
     } catch (error) {
-      console.error("Error initializing client data:", error);
+      console.error("Critical error initializing client data:", error);
       setError("Failed to load client data. Please refresh the page.");
       toast({
         title: "Error Loading Students",
@@ -69,6 +91,7 @@ export default function Clients() {
       });
     } finally {
       setIsLoading(false);
+      console.log("Client data initialization complete");
     }
   }, [loadPersistedData, toast]);
 
@@ -170,7 +193,7 @@ export default function Clients() {
   if (isLoading) {
     return (
       <Layout>
-        <LoadingState message="Loading dashboard data..." size="lg" />
+        <LoadingState message="Loading clients data..." size="lg" />
       </Layout>
     );
   }
@@ -183,7 +206,7 @@ export default function Clients() {
             <h2 className="text-2xl font-bold text-destructive">Error Loading Data</h2>
             <p>{error}</p>
             <button 
-              onClick={initializeClientData}
+              onClick={() => initializeClientData()}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
             >
               Retry
@@ -206,7 +229,7 @@ export default function Clients() {
         
         <ClientsTabs 
           activeTab={activeTab} 
-          onTabChange={handleTabChange} 
+          onTabChange={handleTabChange}
           forceReload={forceReload}
         />
       </Card>

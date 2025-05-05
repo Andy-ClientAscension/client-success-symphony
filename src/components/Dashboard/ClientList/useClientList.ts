@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { Client, getAllClients } from '@/lib/data';
 import { STORAGE_KEYS, saveData, loadData, deleteClientsGlobally } from '@/utils/persistence';
@@ -14,10 +13,12 @@ interface UseClientListProps {
 export function useClientList({ statusFilter }: UseClientListProps) {
   const { toast } = useToast();
   const kanbanStore = useKanbanStore();
+  const [isInitializing, setIsInitializing] = useState(true);
   
   // Get default clients as a memoized value
   const defaultClients = useMemo(() => {
     try {
+      console.log("Loading default clients from data service");
       const allClients = getAllClients();
       return validateClients(allClients);
     } catch (error) {
@@ -34,10 +35,20 @@ export function useClientList({ statusFilter }: UseClientListProps) {
   // Use the realtime data hook for clients
   const [clients, isClientsLoading] = useRealtimeData<Client[]>(
     STORAGE_KEYS.CLIENTS, 
-    defaultClients
+    defaultClients,
+    {
+      onError: (error) => {
+        console.error("Error in realtime data hook:", error);
+        toast({
+          title: "Data Sync Error",
+          description: "There was a problem syncing client data.",
+          variant: "destructive",
+        });
+      }
+    }
   );
   
-  const [filteredClients, setFilteredClients] = useState<Client[]>(clients);
+  const [filteredClients, setFilteredClients] = useState<Client[]>([]);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [metricsModalOpen, setMetricsModalOpen] = useState(false);
   const [npsModalOpen, setNpsModalOpen] = useState(false);
@@ -53,6 +64,7 @@ export function useClientList({ statusFilter }: UseClientListProps) {
   
   // Create a function to update clients (we'll use manual storage updates)
   const setClients = (updatedClients: Client[]) => {
+    console.log(`Saving ${updatedClients.length} clients to storage`);
     saveData(STORAGE_KEYS.CLIENTS, updatedClients);
     // Dispatch a custom event to notify other components of the change
     window.dispatchEvent(new CustomEvent('storageUpdated', { 
@@ -60,8 +72,17 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     }));
   };
 
+  // Clear initialization state once clients are loaded
+  useEffect(() => {
+    if (isInitializing && !isClientsLoading) {
+      setIsInitializing(false);
+    }
+  }, [isClientsLoading, isInitializing]);
+
   // Filter clients when any related state changes
   useEffect(() => {
+    if (isInitializing) return;
+    
     const persistEnabled = localStorage.getItem("persistDashboard") === "true";
     
     if (persistEnabled && clients !== defaultClients) {
@@ -95,16 +116,16 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     
     // Reset to page 1 when filters change
     setCurrentPage(1);
-  }, [clients, selectedTeam, statusFilter, searchQuery, defaultClients]);
+  }, [clients, selectedTeam, statusFilter, searchQuery, defaultClients, isInitializing]);
 
   // Calculate pagination
   const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredClients.slice(indexOfFirstItem, Math.min(indexOfLastItem, filteredClients.length));
+  const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
+  const currentItems = filteredClients.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+    setCurrentPage(Math.max(1, Math.min(page, Math.ceil(filteredClients.length / itemsPerPage))));
   };
 
   const handleItemsPerPageChange = (value: number) => {
@@ -123,11 +144,10 @@ export function useClientList({ statusFilter }: UseClientListProps) {
   };
   
   const handleSelectAll = () => {
-    if (selectedClientIds.length === currentItems.length) {
-      setSelectedClientIds([]);
-    } else {
-      setSelectedClientIds(currentItems.map(client => client.id));
-    }
+    const currentItems = filteredClients.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    setSelectedClientIds(prev => 
+      prev.length === currentItems.length ? [] : currentItems.map(client => client.id)
+    );
   };
 
   const handleTeamChange = (value: string) => {
@@ -223,6 +243,6 @@ export function useClientList({ statusFilter }: UseClientListProps) {
     handleViewModeChange,
     deleteClients,
     updateClientStatus,
-    isLoading: isClientsLoading
+    isLoading: isClientsLoading || isInitializing
   };
 }
