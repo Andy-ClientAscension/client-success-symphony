@@ -151,6 +151,11 @@ export default function Index() {
       const errorMessage = error instanceof Error ? error.message : "Authentication failed";
       
       dispatch({ type: 'AUTH_ERROR', payload: errorMessage });
+      
+      // Ensure both state flags are updated even on error
+      dispatch({ type: 'PROCESSING_COMPLETE' });
+      dispatch({ type: 'URL_PROCESSED' });
+      
       announceToScreenReader(`Authentication error: ${errorMessage}`, "assertive");
       
       toast({
@@ -163,13 +168,8 @@ export default function Index() {
         replace: true,
         state: { authError: errorMessage }
       });
-    } finally {
-      if (state.processingAuth) {
-        dispatch({ type: 'PROCESSING_COMPLETE' });
-      }
-      dispatch({ type: 'URL_PROCESSED' });
     }
-  }, [navigate, toast, refreshSession, dispatch, state.processingAuth]);
+  }, [navigate, toast, refreshSession, dispatch]);
 
   // Handle access token in URL (for email confirmations) - optimized version
   useEffect(() => {
