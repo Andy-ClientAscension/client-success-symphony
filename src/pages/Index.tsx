@@ -89,7 +89,7 @@ export default function Index() {
         if (signal.aborted) return;
         
         // Track the current operation ID to detect outdated operations
-        getNewOperationId(); // Fixed: Removed the argument
+        getNewOperationId(); // Fixed: Calling without an argument
         
         const success = await authenticateWithToken(accessToken, refreshToken);
         console.log("[Index] Token authentication result:", success);
@@ -138,7 +138,7 @@ export default function Index() {
       
       // Create a separate abort controller for session check
       const { controller, signal } = createAbortController();
-      getNewOperationId(); // Fixed: Removed the argument
+      getNewOperationId(); // Fixed: Calling without an argument
       
       const checkAuthSession = async () => {
         try {
