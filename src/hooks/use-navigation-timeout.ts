@@ -9,6 +9,7 @@ export interface NavigationTimeoutOptions {
   showToast?: boolean;
   timeoutMessage?: string;
   replaceCurrent?: boolean;
+  isCritical?: boolean;
 }
 
 /**

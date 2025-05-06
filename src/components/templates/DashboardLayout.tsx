@@ -65,8 +65,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       if (effectiveIsLoading) {
         startTimeout('/', { 
           delay: 7500,
-          timeoutMessage: 'Dashboard loading timeout - redirecting to home page',
-          isCritical: true
+          timeoutMessage: 'Dashboard loading timeout - redirecting to home page'
+          // Note: The isCritical property was removed as it's not part of NavigationTimeoutOptions
         });
       }
     }, 50); // Extremely short delay
