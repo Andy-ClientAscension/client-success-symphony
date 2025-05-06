@@ -110,7 +110,7 @@ export function useTimeoutCoordinator() {
   return context;
 }
 
-// Hook to create a coordinated navigation timeout
+// Hook to create a coordinated timeout
 export function useCoordinatedTimeout(
   parentId?: string,
   options?: { onTimeout?: () => void; description?: string }

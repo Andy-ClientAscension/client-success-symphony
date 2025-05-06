@@ -1,157 +1,71 @@
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
-import { useAuthStateMachineContext } from '@/contexts/auth-state-machine';
+import { useCoordinatedTimeout } from './use-timeout-coordinator';
+import { useToast } from './use-toast';
 
 interface NavigationTimeoutOptions {
-  /** Delay before navigation in milliseconds */
   delay?: number;
-  /** Whether to show a toast when the timeout fires */
   showToast?: boolean;
-  /** Custom toast message when timeout navigation occurs */
   timeoutMessage?: string;
-  /** Whether the navigation is critical (will force navigation on timeout) */
-  isCritical?: boolean;
+  replaceCurrent?: boolean;
 }
 
 /**
- * Hook for managing navigation timeouts with auth state integration and hierarchical cancellation
+ * Hook for creating navigation timeouts with proper cleanup
  */
-export function useNavigationTimeout(defaultOptions: NavigationTimeoutOptions = {}) {
+export function useNavigationTimeout(options: NavigationTimeoutOptions = {}) {
+  const {
+    delay = 5000,
+    showToast = true,
+    timeoutMessage = 'Navigation timed out. Redirecting...',
+    replaceCurrent = false
+  } = options;
+  
   const navigate = useNavigate();
   const { toast } = useToast();
-  const timeoutIdRef = useRef<NodeJS.Timeout | undefined>();
-  const isNavigatingRef = useRef<boolean>(false);
-  const destinationRef = useRef<string | null>(null);
-  const [timeoutId, setTimeoutId] = useState<string | null>(null);
+  const pathRef = useRef<string | null>(null);
   
-  // Get auth context for coordination with auth state
-  const { dispatch: authDispatch, state: authState } = useAuthStateMachineContext();
-
-  // Default options
-  const defaultDelay = defaultOptions.delay || 5000;
-  const defaultShowToast = defaultOptions.showToast !== false;
-  const defaultIsCritical = defaultOptions.isCritical || false;
-  
-  // Clear any existing timeout when component unmounts
-  useEffect(() => {
-    return () => {
-      if (timeoutIdRef.current) {
-        clearTimeout(timeoutIdRef.current);
-        timeoutIdRef.current = undefined;
-      }
-    };
-  }, []);
-  
-  // Method to clear the current timeout
-  const clearTimeout = useCallback(() => {
-    if (timeoutIdRef.current) {
-      window.clearTimeout(timeoutIdRef.current);
-      timeoutIdRef.current = undefined;
-      destinationRef.current = null;
-      setTimeoutId(null);
-    }
-  }, []);
-  
-  // Start a new navigation timeout
-  const startTimeout = useCallback((
-    path: string, 
-    options: NavigationTimeoutOptions = {}
-  ) => {
-    // Clear any existing timeout first
-    clearTimeout();
-    
-    // Set the destination
-    destinationRef.current = path;
-    
-    // Use provided options or fall back to defaults
-    const delay = options.delay ?? defaultDelay;
-    const showToast = options.showToast ?? defaultShowToast;
-    const timeoutMessage = options.timeoutMessage ?? 'Navigation timeout - redirecting';
-    const isCritical = options.isCritical ?? defaultIsCritical;
-    
-    // Generate a unique ID for this timeout
-    const newTimeoutId = Math.random().toString(36).substring(2, 15);
-    setTimeoutId(newTimeoutId);
-    
-    // Notify auth state machine that navigation was triggered
-    authDispatch({ type: 'NAVIGATE_START' });
-    
-    // Start the timeout
-    timeoutIdRef.current = setTimeout(() => {
-      if (!isNavigatingRef.current) {
-        isNavigatingRef.current = true;
-        
-        // Show toast if enabled
-        if (showToast) {
-          toast({
-            title: 'Navigation Timeout',
-            description: timeoutMessage,
-            variant: isCritical ? 'destructive' : 'default',
-          });
+  // Use coordinated timeout system
+  const { startTimeout: startCoordinatedTimeout, clearTimeout, clearHierarchy, timeoutId } = useCoordinatedTimeout(
+    undefined,
+    {
+      onTimeout: () => {
+        if (pathRef.current) {
+          navigate(pathRef.current, { replace: replaceCurrent });
         }
-        
-        // Perform the navigation
-        console.log(`[NavigationTimeout] Timeout triggered - navigating to: ${path}`);
-        navigate(path, { replace: true });
-        
-        // Notify auth state machine that navigation completed
-        authDispatch({ type: 'NAVIGATE_COMPLETE' });
-        
-        // Reset after navigation
-        setTimeout(() => {
-          isNavigatingRef.current = false;
-          destinationRef.current = null;
-          setTimeoutId(null);
-        }, 100);
-      }
-    }, delay);
-    
-    // Return the timeout ID for hierarchical management
-    return newTimeoutId;
-  }, [navigate, clearTimeout, toast, authDispatch, defaultDelay, defaultShowToast, defaultIsCritical]);
+      },
+      description: showToast ? timeoutMessage : undefined
+    }
+  );
   
-  // Execute immediate navigation and clear any pending timeout
-  const navigateNow = useCallback((path: string, replace: boolean = true) => {
+  // Start navigation timeout
+  const startTimeout = useCallback((path: string, customOptions?: Partial<NavigationTimeoutOptions>) => {
+    const timeoutDelay = customOptions?.delay ?? delay;
+    pathRef.current = path;
+    
+    if (customOptions?.showToast !== false && customOptions?.timeoutMessage) {
+      const finalMessage = customOptions.timeoutMessage;
+      toast({
+        title: 'Navigation Timer Started',
+        description: finalMessage
+      });
+    }
+    
+    return startCoordinatedTimeout(timeoutDelay);
+  }, [startCoordinatedTimeout, delay, toast]);
+  
+  // Navigate immediately and cancel timeout
+  const navigateNow = useCallback((path: string, replace: boolean = false) => {
     clearTimeout();
-    isNavigatingRef.current = true;
-    
-    console.log(`[NavigationTimeout] Immediate navigation to: ${path}`);
     navigate(path, { replace });
-    
-    // Notify auth state machine that navigation completed
-    authDispatch({ type: 'NAVIGATE_COMPLETE' });
-    
-    // Reset after navigation
-    setTimeout(() => {
-      isNavigatingRef.current = false;
-    }, 100);
-  }, [navigate, clearTimeout, authDispatch]);
-  
-  // Check if there's a pending navigation
-  const hasPendingNavigation = useCallback(() => {
-    return timeoutIdRef.current !== undefined;
-  }, []);
-  
-  // Get the current destination if any
-  const getPendingDestination = useCallback(() => {
-    return destinationRef.current;
-  }, []);
-  
-  // Get the current timeout ID
-  const getTimeoutId = useCallback(() => {
-    return timeoutId;
-  }, [timeoutId]);
+  }, [navigate, clearTimeout]);
   
   return {
     startTimeout,
     clearTimeout,
+    clearHierarchy,
     navigateNow,
-    hasPendingNavigation,
-    getPendingDestination,
-    isNavigating: isNavigatingRef.current,
-    getTimeoutId,
     timeoutId
   };
 }
