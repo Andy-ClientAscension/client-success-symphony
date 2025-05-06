@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useCallback } from "react";
-import { useAuthStateMachine, AuthStateMachineEvent } from "@/hooks/use-auth-state-machine";
+import { useAuthStateMachine } from "@/hooks/use-auth-state-machine";
 import { useAuthOperations } from "@/hooks/use-auth-operations";
 import { useOperationController } from "@/hooks/use-operation-controller";
 
@@ -10,6 +10,12 @@ type AuthStateMachineContextType = ReturnType<typeof useAuthStateMachine> & {
   authenticateWithToken: (accessToken: string, refreshToken?: string) => Promise<boolean>;
   logout: () => Promise<boolean>;
 };
+
+// Define the event type for the dispatch function
+export interface AuthStateMachineEvent {
+  type: 'NAVIGATE_START' | 'NAVIGATE_COMPLETE' | string;
+  [key: string]: any;
+}
 
 // Create context with default values
 const AuthStateMachineContext = createContext<AuthStateMachineContextType | undefined>(undefined);

@@ -1,5 +1,5 @@
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStateMachineContext } from '@/contexts/auth-state-machine';
@@ -16,7 +16,7 @@ interface NavigationTimeoutOptions {
 }
 
 /**
- * Hook for managing navigation timeouts with auth state integration
+ * Hook for managing navigation timeouts with auth state integration and hierarchical cancellation
  */
 export function useNavigationTimeout(defaultOptions: NavigationTimeoutOptions = {}) {
   const navigate = useNavigate();
@@ -24,6 +24,7 @@ export function useNavigationTimeout(defaultOptions: NavigationTimeoutOptions = 
   const timeoutIdRef = useRef<NodeJS.Timeout | undefined>();
   const isNavigatingRef = useRef<boolean>(false);
   const destinationRef = useRef<string | null>(null);
+  const [timeoutId, setTimeoutId] = useState<string | null>(null);
   
   // Get auth context for coordination with auth state
   const { dispatch: authDispatch, state: authState } = useAuthStateMachineContext();
@@ -49,6 +50,7 @@ export function useNavigationTimeout(defaultOptions: NavigationTimeoutOptions = 
       window.clearTimeout(timeoutIdRef.current);
       timeoutIdRef.current = undefined;
       destinationRef.current = null;
+      setTimeoutId(null);
     }
   }, []);
   
@@ -68,6 +70,10 @@ export function useNavigationTimeout(defaultOptions: NavigationTimeoutOptions = 
     const showToast = options.showToast ?? defaultShowToast;
     const timeoutMessage = options.timeoutMessage ?? 'Navigation timeout - redirecting';
     const isCritical = options.isCritical ?? defaultIsCritical;
+    
+    // Generate a unique ID for this timeout
+    const newTimeoutId = Math.random().toString(36).substring(2, 15);
+    setTimeoutId(newTimeoutId);
     
     // Notify auth state machine that navigation was triggered
     authDispatch({ type: 'NAVIGATE_START' });
@@ -97,12 +103,13 @@ export function useNavigationTimeout(defaultOptions: NavigationTimeoutOptions = 
         setTimeout(() => {
           isNavigatingRef.current = false;
           destinationRef.current = null;
+          setTimeoutId(null);
         }, 100);
       }
     }, delay);
     
-    // Return the destination path for reference
-    return path;
+    // Return the timeout ID for hierarchical management
+    return newTimeoutId;
   }, [navigate, clearTimeout, toast, authDispatch, defaultDelay, defaultShowToast, defaultIsCritical]);
   
   // Execute immediate navigation and clear any pending timeout
@@ -132,12 +139,19 @@ export function useNavigationTimeout(defaultOptions: NavigationTimeoutOptions = 
     return destinationRef.current;
   }, []);
   
+  // Get the current timeout ID
+  const getTimeoutId = useCallback(() => {
+    return timeoutId;
+  }, [timeoutId]);
+  
   return {
     startTimeout,
     clearTimeout,
     navigateNow,
     hasPendingNavigation,
     getPendingDestination,
-    isNavigating: isNavigatingRef.current
+    isNavigating: isNavigatingRef.current,
+    getTimeoutId,
+    timeoutId
   };
 }
