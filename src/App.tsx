@@ -1,8 +1,8 @@
+
 import { SentryRouteErrorBoundary } from "@/components/SentryErrorBoundary";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter } from "react-router-dom";
 import { BrowserCompatibilityCheck } from "@/components/BrowserCompatibilityCheck";
 import { OfflineDetector } from "@/components/OfflineDetector";
 import { AuthProvider } from "@/contexts/auth";
@@ -101,28 +101,26 @@ function App() {
     <SentryRouteErrorBoundary>
       <ThemeProvider defaultTheme="system" storageKey="vite-react-theme">
         <QueryClientProvider client={queryClient}>
-          <BrowserRouter>
-            <AppInitializer>
-              <Suspense fallback={<CriticalLoadingState message="Loading application..." timeout={3000} />}>
-                <AuthProvider>
-                  <AuthStateMachineProvider>
-                    <AuthErrorBoundary>
-                      <SessionValidator>
-                        <WebVitalsMonitor />
-                        <PerformanceDebugger visible={process.env.NODE_ENV === 'development'} />
-                        <NavigationProgressBar variant="brand" />
-                        <BrowserCompatibilityCheck />
-                        <OfflineDetector />
-                        <OfflineBanner position="bottom" />
-                        <Toaster />
-                        <AppRoutes />
-                      </SessionValidator>
-                    </AuthErrorBoundary>
-                  </AuthStateMachineProvider>
-                </AuthProvider>
-              </Suspense>
-            </AppInitializer>
-          </BrowserRouter>
+          <AppInitializer>
+            <Suspense fallback={<CriticalLoadingState message="Loading application..." timeout={3000} />}>
+              <AuthProvider>
+                <AuthStateMachineProvider>
+                  <AuthErrorBoundary>
+                    <SessionValidator>
+                      <WebVitalsMonitor />
+                      <PerformanceDebugger visible={process.env.NODE_ENV === 'development'} />
+                      <NavigationProgressBar variant="brand" />
+                      <BrowserCompatibilityCheck />
+                      <OfflineDetector />
+                      <OfflineBanner position="bottom" />
+                      <Toaster />
+                      <AppRoutes />
+                    </SessionValidator>
+                  </AuthErrorBoundary>
+                </AuthStateMachineProvider>
+              </AuthProvider>
+            </Suspense>
+          </AppInitializer>
         </QueryClientProvider>
       </ThemeProvider>
     </SentryRouteErrorBoundary>
