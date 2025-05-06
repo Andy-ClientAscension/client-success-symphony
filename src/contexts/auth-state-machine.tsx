@@ -1,13 +1,20 @@
 
 import React, { createContext, useContext, useCallback, useRef, useEffect } from "react";
-import { useAuthStateMachine } from "@/hooks/use-auth-state-machine";
+import { useAuthStateMachine, AuthStateMachineEvent } from "@/hooks/use-auth-state-machine";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Session, AuthError } from '@supabase/supabase-js';
 import { safeAbort, createAbortController } from "@/utils/abortUtils";
 
+// Define the complete context type including all methods
+type AuthStateMachineContextType = ReturnType<typeof useAuthStateMachine> & {
+  checkSession: (forceRefresh?: boolean) => Promise<boolean>;
+  authenticateWithToken: (accessToken: string, refreshToken?: string) => Promise<boolean>;
+  logout: () => Promise<boolean>;
+};
+
 // Create context with default values
-const AuthStateMachineContext = createContext<ReturnType<typeof useAuthStateMachine> | undefined>(undefined);
+const AuthStateMachineContext = createContext<AuthStateMachineContextType | undefined>(undefined);
 
 // Provider component
 export function AuthStateMachineProvider({ children }: { children: React.ReactNode }) {
@@ -303,7 +310,7 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
   }, [withAuthTimeout, toast, authStateMachine.operationId, registerOperation, completeOperation]);
   
   // Create a merged value that includes our additional helper methods
-  const contextValue = {
+  const contextValue: AuthStateMachineContextType = {
     ...authStateMachine,
     checkSession,
     authenticateWithToken,

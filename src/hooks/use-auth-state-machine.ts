@@ -13,7 +13,7 @@ type AuthStateMachineState =
   | 'navigation_completed';
 
 // Define events that can be dispatched to the state machine
-type AuthStateMachineEvent = 
+export type AuthStateMachineEvent = 
   | { type: 'SESSION_CHECK_START' }
   | { type: 'SESSION_CHECK_SUCCESS' }
   | { type: 'SESSION_CHECK_FAILURE'; error?: Error }
@@ -121,6 +121,25 @@ export function useAuthStateMachine() {
     }
   }, [state]);
   
+  // Authentication methods that need to be provided through the context
+  const authenticateWithToken = useCallback(async (accessToken: string, refreshToken?: string): Promise<boolean> => {
+    // This is a stub implementation - the real implementation is in the AuthStateMachineProvider
+    console.log("[AuthStateMachine] authenticateWithToken stub called");
+    return false;
+  }, []);
+
+  const checkSession = useCallback(async (forceRefresh = false): Promise<boolean> => {
+    // This is a stub implementation - the real implementation is in the AuthStateMachineProvider
+    console.log("[AuthStateMachine] checkSession stub called");
+    return false;
+  }, []);
+
+  const logout = useCallback(async (): Promise<boolean> => {
+    // This is a stub implementation - the real implementation is in the AuthStateMachineProvider
+    console.log("[AuthStateMachine] logout stub called");
+    return false;
+  }, []);
+  
   // Get the processing auth status from auth reducer state
   const processingAuth = authState.processingAuth || state === 'checking_session' || state === 'checking_token';
   
@@ -136,6 +155,10 @@ export function useAuthStateMachine() {
     withAuthTimeout,
     operationId,
     getNewOperationId,
-    timeoutLevel
+    timeoutLevel,
+    // Add the stub methods that will be overridden by the provider
+    authenticateWithToken,
+    checkSession,
+    logout
   };
 }
