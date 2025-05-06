@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from "@/components/Layout/Layout";
@@ -89,7 +88,7 @@ export default function Index() {
         if (signal.aborted) return;
         
         // Track the current operation ID to detect outdated operations
-        // Fix: Call getNewOperationId without arguments
+        // Call getNewOperationId without arguments
         getNewOperationId();
         
         const success = await authenticateWithToken(accessToken, refreshToken);
@@ -139,7 +138,7 @@ export default function Index() {
       
       // Create a separate abort controller for session check
       const { controller, signal } = createAbortController();
-      // Fix: Call getNewOperationId without arguments
+      // Call getNewOperationId without arguments
       getNewOperationId();
       
       const checkAuthSession = async () => {
