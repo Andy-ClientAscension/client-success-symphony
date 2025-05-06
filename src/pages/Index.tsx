@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Layout } from "@/components/Layout/Layout";
 import { LoadingState } from "@/components/LoadingState";
@@ -17,6 +17,8 @@ export default function Index() {
   const { toast } = useToast();
   const processedUrlRef = useRef<boolean>(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const navigationLockRef = useRef<boolean>(false);
+  const isMountedRef = useRef<boolean>(true);
   
   // Get the auth state machine context with all its methods
   const authContext = useAuthStateMachineContext();
@@ -24,7 +26,8 @@ export default function Index() {
     state: authState, 
     dispatch, 
     isAuthenticated,
-    authenticateWithToken
+    authenticateWithToken,
+    operationId // Track the current operation ID
   } = authContext;
   
   const { 
@@ -32,6 +35,14 @@ export default function Index() {
     checkSession 
   } = useSessionCoordination();
 
+  // Track mounting state to prevent updates after unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+  
   // Clean up abort controller on unmount
   useEffect(() => {
     return () => {
@@ -77,20 +88,23 @@ export default function Index() {
     // Clean up URL before authentication attempt
     window.history.replaceState(null, '', window.location.pathname);
     
-    // Use the new authentication helper with abort signal handling
+    // Use the authentication helper with abort signal handling
     const processToken = async () => {
       try {
         if (signal.aborted) return;
         
+        // Track the current operation ID to detect outdated operations
+        const currentOpId = operationId;
+        
         await authenticateWithToken(accessToken, refreshToken);
         
-        // Check if aborted during API call
-        if (signal.aborted) {
-          console.log("[Index] Token authentication aborted after API call");
+        // Check if aborted during API call or if another operation started
+        if (signal.aborted || !isMountedRef.current || operationId !== currentOpId) {
+          console.log("[Index] Token authentication aborted after API call or operation superseded");
           return;
         }
       } catch (error) {
-        if (!signal.aborted) {
+        if (!signal.aborted && isMountedRef.current) {
           console.error("[Index] Error in token authentication:", error);
         }
       } finally {
@@ -103,7 +117,7 @@ export default function Index() {
     
     processToken();
     
-  }, [navigate, authenticateWithToken, toast]);
+  }, [navigate, authenticateWithToken, toast, operationId]);
   
   // Initialize auth state and handle redirects
   useEffect(() => {
@@ -123,13 +137,16 @@ export default function Index() {
         try {
           if (signal.aborted) return;
           
+          // Track the current operation ID to detect outdated operations
+          const currentOpId = operationId;
+          
           await checkSession(false);
           
-          if (signal.aborted) {
-            console.log("[Index] Session check aborted after API call");
+          if (signal.aborted || !isMountedRef.current || operationId !== currentOpId) {
+            console.log("[Index] Session check aborted after API call or operation superseded");
           }
         } catch (error) {
-          if (!signal.aborted) {
+          if (!signal.aborted && isMountedRef.current) {
             console.error("[Index] Error checking session:", error);
           }
         } finally {
@@ -141,27 +158,44 @@ export default function Index() {
       checkAuthSession();
     }
     
+    // Handle navigation with lock mechanism to prevent race conditions
+    const navigateWithLock = (path: string, replace = true) => {
+      if (!navigationLockRef.current && isMountedRef.current) {
+        navigationLockRef.current = true;
+        console.log(`[Index] Navigating to: ${path}`);
+        navigate(path, { replace });
+        
+        // Release lock after a short delay
+        setTimeout(() => {
+          navigationLockRef.current = false;
+        }, 100);
+      } else {
+        console.log(`[Index] Navigation to ${path} blocked by lock or component unmounted`);
+      }
+    };
+    
     // Handle authenticated state
     if (isAuthenticated === true && authState === 'authenticated') {
       console.log("[Index] User is authenticated, redirecting to dashboard");
-      navigate('/dashboard', { replace: true });
+      navigateWithLock('/dashboard', true);
     }
     
     // Handle unauthenticated state with a slight delay to allow for race conditions
     if (isAuthenticated === false && authState === 'unauthenticated') {
       console.log("[Index] User is not authenticated, redirecting to login");
-      navigate('/login', { replace: true });
+      navigateWithLock('/login', true);
     }
     
-  }, [authState, isAuthenticated, navigate, checkSession]);
+  }, [authState, isAuthenticated, navigate, checkSession, operationId]);
   
   // Log current auth state information
   useEffect(() => {
     console.log('[Index] Auth state:', { 
       state: authState,
-      isAuthenticated 
+      isAuthenticated,
+      operationId
     });
-  }, [authState, isAuthenticated]);
+  }, [authState, isAuthenticated, operationId]);
 
   // Announce loading state to screen readers
   useEffect(() => {

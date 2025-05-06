@@ -15,15 +15,39 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
   const authStateMachine = useAuthStateMachine();
   const { dispatch, withAuthTimeout } = authStateMachine;
   const abortControllerRef = useRef<AbortController | null>(null);
+  const pendingOperationsRef = useRef<Map<number, { controller: AbortController, timeoutId?: NodeJS.Timeout }>>(new Map());
 
   // Cleanup function for aborting ongoing requests
   useEffect(() => {
     return () => {
+      // Abort all pending operations on unmount
+      pendingOperationsRef.current.forEach(({ controller, timeoutId }) => {
+        safeAbort(controller, 'Component unmounted');
+        if (timeoutId) clearTimeout(timeoutId);
+      });
+      pendingOperationsRef.current.clear();
+      
       if (abortControllerRef.current) {
         safeAbort(abortControllerRef.current, 'Component unmounted');
         abortControllerRef.current = null;
       }
     };
+  }, []);
+  
+  // Helper to register and track operations
+  const registerOperation = useCallback((operationId: number, controller: AbortController) => {
+    pendingOperationsRef.current.set(operationId, { controller });
+    return operationId;
+  }, []);
+  
+  // Helper to complete operations
+  const completeOperation = useCallback((operationId: number) => {
+    const operation = pendingOperationsRef.current.get(operationId);
+    if (operation) {
+      const { timeoutId } = operation;
+      if (timeoutId) clearTimeout(timeoutId);
+      pendingOperationsRef.current.delete(operationId);
+    }
   }, []);
   
   // Enhanced session check that uses our timeout mechanisms and abort controls
@@ -36,6 +60,10 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
     // Create a new abort controller for this request
     const { controller, signal } = createAbortController();
     abortControllerRef.current = controller;
+    const operationId = authStateMachine.operationId;
+    
+    // Register this operation
+    registerOperation(operationId, controller);
     
     try {
       dispatch({ type: 'SESSION_CHECK_START' });
@@ -45,7 +73,7 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
         throw new Error('Session check aborted');
       }
       
-      // Fix: Properly type the response from getSession
+      // Properly type the response from getSession
       const { data, error } = await withAuthTimeout<{
         data: { session: Session | null },
         error: AuthError | null
@@ -114,8 +142,11 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
       if (abortControllerRef.current === controller) {
         abortControllerRef.current = null;
       }
+      
+      // Complete this operation
+      completeOperation(operationId);
     }
-  }, [dispatch, withAuthTimeout, toast]);
+  }, [dispatch, withAuthTimeout, toast, authStateMachine.operationId, registerOperation, completeOperation]);
   
   // Enhanced authentication helper with timeout and abort handling
   const authenticateWithToken = useCallback(async (accessToken: string, refreshToken?: string) => {
@@ -127,6 +158,10 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
     // Create a new abort controller for this request
     const { controller, signal } = createAbortController();
     abortControllerRef.current = controller;
+    const operationId = authStateMachine.operationId;
+    
+    // Register this operation
+    registerOperation(operationId, controller);
     
     try {
       dispatch({ type: 'TOKEN_CHECK_START' });
@@ -136,7 +171,7 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
         throw new Error('Authentication aborted');
       }
       
-      // Fix: Properly type the response from setSession
+      // Properly type the response from setSession
       const { data, error } = await withAuthTimeout<{
         data: { session: Session | null, user: any | null },
         error: AuthError | null
@@ -197,8 +232,11 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
       if (abortControllerRef.current === controller) {
         abortControllerRef.current = null;
       }
+      
+      // Complete this operation
+      completeOperation(operationId);
     }
-  }, [dispatch, withAuthTimeout, toast]);
+  }, [dispatch, withAuthTimeout, toast, authStateMachine.operationId, registerOperation, completeOperation]);
   
   // Enhanced logout with timeout, abort control and state management
   const logout = useCallback(async () => {
@@ -210,6 +248,10 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
     // Create a new abort controller for this request
     const { controller, signal } = createAbortController();
     abortControllerRef.current = controller;
+    const operationId = authStateMachine.operationId;
+    
+    // Register this operation
+    registerOperation(operationId, controller);
     
     try {
       // Note: we don't dispatch a specific logout action as this is handled by Supabase's
@@ -254,8 +296,11 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
       if (abortControllerRef.current === controller) {
         abortControllerRef.current = null;
       }
+      
+      // Complete this operation
+      completeOperation(operationId);
     }
-  }, [withAuthTimeout, toast]);
+  }, [withAuthTimeout, toast, authStateMachine.operationId, registerOperation, completeOperation]);
   
   // Create a merged value that includes our additional helper methods
   const contextValue = {
