@@ -87,7 +87,9 @@ describe('useTimeoutCoordinator', () => {
     
     // When we clear the parent, the child should also be cleared
     act(() => {
-      parentResult.current.clearHierarchy();
+      if (parentId) {  // Add a check to ensure parentId is not null
+        parentResult.current.clearHierarchy(parentId);  // Pass the parentId parameter
+      }
     });
     
     // Both should be cleared

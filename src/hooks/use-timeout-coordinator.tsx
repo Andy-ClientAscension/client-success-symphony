@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import { useToast } from './use-toast';
 
@@ -7,6 +8,8 @@ interface TimeoutCoordinatorContextType {
   clearTimeout: (id: string) => void;
   clearHierarchy: (parentId: string) => void;
   getActiveTimeouts: () => string[];
+  clearAll: () => void;  // Add the missing clearAll method
+  activeTimeouts: Set<string>; // Add the activeTimeouts property
 }
 
 // Options for creating timeouts
@@ -15,6 +18,7 @@ interface TimeoutOptions {
   description?: string;
   parentId?: string;
   priority?: number;
+  isCritical?: boolean; // Added isCritical property for NavigationTimeoutOptions compatibility
 }
 
 // Timeout item structure
@@ -36,6 +40,8 @@ const TimeoutCoordinatorContext = createContext<TimeoutCoordinatorContextType>({
   clearTimeout: () => {},
   clearHierarchy: () => {},
   getActiveTimeouts: () => [],
+  clearAll: () => {}, // Add default implementation
+  activeTimeouts: new Set<string>(), // Add default empty set
 });
 
 /**
@@ -45,6 +51,7 @@ export function TimeoutCoordinatorProvider({ children }: { children: React.React
   const [timeouts, setTimeouts] = useState<Record<string, TimeoutItem>>({});
   const timeoutsRef = useRef<Record<string, TimeoutItem>>({});
   const { toast } = useToast();
+  const [activeTimeoutsSet, setActiveTimeoutsSet] = useState<Set<string>>(new Set());
   
   // Helper to generate unique IDs
   const generateTimeoutId = useCallback(() => {
@@ -122,6 +129,13 @@ export function TimeoutCoordinatorProvider({ children }: { children: React.React
       [id]: timeoutItem
     };
     
+    // Add to active timeouts set
+    setActiveTimeoutsSet(prev => {
+      const updated = new Set(prev);
+      updated.add(id);
+      return updated;
+    });
+    
     return id;
   }, [generateTimeoutId, toast]);
   
@@ -141,6 +155,13 @@ export function TimeoutCoordinatorProvider({ children }: { children: React.React
       const updatedTimeouts = { ...timeoutsRef.current };
       delete updatedTimeouts[id];
       timeoutsRef.current = updatedTimeouts;
+      
+      // Remove from active timeouts set
+      setActiveTimeoutsSet(prev => {
+        const updated = new Set(prev);
+        updated.delete(id);
+        return updated;
+      });
     }
   }, []);
   
@@ -157,6 +178,19 @@ export function TimeoutCoordinatorProvider({ children }: { children: React.React
     });
   }, [clearTimeout]);
   
+  // Clear all timeouts
+  const clearAll = useCallback(() => {
+    // Clear all timeouts in the ref
+    Object.values(timeoutsRef.current).forEach(timeout => {
+      window.clearTimeout(timeout.timerId);
+    });
+    
+    // Reset state and ref
+    setTimeouts({});
+    timeoutsRef.current = {};
+    setActiveTimeoutsSet(new Set());
+  }, []);
+  
   // Get a list of all active timeout IDs
   const getActiveTimeouts = useCallback(() => {
     return Object.keys(timeoutsRef.current);
@@ -168,7 +202,9 @@ export function TimeoutCoordinatorProvider({ children }: { children: React.React
         startTimeout, 
         clearTimeout, 
         clearHierarchy,
-        getActiveTimeouts 
+        getActiveTimeouts,
+        clearAll,
+        activeTimeouts: activeTimeoutsSet
       }}
     >
       {children}
