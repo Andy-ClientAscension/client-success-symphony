@@ -1,10 +1,10 @@
 
-import { useCallback, useRef, useEffect } from 'react';
+import { useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStateMachineContext } from '@/contexts/auth-state-machine';
 import { useToast } from '@/hooks/use-toast';
 import { getCachedSession, cacheSession, clearCachedSession } from '@/utils/sessionCache';
-import { safeAbort, createAbortController } from '@/utils/abortUtils';
+import { useOperationController } from './use-operation-controller';
 
 // Grace periods (in ms) before retrying various operations
 const REFRESH_DEBOUNCE = 2000;  // Minimum time between refreshes
@@ -22,55 +22,19 @@ export function useSessionCoordination() {
     checkSession
   } = useAuthStateMachineContext();
   
+  // Use the operation controller hook
+  const { 
+    registerOperation, 
+    completeOperation, 
+    getController, 
+    isMounted 
+  } = useOperationController();
+  
   // Tracking refs for preventing duplicate operations
   const lastRefreshTimeRef = useRef<number>(0);
   const refreshPromiseRef = useRef<Promise<boolean> | null>(null);
   const refreshAttemptsRef = useRef<number>(0);
   const backoffTimeRef = useRef<number>(BACKOFF_INITIAL);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const pendingOperationsRef = useRef<Map<number, { controller: AbortController, timeoutId?: NodeJS.Timeout }>>(new Map());
-  const isMountedRef = useRef<boolean>(true);
-  
-  // Track mounting state to prevent updates after unmount
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-  
-  // Clean up abort controller and pending operations on unmount
-  useEffect(() => {
-    return () => {
-      if (abortControllerRef.current) {
-        safeAbort(abortControllerRef.current, 'Component unmounted');
-        abortControllerRef.current = null;
-      }
-      
-      // Abort all pending operations on unmount
-      pendingOperationsRef.current.forEach(({ controller, timeoutId }) => {
-        safeAbort(controller, 'Component unmounted');
-        if (timeoutId) clearTimeout(timeoutId);
-      });
-      pendingOperationsRef.current.clear();
-    };
-  }, []);
-  
-  // Helper to register and track operations
-  const registerOperation = useCallback((opId: number, controller: AbortController) => {
-    pendingOperationsRef.current.set(opId, { controller });
-    return opId;
-  }, []);
-  
-  // Helper to complete operations
-  const completeOperation = useCallback((opId: number) => {
-    const operation = pendingOperationsRef.current.get(opId);
-    if (operation) {
-      const { timeoutId } = operation;
-      if (timeoutId) clearTimeout(timeoutId);
-      pendingOperationsRef.current.delete(opId);
-    }
-  }, []);
   
   // Optimized session refresh with debouncing, caching and abort control
   const refreshSession = useCallback(async (forceRefresh = false): Promise<boolean> => {
@@ -92,14 +56,8 @@ export function useSessionCoordination() {
       return Promise.resolve(cachedSession !== null || isAuthenticated === true);
     }
     
-    // Abort any previous ongoing request
-    if (abortControllerRef.current) {
-      safeAbort(abortControllerRef.current, 'New session refresh requested');
-    }
-
-    // Create a new abort controller for this request
-    const { controller, signal } = createAbortController();
-    abortControllerRef.current = controller;
+    // Get a new controller for this operation
+    const { controller, signal } = getController('New session refresh requested');
     
     // Register this operation
     registerOperation(currentOpId, controller);
@@ -111,7 +69,7 @@ export function useSessionCoordination() {
         lastRefreshTimeRef.current = now;
         
         // Exit early if abort was requested
-        if (signal.aborted || !isMountedRef.current) {
+        if (signal.aborted || !isMounted()) {
           throw new Error('Session refresh aborted');
         }
         
@@ -119,8 +77,8 @@ export function useSessionCoordination() {
         const isValid = await checkSession(forceRefresh);
         
         // Check if abort was requested during the operation or component unmounted
-        if (signal.aborted || !isMountedRef.current || operationId !== currentOpId) {
-          throw new Error('Session refresh aborted after check or operation superseded');
+        if (signal.aborted || !isMounted()) {
+          throw new Error('Session refresh aborted after check');
         }
         
         if (isValid) {
@@ -130,11 +88,11 @@ export function useSessionCoordination() {
           
           // Cache the session for future quick access
           try {
-            if (signal.aborted || !isMountedRef.current) return false;
+            if (signal.aborted || !isMounted()) return false;
             
             const { data } = await supabase.auth.getSession(); 
             
-            if (signal.aborted || !isMountedRef.current) return false;
+            if (signal.aborted || !isMounted()) return false;
             
             if (data.session) {
               cacheSession(data.session);
@@ -152,7 +110,7 @@ export function useSessionCoordination() {
         return false;
       } catch (error) {
         // Don't process errors if already aborted
-        if (signal.aborted || !isMountedRef.current) {
+        if (signal.aborted || !isMounted()) {
           console.log("[SessionCoordination] Session refresh aborted, skipping error handling");
           return false;
         }
@@ -184,22 +142,17 @@ export function useSessionCoordination() {
         // Clear the promise ref so future refreshes can occur
         refreshPromiseRef.current = null;
         
-        // Clear the controller reference if this is still the active controller
-        if (abortControllerRef.current === controller) {
-          abortControllerRef.current = null;
-        }
-        
         // Complete this operation
         completeOperation(currentOpId);
       }
     })();
     
     return refreshPromiseRef.current;
-  }, [checkSession, isAuthenticated, toast, operationId, registerOperation, completeOperation]);
+  }, [checkSession, isAuthenticated, toast, operationId, registerOperation, completeOperation, getController, isMounted]);
   
   // Force session verification with UI feedback
   const verifySession = useCallback(async (): Promise<boolean> => {
-    if (!isMountedRef.current) return false;
+    if (!isMounted()) return false;
     
     toast({
       title: "Verifying authentication",
@@ -209,14 +162,8 @@ export function useSessionCoordination() {
     // Dispatch to update state right away
     dispatch({ type: 'SESSION_CHECK_START' });
     
-    // Abort any previous ongoing request
-    if (abortControllerRef.current) {
-      safeAbort(abortControllerRef.current, 'New session verification requested');
-    }
-
-    // Create a new abort controller for this request
-    const { controller, signal } = createAbortController();
-    abortControllerRef.current = controller;
+    // Get a new controller for this operation
+    const { controller, signal } = getController('New session verification requested');
     const currentOpId = operationId;
     
     // Register this operation
@@ -224,7 +171,7 @@ export function useSessionCoordination() {
     
     try {
       // Exit early if abort was requested
-      if (signal.aborted || !isMountedRef.current) {
+      if (signal.aborted || !isMounted()) {
         throw new Error('Session verification aborted');
       }
       
@@ -232,8 +179,8 @@ export function useSessionCoordination() {
       const result = await refreshSession(true);
       
       // Check if abort was requested during the operation or component unmounted
-      if (signal.aborted || !isMountedRef.current || operationId !== currentOpId) {
-        throw new Error('Session verification aborted after refresh or operation superseded');
+      if (signal.aborted || !isMounted()) {
+        throw new Error('Session verification aborted after refresh');
       }
       
       if (result) {
@@ -252,7 +199,7 @@ export function useSessionCoordination() {
       }
     } catch (error) {
       // Don't process errors if already aborted or component unmounted
-      if (signal.aborted || !isMountedRef.current) {
+      if (signal.aborted || !isMounted()) {
         console.log("[SessionCoordination] Session verification aborted, skipping error handling");
         return false;
       }
@@ -265,15 +212,10 @@ export function useSessionCoordination() {
       });
       return false;
     } finally {
-      // Clear the controller reference if this is still the active controller
-      if (abortControllerRef.current === controller) {
-        abortControllerRef.current = null;
-      }
-      
       // Complete this operation
       completeOperation(currentOpId);
     }
-  }, [dispatch, refreshSession, toast, operationId, registerOperation, completeOperation]);
+  }, [dispatch, refreshSession, toast, operationId, registerOperation, completeOperation, getController, isMounted]);
   
   // Check if we can skip refreshing based on cache and state
   const shouldRefreshSession = useCallback((): boolean => {
