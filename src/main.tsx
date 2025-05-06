@@ -1,10 +1,11 @@
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from "@/components/ThemeProvider"
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthContextProvider } from '@/contexts/AuthContext';
 import { AuthStateMachineProvider } from '@/contexts/auth-state-machine';
 import { SessionValidatorProvider } from '@/contexts/SessionValidatorContext';
