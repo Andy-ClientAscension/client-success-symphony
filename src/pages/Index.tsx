@@ -138,7 +138,7 @@ export default function Index() {
     }
     
     // Set up a backup navigation timeout for uncertain states
-    if (authState === 'initializing' || authState === 'checking_session') {
+    if (authState === 'initializing') {
       console.log("[Index] Setting up backup navigation timeout");
       // Will redirect to login after delay if no state resolution
       startTimeout('/login', { 

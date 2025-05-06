@@ -32,7 +32,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { refreshSession } = useSessionCoordination();
   
   // Use our new navigation timeout hook for loading timeouts
-  const { startTimeout, clearTimeout } = useNavigationTimeout({
+  const { startTimeout, clearTimeout: clearNavTimeout } = useNavigationTimeout({
     delay: 10000, // 10 seconds for dashboard loading
     showToast: true,
     timeoutMessage: 'Loading took longer than expected - redirecting to home page'
@@ -74,22 +74,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     return () => {
       clearTimeout(initialCheckTimerId);
       // Clear any navigation timeouts
-      clearTimeout();
+      clearNavTimeout();
     };
-  }, [effectiveIsLoading, effectiveIsAuthenticated, timeoutLevel, refreshSession, startTimeout, clearTimeout]);
+  }, [effectiveIsLoading, effectiveIsAuthenticated, timeoutLevel, refreshSession, startTimeout, clearNavTimeout]);
   
   // Clear timeout when loading completes or auth state is determined
   useEffect(() => {
     if (!effectiveIsLoading || effectiveIsAuthenticated !== null) {
-      clearTimeout();
+      clearNavTimeout();
     }
-  }, [effectiveIsLoading, effectiveIsAuthenticated, clearTimeout]);
+  }, [effectiveIsLoading, effectiveIsAuthenticated, clearNavTimeout]);
   
   // Handle force continue for stuck loading states
   const handleForceContinue = () => {
     console.warn("Auth session loading timeout, forcing continue");
     setShowLoading(false);
-    clearTimeout(); // Clear any navigation timeouts
+    clearNavTimeout(); // Clear any navigation timeouts
     
     toast({
       title: "Loading timeout",
