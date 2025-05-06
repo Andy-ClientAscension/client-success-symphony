@@ -1,5 +1,5 @@
 
-import { useEffect, useRef, useContext, createContext, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useContext, createContext, useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 // Define the context for timeout coordination
