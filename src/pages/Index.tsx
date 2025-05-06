@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Layout } from "@/components/Layout/Layout";
@@ -27,7 +26,8 @@ export default function Index() {
     dispatch, 
     isAuthenticated,
     authenticateWithToken,
-    operationId // Track the current operation ID
+    operationId,
+    getNewOperationId
   } = authContext;
   
   const { 
@@ -127,23 +127,21 @@ export default function Index() {
     }
     
     // Initialize auth state if needed
-    if (authState === 'initializing' && !isAuthenticated) {
+    if (authState === 'initializing' && isAuthenticated === null) {
       console.log("[Index] Initializing auth state machine");
       
       // Create a separate abort controller for session check
       const { controller, signal } = createAbortController();
+      const currentOpId = getNewOperationId();
       
       const checkAuthSession = async () => {
         try {
           if (signal.aborted) return;
           
-          // Track the current operation ID to detect outdated operations
-          const currentOpId = operationId;
-          
           await checkSession(false);
           
-          if (signal.aborted || !isMountedRef.current || operationId !== currentOpId) {
-            console.log("[Index] Session check aborted after API call or operation superseded");
+          if (signal.aborted || !isMountedRef.current) {
+            console.log("[Index] Session check aborted after API call or component unmounted");
           }
         } catch (error) {
           if (!signal.aborted && isMountedRef.current) {
@@ -186,7 +184,7 @@ export default function Index() {
       navigateWithLock('/login', true);
     }
     
-  }, [authState, isAuthenticated, navigate, checkSession, operationId]);
+  }, [authState, isAuthenticated, navigate, checkSession, getNewOperationId]);
   
   // Log current auth state information
   useEffect(() => {

@@ -1,4 +1,3 @@
-
 import React, { useEffect, Suspense, lazy, useState } from "react";
 import { DashboardLayout } from "@/components/templates/DashboardLayout";
 import { LoadingState } from "@/components/LoadingState";
@@ -11,6 +10,7 @@ import { focusRingClasses } from "@/lib/accessibility";
 import { Bug } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useAuthStateMachineContext } from '@/contexts/auth-state-machine';
 
 // Use React.lazy for component code-splitting
 const DashboardHeader = lazy(() => import("@/components/Dashboard/Header").then(mod => ({ default: mod.DashboardHeader })));
@@ -31,6 +31,7 @@ const ComponentLoader = ({ message = "Loading component..." }) => (
 export default function Dashboard() {
   const [initializingDone, setInitializingDone] = useState(false);
   const { toast } = useToast();
+  const { state: authState, isAuthenticated } = useAuthStateMachineContext();
   
   // Use the synced dashboard hook for better data handling
   const {
@@ -66,6 +67,20 @@ export default function Dashboard() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Add auth state to verbose logging to help debug loading issues
+  useEffect(() => {
+    console.log("Dashboard loading state:", {
+      dataIsLoading,
+      isLoading,
+      isRefreshing,
+      initializingDone,
+      error: error ? 'Error exists' : 'No error',
+      lastUpdated: lastUpdated?.toISOString() || 'none',
+      authState,
+      isAuthenticated
+    });
+  }, [dataIsLoading, isLoading, isRefreshing, initializingDone, error, lastUpdated, authState, isAuthenticated]);
+
   // Report persistent errors that happen on dashboard level
   useEffect(() => {
     if (error && !isLoading && !isRefreshing) {
@@ -76,18 +91,6 @@ export default function Dashboard() {
       });
     }
   }, [error, isLoading, isRefreshing, reportError, lastUpdated]);
-
-  // Add verbose logging to help debug loading state issues
-  useEffect(() => {
-    console.log("Dashboard loading state:", {
-      dataIsLoading,
-      isLoading,
-      isRefreshing,
-      initializingDone,
-      error: error ? 'Error exists' : 'No error',
-      lastUpdated: lastUpdated?.toISOString() || 'none'
-    });
-  }, [dataIsLoading, isLoading, isRefreshing, initializingDone, error, lastUpdated]);
 
   // If still loading dashboard data
   if (isLoading && !initializingDone) {

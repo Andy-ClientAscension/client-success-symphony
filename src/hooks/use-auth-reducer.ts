@@ -1,5 +1,4 @@
-
-import { useReducer, useRef, useEffect } from 'react';
+import { useReducer, useMemo, useEffect } from 'react';
 
 export interface AuthState {
   processingAuth: boolean;
@@ -99,17 +98,18 @@ export const authReducer = (state: AuthState, action: AuthAction): AuthState => 
   }
 };
 
-// Enhanced auth reducer hook with automatic timeout progression
+// Updated hook implementation to avoid memory leaks and improve reactivity
 export const useAuthReducer = () => {
-  const reducerRef = useRef<ReturnType<typeof useReducer> | null>(null);
+  const [state, dispatch] = useReducer(authReducer, initialAuthState);
   
-  if (reducerRef.current === null) {
-    reducerRef.current = useReducer(authReducer, initialAuthState);
-  }
-  
-  const [state, dispatch] = reducerRef.current;
-  
-  // Set up tiered timeout system that automatically progresses through timeout levels
+  // Return a memoized array reference that only changes when state changes
+  // This preserves reference equality for the returned array while ensuring
+  // that state updates properly propagate to dependent components
+  return useMemo(() => [state, dispatch] as const, [state]);
+};
+
+// Set up tiered timeout system that automatically progresses through timeout levels
+export const useAuthTimeouts = (state: AuthState, dispatch: React.Dispatch<AuthAction>) => {
   useEffect(() => {
     const timeouts: NodeJS.Timeout[] = [];
     
@@ -145,6 +145,4 @@ export const useAuthReducer = () => {
       timeouts.forEach(clearTimeout);
     };
   }, [state.status, state.navigationAttempted, dispatch]);
-  
-  return [state, dispatch] as const;
 };
