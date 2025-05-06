@@ -1,209 +1,230 @@
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
+import { useToast } from './use-toast';
 
-import React, { useEffect, useRef, useContext, createContext, useState, useCallback } from 'react';
-import { useToast } from '@/hooks/use-toast';
-
-// Define the context for timeout coordination
+// Types for the timeout coordinator
 interface TimeoutCoordinatorContextType {
-  registerTimeout: (id: string, clearFn: () => void, parentId?: string) => void;
-  unregisterTimeout: (id: string) => void;
-  clearHierarchy: (id: string) => void;
-  clearAll: () => void;
-  activeTimeouts: Map<string, { clearFn: () => void, children: string[] }>;
+  startTimeout: (id: string | number, delay: number, options?: TimeoutOptions) => string;
+  clearTimeout: (id: string) => void;
+  clearHierarchy: (parentId: string) => void;
+  getActiveTimeouts: () => string[];
 }
 
-const TimeoutCoordinatorContext = createContext<TimeoutCoordinatorContextType | null>(null);
+// Options for creating timeouts
+interface TimeoutOptions {
+  onTimeout?: () => void;
+  description?: string;
+  parentId?: string;
+  priority?: number;
+}
 
-// Provider component for timeout coordination
+// Timeout item structure
+interface TimeoutItem {
+  id: string;
+  timerId: number;
+  delay: number;
+  startTime: number;
+  expiryTime: number;
+  parentId?: string;
+  options?: TimeoutOptions;
+  priority: number;
+  description?: string;
+}
+
+// Create context with default values
+const TimeoutCoordinatorContext = createContext<TimeoutCoordinatorContextType>({
+  startTimeout: () => '',
+  clearTimeout: () => {},
+  clearHierarchy: () => {},
+  getActiveTimeouts: () => [],
+});
+
+/**
+ * Provider component for timeout coordination
+ */
 export function TimeoutCoordinatorProvider({ children }: { children: React.ReactNode }) {
-  // Store timeout hierarchy
-  const timeoutsRef = useRef<Map<string, { clearFn: () => void, children: string[], parentId?: string }>>(new Map());
-  const [activeTimeoutCount, setActiveTimeoutCount] = useState(0);
+  const [timeouts, setTimeouts] = useState<Record<string, TimeoutItem>>({});
+  const timeoutsRef = useRef<Record<string, TimeoutItem>>({});
+  const { toast } = useToast();
   
-  // Register a timeout with optional parent
-  const registerTimeout = useCallback((id: string, clearFn: () => void, parentId?: string) => {
-    if (!timeoutsRef.current.has(id)) {
-      timeoutsRef.current.set(id, { clearFn, children: [], parentId });
-      
-      // Add as child to parent if specified
-      if (parentId && timeoutsRef.current.has(parentId)) {
-        const parent = timeoutsRef.current.get(parentId);
-        if (parent) {
-          parent.children.push(id);
-          timeoutsRef.current.set(parentId, parent);
-        }
-      }
-      
-      setActiveTimeoutCount(count => count + 1);
-    }
+  // Helper to generate unique IDs
+  const generateTimeoutId = useCallback(() => {
+    return `timeout_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }, []);
   
-  // Unregister a timeout
-  const unregisterTimeout = useCallback((id: string) => {
-    if (timeoutsRef.current.has(id)) {
-      const timeout = timeoutsRef.current.get(id);
-      
-      // Remove from parent's children list
-      if (timeout?.parentId && timeoutsRef.current.has(timeout.parentId)) {
-        const parent = timeoutsRef.current.get(timeout.parentId);
-        if (parent) {
-          parent.children = parent.children.filter(childId => childId !== id);
-          timeoutsRef.current.set(timeout.parentId, parent);
-        }
+  // Start a new timeout
+  const startTimeout = useCallback((idOrDelay: string | number, delayOrOptions?: number | TimeoutOptions, optionsArg?: TimeoutOptions) => {
+    // Handle different argument patterns
+    let id: string;
+    let delay: number;
+    let options: TimeoutOptions | undefined;
+    
+    // If first argument is a number, it's the delay (legacy API support)
+    if (typeof idOrDelay === 'number') {
+      delay = idOrDelay;
+      options = typeof delayOrOptions === 'object' ? delayOrOptions : {};
+      id = generateTimeoutId();
+    } 
+    // Otherwise, it's the ID
+    else {
+      id = idOrDelay;
+      delay = typeof delayOrOptions === 'number' ? delayOrOptions : 5000;
+      options = optionsArg;
+    }
+    
+    // Clear any existing timeout with this ID
+    if (timeoutsRef.current[id]) {
+      window.clearTimeout(timeoutsRef.current[id].timerId);
+    }
+    
+    // Create the timer
+    const startTime = Date.now();
+    const expiryTime = startTime + delay;
+    
+    const timerId = window.setTimeout(() => {
+      // When timeout completes, run the callback if provided
+      if (options?.onTimeout) {
+        options.onTimeout();
       }
       
-      timeoutsRef.current.delete(id);
-      setActiveTimeoutCount(count => Math.max(0, count - 1));
-    }
-  }, []);
-  
-  // Clear a timeout and all its children
-  const clearHierarchy = useCallback((id: string) => {
-    const clearTimeoutAndChildren = (timeoutId: string) => {
-      const timeout = timeoutsRef.current.get(timeoutId);
-      if (!timeout) return;
+      // Show toast if description is provided
+      if (options?.description) {
+        toast({
+          title: 'Operation Timeout',
+          description: options.description
+        });
+      }
       
-      // Clear all children first
-      [...timeout.children].forEach(childId => {
-        clearTimeoutAndChildren(childId);
-      });
-      
-      // Clear this timeout
-      timeout.clearFn();
-      unregisterTimeout(timeoutId);
+      // Clean up this timeout
+      clearTimeout(id);
+    }, delay);
+    
+    // Create new timeout object
+    const timeoutItem: TimeoutItem = {
+      id,
+      timerId,
+      delay,
+      startTime,
+      expiryTime,
+      parentId: options?.parentId,
+      options,
+      priority: options?.priority || 0,
+      description: options?.description,
     };
     
-    clearTimeoutAndChildren(id);
-  }, [unregisterTimeout]);
-  
-  // Clear all timeouts
-  const clearAll = useCallback(() => {
-    // Get root timeouts (those without parents)
-    const rootTimeouts = Array.from(timeoutsRef.current.entries())
-      .filter(([_, data]) => !data.parentId)
-      .map(([id]) => id);
+    // Update state and ref
+    setTimeouts(prev => ({
+      ...prev,
+      [id]: timeoutItem
+    }));
     
-    // Clear each root and its children
-    rootTimeouts.forEach(id => clearHierarchy(id));
-  }, [clearHierarchy]);
+    timeoutsRef.current = {
+      ...timeoutsRef.current,
+      [id]: timeoutItem
+    };
+    
+    return id;
+  }, [generateTimeoutId, toast]);
   
-  const value = {
-    registerTimeout,
-    unregisterTimeout,
-    clearHierarchy,
-    clearAll,
-    activeTimeouts: timeoutsRef.current as Map<string, { clearFn: () => void, children: string[] }>
-  };
+  // Clear a specific timeout
+  const clearTimeout = useCallback((id: string) => {
+    if (timeoutsRef.current[id]) {
+      window.clearTimeout(timeoutsRef.current[id].timerId);
+      
+      // Remove from state
+      setTimeouts(prev => {
+        const updated = { ...prev };
+        delete updated[id];
+        return updated;
+      });
+      
+      // Remove from ref
+      const updatedTimeouts = { ...timeoutsRef.current };
+      delete updatedTimeouts[id];
+      timeoutsRef.current = updatedTimeouts;
+    }
+  }, []);
+  
+  // Clear a timeout hierarchy (parent and all its children)
+  const clearHierarchy = useCallback((parentId: string) => {
+    // Clear the parent first
+    clearTimeout(parentId);
+    
+    // Find and clear all children
+    Object.values(timeoutsRef.current).forEach(timeout => {
+      if (timeout.parentId === parentId) {
+        clearTimeout(timeout.id);
+      }
+    });
+  }, [clearTimeout]);
+  
+  // Get a list of all active timeout IDs
+  const getActiveTimeouts = useCallback(() => {
+    return Object.keys(timeoutsRef.current);
+  }, []);
   
   return (
-    <TimeoutCoordinatorContext.Provider value={value}>
+    <TimeoutCoordinatorContext.Provider 
+      value={{ 
+        startTimeout, 
+        clearTimeout, 
+        clearHierarchy,
+        getActiveTimeouts 
+      }}
+    >
       {children}
     </TimeoutCoordinatorContext.Provider>
   );
 }
 
-// Hook to use the timeout coordinator
+/**
+ * Hook to use the timeout coordinator
+ */
 export function useTimeoutCoordinator() {
   const context = useContext(TimeoutCoordinatorContext);
-  if (!context) {
+  
+  if (context === undefined) {
     throw new Error('useTimeoutCoordinator must be used within a TimeoutCoordinatorProvider');
   }
+  
   return context;
 }
 
-// Hook to create a coordinated timeout
-export function useCoordinatedTimeout(
-  parentId?: string,
-  options?: { onTimeout?: () => void; description?: string }
-) {
-  const { registerTimeout, unregisterTimeout, clearHierarchy } = useTimeoutCoordinator();
-  const { toast } = useToast();
-  const timeoutIdRef = useRef<string | null>(null);
-  const timeoutTimerRef = useRef<NodeJS.Timeout | null>(null);
+/**
+ * Hook that creates a coordinated timeout with specified options
+ */
+export function useCoordinatedTimeout(id?: string, options?: TimeoutOptions) {
+  const { startTimeout, clearTimeout, clearHierarchy } = useTimeoutCoordinator();
+  const [timeoutId, setTimeoutId] = useState<string | null>(null);
   
-  // Clean up on unmount
+  // Start a timeout with the given delay
+  const startTimeoutFn = useCallback((delay: number) => {
+    const newId = id || `coordinated_${Date.now()}`;
+    const timeoutId = startTimeout(newId, delay, options);
+    setTimeoutId(timeoutId);
+    return timeoutId;
+  }, [id, options, startTimeout]);
+  
+  // Custom clear that also updates local state
+  const clearTimeoutFn = useCallback(() => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      setTimeoutId(null);
+    }
+  }, [timeoutId, clearTimeout]);
+  
+  // Clear timeout on unmount
   useEffect(() => {
     return () => {
-      if (timeoutIdRef.current) {
-        unregisterTimeout(timeoutIdRef.current);
-        timeoutIdRef.current = null;
-      }
-      if (timeoutTimerRef.current) {
-        clearTimeout(timeoutTimerRef.current);
-        timeoutTimerRef.current = null;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
       }
     };
-  }, [unregisterTimeout]);
-  
-  // Start a timeout
-  const startTimeout = useCallback((delay: number = 5000) => {
-    // Clear any existing timeout
-    if (timeoutIdRef.current) {
-      unregisterTimeout(timeoutIdRef.current);
-    }
-    if (timeoutTimerRef.current) {
-      clearTimeout(timeoutTimerRef.current);
-    }
-    
-    // Create new timeout ID
-    const newTimeoutId = Math.random().toString(36).substring(2, 15);
-    timeoutIdRef.current = newTimeoutId;
-    
-    // Create the timeout
-    timeoutTimerRef.current = setTimeout(() => {
-      // Execute timeout callback if provided
-      if (options?.onTimeout) {
-        options.onTimeout();
-      }
-      
-      // Show toast notification if description provided
-      if (options?.description) {
-        toast({
-          title: 'Timeout',
-          description: options.description
-        });
-      }
-      
-      // Clean up
-      unregisterTimeout(newTimeoutId);
-      timeoutIdRef.current = null;
-    }, delay);
-    
-    // Register with coordinator
-    registerTimeout(newTimeoutId, () => {
-      if (timeoutTimerRef.current) {
-        clearTimeout(timeoutTimerRef.current);
-        timeoutTimerRef.current = null;
-      }
-    }, parentId);
-    
-    return newTimeoutId;
-  }, [registerTimeout, unregisterTimeout, toast, options, parentId]);
-  
-  // Clear the timeout
-  const clearTimeout = useCallback(() => {
-    if (timeoutIdRef.current) {
-      unregisterTimeout(timeoutIdRef.current);
-      timeoutIdRef.current = null;
-    }
-    if (timeoutTimerRef.current) {
-      clearTimeout(timeoutTimerRef.current);
-      timeoutTimerRef.current = null;
-    }
-  }, [unregisterTimeout]);
-  
-  // Clear this timeout and all children
-  const clearHierarchyFromThis = useCallback(() => {
-    if (timeoutIdRef.current) {
-      clearHierarchy(timeoutIdRef.current);
-      timeoutIdRef.current = null;
-      timeoutTimerRef.current = null;
-    }
-  }, [clearHierarchy]);
+  }, [timeoutId, clearTimeout]);
   
   return {
-    startTimeout,
-    clearTimeout,
-    clearHierarchy: clearHierarchyFromThis,
-    timeoutId: timeoutIdRef.current
+    startTimeout: startTimeoutFn,
+    clearTimeout: clearTimeoutFn,
+    clearHierarchy,
+    timeoutId
   };
 }
