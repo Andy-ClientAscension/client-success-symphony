@@ -1,8 +1,9 @@
 
-import React, { createContext, useContext, useCallback } from "react";
+import React, { createContext, useContext, useCallback, useState, useEffect } from "react";
 import { useAuthStateMachine } from "@/hooks/use-auth-state-machine";
 import { useAuthOperations } from "@/hooks/use-auth-operations";
 import { useOperationController } from "@/hooks/use-operation-controller";
+import { useNavigate, useLocation } from "react-router-dom";
 
 // Define the complete context type including all methods
 type AuthStateMachineContextType = ReturnType<typeof useAuthStateMachine> & {
@@ -24,7 +25,10 @@ const AuthStateMachineContext = createContext<AuthStateMachineContextType | unde
 export function AuthStateMachineProvider({ children }: { children: React.ReactNode }) {
   // Get the core auth state machine
   const authStateMachine = useAuthStateMachine();
-  const { withAuthTimeout, operationId } = authStateMachine;
+  const { withAuthTimeout, operationId, dispatch } = authStateMachine;
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
   
   // Use the extracted operation controller
   useOperationController();
@@ -37,6 +41,31 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
     ...authStateMachine,
     ...authOperations
   };
+
+  // Handle navigation events for auth state machine
+  useEffect(() => {
+    // Notify state machine about navigation
+    console.log("AuthStateMachineProvider: Navigation detected to", location.pathname);
+    dispatch({ type: 'NAVIGATE_COMPLETE' });
+    
+    // Perform initial session check only once after provider is mounted
+    // but only if not on auth-related paths
+    if (!initialCheckDone && 
+        location.pathname !== '/login' && 
+        location.pathname !== '/signup' && 
+        location.pathname !== '/auth-callback' &&
+        location.pathname !== '/reset-password') {
+      console.log("AuthStateMachineProvider: Performing initial session check");
+      setInitialCheckDone(true);
+      
+      // Short delay to avoid race conditions with other init processes
+      setTimeout(() => {
+        authOperations.checkSession(false).catch(err => {
+          console.error("Initial session check error:", err);
+        });
+      }, 300);
+    }
+  }, [location, dispatch, initialCheckDone, authOperations]);
   
   return (
     <AuthStateMachineContext.Provider value={contextValue}>

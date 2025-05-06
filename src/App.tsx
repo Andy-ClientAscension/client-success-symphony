@@ -51,8 +51,14 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
   }, [toast]);
   
   useEffect(() => {
+    console.log("AppInitializer: Starting initialization");
+    
     // Mark as initialized soon to avoid loading flicker for simple cases
-    const timer = setTimeout(() => setIsInitialized(true), 250);
+    // Increased to 500ms to allow more time for auth state to stabilize
+    const timer = setTimeout(() => {
+      console.log("AppInitializer: Setting isInitialized to true");
+      setIsInitialized(true);
+    }, 500);
     
     // Set a timeout flag after 3 seconds to avoid infinite loading
     const timeoutTimer = setTimeout(() => {
