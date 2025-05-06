@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCoordinatedTimeout } from './use-timeout-coordinator';
 import { useToast } from './use-toast';
 
-interface NavigationTimeoutOptions {
+export interface NavigationTimeoutOptions {
   delay?: number;
   showToast?: boolean;
   timeoutMessage?: string;
@@ -61,11 +61,23 @@ export function useNavigationTimeout(options: NavigationTimeoutOptions = {}) {
     navigate(path, { replace });
   }, [navigate, clearTimeout]);
   
+  // Check if there is a pending navigation timeout
+  const hasPendingNavigation = useCallback(() => {
+    return timeoutId !== null && pathRef.current !== null;
+  }, [timeoutId]);
+  
+  // Get the pending destination path, if any
+  const getPendingDestination = useCallback(() => {
+    return pathRef.current;
+  }, []);
+  
   return {
     startTimeout,
     clearTimeout,
     clearHierarchy,
     navigateNow,
-    timeoutId
+    timeoutId,
+    hasPendingNavigation,
+    getPendingDestination
   };
 }

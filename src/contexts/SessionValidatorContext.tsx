@@ -1,6 +1,6 @@
 
-import React, { createContext, useContext, useState } from 'react';
-import useSessionValidator from '@/hooks/useSessionValidator';
+import React, { createContext, useContext } from 'react';
+import useSessionValidation from '@/hooks/useSessionValidator';
 
 interface SessionValidatorProps {
   children: React.ReactNode;
@@ -16,7 +16,7 @@ interface SessionValidatorContextType {
 const SessionValidatorContext = createContext<SessionValidatorContextType | undefined>(undefined);
 
 export function SessionValidatorProvider({ children }: SessionValidatorProps) {
-  const validator = useSessionValidator();
+  const validator = useSessionValidation();
   
   return (
     <SessionValidatorContext.Provider value={validator}>

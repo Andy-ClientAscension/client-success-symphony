@@ -14,7 +14,7 @@ interface SessionValidationConfig {
 /**
  * Hook that periodically validates the user's session and handles refresh/redirect logic
  */
-export function useSessionValidator({
+export default function useSessionValidation({
   validateIntervalMinutes = 5,
   redirectPath = '/login',
   showExpiredToast = true
@@ -121,5 +121,3 @@ export function useSessionValidator({
     validateSession,
   };
 }
-
-export default useSessionValidator;
