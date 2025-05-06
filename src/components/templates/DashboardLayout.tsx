@@ -1,5 +1,6 @@
+
 import { Layout } from "@/components/Layout/Layout";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { CriticalLoadingState } from "@/components/CriticalLoadingState";
 import type { ReactNode } from "react";
@@ -7,6 +8,7 @@ import { useEffect, useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStateMachineContext } from '@/contexts/auth-state-machine';
 import { useSessionCoordination } from '@/hooks/use-session-coordination';
+import { useNavigationTimeout } from '@/hooks/use-navigation-timeout';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -14,7 +16,6 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { isAuthenticated: legacyIsAuthenticated, isLoading: legacyIsLoading } = useAuth();
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [showLoading, setShowLoading] = useState(false);
   const initialCheckDoneRef = useRef(false);
@@ -29,6 +30,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   } = authContext;
   
   const { refreshSession } = useSessionCoordination();
+  
+  // Use our new navigation timeout hook for loading timeouts
+  const { startTimeout, clearTimeout } = useNavigationTimeout({
+    delay: 10000, // 10 seconds for dashboard loading
+    showToast: true,
+    timeoutMessage: 'Loading took longer than expected - redirecting to home page'
+  });
   
   // Merge authentication state between old and new systems for compatibility
   // Use OR logic to be more permissive during transition period
@@ -52,17 +60,36 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           console.error("Error refreshing session in DashboardLayout:", err)
         );
       }
+      
+      // If we're still loading, start a navigation timeout as a fallback
+      if (effectiveIsLoading) {
+        startTimeout('/', { 
+          delay: 7500,
+          timeoutMessage: 'Dashboard loading timeout - redirecting to home page',
+          isCritical: true
+        });
+      }
     }, 50); // Extremely short delay
     
     return () => {
       clearTimeout(initialCheckTimerId);
+      // Clear any navigation timeouts
+      clearTimeout();
     };
-  }, [effectiveIsLoading, effectiveIsAuthenticated, timeoutLevel, refreshSession]);
+  }, [effectiveIsLoading, effectiveIsAuthenticated, timeoutLevel, refreshSession, startTimeout, clearTimeout]);
+  
+  // Clear timeout when loading completes or auth state is determined
+  useEffect(() => {
+    if (!effectiveIsLoading || effectiveIsAuthenticated !== null) {
+      clearTimeout();
+    }
+  }, [effectiveIsLoading, effectiveIsAuthenticated, clearTimeout]);
   
   // Handle force continue for stuck loading states
   const handleForceContinue = () => {
     console.warn("Auth session loading timeout, forcing continue");
     setShowLoading(false);
+    clearTimeout(); // Clear any navigation timeouts
     
     toast({
       title: "Loading timeout",

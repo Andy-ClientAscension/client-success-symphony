@@ -7,13 +7,19 @@ import { useAuthStateMachineContext } from '@/contexts/auth-state-machine';
 import { useSessionCoordination } from '@/hooks/use-session-coordination';
 import { PageLoader } from '@/components/PageTransition/PageLoader';
 import { createAbortController } from "@/utils/abortUtils";
+import { useNavigationTimeout } from '@/hooks/use-navigation-timeout';
 
 // This is the landing page that redirects based on auth state
 export default function Index() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const processedUrlRef = useRef<boolean>(false);
-  const navigationLockRef = useRef<boolean>(false);
+  
+  // Use our new navigation timeout hook
+  const { startTimeout, clearTimeout, navigateNow } = useNavigationTimeout({
+    delay: 500, // Short delay for Index page navigation
+    showToast: false // Don't show toast for normal redirects
+  });
   
   // Get the auth state machine context with all its methods
   const { 
@@ -81,6 +87,9 @@ export default function Index() {
   
   // Initialize auth state and handle redirects
   useEffect(() => {
+    // Cancel any pending navigation timeouts when auth state changes
+    clearTimeout();
+    
     // Skip if we're already processing auth
     if (authState === 'checking_token' || authState === 'checking_session') {
       return;
@@ -114,35 +123,32 @@ export default function Index() {
       };
     }
     
-    // Handle navigation with lock mechanism to prevent race conditions
-    const navigateWithLock = (path: string, replace = true) => {
-      if (!navigationLockRef.current) {
-        navigationLockRef.current = true;
-        console.log(`[Index] Navigating to: ${path}`);
-        navigate(path, { replace });
-        
-        // Release lock after a short delay
-        setTimeout(() => {
-          navigationLockRef.current = false;
-        }, 100);
-      } else {
-        console.log(`[Index] Navigation to ${path} blocked by lock`);
-      }
-    };
-    
-    // Handle authenticated state
+    // Handle authenticated state with navigation timeout
     if (isAuthenticated === true && authState === 'authenticated') {
       console.log("[Index] User is authenticated, redirecting to dashboard");
-      navigateWithLock('/dashboard', true);
+      navigateNow('/dashboard', true);
+      return;
     }
     
-    // Handle unauthenticated state with a slight delay to allow for race conditions
+    // Handle unauthenticated state with navigation timeout
     if (isAuthenticated === false && authState === 'unauthenticated') {
       console.log("[Index] User is not authenticated, redirecting to login");
-      navigateWithLock('/login', true);
+      navigateNow('/login', true);
+      return;
     }
     
-  }, [authState, isAuthenticated, navigate, checkSession, getNewOperationId]);
+    // Set up a backup navigation timeout for uncertain states
+    if (authState === 'initializing' || authState === 'checking_session') {
+      console.log("[Index] Setting up backup navigation timeout");
+      // Will redirect to login after delay if no state resolution
+      startTimeout('/login', { 
+        delay: 3000,
+        timeoutMessage: 'Authentication check taking too long - redirecting to login'
+      });
+      return;
+    }
+    
+  }, [authState, isAuthenticated, navigateNow, startTimeout, clearTimeout, checkSession, getNewOperationId]);
   
   // Log current auth state information
   useEffect(() => {

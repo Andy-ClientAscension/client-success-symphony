@@ -23,7 +23,7 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
   // Use the extracted operation controller
   useOperationController();
   
-  // Use the extracted auth operations
+  // Use the extracted auth operations with improved timeout handling
   const authOperations = useAuthOperations(withAuthTimeout, operationId);
   
   // Create a merged value that includes our additional helper methods
