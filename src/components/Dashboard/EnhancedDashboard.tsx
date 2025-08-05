@@ -69,34 +69,34 @@ export function EnhancedDashboard() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-subtle">
+      <div className="min-h-screen flex w-full bg-background">
         <DashboardSidebar />
         
-        <div className="flex-1 flex flex-col">
-          {/* Modern Header */}
-          <header className="sticky top-0 z-40 border-b bg-card/80 backdrop-blur-md supports-[backdrop-filter]:bg-card/60">
-            <div className="flex h-16 items-center justify-between px-6">
-              <div className="flex items-center gap-4">
-                <SidebarTrigger className="p-2 hover:bg-accent rounded-md transition-colors" />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Clean Header - More like reference */}
+          <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="flex h-20 items-center justify-between px-8">
+              <div className="flex items-center gap-6">
+                <SidebarTrigger className="p-2 hover:bg-accent rounded-lg transition-colors" />
                 <div>
-                  <h1 className="text-xl font-bold text-foreground">Dashboard</h1>
-                  <p className="text-sm text-muted-foreground">Business Intelligence Overview</p>
+                  <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+                  <p className="text-sm text-muted-foreground">Business overview and key metrics</p>
                 </div>
               </div>
               
-              <div className="flex items-center gap-3">
-                <Button variant="ghost" size="sm" className="gap-2">
+              <div className="flex items-center gap-4">
+                <Button variant="ghost" size="sm" className="gap-2 h-9 px-4">
                   <Search className="h-4 w-4" />
                   Search
                 </Button>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
                   <Settings className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
                   <User className="h-4 w-4" />
                 </Button>
                 {unreadCount > 0 && (
-                  <Badge variant="destructive" className="ml-2">
+                  <Badge variant="destructive" className="h-5 min-w-[20px] text-xs">
                     {unreadCount}
                   </Badge>
                 )}
@@ -104,48 +104,102 @@ export function EnhancedDashboard() {
             </div>
           </header>
 
-          {/* Main Content */}
-          <main className="flex-1 p-6 space-y-8">
-            {/* Hero Section */}
-            <div className="space-y-2">
+          {/* Main Content - Much more spacious */}
+          <main className="flex-1 overflow-auto">
+            <div className="max-w-[1600px] mx-auto p-8 space-y-12">
+              {/* Page Title Section */}
               <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-3xl font-bold tracking-tight">Welcome back</h2>
-                  <p className="text-muted-foreground">
+                <div className="space-y-2">
+                  <h2 className="text-4xl font-bold tracking-tight text-foreground">
+                    Good morning, Admin
+                  </h2>
+                  <p className="text-lg text-muted-foreground">
                     Here's what's happening with your business today.
                   </p>
                 </div>
-                <Badge variant="outline" className="flex items-center gap-2 bg-success/10 text-success border-success/20">
-                  <TrendingUp className="h-3 w-3" />
+                <Badge variant="outline" className="flex items-center gap-2 px-4 py-2 bg-success/5 text-success border-success/20 rounded-full">
+                  <div className="h-2 w-2 bg-success rounded-full animate-pulse" />
                   All Systems Operational
                 </Badge>
               </div>
-            </div>
 
-            {/* Metrics Grid */}
-            <MetricsGrid
-              totalClients={totalClients}
-              growthRate={12}
-              clientCounts={{
-                active: clientCounts.active,
-                'at-risk': clientCounts["at-risk"],
-                new: clientCounts.new
-              }}
-              percentages={{
-                activeClientsPercentage: (clientCounts.active / totalClients) * 100,
-                atRiskPercentage: (clientCounts["at-risk"] / totalClients) * 100,
-                newPercentage: (clientCounts.new / totalClients) * 100
-              }}
-              successRate={rates.retentionRate}
-              churnRate={rates.churnRate}
-            />
+              {/* Key Metrics - Larger spacing like reference */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-semibold text-foreground">Key Performance Indicators</h3>
+                  <Button variant="outline" size="sm">View All Reports</Button>
+                </div>
+                
+                <MetricsGrid
+                  totalClients={totalClients}
+                  growthRate={12}
+                  clientCounts={{
+                    active: clientCounts.active,
+                    'at-risk': clientCounts["at-risk"],
+                    new: clientCounts.new
+                  }}
+                  percentages={{
+                    activeClientsPercentage: (clientCounts.active / totalClients) * 100,
+                    atRiskPercentage: (clientCounts["at-risk"] / totalClients) * 100,
+                    newPercentage: (clientCounts.new / totalClients) * 100
+                  }}
+                  successRate={rates.retentionRate}
+                  churnRate={rates.churnRate}
+                />
+              </div>
 
-            {/* Widgets Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <TaskManagementWidget />
-              <RenewalForecastWidget />
-              <CommunicationsTimelineWidget />
-              <OfferPerformanceWidget />
+              {/* Analytics Section - Better spacing */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-semibold text-foreground">Business Analytics</h3>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm">Export Data</Button>
+                    <Button variant="outline" size="sm">Customize View</Button>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                  <Card className="card-premium">
+                    <CardHeader className="pb-6">
+                      <CardTitle className="text-lg">Revenue Analytics</CardTitle>
+                      <CardDescription>Monthly recurring revenue and growth trends</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <OfferPerformanceWidget />
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="card-premium">
+                    <CardHeader className="pb-6">
+                      <CardTitle className="text-lg">Client Management</CardTitle>
+                      <CardDescription>Upcoming renewals and client health metrics</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <RenewalForecastWidget />
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="card-premium">
+                    <CardHeader className="pb-6">
+                      <CardTitle className="text-lg">Task Overview</CardTitle>
+                      <CardDescription>Pending tasks and team productivity</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <TaskManagementWidget />
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="card-premium">
+                    <CardHeader className="pb-6">
+                      <CardTitle className="text-lg">Communications</CardTitle>
+                      <CardDescription>Recent client interactions and updates</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <CommunicationsTimelineWidget />
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
             </div>
           </main>
         </div>

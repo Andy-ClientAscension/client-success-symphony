@@ -52,10 +52,10 @@ export function DashboardSidebar() {
   const getNavClasses = (itemUrl: string) => {
     const active = isActive(itemUrl);
     return cn(
-      'transition-all duration-200 group relative',
+      'flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 group relative text-left',
       active 
         ? 'bg-primary text-primary-foreground shadow-sm font-medium' 
-        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+        : 'text-muted-foreground hover:text-foreground hover:bg-accent/80'
     );
   };
 
@@ -64,25 +64,25 @@ export function DashboardSidebar() {
     groupLabel: string
   ) => (
     <SidebarGroup>
-      <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3">
+      <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wide text-muted-foreground px-8 mb-4">
         {groupLabel}
       </SidebarGroupLabel>
       <SidebarGroupContent>
-        <SidebarMenu className="space-y-1">
+        <SidebarMenu className="space-y-2 px-6">
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild>
+              <SidebarMenuButton asChild className="h-11">
                 <NavLink
                   to={item.url}
                   end
                   className={getNavClasses(item.url)}
                 >
-                  <item.icon className="h-4 w-4 transition-colors mr-3" />
+                  <item.icon className="h-5 w-5 transition-colors mr-4" />
                   <span className="text-sm font-medium">
                     {item.title}
                   </span>
                   {isActive(item.url) && (
-                    <div className="absolute right-2 h-1.5 w-1.5 rounded-full bg-current" />
+                    <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
                   )}
                 </NavLink>
               </SidebarMenuButton>
@@ -94,27 +94,26 @@ export function DashboardSidebar() {
   );
 
   return (
-    <Sidebar
-      className="border-r bg-card/50 backdrop-blur-sm transition-all duration-300 w-64"
-      collapsible="icon"
-    >
-      <SidebarContent className="py-4">
-        {/* Brand Section */}
-        <div className="px-6 mb-6">
-          <div>
-            <h2 className="text-lg font-bold text-primary">Client Ascension</h2>
-            <p className="text-xs text-muted-foreground">Business Intelligence</p>
+    <Sidebar className="border-r bg-background w-72 min-w-72">
+      <SidebarContent className="py-8">
+        {/* Brand Section - More spacious */}
+        <div className="px-8 mb-10">
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold text-primary">Client Ascension</h2>
+            <p className="text-sm text-muted-foreground">Business Intelligence Platform</p>
           </div>
         </div>
 
-        {/* Main Navigation */}
-        {renderNavGroup(mainNavItems, 'Main')}
-        
-        {/* Management */}
-        {renderNavGroup(managementItems, 'Management')}
-        
-        {/* System */}
-        {renderNavGroup(systemItems, 'System')}
+        <div className="space-y-8">
+          {/* Main Navigation */}
+          {renderNavGroup(mainNavItems, 'Dashboard')}
+          
+          {/* Management */}
+          {renderNavGroup(managementItems, 'Management')}
+          
+          {/* System */}
+          {renderNavGroup(systemItems, 'Settings')}
+        </div>
       </SidebarContent>
     </Sidebar>
   );

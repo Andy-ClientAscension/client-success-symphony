@@ -81,7 +81,7 @@ export function MetricCard({
   return (
     <Card 
       className={cn(
-        'card-metric p-6 hover-lift',
+        'card-premium p-8 hover-lift border-0 shadow-md',
         variantStyles[variant],
         className
       )}
@@ -89,20 +89,20 @@ export function MetricCard({
     >
       <CardContent className="p-0">
         <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-muted-foreground">
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
               {title}
             </p>
-            <p className="text-2xl font-bold tracking-tight">
+            <p className="text-3xl font-bold tracking-tight text-foreground">
               {value}
             </p>
             {trend && (
               <div className={cn(
-                'flex items-center space-x-1 text-xs',
+                'flex items-center space-x-2 text-sm',
                 getTrendColor()
               )}>
                 {getTrendIcon()}
-                <span>{trend.value}%</span>
+                <span className="font-medium">{trend.value}%</span>
                 {trend.label && (
                   <span className="text-muted-foreground">{trend.label}</span>
                 )}
@@ -111,10 +111,10 @@ export function MetricCard({
           </div>
           
           <div className={cn(
-            'rounded-full p-3 transition-colors',
+            'rounded-2xl p-4 transition-colors',
             iconBgStyles[variant]
           )}>
-            <div className={cn('h-5 w-5', iconColorStyles[variant])}>
+            <div className={cn('h-6 w-6', iconColorStyles[variant])}>
               {icon}
             </div>
           </div>

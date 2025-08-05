@@ -145,8 +145,8 @@ export function MetricsGrid({
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-stagger">
-      {metrics.map((metric, index) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      {metrics.slice(0, 4).map((metric, index) => (
         <MetricCard
           key={metric.title}
           title={metric.title}
