@@ -3,13 +3,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { DashboardSidebar } from './Layout/DashboardSidebar';
-import { MetricsGrid } from './Metrics/MetricsGrid';
+import { MetricCard } from './Metrics/MetricCard';
 import { 
   TrendingUp,
-  Menu,
   Search,
   Settings,
-  User
+  Users,
+  Heart,
+  DollarSign
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -69,137 +70,110 @@ export function EnhancedDashboard() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="min-h-screen flex w-full bg-gray-50">
         <DashboardSidebar />
         
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Clean Header - More like reference */}
-          <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="flex h-20 items-center justify-between px-8">
-              <div className="flex items-center gap-6">
-                <SidebarTrigger className="p-2 hover:bg-accent rounded-lg transition-colors" />
-                <div>
-                  <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-                  <p className="text-sm text-muted-foreground">Business overview and key metrics</p>
-                </div>
+        <div className="flex-1 flex flex-col">
+          {/* Clean Header - matching reference */}
+          <header className="bg-white border-b border-gray-200 h-16">
+            <div className="flex h-full items-center justify-between px-6">
+              <div className="flex items-center gap-4">
+                <SidebarTrigger />
+                <h1 className="text-lg font-semibold text-gray-900">Dashboard</h1>
               </div>
               
               <div className="flex items-center gap-4">
-                <Button variant="ghost" size="sm" className="gap-2 h-9 px-4">
-                  <Search className="h-4 w-4" />
-                  Search
-                </Button>
-                <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input 
+                    type="text" 
+                    placeholder="Search here"
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm w-64"
+                  />
+                </div>
+                <Button variant="ghost" size="sm">
                   <Settings className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
-                  <User className="h-4 w-4" />
-                </Button>
-                {unreadCount > 0 && (
-                  <Badge variant="destructive" className="h-5 min-w-[20px] text-xs">
-                    {unreadCount}
-                  </Badge>
-                )}
+                <div className="h-8 w-8 rounded-full bg-gray-300"></div>
               </div>
             </div>
           </header>
 
-          {/* Main Content - Much more spacious */}
-          <main className="flex-1 overflow-auto">
-            <div className="max-w-[1800px] mx-auto p-12 space-y-16">
-              {/* Page Title Section - Much larger */}
-              <div className="flex items-center justify-between py-8">
-                <div className="space-y-4">
-                  <h2 className="text-5xl font-bold tracking-tight text-foreground">
-                    Good morning, Admin
-                  </h2>
-                  <p className="text-xl text-muted-foreground">
-                    Here's what's happening with your business today.
-                  </p>
-                </div>
-                <Badge variant="outline" className="flex items-center gap-3 px-6 py-3 bg-success/5 text-success border-success/20 rounded-full text-base">
-                  <div className="h-3 w-3 bg-success rounded-full animate-pulse" />
-                  All Systems Operational
-                </Badge>
-              </div>
+          {/* Main Content - proper spacing like reference */}
+          <main className="flex-1 p-6">
+            {/* Metrics Cards Row - exactly like reference */}
+            <div className="grid grid-cols-4 gap-6 mb-6">
+              <MetricCard
+                title="Total Clients"
+                value={totalClients}
+                icon={<Users />}
+                trend={{ value: 13, direction: 'up', label: 'of target' }}
+                variant="primary"
+                iconColor="bg-orange-100 text-orange-600"
+              />
+              <MetricCard
+                title="Active Clients"
+                value={clientCounts.active}
+                icon={<Heart />}
+                trend={{ value: 12, direction: 'up', label: 'of target' }}
+                variant="success"
+                iconColor="bg-purple-100 text-purple-600"
+              />
+              <MetricCard
+                title="Monthly Revenue"
+                value={`$${Math.round(totalMRR)}`}
+                icon={<DollarSign />}
+                trend={{ value: 9, direction: 'down', label: 'of target' }}
+                variant="success"
+                iconColor="bg-green-100 text-green-600"
+              />
+              <MetricCard
+                title="Deals Closed"
+                value={totalDealsClosed}
+                icon={<TrendingUp />}
+                trend={{ value: 3, direction: 'up', label: 'of target' }}
+                variant="warning"
+                iconColor="bg-yellow-100 text-yellow-600"
+              />
+            </div>
 
-              {/* Key Metrics - Much larger spacing */}
-              <div className="space-y-10">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-2xl font-semibold text-foreground">Key Performance Indicators</h3>
-                  <Button variant="outline" size="lg" className="h-12 px-6">View All Reports</Button>
-                </div>
-                
-                <MetricsGrid
-                  totalClients={totalClients}
-                  growthRate={12}
-                  clientCounts={{
-                    active: clientCounts.active,
-                    'at-risk': clientCounts["at-risk"],
-                    new: clientCounts.new
-                  }}
-                  percentages={{
-                    activeClientsPercentage: (clientCounts.active / totalClients) * 100,
-                    atRiskPercentage: (clientCounts["at-risk"] / totalClients) * 100,
-                    newPercentage: (clientCounts.new / totalClients) * 100
-                  }}
-                  successRate={rates.retentionRate}
-                  churnRate={rates.churnRate}
-                />
-              </div>
-
-              {/* Analytics Section - Much bigger spacing */}
-              <div className="space-y-10">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-2xl font-semibold text-foreground">Business Analytics</h3>
-                  <div className="flex gap-4">
-                    <Button variant="outline" size="lg" className="h-12 px-6">Export Data</Button>
-                    <Button variant="outline" size="lg" className="h-12 px-6">Customize View</Button>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
-                  <Card className="card-premium min-h-[400px]">
-                    <CardHeader className="pb-8 p-8">
-                      <CardTitle className="text-xl">Revenue Analytics</CardTitle>
-                      <CardDescription className="text-base">Monthly recurring revenue and growth trends</CardDescription>
-                    </CardHeader>
-                    <CardContent className="px-8 pb-8">
-                      <OfferPerformanceWidget />
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="card-premium min-h-[400px]">
-                    <CardHeader className="pb-8 p-8">
-                      <CardTitle className="text-xl">Client Management</CardTitle>
-                      <CardDescription className="text-base">Upcoming renewals and client health metrics</CardDescription>
-                    </CardHeader>
-                    <CardContent className="px-8 pb-8">
-                      <RenewalForecastWidget />
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="card-premium min-h-[400px]">
-                    <CardHeader className="pb-8 p-8">
-                      <CardTitle className="text-xl">Task Overview</CardTitle>
-                      <CardDescription className="text-base">Pending tasks and team productivity</CardDescription>
-                    </CardHeader>
-                    <CardContent className="px-8 pb-8">
-                      <TaskManagementWidget />
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="card-premium min-h-[400px]">
-                    <CardHeader className="pb-8 p-8">
-                      <CardTitle className="text-xl">Communications</CardTitle>
-                      <CardDescription className="text-base">Recent client interactions and updates</CardDescription>
-                    </CardHeader>
-                    <CardContent className="px-8 pb-8">
-                      <CommunicationsTimelineWidget />
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
+            {/* Charts Grid - 2x2 like reference */}
+            <div className="grid grid-cols-2 gap-6">
+              <Card className="bg-white border border-gray-200 rounded-lg">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-base font-semibold">Revenue Analytics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <OfferPerformanceWidget />
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-white border border-gray-200 rounded-lg">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-base font-semibold">Client Activity</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <RenewalForecastWidget />
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-white border border-gray-200 rounded-lg">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-base font-semibold">Task Overview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <TaskManagementWidget />
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-white border border-gray-200 rounded-lg">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-base font-semibold">Communications</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CommunicationsTimelineWidget />
+                </CardContent>
+              </Card>
             </div>
           </main>
         </div>

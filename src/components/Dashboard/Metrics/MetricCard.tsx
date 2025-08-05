@@ -17,6 +17,7 @@ interface MetricCardProps {
   className?: string;
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'danger';
   style?: React.CSSProperties;
+  iconColor?: string;
 }
 
 export function MetricCard({ 
@@ -26,7 +27,8 @@ export function MetricCard({
   trend, 
   className,
   variant = 'default',
-  style 
+  style,
+  iconColor = 'bg-gray-100 text-gray-600'
 }: MetricCardProps) {
   const variantStyles = {
     default: 'border-border',
@@ -79,44 +81,33 @@ export function MetricCard({
   };
 
   return (
-    <Card 
-      className={cn(
-        'card-premium p-10 hover-lift border-0 shadow-lg min-h-[200px]',
-        variantStyles[variant],
-        className
-      )}
-      style={style}
-    >
+    <Card className={cn(
+      'bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow',
+      className
+    )} style={style}>
       <CardContent className="p-0">
-        <div className="flex items-start justify-between h-full">
-          <div className="space-y-4 flex-1">
-            <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-              {title}
-            </p>
-            <p className="text-4xl font-bold tracking-tight text-foreground">
-              {value}
-            </p>
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className={cn('w-12 h-12 rounded-lg flex items-center justify-center mb-4', iconColor)}>
+              <div className="h-6 w-6">
+                {icon}
+              </div>
+            </div>
+            <h3 className="text-sm font-medium text-gray-600 mb-1">{title}</h3>
+            <p className="text-2xl font-bold text-gray-900 mb-2">{value}</p>
             {trend && (
               <div className={cn(
-                'flex items-center space-x-3 text-base',
-                getTrendColor()
+                'flex items-center text-sm',
+                trend.direction === 'up' ? 'text-green-600' : 'text-red-500'
               )}>
-                {getTrendIcon()}
-                <span className="font-semibold">{trend.value}%</span>
-                {trend.label && (
-                  <span className="text-muted-foreground">{trend.label}</span>
+                {trend.direction === 'up' ? (
+                  <ArrowUpIcon className="h-3 w-3 mr-1" />
+                ) : (
+                  <ArrowDownIcon className="h-3 w-3 mr-1" />
                 )}
+                <span className="font-medium">{trend.value}% {trend.label}</span>
               </div>
             )}
-          </div>
-          
-          <div className={cn(
-            'rounded-2xl p-5 transition-colors',
-            iconBgStyles[variant]
-          )}>
-            <div className={cn('h-8 w-8', iconColorStyles[variant])}>
-              {icon}
-            </div>
           </div>
         </div>
       </CardContent>
