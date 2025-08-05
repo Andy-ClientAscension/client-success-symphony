@@ -106,28 +106,28 @@ export function EnhancedDashboard() {
 
           {/* Main Content - Much more spacious */}
           <main className="flex-1 overflow-auto">
-            <div className="max-w-[1600px] mx-auto p-8 space-y-12">
-              {/* Page Title Section */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-2">
-                  <h2 className="text-4xl font-bold tracking-tight text-foreground">
+            <div className="max-w-[1800px] mx-auto p-12 space-y-16">
+              {/* Page Title Section - Much larger */}
+              <div className="flex items-center justify-between py-8">
+                <div className="space-y-4">
+                  <h2 className="text-5xl font-bold tracking-tight text-foreground">
                     Good morning, Admin
                   </h2>
-                  <p className="text-lg text-muted-foreground">
+                  <p className="text-xl text-muted-foreground">
                     Here's what's happening with your business today.
                   </p>
                 </div>
-                <Badge variant="outline" className="flex items-center gap-2 px-4 py-2 bg-success/5 text-success border-success/20 rounded-full">
-                  <div className="h-2 w-2 bg-success rounded-full animate-pulse" />
+                <Badge variant="outline" className="flex items-center gap-3 px-6 py-3 bg-success/5 text-success border-success/20 rounded-full text-base">
+                  <div className="h-3 w-3 bg-success rounded-full animate-pulse" />
                   All Systems Operational
                 </Badge>
               </div>
 
-              {/* Key Metrics - Larger spacing like reference */}
-              <div className="space-y-6">
+              {/* Key Metrics - Much larger spacing */}
+              <div className="space-y-10">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-semibold text-foreground">Key Performance Indicators</h3>
-                  <Button variant="outline" size="sm">View All Reports</Button>
+                  <h3 className="text-2xl font-semibold text-foreground">Key Performance Indicators</h3>
+                  <Button variant="outline" size="lg" className="h-12 px-6">View All Reports</Button>
                 </div>
                 
                 <MetricsGrid
@@ -148,53 +148,53 @@ export function EnhancedDashboard() {
                 />
               </div>
 
-              {/* Analytics Section - Better spacing */}
-              <div className="space-y-6">
+              {/* Analytics Section - Much bigger spacing */}
+              <div className="space-y-10">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-semibold text-foreground">Business Analytics</h3>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm">Export Data</Button>
-                    <Button variant="outline" size="sm">Customize View</Button>
+                  <h3 className="text-2xl font-semibold text-foreground">Business Analytics</h3>
+                  <div className="flex gap-4">
+                    <Button variant="outline" size="lg" className="h-12 px-6">Export Data</Button>
+                    <Button variant="outline" size="lg" className="h-12 px-6">Customize View</Button>
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                  <Card className="card-premium">
-                    <CardHeader className="pb-6">
-                      <CardTitle className="text-lg">Revenue Analytics</CardTitle>
-                      <CardDescription>Monthly recurring revenue and growth trends</CardDescription>
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
+                  <Card className="card-premium min-h-[400px]">
+                    <CardHeader className="pb-8 p-8">
+                      <CardTitle className="text-xl">Revenue Analytics</CardTitle>
+                      <CardDescription className="text-base">Monthly recurring revenue and growth trends</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="px-8 pb-8">
                       <OfferPerformanceWidget />
                     </CardContent>
                   </Card>
                   
-                  <Card className="card-premium">
-                    <CardHeader className="pb-6">
-                      <CardTitle className="text-lg">Client Management</CardTitle>
-                      <CardDescription>Upcoming renewals and client health metrics</CardDescription>
+                  <Card className="card-premium min-h-[400px]">
+                    <CardHeader className="pb-8 p-8">
+                      <CardTitle className="text-xl">Client Management</CardTitle>
+                      <CardDescription className="text-base">Upcoming renewals and client health metrics</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="px-8 pb-8">
                       <RenewalForecastWidget />
                     </CardContent>
                   </Card>
                   
-                  <Card className="card-premium">
-                    <CardHeader className="pb-6">
-                      <CardTitle className="text-lg">Task Overview</CardTitle>
-                      <CardDescription>Pending tasks and team productivity</CardDescription>
+                  <Card className="card-premium min-h-[400px]">
+                    <CardHeader className="pb-8 p-8">
+                      <CardTitle className="text-xl">Task Overview</CardTitle>
+                      <CardDescription className="text-base">Pending tasks and team productivity</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="px-8 pb-8">
                       <TaskManagementWidget />
                     </CardContent>
                   </Card>
                   
-                  <Card className="card-premium">
-                    <CardHeader className="pb-6">
-                      <CardTitle className="text-lg">Communications</CardTitle>
-                      <CardDescription>Recent client interactions and updates</CardDescription>
+                  <Card className="card-premium min-h-[400px]">
+                    <CardHeader className="pb-8 p-8">
+                      <CardTitle className="text-xl">Communications</CardTitle>
+                      <CardDescription className="text-base">Recent client interactions and updates</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="px-8 pb-8">
                       <CommunicationsTimelineWidget />
                     </CardContent>
                   </Card>

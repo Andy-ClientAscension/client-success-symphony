@@ -81,28 +81,28 @@ export function MetricCard({
   return (
     <Card 
       className={cn(
-        'card-premium p-8 hover-lift border-0 shadow-md',
+        'card-premium p-10 hover-lift border-0 shadow-lg min-h-[200px]',
         variantStyles[variant],
         className
       )}
       style={style}
     >
       <CardContent className="p-0">
-        <div className="flex items-start justify-between">
-          <div className="space-y-3">
-            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+        <div className="flex items-start justify-between h-full">
+          <div className="space-y-4 flex-1">
+            <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
               {title}
             </p>
-            <p className="text-3xl font-bold tracking-tight text-foreground">
+            <p className="text-4xl font-bold tracking-tight text-foreground">
               {value}
             </p>
             {trend && (
               <div className={cn(
-                'flex items-center space-x-2 text-sm',
+                'flex items-center space-x-3 text-base',
                 getTrendColor()
               )}>
                 {getTrendIcon()}
-                <span className="font-medium">{trend.value}%</span>
+                <span className="font-semibold">{trend.value}%</span>
                 {trend.label && (
                   <span className="text-muted-foreground">{trend.label}</span>
                 )}
@@ -111,10 +111,10 @@ export function MetricCard({
           </div>
           
           <div className={cn(
-            'rounded-2xl p-4 transition-colors',
+            'rounded-2xl p-5 transition-colors',
             iconBgStyles[variant]
           )}>
-            <div className={cn('h-6 w-6', iconColorStyles[variant])}>
+            <div className={cn('h-8 w-8', iconColorStyles[variant])}>
               {icon}
             </div>
           </div>
