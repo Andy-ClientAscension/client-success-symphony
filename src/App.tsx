@@ -109,22 +109,16 @@ function App() {
         <QueryClientProvider client={queryClient}>
           <AppInitializer>
             <Suspense fallback={<CriticalLoadingState message="Loading application..." timeout={3000} />}>
-              <AuthProvider>
-                <AuthStateMachineProvider>
-                  <AuthErrorBoundary>
-                    <SessionValidator>
-                      <WebVitalsMonitor />
-                      <PerformanceDebugger visible={process.env.NODE_ENV === 'development'} />
-                      <NavigationProgressBar variant="brand" />
-                      <BrowserCompatibilityCheck />
-                      <OfflineDetector />
-                      <OfflineBanner position="bottom" />
-                      <Toaster />
-                      <AppRoutes />
-                    </SessionValidator>
-                  </AuthErrorBoundary>
-                </AuthStateMachineProvider>
-              </AuthProvider>
+              <AuthErrorBoundary>
+                <WebVitalsMonitor />
+                <PerformanceDebugger visible={process.env.NODE_ENV === 'development'} />
+                <NavigationProgressBar variant="brand" />
+                <BrowserCompatibilityCheck />
+                <OfflineDetector />
+                <OfflineBanner position="bottom" />
+                <Toaster />
+                <AppRoutes />
+              </AuthErrorBoundary>
             </Suspense>
           </AppInitializer>
         </QueryClientProvider>
