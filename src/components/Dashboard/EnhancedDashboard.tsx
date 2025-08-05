@@ -47,16 +47,16 @@ export function EnhancedDashboard() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 animate-fade-up">
+      {/* Enhanced Header */}
+      <div className="flex items-center justify-between p-6 bg-gradient-primary rounded-xl text-white shadow-lg">
         <div>
-          <h1 className="text-3xl font-bold">Enhanced Dashboard</h1>
-          <p className="text-muted-foreground">
-            Comprehensive view of your business operations
+          <h1 className="text-4xl font-bold mb-2">Client Ascension</h1>
+          <p className="text-white/90 text-lg">
+            Comprehensive Business Intelligence Dashboard
           </p>
         </div>
-        <Badge variant="outline" className="flex items-center gap-2">
+        <Badge variant="outline" className="flex items-center gap-2 bg-white/20 border-white/30 text-white hover:bg-white/30">
           <TrendingUp className="h-4 w-4" />
           All Systems Active
         </Badge>
@@ -89,49 +89,57 @@ export function EnhancedDashboard() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          {/* Quick Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
+          {/* Enhanced Stats Cards with Animations */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-stagger">
+            <Card className="card-elevated hover-scale">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Active Tasks</CardTitle>
-                <CheckSquare className="h-4 w-4 text-muted-foreground" />
+                <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
+                  <CheckSquare className="h-4 w-4 text-primary" />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.pendingTasks}</div>
-                <p className="text-xs text-muted-foreground">Pending tasks</p>
+                <div className="text-3xl font-bold text-gradient-primary">{stats.pendingTasks}</div>
+                <p className="text-xs text-muted-foreground mt-1">Pending tasks</p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="card-elevated hover-scale">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Upcoming Renewals</CardTitle>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
+                  <Calendar className="h-4 w-4 text-primary" />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.upcomingRenewals}</div>
-                <p className="text-xs text-muted-foreground">Next 30 days</p>
+                <div className="text-3xl font-bold text-gradient-primary">{stats.upcomingRenewals}</div>
+                <p className="text-xs text-muted-foreground mt-1">Next 30 days</p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="card-elevated hover-scale">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Communications</CardTitle>
-                <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
+                  <MessageSquare className="h-4 w-4 text-primary" />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.recentCommunications}</div>
-                <p className="text-xs text-muted-foreground">This week</p>
+                <div className="text-3xl font-bold text-gradient-primary">{stats.recentCommunications}</div>
+                <p className="text-xs text-muted-foreground mt-1">This week</p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="card-elevated hover-scale">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Pending Offers</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
+                  <DollarSign className="h-4 w-4 text-primary" />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.pendingOffers}</div>
-                <p className="text-xs text-muted-foreground">Awaiting response</p>
+                <div className="text-3xl font-bold text-gradient-primary">{stats.pendingOffers}</div>
+                <p className="text-xs text-muted-foreground mt-1">Awaiting response</p>
               </CardContent>
             </Card>
           </div>
