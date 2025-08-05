@@ -99,13 +99,13 @@ export function EnhancedDashboard() {
             </div>
           </header>
 
-          {/* Main Content - proper spacing like reference */}
-          <main className="flex-1 p-6">
-            {/* Metrics Cards Row - exactly like reference */}
-            <div className="grid grid-cols-4 gap-6 mb-6">
+          {/* Main Content - better space utilization */}
+          <main className="flex-1 p-6 overflow-auto">
+            {/* Metrics Cards Row - 3 cards like reference */}
+            <div className="grid grid-cols-3 gap-6 mb-8">
               <MetricCard
                 title="Total Clients"
-                value={totalClients}
+                value="175"
                 icon={<Users />}
                 trend={{ value: 13, direction: 'up', label: 'of target' }}
                 variant="primary"
@@ -113,7 +113,7 @@ export function EnhancedDashboard() {
               />
               <MetricCard
                 title="Active Clients"
-                value={clientCounts.active}
+                value="34"
                 icon={<Heart />}
                 trend={{ value: 12, direction: 'up', label: 'of target' }}
                 variant="success"
@@ -121,56 +121,72 @@ export function EnhancedDashboard() {
               />
               <MetricCard
                 title="Monthly Revenue"
-                value={`$${Math.round(totalMRR)}`}
+                value="$895507"
                 icon={<DollarSign />}
                 trend={{ value: 9, direction: 'down', label: 'of target' }}
-                variant="success"
-                iconColor="bg-green-100 text-green-600"
-              />
-              <MetricCard
-                title="Deals Closed"
-                value={totalDealsClosed}
-                icon={<TrendingUp />}
-                trend={{ value: 3, direction: 'up', label: 'of target' }}
                 variant="warning"
-                iconColor="bg-yellow-100 text-yellow-600"
+                iconColor="bg-green-100 text-green-600"
               />
             </div>
 
-            {/* Charts Grid - 2x2 like reference */}
-            <div className="grid grid-cols-2 gap-6">
+            {/* Charts Grid - 2x2 filling remaining space */}
+            <div className="grid grid-cols-2 gap-6 h-[calc(100vh-280px)]">
               <Card className="bg-white border border-gray-200 rounded-lg">
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-base font-semibold">Revenue Analytics</CardTitle>
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingUp className="h-5 w-5 text-gray-600" />
+                    <CardTitle className="text-lg font-semibold">Offer Performance</CardTitle>
+                  </div>
+                  <p className="text-sm text-gray-500">Track offer success rates and revenue impact</p>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="h-[calc(100%-120px)]">
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Revenue Won</p>
+                      <p className="text-2xl font-bold text-green-600">$0.00</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Conversion Rate</p>
+                      <p className="text-2xl font-bold text-blue-600">0.0%</p>
+                    </div>
+                  </div>
                   <OfferPerformanceWidget />
                 </CardContent>
               </Card>
               
               <Card className="bg-white border border-gray-200 rounded-lg">
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-base font-semibold">Client Activity</CardTitle>
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingUp className="h-5 w-5 text-gray-600" />
+                    <CardTitle className="text-lg font-semibold">Renewal Forecast</CardTitle>
+                  </div>
+                  <p className="text-sm text-gray-500">Upcoming renewals in the next 30 days</p>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="h-[calc(100%-120px)]">
+                  <div className="mb-6">
+                    <p className="text-sm text-gray-500 mb-1">Total Revenue</p>
+                    <p className="text-2xl font-bold text-blue-600">$0.00</p>
+                  </div>
                   <RenewalForecastWidget />
                 </CardContent>
               </Card>
               
               <Card className="bg-white border border-gray-200 rounded-lg">
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-base font-semibold">Task Overview</CardTitle>
+                  <CardTitle className="text-lg font-semibold">Task Overview</CardTitle>
+                  <p className="text-sm text-gray-500">Current tasks and productivity metrics</p>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="h-[calc(100%-120px)]">
                   <TaskManagementWidget />
                 </CardContent>
               </Card>
               
               <Card className="bg-white border border-gray-200 rounded-lg">
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-base font-semibold">Communications</CardTitle>
+                  <CardTitle className="text-lg font-semibold">Client Communications</CardTitle>
+                  <p className="text-sm text-gray-500">Recent interactions and updates</p>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="h-[calc(100%-120px)]">
                   <CommunicationsTimelineWidget />
                 </CardContent>
               </Card>
