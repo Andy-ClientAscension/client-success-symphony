@@ -54,7 +54,7 @@ export function useSessionManager({
         window.removeEventListener(event, resetInactivityTimer);
       });
     };
-  }, [sessionTimeoutMinutes, sessionExpiryTime, onExpired, onInactive]);
+  }, [sessionTimeoutMinutes, onExpired, onInactive]);
   
   return { sessionExpiryTime };
 }
