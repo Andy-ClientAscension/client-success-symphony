@@ -43,47 +43,43 @@ export function SSCPerformanceMetrics({ csm, clients }: SSCPerformanceMetricsPro
           <MetricCard
             title="Active Students"
             value={metrics.studentCount}
+            icon={<Users className="h-4 w-4" />}
             trend={{
-              value: "10",
+              value: 10,
               direction: "up",
-              text: "vs last month"
+              label: "vs last month"
             }}
-          >
-            <Users className="h-4 w-4" />
-          </MetricCard>
+          />
           <MetricCard
             title="Retention Rate"
             value={`${metrics.retentionRate}%`}
+            icon={<Heart className="h-4 w-4" />}
             trend={{
-              value: "5",
+              value: 5,
               direction: "up",
-              text: "vs last month"
+              label: "vs last month"
             }}
-          >
-            <Heart className="h-4 w-4" />
-          </MetricCard>
+          />
           <MetricCard
             title="Revenue Managed"
             value={formatCurrency(metrics.revenue)}
+            icon={<DollarSign className="h-4 w-4" />}
             trend={{
-              value: "8",
+              value: 8,
               direction: "up",
-              text: "vs last month"
+              label: "vs last month"
             }}
-          >
-            <DollarSign className="h-4 w-4" />
-          </MetricCard>
+          />
           <MetricCard
             title="Health Score"
             value={`${metrics.healthScore}%`}
+            icon={<Gauge className="h-4 w-4" />}
             trend={{
-              value: "3",
+              value: 3,
               direction: "up",
-              text: "vs last month"
+              label: "vs last month"
             }}
-          >
-            <Gauge className="h-4 w-4" />
-          </MetricCard>
+          />
         </ResponsiveGrid>
       </ScrollArea>
     </Card>

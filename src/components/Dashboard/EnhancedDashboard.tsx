@@ -1,37 +1,58 @@
 import { useState, useEffect } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { DashboardSidebar } from './Layout/DashboardSidebar';
+import { MetricsGrid } from './Metrics/MetricsGrid';
 import { 
-  BarChart3, 
-  Users, 
-  Bell, 
   TrendingUp,
-  Calendar,
-  MessageSquare,
-  CheckSquare,
-  DollarSign
+  Menu,
+  Search,
+  Settings,
+  User
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-// Import our new widgets
+// Import our widgets and data
 import { RenewalForecastWidget } from './Widgets/RenewalForecastWidget';
 import { TaskManagementWidget } from './Widgets/TaskManagementWidget';
 import { CommunicationsTimelineWidget } from './Widgets/CommunicationsTimelineWidget';
 import { OfferPerformanceWidget } from './Widgets/OfferPerformanceWidget';
-import { UserProfilesTable } from './UserManagement/UserProfilesTable';
-import { NotificationCenter } from './Notifications/NotificationCenter';
 import { useNotifications } from '@/hooks/useNotifications';
 import { getDashboardStats } from '@/lib/supabase-queries';
+import { getAllClients, getClientsCountByStatus } from '@/lib/data';
+import { calculateRates } from '@/utils/analyticsUtils';
 
 export function EnhancedDashboard() {
-  const [activeTab, setActiveTab] = useState('overview');
   const [stats, setStats] = useState({
     pendingTasks: 0,
     recentCommunications: 0,
     upcomingRenewals: 0,
     pendingOffers: 0
   });
+  
   const { unreadCount } = useNotifications();
+
+  // Get client data for metrics
+  const clients = getAllClients();
+  const clientCounts = getClientsCountByStatus();
+  const totalClients = Object.values(clientCounts).reduce((a, b) => a + b, 0);
+  
+  const statusCounts = {
+    active: clientCounts.active,
+    atRisk: clientCounts["at-risk"],
+    churned: clientCounts.churned,
+    new: clientCounts.new,
+    total: totalClients
+  };
+  
+  const rates = calculateRates(statusCounts);
+  
+  // Calculate performance metrics
+  const totalMRR = clients.reduce((sum, client) => sum + (client.mrr || 0), 0);
+  const totalCallsBooked = clients.reduce((sum, client) => sum + (client.callsBooked || 0), 0);
+  const totalDealsClosed = clients.reduce((sum, client) => sum + (client.dealsClosed || 0), 0);
+  const averageRevenuePerClient = totalClients > 0 ? totalMRR / totalClients : 0;
 
   useEffect(() => {
     loadStats();
@@ -47,144 +68,88 @@ export function EnhancedDashboard() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-up">
-      {/* Enhanced Header */}
-      <div className="flex items-center justify-between p-6 bg-gradient-primary rounded-xl text-white shadow-lg">
-        <div>
-          <h1 className="text-4xl font-bold mb-2">Client Ascension</h1>
-          <p className="text-white/90 text-lg">
-            Comprehensive Business Intelligence Dashboard
-          </p>
-        </div>
-        <Badge variant="outline" className="flex items-center gap-2 bg-white/20 border-white/30 text-white hover:bg-white/30">
-          <TrendingUp className="h-4 w-4" />
-          All Systems Active
-        </Badge>
-      </div>
-
-      {/* Main Content */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" />
-            Analytics
-          </TabsTrigger>
-          <TabsTrigger value="users" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            User Management
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex items-center gap-2">
-            <Bell className="h-4 w-4" />
-            Notifications
-            {unreadCount > 0 && (
-              <Badge variant="destructive" className="ml-1 text-xs">
-                {unreadCount}
-              </Badge>
-            )}
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-6">
-          {/* Enhanced Stats Cards with Animations */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-stagger">
-            <Card className="card-elevated hover-scale">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Tasks</CardTitle>
-                <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
-                  <CheckSquare className="h-4 w-4 text-primary" />
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-gradient-subtle">
+        <DashboardSidebar />
+        
+        <div className="flex-1 flex flex-col">
+          {/* Modern Header */}
+          <header className="sticky top-0 z-40 border-b bg-card/80 backdrop-blur-md supports-[backdrop-filter]:bg-card/60">
+            <div className="flex h-16 items-center justify-between px-6">
+              <div className="flex items-center gap-4">
+                <SidebarTrigger className="p-2 hover:bg-accent rounded-md transition-colors" />
+                <div>
+                  <h1 className="text-xl font-bold text-foreground">Dashboard</h1>
+                  <p className="text-sm text-muted-foreground">Business Intelligence Overview</p>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-gradient-primary">{stats.pendingTasks}</div>
-                <p className="text-xs text-muted-foreground mt-1">Pending tasks</p>
-              </CardContent>
-            </Card>
-
-            <Card className="card-elevated hover-scale">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Upcoming Renewals</CardTitle>
-                <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
-                  <Calendar className="h-4 w-4 text-primary" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-gradient-primary">{stats.upcomingRenewals}</div>
-                <p className="text-xs text-muted-foreground mt-1">Next 30 days</p>
-              </CardContent>
-            </Card>
-
-            <Card className="card-elevated hover-scale">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Communications</CardTitle>
-                <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
-                  <MessageSquare className="h-4 w-4 text-primary" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-gradient-primary">{stats.recentCommunications}</div>
-                <p className="text-xs text-muted-foreground mt-1">This week</p>
-              </CardContent>
-            </Card>
-
-            <Card className="card-elevated hover-scale">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pending Offers</CardTitle>
-                <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
-                  <DollarSign className="h-4 w-4 text-primary" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-gradient-primary">{stats.pendingOffers}</div>
-                <p className="text-xs text-muted-foreground mt-1">Awaiting response</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Main Widgets Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <TaskManagementWidget />
-            <RenewalForecastWidget />
-            <CommunicationsTimelineWidget />
-            <OfferPerformanceWidget />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="analytics" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <OfferPerformanceWidget />
-            <RenewalForecastWidget />
-          </div>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Detailed Analytics</CardTitle>
-              <CardDescription>
-                Comprehensive performance metrics and trends
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12">
-                <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">
-                  Advanced analytics dashboard coming soon
-                </p>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+              
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <Search className="h-4 w-4" />
+                  Search
+                </Button>
+                <Button variant="ghost" size="sm">
+                  <Settings className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="sm">
+                  <User className="h-4 w-4" />
+                </Button>
+                {unreadCount > 0 && (
+                  <Badge variant="destructive" className="ml-2">
+                    {unreadCount}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </header>
 
-        <TabsContent value="users" className="space-y-6">
-          <UserProfilesTable />
-        </TabsContent>
+          {/* Main Content */}
+          <main className="flex-1 p-6 space-y-8">
+            {/* Hero Section */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-3xl font-bold tracking-tight">Welcome back</h2>
+                  <p className="text-muted-foreground">
+                    Here's what's happening with your business today.
+                  </p>
+                </div>
+                <Badge variant="outline" className="flex items-center gap-2 bg-success/10 text-success border-success/20">
+                  <TrendingUp className="h-3 w-3" />
+                  All Systems Operational
+                </Badge>
+              </div>
+            </div>
 
-        <TabsContent value="notifications" className="space-y-6">
-          <NotificationCenter />
-        </TabsContent>
-      </Tabs>
-    </div>
+            {/* Metrics Grid */}
+            <MetricsGrid
+              totalClients={totalClients}
+              growthRate={12}
+              clientCounts={{
+                active: clientCounts.active,
+                'at-risk': clientCounts["at-risk"],
+                new: clientCounts.new
+              }}
+              percentages={{
+                activeClientsPercentage: (clientCounts.active / totalClients) * 100,
+                atRiskPercentage: (clientCounts["at-risk"] / totalClients) * 100,
+                newPercentage: (clientCounts.new / totalClients) * 100
+              }}
+              successRate={rates.retentionRate}
+              churnRate={rates.churnRate}
+            />
+
+            {/* Widgets Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <TaskManagementWidget />
+              <RenewalForecastWidget />
+              <CommunicationsTimelineWidget />
+              <OfferPerformanceWidget />
+            </div>
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 }
