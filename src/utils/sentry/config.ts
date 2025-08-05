@@ -1,6 +1,5 @@
 
 import * as Sentry from '@sentry/react';
-import { BrowserTracing } from '@sentry/tracing';
 import { supabase } from '@/integrations/supabase/client';
 
 // Initialize Sentry with proper configuration
@@ -30,8 +29,8 @@ export async function initializeSentry() {
     Sentry.init({
       dsn: dsn,
       integrations: [
-        new BrowserTracing(),
-        new Sentry.Replay(),
+        Sentry.browserTracingIntegration(),
+        Sentry.replayIntegration(),
       ],
       // Performance Monitoring
       tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,

@@ -1,7 +1,6 @@
 
 import { describe, it, expect, vi } from 'vitest';
-import { render } from '@testing-library/react';
-import { screen, fireEvent } from '@testing-library/dom';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { BackgroundProcessingIndicator, BackgroundTaskStatus } from '@/components/Dashboard/BackgroundProcessingIndicator';
 
 describe('BackgroundProcessingIndicator', () => {
