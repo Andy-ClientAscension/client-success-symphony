@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,10 +21,30 @@ import { OfferPerformanceWidget } from './Widgets/OfferPerformanceWidget';
 import { UserProfilesTable } from './UserManagement/UserProfilesTable';
 import { NotificationCenter } from './Notifications/NotificationCenter';
 import { useNotifications } from '@/hooks/useNotifications';
+import { getDashboardStats } from '@/lib/supabase-queries';
 
 export function EnhancedDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
+  const [stats, setStats] = useState({
+    pendingTasks: 0,
+    recentCommunications: 0,
+    upcomingRenewals: 0,
+    pendingOffers: 0
+  });
   const { unreadCount } = useNotifications();
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  const loadStats = async () => {
+    try {
+      const data = await getDashboardStats();
+      setStats(data);
+    } catch (error) {
+      console.error('Error loading dashboard stats:', error);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -77,18 +97,18 @@ export function EnhancedDashboard() {
                 <CheckSquare className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">12</div>
-                <p className="text-xs text-muted-foreground">+2 from yesterday</p>
+                <div className="text-2xl font-bold">{stats.pendingTasks}</div>
+                <p className="text-xs text-muted-foreground">Pending tasks</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pending Renewals</CardTitle>
+                <CardTitle className="text-sm font-medium">Upcoming Renewals</CardTitle>
                 <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">8</div>
+                <div className="text-2xl font-bold">{stats.upcomingRenewals}</div>
                 <p className="text-xs text-muted-foreground">Next 30 days</p>
               </CardContent>
             </Card>
@@ -99,19 +119,19 @@ export function EnhancedDashboard() {
                 <MessageSquare className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">24</div>
+                <div className="text-2xl font-bold">{stats.recentCommunications}</div>
                 <p className="text-xs text-muted-foreground">This week</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Revenue Pipeline</CardTitle>
+                <CardTitle className="text-sm font-medium">Pending Offers</CardTitle>
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$45.2K</div>
-                <p className="text-xs text-muted-foreground">+12% from last month</p>
+                <div className="text-2xl font-bold">{stats.pendingOffers}</div>
+                <p className="text-xs text-muted-foreground">Awaiting response</p>
               </CardContent>
             </Card>
           </div>
