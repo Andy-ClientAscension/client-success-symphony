@@ -4,13 +4,15 @@ import { Badge } from '@/components/ui/badge';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { DashboardSidebar } from './Layout/DashboardSidebar';
 import { MetricCard } from './Metrics/MetricCard';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { 
   TrendingUp,
   Search,
   Settings,
   Users,
   Heart,
-  DollarSign
+  DollarSign,
+  Bell
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -70,31 +72,37 @@ export function EnhancedDashboard() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
+      <div className="min-h-screen flex w-full bg-background">
         <DashboardSidebar />
         
         <div className="flex-1 flex flex-col">
-          {/* Clean Header - matching reference */}
-          <header className="bg-white border-b border-gray-200 h-16">
+          {/* Client Ascension Header */}
+          <header className="bg-card border-b border-border h-16">
             <div className="flex h-full items-center justify-between px-6">
               <div className="flex items-center gap-4">
                 <SidebarTrigger />
-                <h1 className="text-lg font-semibold text-gray-900">Dashboard</h1>
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                    <span className="text-primary-foreground font-bold text-sm">CA</span>
+                  </div>
+                  <h1 className="text-xl font-bold text-foreground">Client Ascension</h1>
+                </div>
               </div>
               
               <div className="flex items-center gap-4">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <input 
                     type="text" 
-                    placeholder="Search here"
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm w-64"
+                    placeholder="Search students..."
+                    className="pl-10 pr-4 py-2 border border-border rounded-lg bg-background text-sm w-64 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
                 </div>
                 <Button variant="ghost" size="sm">
-                  <Settings className="h-4 w-4" />
+                  <Bell className="h-4 w-4" />
                 </Button>
-                <div className="h-8 w-8 rounded-full bg-gray-300"></div>
+                <ThemeToggle />
+                <div className="h-8 w-8 rounded-full bg-muted"></div>
               </div>
             </div>
           </header>
@@ -104,7 +112,7 @@ export function EnhancedDashboard() {
             {/* Metrics Cards Row - 3 cards like reference */}
             <div className="grid grid-cols-3 gap-6 mb-8">
               <MetricCard
-                title="Total Clients"
+                title="Total Students"
                 value="175"
                 icon={<Users />}
                 trend={{ value: 13, direction: 'up', label: 'of target' }}
@@ -112,7 +120,7 @@ export function EnhancedDashboard() {
                 iconColor="bg-orange-100 text-orange-600"
               />
               <MetricCard
-                title="Active Clients"
+                title="Active Students"
                 value="34"
                 icon={<Heart />}
                 trend={{ value: 12, direction: 'up', label: 'of target' }}
@@ -131,7 +139,7 @@ export function EnhancedDashboard() {
 
             {/* Charts Grid - 2x2 filling remaining space */}
             <div className="grid grid-cols-2 gap-6 h-[calc(100vh-280px)]">
-              <Card className="bg-white border border-gray-200 rounded-lg">
+              <Card className="card-elevated">
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-2 mb-2">
                     <TrendingUp className="h-5 w-5 text-gray-600" />
@@ -154,13 +162,13 @@ export function EnhancedDashboard() {
                 </CardContent>
               </Card>
               
-              <Card className="bg-white border border-gray-200 rounded-lg">
+              <Card className="card-elevated">
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="h-5 w-5 text-gray-600" />
+                    <TrendingUp className="h-5 w-5 text-muted-foreground" />
                     <CardTitle className="text-lg font-semibold">Renewal Forecast</CardTitle>
                   </div>
-                  <p className="text-sm text-gray-500">Upcoming renewals in the next 30 days</p>
+                  <p className="text-sm text-muted-foreground">Upcoming renewals in the next 30 days</p>
                 </CardHeader>
                 <CardContent className="h-[calc(100%-120px)]">
                   <div className="mb-6">
@@ -171,20 +179,20 @@ export function EnhancedDashboard() {
                 </CardContent>
               </Card>
               
-              <Card className="bg-white border border-gray-200 rounded-lg">
+              <Card className="card-elevated">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-lg font-semibold">Task Overview</CardTitle>
-                  <p className="text-sm text-gray-500">Current tasks and productivity metrics</p>
+                  <p className="text-sm text-muted-foreground">Current tasks and productivity metrics</p>
                 </CardHeader>
                 <CardContent className="h-[calc(100%-120px)]">
                   <TaskManagementWidget />
                 </CardContent>
               </Card>
               
-              <Card className="bg-white border border-gray-200 rounded-lg">
+              <Card className="card-elevated">
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-lg font-semibold">Client Communications</CardTitle>
-                  <p className="text-sm text-gray-500">Recent interactions and updates</p>
+                  <CardTitle className="text-lg font-semibold">Student Communications</CardTitle>
+                  <p className="text-sm text-muted-foreground">Recent interactions and updates</p>
                 </CardHeader>
                 <CardContent className="h-[calc(100%-120px)]">
                   <CommunicationsTimelineWidget />
