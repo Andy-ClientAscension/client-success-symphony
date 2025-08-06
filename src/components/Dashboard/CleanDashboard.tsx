@@ -163,126 +163,102 @@ export function CleanDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-[calc(100vh-200px)]">
               {/* Revenue Growth Chart */}
               <Card className="card-elevated">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                        <TrendingUp className="h-5 w-5 text-muted-foreground" />
-                        Revenue Growth
-                      </CardTitle>
-                      <p className="text-sm text-muted-foreground">Monthly recurring revenue and student growth</p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-primary rounded-full"></div>
-                      <span className="text-xs text-muted-foreground">MRR</span>
-                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                      <span className="text-xs text-muted-foreground">Students</span>
-                    </div>
-                  </div>
+                <CardHeader className="pb-1">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    Revenue Growth
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className="pt-2 h-[calc(100%-80px)]">
-                  <div className="h-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={growthData}>
-                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                        <XAxis 
-                          dataKey="month" 
-                          axisLine={false}
-                          tickLine={false}
-                          className="text-xs text-muted-foreground"
-                        />
-                        <YAxis 
-                          yAxisId="left"
-                          axisLine={false}
-                          tickLine={false}
-                          className="text-xs text-muted-foreground"
-                          tickFormatter={(value) => `$${value/1000}k`}
-                        />
-                        <YAxis 
-                          yAxisId="right"
-                          orientation="right"
-                          axisLine={false}
-                          tickLine={false}
-                          className="text-xs text-muted-foreground"
-                        />
-                        <Tooltip 
-                          formatter={(value, name) => [
-                            name === 'mrr' ? `$${value.toLocaleString()}` : value,
-                            name === 'mrr' ? 'MRR' : 'Students'
-                          ]}
-                          labelClassName="text-foreground"
-                          contentStyle={{
-                            backgroundColor: 'hsl(var(--card))',
-                            border: '1px solid hsl(var(--border))',
-                            borderRadius: '8px',
-                          }}
-                        />
-                        <Area 
-                          yAxisId="left"
-                          type="monotone" 
-                          dataKey="mrr" 
-                          stroke="hsl(var(--primary))" 
-                          fill="hsl(var(--primary))"
-                          fillOpacity={0.2}
-                          strokeWidth={2}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
+                <CardContent className="p-2">
+                  <ResponsiveContainer width="100%" height={75}>
+                    <AreaChart data={growthData}>
+                      <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                      <XAxis 
+                        dataKey="month" 
+                        axisLine={false}
+                        tickLine={false}
+                        className="text-xs text-muted-foreground"
+                        fontSize={10}
+                      />
+                      <YAxis 
+                        yAxisId="left"
+                        axisLine={false}
+                        tickLine={false}
+                        className="text-xs text-muted-foreground"
+                        tickFormatter={(value) => `$${value/1000}k`}
+                        fontSize={10}
+                      />
+                      <Tooltip 
+                        formatter={(value, name) => [
+                          name === 'mrr' ? `$${value.toLocaleString()}` : value,
+                          name === 'mrr' ? 'MRR' : 'Students'
+                        ]}
+                        labelClassName="text-foreground"
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                        }}
+                      />
+                      <Area 
+                        yAxisId="left"
+                        type="monotone" 
+                        dataKey="mrr" 
+                        stroke="hsl(var(--primary))" 
+                        fill="hsl(var(--primary))"
+                        fillOpacity={0.2}
+                        strokeWidth={1}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
                 </CardContent>
               </Card>
 
               {/* Student Health Distribution */}
               <Card className="card-elevated">
-                <CardHeader>
-                  <div>
-                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                      <Heart className="h-5 w-5 text-muted-foreground" />
-                      Student Health Distribution
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground">Health score breakdown by risk level</p>
-                  </div>
+                <CardHeader className="pb-1">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Heart className="h-4 w-4 text-muted-foreground" />
+                    Student Health Distribution
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className="pt-2 h-[calc(100%-80px)]">
-                  <div className="h-full pb-4">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={studentHealthData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={120}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {studentHealthData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip 
-                          formatter={(value) => [`${value}%`, 'Percentage']}
-                          labelClassName="text-foreground"
-                          contentStyle={{
-                            backgroundColor: 'hsl(var(--card))',
-                            border: '1px solid hsl(var(--border))',
-                            borderRadius: '8px',
-                          }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="flex-1 grid grid-cols-3 gap-2 mt-2">
+                <CardContent className="p-2">
+                  <ResponsiveContainer width="100%" height={75}>
+                    <PieChart>
+                      <Pie
+                        data={studentHealthData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={15}
+                        outerRadius={25}
+                        paddingAngle={2}
+                        dataKey="value"
+                      >
+                        {studentHealthData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value) => [`${value}%`, 'Percentage']}
+                        labelClassName="text-foreground"
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="grid grid-cols-3 gap-1 mt-1">
                     {studentHealthData.map((item, index) => (
                       <div key={index} className="text-center">
-                        <div className="flex items-center justify-center space-x-1 mb-1">
+                        <div className="flex items-center justify-center space-x-1">
                           <div 
-                            className="w-2 h-2 rounded-full" 
+                            className="w-1.5 h-1.5 rounded-full" 
                             style={{ backgroundColor: item.color }}
                           ></div>
                           <span className="text-xs font-medium">{item.value}%</span>
                         </div>
-                        <p className="text-xs text-muted-foreground">{item.name.replace(' (', '\n(')}</p>
                       </div>
                     ))}
                   </div>
