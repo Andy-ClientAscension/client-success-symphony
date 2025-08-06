@@ -2,13 +2,16 @@
 import { Layout } from "@/components/Layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { ArrowLeft, RefreshCw, Home } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { ValidationError } from "@/components/ValidationError";
 import { useQueryClient } from "@tanstack/react-query";
+
+// Enhanced UI components
+import { PageHeader } from "@/components/ui/page-header";
+import { EnhancedErrorBoundary } from "@/components/ui/error-boundary-enhanced";
+import { MetricCardEnhanced } from "@/components/ui/metric-card-enhanced";
+import { SkeletonCard, SkeletonChart } from "@/components/ui/skeleton-enhanced";
 
 // Import our analytics components
 import { CompanyMetrics } from "@/components/Dashboard/CompanyMetrics";
@@ -57,147 +60,217 @@ export default function Analytics() {
 
   return (
     <Layout>
-      <div className="flex-1 space-y-6">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Link to="/">
-              <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            </Link>
-            <h2 className="text-xl font-bold">Analytics Dashboard</h2>
-          </div>
-          
-          <div className="flex gap-2">
+      <div className="flex-1 space-y-6 animate-fade-up">
+        <PageHeader
+          title="Analytics Dashboard"
+          subtitle="Comprehensive view of your business metrics and performance"
+          showBackButton
+          showHomeButton
+          actions={
             <Button 
               variant="outline" 
               onClick={handleRefreshData}
               disabled={isRefreshing}
-              className="h-8 gap-1"
+              className="gap-2"
+              aria-label="Refresh analytics data"
             >
               <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               Refresh Data
             </Button>
-            
-            <Button asChild variant="destructive" className="text-white bg-red-600 hover:bg-red-700 h-8 gap-1">
-              <Link to="/">
-                <Home className="h-4 w-4" />
-                Return to Home
-              </Link>
-            </Button>
-          </div>
-        </div>
+          }
+        />
         
-        <div className="space-y-6">
-          <ErrorBoundary onReset={handleNPSErrorReset}>
+        <div className="space-y-6 animate-stagger">
+          <EnhancedErrorBoundary 
+            onReset={handleNPSErrorReset}
+            title="Error Loading Key Metrics"
+            showDetails={process.env.NODE_ENV === 'development'}
+          >
             <MetricsCards />
-          </ErrorBoundary>
+          </EnhancedErrorBoundary>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Growth & Retention</CardTitle>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="card-elevated">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-semibold text-foreground">
+                  Growth & Retention
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <div className="text-sm text-gray-600 mb-1">Growth Rate</div>
-                    <div className="text-xl font-semibold text-green-600">12%</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-600 mb-1">Avg. Client Value</div>
-                    <div className="text-xl font-semibold">$1200</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-600 mb-1">Client Lifetime</div>
-                    <div className="text-xl font-semibold">14.5 months</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-600 mb-1">Time to Value</div>
-                    <div className="text-xl font-semibold">3.2 months</div>
-                  </div>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <MetricCardEnhanced
+                    title="Growth Rate"
+                    value="12%"
+                    status="positive"
+                    trend={{
+                      value: 8,
+                      direction: 'up',
+                      label: 'vs last month'
+                    }}
+                    className="border-0 shadow-none p-4"
+                  />
+                  <MetricCardEnhanced
+                    title="Avg. Client Value"
+                    value="$1200"
+                    status="neutral"
+                    trend={{
+                      value: 5,
+                      direction: 'up',
+                      label: 'vs last month'
+                    }}
+                    className="border-0 shadow-none p-4"
+                    valueFormatter={(v) => v.toString()}
+                  />
+                  <MetricCardEnhanced
+                    title="Client Lifetime"
+                    value="14.5 months"
+                    status="positive"
+                    className="border-0 shadow-none p-4"
+                  />
+                  <MetricCardEnhanced
+                    title="Time to Value"
+                    value="3.2 months"
+                    status="positive"
+                    trend={{
+                      value: 12,
+                      direction: 'down',
+                      label: 'improvement'
+                    }}
+                    className="border-0 shadow-none p-4"
+                  />
                 </div>
               </CardContent>
             </Card>
             
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Performance Trends</CardTitle>
+            <Card className="card-elevated">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-semibold text-foreground">
+                  Performance Trends
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <NPSChart />
+                <EnhancedErrorBoundary
+                  title="Error Loading Performance Chart"
+                  showDetails={false}
+                >
+                  <NPSChart />
+                </EnhancedErrorBoundary>
               </CardContent>
             </Card>
           </div>
           
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Team Analytics</CardTitle>
+          <Card className="card-elevated">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-semibold text-foreground">
+                Team Analytics
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                <div className="p-4 border rounded-md">
-                  <div className="text-sm text-gray-600">Total MRR</div>
-                  <div className="text-2xl font-semibold">$4950</div>
-                  <div className="text-xs text-green-600">↑ 8%</div>
-                </div>
-                <div className="p-4 border rounded-md">
-                  <div className="text-sm text-gray-600">Calls Booked</div>
-                  <div className="text-2xl font-semibold">40</div>
-                  <div className="text-xs text-green-600">↑ 12%</div>
-                </div>
-                <div className="p-4 border rounded-md">
-                  <div className="text-sm text-gray-600">Deals Closed</div>
-                  <div className="text-2xl font-semibold">9</div>
-                  <div className="text-xs text-green-600">↑ 5%</div>
-                </div>
-                <div className="p-4 border rounded-md">
-                  <div className="text-sm text-gray-600">Client Count</div>
-                  <div className="text-2xl font-semibold">5</div>
-                  <div className="text-xs text-green-600">↑ 3%</div>
-                </div>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <MetricCardEnhanced
+                  title="Total MRR"
+                  value="$4,950"
+                  status="positive"
+                  trend={{
+                    value: 8,
+                    direction: 'up',
+                    label: 'vs last month'
+                  }}
+                />
+                <MetricCardEnhanced
+                  title="Calls Booked"
+                  value={40}
+                  status="positive"
+                  trend={{
+                    value: 12,
+                    direction: 'up',
+                    label: 'vs last month'
+                  }}
+                />
+                <MetricCardEnhanced
+                  title="Deals Closed"
+                  value={9}
+                  status="positive"
+                  trend={{
+                    value: 5,
+                    direction: 'up',
+                    label: 'vs last month'
+                  }}
+                />
+                <MetricCardEnhanced
+                  title="Client Count"
+                  value={5}
+                  status="positive"
+                  trend={{
+                    value: 3,
+                    direction: 'up',
+                    label: 'vs last month'
+                  }}
+                />
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 border rounded-md">
-                  <div className="flex justify-between mb-2">
-                    <div className="text-sm font-medium">Retention Rate</div>
-                    <div className="text-sm font-semibold text-green-600">40%</div>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                    <div className="bg-green-500 h-2 rounded-full" style={{ width: '40%' }}></div>
-                  </div>
-                  <div className="text-xs text-gray-600">2 active clients</div>
-                </div>
+                <Card className="border border-success/20 bg-success/5">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <div className="text-sm font-medium text-foreground">Retention Rate</div>
+                      <div className="text-lg font-semibold text-success">40%</div>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2 mb-2">
+                      <div 
+                        className="bg-success h-2 rounded-full transition-all duration-500" 
+                        style={{ width: '40%' }}
+                        aria-label="40% retention rate"
+                      />
+                    </div>
+                    <div className="text-xs text-muted-foreground">2 active clients</div>
+                  </CardContent>
+                </Card>
                 
-                <div className="p-4 border rounded-md">
-                  <div className="flex justify-between mb-2">
-                    <div className="text-sm font-medium">At Risk Rate</div>
-                    <div className="text-sm font-semibold text-amber-600">20%</div>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                    <div className="bg-amber-500 h-2 rounded-full" style={{ width: '20%' }}></div>
-                  </div>
-                  <div className="text-xs text-gray-600">1 at-risk client</div>
-                </div>
+                <Card className="border border-warning/20 bg-warning/5">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <div className="text-sm font-medium text-foreground">At Risk Rate</div>
+                      <div className="text-lg font-semibold text-warning">20%</div>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2 mb-2">
+                      <div 
+                        className="bg-warning h-2 rounded-full transition-all duration-500" 
+                        style={{ width: '20%' }}
+                        aria-label="20% at risk rate"
+                      />
+                    </div>
+                    <div className="text-xs text-muted-foreground">1 at-risk client</div>
+                  </CardContent>
+                </Card>
                 
-                <div className="p-4 border rounded-md">
-                  <div className="flex justify-between mb-2">
-                    <div className="text-sm font-medium">Churn Rate</div>
-                    <div className="text-sm font-semibold text-red-600">20%</div>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                    <div className="bg-red-500 h-2 rounded-full" style={{ width: '20%' }}></div>
-                  </div>
-                  <div className="text-xs text-gray-600">1 churned client</div>
-                </div>
+                <Card className="border border-destructive/20 bg-destructive/5">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <div className="text-sm font-medium text-foreground">Churn Rate</div>
+                      <div className="text-lg font-semibold text-destructive">20%</div>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2 mb-2">
+                      <div 
+                        className="bg-destructive h-2 rounded-full transition-all duration-500" 
+                        style={{ width: '20%' }}
+                        aria-label="20% churn rate"
+                      />
+                    </div>
+                    <div className="text-xs text-muted-foreground">1 churned client</div>
+                  </CardContent>
+                </Card>
               </div>
             </CardContent>
           </Card>
           
-          <ErrorBoundary onReset={handleNPSErrorReset}>
+          <EnhancedErrorBoundary 
+            onReset={handleNPSErrorReset}
+            title="Error Loading Client Analytics"
+            showDetails={process.env.NODE_ENV === 'development'}
+          >
             <ClientAnalytics />
-          </ErrorBoundary>
+          </EnhancedErrorBoundary>
         </div>
       </div>
     </Layout>

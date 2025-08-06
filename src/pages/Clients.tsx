@@ -6,12 +6,16 @@ import { ClientsHeader } from "@/components/Dashboard/ClientsHeader";
 import { useToast } from "@/hooks/use-toast";
 import { useKanbanStore } from "@/utils/kanbanStore";
 import { STORAGE_KEYS, loadData, saveData } from "@/utils/persistence";
-import { CriticalLoadingState } from "@/components/CriticalLoadingState";
 import { getAllClients, Client } from "@/lib/data";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DataSyncMonitor } from "@/components/Dashboard/DataSyncMonitor";
 import { useSmartLoading } from "@/hooks/useSmartLoading";
+
+// Enhanced UI components
+import { PageHeader } from "@/components/ui/page-header";
+import { EnhancedErrorBoundary } from "@/components/ui/error-boundary-enhanced";
+import { SkeletonCard } from "@/components/ui/skeleton-enhanced";
 
 export default function Clients() {
   const [activeTab, setActiveTab] = useState("all");
@@ -285,12 +289,27 @@ export default function Clients() {
     );
   };
 
-  // Use a more immediate loading indicator first
+  // Use enhanced loading state with skeleton
   if (showLoading && !clients.length) {
     console.log("Rendering initial loading state");
     return (
       <Layout>
-        <CriticalLoadingState message="Loading clients..." isBlocking={true} />
+        <div className="space-y-6 animate-fade-up">
+          <PageHeader
+            title="Clients"
+            subtitle="Manage your client relationships and data"
+            showBackButton
+            showHomeButton
+          />
+          <div className="grid gap-6">
+            <SkeletonCard />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </div>
+          </div>
+        </div>
       </Layout>
     );
   }
@@ -299,21 +318,26 @@ export default function Clients() {
     console.log("Rendering error state");
     return (
       <Layout>
-        <Card className="p-6">
-          <div className="text-center space-y-4">
-            <h2 className="text-2xl font-bold text-destructive">Error Loading Data</h2>
-            <p>{error}</p>
-            <button 
-              onClick={() => {
-                initializationAttempted.current = false;
-                initializeClientData();
-              }}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-            >
-              Retry
-            </button>
-          </div>
-        </Card>
+        <div className="space-y-6">
+          <PageHeader
+            title="Clients"
+            subtitle="Manage your client relationships and data"
+            showBackButton
+            showHomeButton
+          />
+          <EnhancedErrorBoundary
+            onReset={() => {
+              initializationAttempted.current = false;
+              initializeClientData();
+            }}
+            title="Error Loading Client Data"
+            showDetails={process.env.NODE_ENV === 'development'}
+            showBackButton
+            onBack={() => navigate('/')}
+          >
+            <div>Failed to load client data: {error}</div>
+          </EnhancedErrorBoundary>
+        </div>
       </Layout>
     );
   }
@@ -323,27 +347,47 @@ export default function Clients() {
   
   return (
     <Layout>
-      <div className="mb-4">
-        <DataSyncMonitor />
+      <div className="space-y-6 animate-fade-up">
+        <PageHeader
+          title="Clients"
+          subtitle={`Manage your ${filteredClientsList.length} client relationships and data`}
+          showBackButton
+          showHomeButton
+        />
+        
+        <div className="space-y-4">
+          <DataSyncMonitor />
+          
+          <Card className="card-elevated">
+            <div className="p-6 space-y-6">
+              <EnhancedErrorBoundary
+                title="Error Loading Client Interface"
+                showDetails={process.env.NODE_ENV === 'development'}
+                onReset={() => {
+                  setForceReload(prev => prev + 1);
+                }}
+              >
+                <ClientsHeader 
+                  clientCount={filteredClientsList.length} 
+                  onAddNewClient={handleAddNewClient}
+                  searchQuery={searchQuery}
+                  statusFilter={statusFilter}
+                  onSearchChange={handleSearchChange}
+                  onStatusFilterChange={handleStatusFilterChange}
+                />
+                
+                {getStatusSummary()}
+                
+                <ClientsTabs 
+                  activeTab={activeTab} 
+                  onTabChange={handleTabChange}
+                  forceReload={forceReload}
+                />
+              </EnhancedErrorBoundary>
+            </div>
+          </Card>
+        </div>
       </div>
-      <Card className="p-6">
-        <ClientsHeader 
-          clientCount={filteredClientsList.length} 
-          onAddNewClient={handleAddNewClient}
-          searchQuery={searchQuery}
-          statusFilter={statusFilter}
-          onSearchChange={handleSearchChange}
-          onStatusFilterChange={handleStatusFilterChange}
-        />
-        
-        {getStatusSummary()}
-        
-        <ClientsTabs 
-          activeTab={activeTab} 
-          onTabChange={handleTabChange}
-          forceReload={forceReload}
-        />
-      </Card>
     </Layout>
   );
 }
