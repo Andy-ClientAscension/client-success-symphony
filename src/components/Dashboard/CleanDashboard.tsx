@@ -166,8 +166,11 @@ export function CleanDashboard() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle className="text-lg font-semibold">Revenue Growth</CardTitle>
-                      <p className="text-sm text-muted-foreground">Monthly recurring revenue and student count</p>
+                      <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5 text-muted-foreground" />
+                        Revenue Growth
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground">Monthly recurring revenue and student growth</p>
                     </div>
                     <div className="flex items-center space-x-2">
                       <div className="w-3 h-3 bg-primary rounded-full"></div>
@@ -241,7 +244,10 @@ export function CleanDashboard() {
               <Card className="card-elevated">
                 <CardHeader>
                   <div>
-                    <CardTitle className="text-lg font-semibold">Student Health Distribution</CardTitle>
+                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                      <Heart className="h-5 w-5 text-muted-foreground" />
+                      Student Health Distribution
+                    </CardTitle>
                     <p className="text-sm text-muted-foreground">Health score breakdown by risk level</p>
                   </div>
                 </CardHeader>
@@ -291,66 +297,96 @@ export function CleanDashboard() {
                 </CardContent>
               </Card>
 
-              {/* Performance Metrics */}
+              {/* Offer Performance with Chart */}
               <Card className="card-elevated">
                 <CardHeader>
                   <div>
-                    <CardTitle className="text-lg font-semibold">Performance Metrics</CardTitle>
-                    <p className="text-sm text-muted-foreground">Key performance indicators vs targets</p>
+                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                      <Target className="h-5 w-5 text-muted-foreground" />
+                      Offer Performance
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">Track offer success rates and revenue impact</p>
                   </div>
                 </CardHeader>
                 <CardContent className="pt-2">
-                  <div className="space-y-6">
-                    {performanceData.map((metric, index) => (
-                      <div key={index} className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium">{metric.metric}</span>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-sm text-muted-foreground">
-                              {typeof metric.current === 'number' && metric.current > 100 
-                                ? `$${metric.current.toLocaleString()}` 
-                                : metric.current}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              / {typeof metric.target === 'number' && metric.target > 100 
-                                ? `$${metric.target.toLocaleString()}` 
-                                : metric.target}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="w-full bg-muted rounded-full h-2">
-                          <div 
-                            className="h-2 rounded-full transition-all duration-300"
-                            style={{ 
-                              width: `${Math.min((metric.current / metric.target) * 100, 100)}%`,
-                              backgroundColor: metric.color 
-                            }}
-                          ></div>
-                        </div>
-                        <div className="flex justify-between text-xs text-muted-foreground">
-                          <span>Progress: {((metric.current / metric.target) * 100).toFixed(1)}%</span>
-                          <span>Target: {typeof metric.target === 'number' && metric.target > 100 
-                            ? `$${metric.target.toLocaleString()}` 
-                            : metric.target}</span>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                      <p className="text-sm text-muted-foreground">Revenue Won</p>
+                      <p className="text-2xl font-bold text-green-600">$0.00</p>
+                    </div>
+                    <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <p className="text-sm text-muted-foreground">Conversion Rate</p>
+                      <p className="text-2xl font-bold text-blue-600">0.0%</p>
+                    </div>
+                  </div>
+                  <div className="h-48">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={[
+                        { name: 'Sent', value: 0 },
+                        { name: 'Viewed', value: 0 },
+                        { name: 'Responded', value: 0 },
+                        { name: 'Accepted', value: 0 }
+                      ]}>
+                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                        <XAxis 
+                          dataKey="name"
+                          axisLine={false}
+                          tickLine={false}
+                          className="text-xs text-muted-foreground"
+                        />
+                        <YAxis 
+                          axisLine={false}
+                          tickLine={false}
+                          className="text-xs text-muted-foreground"
+                        />
+                        <Tooltip 
+                          contentStyle={{
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px',
+                          }}
+                        />
+                        <Bar 
+                          dataKey="value" 
+                          fill="hsl(var(--primary))"
+                          radius={[4, 4, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Monthly Revenue Breakdown */}
+              {/* Renewal Forecast with Chart */}
               <Card className="card-elevated">
                 <CardHeader>
                   <div>
-                    <CardTitle className="text-lg font-semibold">Monthly Revenue Breakdown</CardTitle>
-                    <p className="text-sm text-muted-foreground">Revenue vs student count by month</p>
+                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                      <Calendar className="h-5 w-5 text-muted-foreground" />
+                      Renewal Forecast
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">Upcoming renewals in the next 30 days</p>
                   </div>
                 </CardHeader>
                 <CardContent className="pt-2">
-                  <div className="h-80">
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <p className="text-sm text-muted-foreground">Total Revenue</p>
+                      <p className="text-2xl font-bold text-blue-600">$0.00</p>
+                    </div>
+                    <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                      <p className="text-sm text-muted-foreground">Upsell Potential</p>
+                      <p className="text-2xl font-bold text-green-600">$0.00</p>
+                    </div>
+                  </div>
+                  <div className="h-48">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={revenueData}>
+                      <LineChart data={[
+                        { month: 'Week 1', renewals: 0, revenue: 0 },
+                        { month: 'Week 2', renewals: 0, revenue: 0 },
+                        { month: 'Week 3', renewals: 0, revenue: 0 },
+                        { month: 'Week 4', renewals: 0, revenue: 0 }
+                      ]}>
                         <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                         <XAxis 
                           dataKey="month"
@@ -362,26 +398,22 @@ export function CleanDashboard() {
                           axisLine={false}
                           tickLine={false}
                           className="text-xs text-muted-foreground"
-                          tickFormatter={(value) => `$${value/1000}k`}
                         />
                         <Tooltip 
-                          formatter={(value, name) => [
-                            name === 'revenue' ? `$${value.toLocaleString()}` : value,
-                            name === 'revenue' ? 'Revenue' : 'Students'
-                          ]}
-                          labelClassName="text-foreground"
                           contentStyle={{
                             backgroundColor: 'hsl(var(--card))',
                             border: '1px solid hsl(var(--border))',
                             borderRadius: '8px',
                           }}
                         />
-                        <Bar 
-                          dataKey="revenue" 
-                          fill="hsl(var(--primary))"
-                          radius={[4, 4, 0, 0]}
+                        <Line 
+                          type="monotone" 
+                          dataKey="renewals" 
+                          stroke="hsl(var(--primary))" 
+                          strokeWidth={2}
+                          dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
                         />
-                      </BarChart>
+                      </LineChart>
                     </ResponsiveContainer>
                   </div>
                 </CardContent>
