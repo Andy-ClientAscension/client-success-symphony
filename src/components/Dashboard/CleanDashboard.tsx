@@ -169,8 +169,8 @@ export function CleanDashboard() {
                     Revenue Growth
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-2">
-                  <ResponsiveContainer width="100%" height={75}>
+                <CardContent className="p-3">
+                  <ResponsiveContainer width="100%" height={120}>
                     <AreaChart data={growthData}>
                       <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                       <XAxis 
@@ -222,8 +222,8 @@ export function CleanDashboard() {
                     Student Health Distribution
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-2">
-                  <ResponsiveContainer width="100%" height={75}>
+                <CardContent className="p-3">
+                  <ResponsiveContainer width="100%" height={120}>
                     <PieChart>
                       <Pie
                         data={studentHealthData}
