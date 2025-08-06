@@ -48,7 +48,7 @@ export function CleanDashboard() {
       <div className="min-h-screen flex w-full bg-background">
         <DashboardSidebar />
         
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-h-screen">
           {/* Client Ascension Header */}
           <header className="bg-card border-b border-border h-16 shrink-0">
             <div className="flex h-full items-center justify-between px-6">
@@ -82,85 +82,85 @@ export function CleanDashboard() {
             </div>
           </header>
 
-          {/* Main Content */}
-          <main className="flex-1 p-6 space-y-6 overflow-auto">
-            {/* Metric Cards Row */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {/* Main Content - Compact Layout */}
+          <main className="flex-1 p-4 space-y-4 overflow-auto max-h-screen">
+            {/* Metric Cards Row - Compact */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card className="card-metric hover-lift">
-                <CardContent className="p-6">
+                <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Total Students</p>
-                      <p className="text-2xl font-bold text-foreground">59</p>
+                      <p className="text-xl font-bold text-foreground">59</p>
                       <p className="text-xs text-green-600 flex items-center gap-1">
                         <TrendingUp className="h-3 w-3" />
                         +12% from last month
                       </p>
                     </div>
-                    <div className="h-12 w-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
-                      <Users className="h-6 w-6 text-blue-600" />
+                    <div className="h-10 w-10 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
+                      <Users className="h-5 w-5 text-blue-600" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="card-metric hover-lift">
-                <CardContent className="p-6">
+                <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Active Students</p>
-                      <p className="text-2xl font-bold text-foreground">47</p>
+                      <p className="text-xl font-bold text-foreground">47</p>
                       <p className="text-xs text-green-600 flex items-center gap-1">
                         <TrendingUp className="h-3 w-3" />
                         +5% from last month
                       </p>
                     </div>
-                    <div className="h-12 w-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-                      <Heart className="h-6 w-6 text-green-600" />
+                    <div className="h-10 w-10 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
+                      <Heart className="h-5 w-5 text-green-600" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="card-metric hover-lift">
-                <CardContent className="p-6">
+                <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Monthly MRR</p>
-                      <p className="text-2xl font-bold text-foreground">$167K</p>
+                      <p className="text-xl font-bold text-foreground">$167K</p>
                       <p className="text-xs text-green-600 flex items-center gap-1">
                         <TrendingUp className="h-3 w-3" />
                         +8.2% from last month
                       </p>
                     </div>
-                    <div className="h-12 w-12 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg flex items-center justify-center">
-                      <DollarSign className="h-6 w-6 text-emerald-600" />
+                    <div className="h-10 w-10 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg flex items-center justify-center">
+                      <DollarSign className="h-5 w-5 text-emerald-600" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="card-metric hover-lift">
-                <CardContent className="p-6">
+                <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Avg Health Score</p>
-                      <p className="text-2xl font-bold text-foreground">8.2</p>
+                      <p className="text-xl font-bold text-foreground">8.2</p>
                       <p className="text-xs text-green-600 flex items-center gap-1">
                         <TrendingUp className="h-3 w-3" />
                         +0.3 from last month
                       </p>
                     </div>
-                    <div className="h-12 w-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
-                      <Target className="h-6 w-6 text-purple-600" />
+                    <div className="h-10 w-10 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
+                      <Target className="h-5 w-5 text-purple-600" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Charts Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Charts Grid - Compact and Responsive */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-[calc(100vh-200px)]">
               {/* Revenue Growth Chart */}
               <Card className="card-elevated">
                 <CardHeader>
@@ -180,8 +180,8 @@ export function CleanDashboard() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="pt-2">
-                  <div className="h-80">
+                <CardContent className="pt-2 h-[calc(100%-80px)]">
+                  <div className="h-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={growthData}>
                         <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
@@ -251,8 +251,8 @@ export function CleanDashboard() {
                     <p className="text-sm text-muted-foreground">Health score breakdown by risk level</p>
                   </div>
                 </CardHeader>
-                <CardContent className="pt-2">
-                  <div className="h-80">
+                <CardContent className="pt-2 h-[calc(100%-80px)]">
+                  <div className="h-full pb-4">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
@@ -280,17 +280,17 @@ export function CleanDashboard() {
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
-                  <div className="grid grid-cols-3 gap-4 mt-4">
+                  <div className="flex-1 grid grid-cols-3 gap-2 mt-2">
                     {studentHealthData.map((item, index) => (
                       <div key={index} className="text-center">
-                        <div className="flex items-center justify-center space-x-2 mb-1">
+                        <div className="flex items-center justify-center space-x-1 mb-1">
                           <div 
-                            className="w-3 h-3 rounded-full" 
+                            className="w-2 h-2 rounded-full" 
                             style={{ backgroundColor: item.color }}
                           ></div>
                           <span className="text-xs font-medium">{item.value}%</span>
                         </div>
-                        <p className="text-xs text-muted-foreground">{item.name}</p>
+                        <p className="text-xs text-muted-foreground">{item.name.replace(' (', '\n(')}</p>
                       </div>
                     ))}
                   </div>
