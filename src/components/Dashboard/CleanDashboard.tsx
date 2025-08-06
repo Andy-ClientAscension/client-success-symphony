@@ -226,14 +226,6 @@ export function CleanDashboard() {
                           fillOpacity={0.2}
                           strokeWidth={2}
                         />
-                        <Line 
-                          yAxisId="right"
-                          type="monotone" 
-                          dataKey="students" 
-                          stroke="#3b82f6" 
-                          strokeWidth={2}
-                          dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-                        />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>

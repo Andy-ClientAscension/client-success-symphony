@@ -1,10 +1,5 @@
-import { DashboardLayout } from "@/components/templates/DashboardLayout";
-import { EnhancedDashboard } from "@/components/Dashboard/EnhancedDashboard";
-export default function Dashboard() {
+import { CleanDashboard } from "@/components/Dashboard/CleanDashboard";
 
-  return (
-    <DashboardLayout>
-      <EnhancedDashboard />
-    </DashboardLayout>
-  );
+export default function Dashboard() {
+  return <CleanDashboard />;
 }
