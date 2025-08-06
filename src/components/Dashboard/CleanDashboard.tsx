@@ -43,6 +43,8 @@ const growthData = [
 ];
 
 export function CleanDashboard() {
+  console.log('CleanDashboard component loading...');
+  
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
