@@ -29,20 +29,19 @@ import { cn } from '@/lib/utils';
 
 const mainNavItems = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
-  { title: 'Students', url: '/students', icon: Users },
+  { title: 'Clients', url: '/clients', icon: Users },
   { title: 'Analytics', url: '/analytics', icon: BarChart3 },
-  { title: 'Health Scores', url: '/health-scores', icon: Heart },
+  { title: 'Health Scores', url: '/health-score-dashboard', icon: Heart },
 ];
 
 const managementItems = [
-  { title: 'Calendar', url: '/calendar', icon: Calendar },
+  { title: 'Renewals', url: '/renewals', icon: Calendar },
   { title: 'Communications', url: '/communications', icon: MessageSquare },
   { title: 'Payments', url: '/payments', icon: CreditCard },
   { title: 'Automations', url: '/automations', icon: Zap },
 ];
 
 const systemItems = [
-  { title: 'Notifications', url: '/notifications', icon: Bell },
   { title: 'Settings', url: '/settings', icon: Settings },
 ];
 

@@ -10,6 +10,13 @@ const Login = lazy(() => import('@/pages/Login'));
 const SignUp = lazy(() => import('@/pages/SignUp'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Analytics = lazy(() => import('@/pages/Analytics'));
+const Clients = lazy(() => import('@/pages/Clients'));
+const Renewals = lazy(() => import('@/pages/Renewals'));
+const HealthScoreDashboard = lazy(() => import('@/pages/HealthScoreDashboard'));
+const Communications = lazy(() => import('@/pages/Communications'));
+const Payments = lazy(() => import('@/pages/Payments'));
+const Automations = lazy(() => import('@/pages/Automations'));
+const Settings = lazy(() => import('@/pages/Settings'));
 const AuthCallback = lazy(() => import('@/pages/AuthCallback'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
@@ -38,6 +45,41 @@ export default function AppRoutes() {
         <Route path="/analytics" element={
           <ProtectedRoute>
             <Analytics />
+          </ProtectedRoute>
+        } />
+        <Route path="/clients" element={
+          <ProtectedRoute>
+            <Clients />
+          </ProtectedRoute>
+        } />
+        <Route path="/renewals" element={
+          <ProtectedRoute>
+            <Renewals />
+          </ProtectedRoute>
+        } />
+        <Route path="/health-score-dashboard" element={
+          <ProtectedRoute>
+            <HealthScoreDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/communications" element={
+          <ProtectedRoute>
+            <Communications />
+          </ProtectedRoute>
+        } />
+        <Route path="/payments" element={
+          <ProtectedRoute>
+            <Payments />
+          </ProtectedRoute>
+        } />
+        <Route path="/automations" element={
+          <ProtectedRoute>
+            <Automations />
+          </ProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <Settings />
           </ProtectedRoute>
         } />
         <Route path="/pre-launch" element={
