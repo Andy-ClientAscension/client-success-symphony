@@ -132,58 +132,66 @@ export function VirtualizedClientList({
   return (
     <div className="border rounded-lg mb-4 overflow-hidden">
       <div className="overflow-hidden">
+        {/* Header */}
+        <div className="sticky top-0 bg-muted z-10 border-b">
+          <div className="grid grid-cols-[40px_1fr_120px_200px] gap-4 py-3 px-4">
+            {columns.map((column) => (
+              <div
+                key={column.key}
+                className={`text-left text-xs font-medium text-muted-foreground uppercase tracking-wider ${column.className || ''}`}
+              >
+                {column.header}
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* Virtualized Content Container */}
         <div 
           ref={tableContainerRef} 
-          className="overflow-auto" 
-          style={{ height: '600px' }}
+          className="overflow-auto relative" 
+          style={{ height: '500px' }}
         >
-          <table className="min-w-full">
-            <thead className="sticky top-0 bg-muted z-10">
-              <tr>
-                {columns.map((column) => (
-                  <th
-                    key={column.key}
-                    className={`py-3 px-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider ${column.className || ''}`}
-                  >
-                    {column.header}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                // Loading state
-                Array.from({ length: 5 }).map((_, idx) => (
-                  <tr key={`skeleton-${idx}`} className="animate-pulse">
+          <div
+            style={{
+              height: `${rowVirtualizer.getTotalSize()}px`,
+              width: '100%',
+              position: 'relative',
+            }}
+          >
+            {isLoading ? (
+              // Loading state
+              <div className="space-y-1">
+                {Array.from({ length: 5 }).map((_, idx) => (
+                  <div key={`skeleton-${idx}`} className="grid grid-cols-[40px_1fr_120px_200px] gap-4 py-3 px-4 animate-pulse border-b">
                     {columns.map((column) => (
-                      <td key={`skeleton-${idx}-${column.key}`} className="py-3 px-4">
+                      <div key={`skeleton-${idx}-${column.key}`}>
                         <Skeleton className="h-6 w-full" />
-                      </td>
+                      </div>
                     ))}
-                  </tr>
-                ))
-              ) : (
-                // Virtualized rows
-                rowVirtualizer.getVirtualItems().map((virtualRow) => (
-                  <VirtualizedClientRow
-                    key={clients[virtualRow.index]?.id || `virtual-row-${virtualRow.index}`}
-                    client={clients[virtualRow.index]}
-                    columns={columns}
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: `${virtualRow.size}px`,
-                      transform: `translateY(${virtualRow.start}px)`,
-                    }}
-                    onClick={handleRowClick}
-                  />
-                ))
-              )}
-            </tbody>
-          </table>
-          <div style={{ height: `${rowVirtualizer.getTotalSize()}px` }} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              // Virtualized rows
+              rowVirtualizer.getVirtualItems().map((virtualRow) => (
+                <VirtualizedClientRow
+                  key={clients[virtualRow.index]?.id || `virtual-row-${virtualRow.index}`}
+                  client={clients[virtualRow.index]}
+                  columns={columns}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: `${virtualRow.size}px`,
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                  onClick={handleRowClick}
+                />
+              ))
+            )}
+          </div>
         </div>
       </div>
       {renderPagination()}

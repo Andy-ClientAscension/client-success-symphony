@@ -62,26 +62,24 @@ export function VirtualizedClientRow({
   };
   
   return (
-    <tr
-      className="hover:bg-muted/50 cursor-pointer transition-colors"
+    <div
+      className="grid grid-cols-[40px_1fr_120px_200px] gap-4 py-3 px-4 hover:bg-muted/50 cursor-pointer transition-colors border-b border-border/50"
       style={style}
       onClick={() => onClick?.(client)}
       role="row"
-      // Convert client.id to a number if it's a string with a number value, 
-      // or use a numeric index or 0 as fallback
       aria-rowindex={Number(client.id) || 0}
     >
       {columns.map((column) => (
-        <td
+        <div
           key={`${client.id}-${column.key}`}
-          className={`py-3 px-4 ${column.className || ''}`}
+          className={`flex items-center ${column.className || ''}`}
           role="cell"
         >
           {column.key === 'status' && client.status
             ? renderStatusWithChart(client.status)
             : column.cell?.(client)}
-        </td>
+        </div>
       ))}
-    </tr>
+    </div>
   );
 }
