@@ -11,6 +11,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DataSyncMonitor } from "@/components/Dashboard/DataSyncMonitor";
 import { useSmartLoading } from "@/hooks/useSmartLoading";
+import { DataStabilizer } from '@/utils/dataStabilizer';
+import { ErrorRecovery } from '@/components/Dashboard/ErrorRecovery';
 
 // Enhanced UI components
 import { PageHeader } from "@/components/ui/page-header";
@@ -170,9 +172,10 @@ export default function Clients() {
       });
   }, [initializeClientData]);
 
-  // Optimize storage event handling with debouncing and fix stale closure
+  // Optimize storage event handling with longer debouncing and deduplication
   useEffect(() => {
     let debounceTimer: NodeJS.Timeout | null = null;
+    let lastEventData: string | null = null;
     
     const handleStorageChange = (event: StorageEvent | CustomEvent) => {
       const key = event instanceof StorageEvent ? event.key : (event as CustomEvent).detail?.key;
@@ -180,6 +183,9 @@ export default function Clients() {
       // Only reload on relevant storage changes
       if (key === STORAGE_KEYS.CLIENTS || key === STORAGE_KEYS.CLIENT_STATUS || 
           key === STORAGE_KEYS.KANBAN || key === null) {
+        
+        // Create a unique event signature for deduplication
+        const eventSignature = `${key}-${Date.now()}`;
         
         // Debounce the reload to prevent multiple rapid updates
         if (debounceTimer) {
@@ -192,18 +198,23 @@ export default function Clients() {
           // Reload clients from storage
           try {
             const updatedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
-            // Compare with the current reference to avoid unnecessary updates
-            if (updatedClients && updatedClients.length > 0 && 
-                JSON.stringify(updatedClients) !== JSON.stringify(clientsRef.current)) {
-              setClients(updatedClients);
-            }
+            const newDataSignature = JSON.stringify(updatedClients);
             
-            // Increment force reload counter to refresh child components
-            setForceReload(prev => prev + 1);
+            // Only update if data has actually changed
+            if (updatedClients && updatedClients.length > 0 && 
+                newDataSignature !== JSON.stringify(clientsRef.current) &&
+                newDataSignature !== lastEventData) {
+              
+              lastEventData = newDataSignature;
+              setClients(updatedClients);
+              
+              // Only increment force reload if data actually changed
+              setForceReload(prev => prev + 1);
+            }
           } catch (error) {
             console.error("Error processing storage change:", error);
           }
-        }, 100);
+        }, 500); // Increased debounce time to 500ms
       }
     };
     
@@ -325,18 +336,14 @@ export default function Clients() {
             showBackButton
             showHomeButton
           />
-          <EnhancedErrorBoundary
-            onReset={() => {
+          <ErrorRecovery 
+            errorMessage={error}
+            onRetry={() => {
               initializationAttempted.current = false;
+              setError(null);
               initializeClientData();
             }}
-            title="Error Loading Client Data"
-            showDetails={process.env.NODE_ENV === 'development'}
-            showBackButton
-            onBack={() => navigate('/')}
-          >
-            <div>Failed to load client data: {error}</div>
-          </EnhancedErrorBoundary>
+          />
         </div>
       </Layout>
     );

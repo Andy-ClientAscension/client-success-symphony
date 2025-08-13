@@ -7,6 +7,8 @@ import { useKanbanStore } from "@/utils/kanbanStore";
 import { validateClients } from '@/utils/clientValidation';
 import { useRealtimeData } from '@/utils/dataSyncService';
 import { useSmartLoading } from '@/hooks/useSmartLoading';
+import { useStableCallback } from '@/hooks/useStableCallback';
+import { DataStabilizer } from '@/utils/dataStabilizer';
 
 interface UseClientListProps {
   statusFilter?: Client['status'];
@@ -17,7 +19,7 @@ export function useClientList({ statusFilter }: UseClientListProps = {}) {
   const kanbanStore = useKanbanStore();
   const [isInitializing, setIsInitializing] = useState(true);
   
-  // Get default clients as a memoized value
+  // Get default clients as a stable memoized value - fix re-render loop
   const defaultClients = useMemo(() => {
     try {
       console.log("Loading default clients from data service");
@@ -25,14 +27,9 @@ export function useClientList({ statusFilter }: UseClientListProps = {}) {
       return validateClients(allClients);
     } catch (error) {
       console.error("Error loading default clients:", error);
-      toast({
-        title: "Data Loading Error",
-        description: "Failed to load client data. Using fallback data.",
-        variant: "destructive",
-      });
       return [];
     }
-  }, [toast]);
+  }, []); // Empty deps to prevent re-computation
   
   // Use the realtime data hook for clients with proper arguments
   const [clients, isClientsLoading] = useRealtimeData<Client[]>(
@@ -87,15 +84,20 @@ export function useClientList({ statusFilter }: UseClientListProps = {}) {
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
   
-  // Create a function to update clients (we'll use manual storage updates)
-  const setClients = useCallback((updatedClients: Client[]) => {
-    console.log(`Saving ${updatedClients.length} clients to storage`);
-    saveData(STORAGE_KEYS.CLIENTS, updatedClients);
-    // Dispatch a custom event to notify other components of the change
-    window.dispatchEvent(new CustomEvent('storageUpdated', { 
-      detail: { key: STORAGE_KEYS.CLIENTS } 
-    }));
-  }, []);
+  // Create a stable function to update clients with deduplication
+  const setClients = useStableCallback((updatedClients: Client[]) => {
+    const validatedClients = validateClients(updatedClients);
+    console.log(`Saving ${validatedClients.length} clients to storage`);
+    
+    // Use data stabilizer to prevent unnecessary updates
+    if (DataStabilizer.hasDataChanged(STORAGE_KEYS.CLIENTS, validatedClients)) {
+      saveData(STORAGE_KEYS.CLIENTS, validatedClients);
+      // Dispatch a custom event to notify other components of the change
+      window.dispatchEvent(new CustomEvent('storageUpdated', { 
+        detail: { key: STORAGE_KEYS.CLIENTS } 
+      }));
+    }
+  });
 
   // Clear initialization state once clients are loaded
   useEffect(() => {
@@ -105,65 +107,57 @@ export function useClientList({ statusFilter }: UseClientListProps = {}) {
     }
   }, [isClientsLoading, isInitializing]);
 
-  // Filter clients when any related state changes - debounced for better performance
-  const debouncedFilterTimer = useRef<NodeJS.Timeout | null>(null);
-  
-  useEffect(() => {
-    // Cancel previous debounce timer if exists
-    if (debouncedFilterTimer.current) {
-      clearTimeout(debouncedFilterTimer.current);
+  // Filter clients with stable dependencies to prevent re-render loops
+  const filteredClientsStable = useMemo(() => {
+    if (isInitializing) {
+      console.log("useClientList: Still initializing, returning empty array");
+      return [];
     }
     
-    // Debounce filtering to avoid excessive re-renders during typing
-    debouncedFilterTimer.current = setTimeout(() => {
-      if (isInitializing) {
-        console.log("useClientList: Still initializing, skipping filter");
-        return;
-      }
-      
+    let filtered = validateClients(clients);
+    console.log(`useClientList: Filtering ${filtered.length} clients with statusFilter:`, statusFilter);
+    
+    if (statusFilter) {
+      filtered = filtered.filter(client => client.status === statusFilter);
+    }
+
+    if (selectedTeam !== "all") {
+      filtered = filtered.filter(client => {
+        const clientTeam = client.team || ""; 
+        return clientTeam.toLowerCase() === selectedTeam.toLowerCase();
+      });
+    }
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(client => 
+        client.name.toLowerCase().includes(query) || 
+        (client.csm && client.csm.toLowerCase().includes(query))
+      );
+    }
+
+    console.log(`useClientList: Filtered to ${filtered.length} clients`);
+    return filtered;
+  }, [clients, selectedTeam, statusFilter, searchQuery, isInitializing]);
+
+  // Update filteredClients when the memoized value changes
+  useEffect(() => {
+    setFilteredClients(filteredClientsStable);
+    setCurrentPage(1); // Reset to page 1 when filters change
+  }, [filteredClientsStable]);
+
+  // Persist data changes when clients change (separate from filtering)
+  useEffect(() => {
+    if (!isInitializing) {
       const persistEnabled = localStorage.getItem("persistDashboard") === "true";
       
-      if (persistEnabled && clients !== defaultClients) {
+      if (persistEnabled && clients.length > 0) {
         const validatedClients = validateClients(clients);
         saveData(STORAGE_KEYS.CLIENTS, validatedClients);
         saveData(STORAGE_KEYS.CLIENT_STATUS, validatedClients);
       }
-      
-      let filtered = validateClients(clients);
-      console.log(`useClientList: Filtering ${filtered.length} clients with statusFilter:`, statusFilter);
-      
-      if (statusFilter) {
-        filtered = filtered.filter(client => client.status === statusFilter);
-      }
-
-      if (selectedTeam !== "all") {
-        filtered = filtered.filter(client => {
-          const clientTeam = client.team || ""; 
-          return clientTeam.toLowerCase() === selectedTeam.toLowerCase();
-        });
-      }
-
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase();
-        filtered = filtered.filter(client => 
-          client.name.toLowerCase().includes(query) || 
-          (client.csm && client.csm.toLowerCase().includes(query))
-        );
-      }
-
-      console.log(`useClientList: Filtered to ${filtered.length} clients`);
-      setFilteredClients(filtered);
-      
-      // Reset to page 1 when filters change
-      setCurrentPage(1);
-    }, 300); // 300ms debounce
-    
-    return () => {
-      if (debouncedFilterTimer.current) {
-        clearTimeout(debouncedFilterTimer.current);
-      }
-    };
-  }, [clients, selectedTeam, statusFilter, searchQuery, defaultClients, isInitializing]);
+    }
+  }, [clients, isInitializing]);
 
   // Calculate pagination
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -176,16 +170,17 @@ export function useClientList({ statusFilter }: UseClientListProps = {}) {
     return Math.ceil(filteredClients.length / itemsPerPage);
   }, [filteredClients.length, itemsPerPage]);
 
-  const handlePageChange = useCallback((page: number) => {
+  // Use stable callbacks to prevent dependency issues
+  const handlePageChange = useStableCallback((page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, Math.ceil(filteredClients.length / itemsPerPage))));
-  }, [filteredClients.length, itemsPerPage]);
+  });
 
-  const handleItemsPerPageChange = useCallback((value: number) => {
+  const handleItemsPerPageChange = useStableCallback((value: number) => {
     setItemsPerPage(value);
     setCurrentPage(1);
-  }, []);
+  });
 
-  const handleSelectClient = useCallback((clientId: string) => {
+  const handleSelectClient = useStableCallback((clientId: string) => {
     setSelectedClientIds(prev => {
       if (prev.includes(clientId)) {
         return prev.filter(id => id !== clientId);
@@ -193,26 +188,26 @@ export function useClientList({ statusFilter }: UseClientListProps = {}) {
         return [...prev, clientId];
       }
     });
-  }, []);
+  });
   
-  const handleSelectAll = useCallback(() => {
+  const handleSelectAll = useStableCallback(() => {
     const currentItems = filteredClients.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
     setSelectedClientIds(prev => 
       prev.length === currentItems.length ? [] : currentItems.map(client => client.id)
     );
-  }, [filteredClients, currentPage, itemsPerPage]);
+  });
 
-  const handleTeamChange = useCallback((value: string) => {
+  const handleTeamChange = useStableCallback((value: string) => {
     setSelectedTeam(value);
-  }, []);
+  });
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchChange = useStableCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-  }, []);
+  });
 
-  const handleViewModeChange = useCallback((mode: 'table' | 'kanban') => {
+  const handleViewModeChange = useStableCallback((mode: 'table' | 'kanban') => {
     setViewMode(mode);
-  }, []);
+  });
 
   const deleteClients = useCallback((clientIdsToDelete: string[]) => {
     deleteClientsGlobally(clientIdsToDelete);

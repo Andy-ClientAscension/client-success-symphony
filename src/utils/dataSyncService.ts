@@ -1,5 +1,5 @@
 import { enhancedStorage } from "./storageUtils";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 // Type definitions for our service
 export interface SyncEvent {
@@ -300,34 +300,49 @@ export function useSyncService() {
   };
 }
 
-// Add a hook to use realtime data with error handling
+// Add a hook to use realtime data with stable subscription handling
 export function useRealtimeData<T = any>(key: string, defaultValue: T = null as unknown as T): [T, boolean] {
   const [data, setData] = useState<T>(defaultValue);
   const [isLoading, setIsLoading] = useState(true);
+  const subscriptionRef = useRef<Function | null>(null);
+  
+  // Stable callback to avoid subscription churn
+  const handleDataChange = useCallback((newData: T) => {
+    setData(newData);
+  }, []);
   
   useEffect(() => {
+    let isMounted = true;
+    
     try {
       // Load initial data
       const storedData = dataSyncService.loadData(key, defaultValue);
-      setData(storedData);
-      setIsLoading(false);
+      if (isMounted) {
+        setData(storedData);
+        setIsLoading(false);
+      }
       
-      // Subscribe to changes
-      const handleDataChange = (newData: T) => {
-        setData(newData);
-      };
-      
-      dataSyncService.subscribe(key, handleDataChange);
+      // Store reference to prevent multiple subscriptions
+      if (!subscriptionRef.current) {
+        subscriptionRef.current = handleDataChange;
+        dataSyncService.subscribe(key, handleDataChange);
+      }
       
       return () => {
-        dataSyncService.unsubscribe(key, handleDataChange);
+        isMounted = false;
+        if (subscriptionRef.current) {
+          dataSyncService.unsubscribe(key, subscriptionRef.current);
+          subscriptionRef.current = null;
+        }
       };
     } catch (error) {
       console.error(`Error in useRealtimeData for key: ${key}`, error);
-      setData(defaultValue);
-      setIsLoading(false);
+      if (isMounted) {
+        setData(defaultValue);
+        setIsLoading(false);
+      }
     }
-  }, [key, defaultValue]);
+  }, [key, defaultValue, handleDataChange]);
   
   return [data, isLoading];
 }
