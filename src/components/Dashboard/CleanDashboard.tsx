@@ -4,7 +4,10 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { DashboardSidebar } from './Layout/DashboardSidebar';
-import { Search, Bell, Users, Heart, DollarSign, TrendingUp, Calendar, Target } from 'lucide-react';
+import { Users, Heart, DollarSign, TrendingUp, Calendar, Target } from 'lucide-react';
+import { SearchBar } from '@/components/Navigation/SearchBar';
+import { NotificationBell } from '@/components/Navigation/NotificationBell';
+import { Breadcrumbs } from '@/components/Navigation/Breadcrumbs';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -102,8 +105,8 @@ export function CleanDashboard() {
         
         <div className="flex-1 flex flex-col min-h-screen">
           {/* Client Ascension Header */}
-          <header className="bg-card border-b border-border h-16 shrink-0">
-            <div className="flex h-full items-center justify-between px-6">
+          <header className="bg-card border-b border-border shrink-0">
+            <div className="flex h-16 items-center justify-between px-6">
               <div className="flex items-center gap-4">
                 <SidebarTrigger />
                 <div className="flex items-center space-x-3">
@@ -115,22 +118,18 @@ export function CleanDashboard() {
               </div>
               
               <div className="flex items-center gap-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <input 
-                    type="text" 
-                    placeholder="Search students..."
-                    className="pl-10 pr-4 py-2 border border-border rounded-lg bg-background text-sm w-64 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                </div>
-                <Button variant="ghost" size="sm">
-                  <Bell className="h-4 w-4" />
-                </Button>
+                <SearchBar className="w-64" />
+                <NotificationBell />
                 <ThemeToggle />
                 <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
                   <span className="text-xs font-medium">JD</span>
                 </div>
               </div>
+            </div>
+            
+            {/* Breadcrumbs */}
+            <div className="px-6 py-2 border-t border-border/50">
+              <Breadcrumbs />
             </div>
           </header>
 

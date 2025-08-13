@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
@@ -25,7 +25,7 @@ import {
   CreditCard,
   Zap
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { SidebarNavLink } from '@/components/Navigation/StandardNavLink';
 
 const mainNavItems = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
@@ -51,15 +51,7 @@ export function DashboardSidebar() {
 
   const isActive = (path: string) => currentPath === path;
   
-  const getNavClasses = (itemUrl: string) => {
-    const active = isActive(itemUrl);
-    return cn(
-      'flex items-center w-full px-3 py-2 rounded-lg text-sm transition-colors',
-      active 
-        ? 'bg-primary/10 text-primary font-medium border-r-2 border-primary' 
-        : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-    );
-  };
+  // Removed getNavClasses - now handled by StandardNavLink
 
   const renderNavGroup = (
     items: typeof mainNavItems,
@@ -76,16 +68,13 @@ export function DashboardSidebar() {
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild>
-                <NavLink
+                <SidebarNavLink
                   to={item.url}
                   end
-                  className={getNavClasses(item.url)}
+                  icon={item.icon}
                 >
-                  <item.icon className="h-5 w-5 mr-3" />
-                  <span className="text-sm font-medium">
-                    {item.title}
-                  </span>
-                </NavLink>
+                  {item.title}
+                </SidebarNavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
