@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
@@ -8,16 +8,70 @@ import { Users, Heart, DollarSign, TrendingUp, Calendar, Target } from 'lucide-r
 import { SearchBar } from '@/components/Navigation/SearchBar';
 import { NotificationBell } from '@/components/Navigation/NotificationBell';
 import { Breadcrumbs } from '@/components/Navigation/Breadcrumbs';
+import { SyncIndicator } from '@/components/ui/sync-indicator';
+import { AdvancedFilters, useAdvancedFilters } from '@/components/Filters/AdvancedFilters';
+import { DashboardCustomizer, useDashboardCustomization, DashboardWidget } from './DashboardCustomizer';
 import { createTestNotifications } from '@/utils/testNotifications';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell, AreaChart, Area 
 } from 'recharts';
+import { cn } from '@/lib/utils';
 
-import { useMemo, useEffect } from 'react';
+// Define dashboard widgets for customization
+const defaultWidgets: DashboardWidget[] = [
+  { id: 'metrics', title: 'Key Metrics', component: () => null, isVisible: true, size: 'full', order: 0, category: 'metrics' },
+  { id: 'revenue-chart', title: 'Revenue Growth', component: () => null, isVisible: true, size: 'medium', order: 1, category: 'charts' },
+  { id: 'health-chart', title: 'Health Distribution', component: () => null, isVisible: true, size: 'medium', order: 2, category: 'charts' },
+  { id: 'offers-chart', title: 'Offer Performance', component: () => null, isVisible: true, size: 'medium', order: 3, category: 'charts' },
+  { id: 'renewals-chart', title: 'Renewal Forecast', component: () => null, isVisible: true, size: 'medium', order: 4, category: 'charts' }
+];
+
 export function CleanDashboard() {
-  const { allClients, teamStatusCounts, teamMetrics, churnData, npsScore, isLoading, error } = useDashboardData({ enableAutoSync: true });
+  const { allClients, teamStatusCounts, teamMetrics, churnData, npsScore, isLoading, error, lastUpdated, refreshData, isRefreshing } = useDashboardData({ enableAutoSync: true });
+  
+  // Advanced filtering
+  const { filters, updateFilters, hasActiveFilters } = useAdvancedFilters();
+  
+  // Dashboard customization
+  const { widgets, layout, updateWidgets, updateLayout } = useDashboardCustomization(defaultWidgets);
+  
+  // Apply filters to data
+  const filteredData = useMemo(() => {
+    let filtered = allClients;
+    
+    if (filters.statuses.length > 0) {
+      filtered = filtered.filter(client => filters.statuses.includes(client.status));
+    }
+    
+    if (filters.teams.length > 0) {
+      filtered = filtered.filter(client => client.team && filters.teams.includes(client.team));
+    }
+    
+    if (filters.dateRange.from || filters.dateRange.to) {
+      filtered = filtered.filter(client => {
+        const clientDate = new Date(client.startDate);
+        if (filters.dateRange.from && clientDate < filters.dateRange.from) return false;
+        if (filters.dateRange.to && clientDate > filters.dateRange.to) return false;
+        return true;
+      });
+    }
+    
+    return filtered;
+  }, [allClients, filters]);
+  
+  // Calculate metrics from filtered data
+  const filteredMetrics = useMemo(() => {
+    const total = filteredData.length;
+    const active = filteredData.filter(c => c.status === 'active').length;
+    const atRisk = filteredData.filter(c => c.status === 'at-risk').length;
+    const churned = filteredData.filter(c => c.status === 'churned').length;
+    const totalMRR = filteredData.reduce((sum, client) => sum + (client.mrr || 0), 0);
+    const avgHealth = total > 0 ? filteredData.reduce((sum, client) => sum + (client.npsScore || 0), 0) / total : 0;
+    
+    return { total, active, atRisk, churned, totalMRR, avgHealth };
+  }, [filteredData]);
   
   // Create test notifications on first load (for demo purposes)
   useEffect(() => {
@@ -28,10 +82,10 @@ export function CleanDashboard() {
     }
   }, []);
   
-  // Generate dynamic chart data from real database values
+  // Generate dynamic chart data from filtered metrics
   const chartData = useMemo(() => {
-    const currentMRR = teamMetrics?.totalMRR || 0;
-    const studentCount = teamStatusCounts?.total || 0;
+    const currentMRR = filteredMetrics.totalMRR || 0;
+    const studentCount = filteredMetrics.total || 0;
     
     // Generate monthly progression data (mock progression for now, can be enhanced with historical data)
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
@@ -46,28 +100,47 @@ export function CleanDashboard() {
       };
     });
     
-    // Health distribution based on real client data
-    const totalClients = Math.max(1, studentCount); // Prevent division by zero
+    // Health distribution based on filtered client data
+    const totalClients = Math.max(1, studentCount);
     const healthData = [
       { 
         name: 'Excellent (8-10)', 
-        value: Math.round(((teamStatusCounts?.active || 0) / totalClients) * 100), 
+        value: Math.round(((filteredMetrics.active || 0) / totalClients) * 100), 
         color: '#22c55e' 
       },
       { 
         name: 'Good (5-7)', 
-        value: Math.round(((teamStatusCounts?.new || 0) / totalClients) * 100), 
+        value: Math.round(((filteredMetrics.total - filteredMetrics.active - filteredMetrics.atRisk - filteredMetrics.churned || 0) / totalClients) * 100), 
         color: '#f59e0b' 
       },
       { 
         name: 'At Risk (1-4)', 
-        value: Math.round(((teamStatusCounts?.atRisk || 0) / totalClients) * 100), 
+        value: Math.round(((filteredMetrics.atRisk || 0) / totalClients) * 100), 
         color: '#ef4444' 
       },
     ];
     
     return { growthData, healthData };
-  }, [teamMetrics, teamStatusCounts]);
+  }, [filteredMetrics]);
+  
+  // Layout styles
+  const layoutStyles = {
+    compact: "space-y-2",
+    comfortable: "space-y-4", 
+    spacious: "space-y-6"
+  };
+  
+  // Get available teams and statuses for filters
+  const availableTeams = useMemo(() => {
+    return Array.from(new Set(allClients.map(client => client.team).filter(Boolean)));
+  }, [allClients]);
+  
+  const availableStatuses = useMemo(() => {
+    return Array.from(new Set(allClients.map(client => client.status)));
+  }, [allClients]);
+  
+  // Visible widgets sorted by order
+  const visibleWidgets = widgets.filter(widget => widget.isVisible).sort((a, b) => a.order - b.order);
   
   // Loading state
   if (isLoading) {
@@ -108,6 +181,7 @@ export function CleanDashboard() {
       </SidebarProvider>
     );
   }
+  
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -137,316 +211,247 @@ export function CleanDashboard() {
               </div>
             </div>
             
-            {/* Breadcrumbs */}
-            <div className="px-6 py-2 border-t border-border/50">
-              <Breadcrumbs />
+            {/* Breadcrumbs and Filters */}
+            <div className="px-6 py-3 border-t border-border/50">
+              <div className="flex items-center justify-between">
+                <Breadcrumbs />
+                
+                <div className="flex items-center gap-3">
+                  <SyncIndicator
+                    isLoading={isLoading}
+                    isRefreshing={isRefreshing}
+                    lastUpdated={lastUpdated}
+                    onRefresh={refreshData}
+                    syncStatus={error ? 'error' : 'idle'}
+                  />
+                  
+                  <AdvancedFilters
+                    filters={filters}
+                    onFiltersChange={updateFilters}
+                    availableTeams={availableTeams}
+                    availableStatuses={availableStatuses}
+                  />
+                  
+                  <DashboardCustomizer
+                    widgets={widgets}
+                    onWidgetsChange={updateWidgets}
+                    currentLayout={layout}
+                    onLayoutChange={updateLayout}
+                  />
+                </div>
+              </div>
             </div>
           </header>
 
-          {/* Main Content - Compact Layout */}
-          <main className="flex-1 p-4 space-y-4 overflow-auto max-h-screen">
-            {/* Metric Cards Row - Compact */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="card-metric hover-lift">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total Students</p>
-                      <p className="text-xl font-bold text-foreground">{teamStatusCounts?.total || 0}</p>
-                      <p className="text-xs text-green-600 flex items-center gap-1">
-                        <TrendingUp className="h-3 w-3" />
-                        {isLoading ? 'Loading...' : '+12% from last month'}
-                      </p>
-                    </div>
-                    <div className="h-10 w-10 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
-                      <Users className="h-5 w-5 text-blue-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="card-metric hover-lift">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Active Students</p>
-                      <p className="text-xl font-bold text-foreground">{teamStatusCounts?.active || 0}</p>
-                      <p className="text-xs text-green-600 flex items-center gap-1">
-                        <TrendingUp className="h-3 w-3" />
-                        {isLoading ? 'Loading...' : '+5% from last month'}
-                      </p>
-                    </div>
-                    <div className="h-10 w-10 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-                      <Heart className="h-5 w-5 text-green-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="card-metric hover-lift">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Monthly MRR</p>
-                      <p className="text-xl font-bold text-foreground">${teamMetrics?.totalMRR ? Math.round(teamMetrics.totalMRR / 1000) : 0}K</p>
-                      <p className="text-xs text-green-600 flex items-center gap-1">
-                        <TrendingUp className="h-3 w-3" />
-                        {isLoading ? 'Loading...' : '+8.2% from last month'}
-                      </p>
-                    </div>
-                    <div className="h-10 w-10 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg flex items-center justify-center">
-                      <DollarSign className="h-5 w-5 text-emerald-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="card-metric hover-lift">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Avg Health Score</p>
-                      <p className="text-xl font-bold text-foreground">{teamMetrics?.averageHealth?.toFixed(1) || '0.0'}</p>
-                      <p className="text-xs text-green-600 flex items-center gap-1">
-                        <TrendingUp className="h-3 w-3" />
-                        {isLoading ? 'Loading...' : '+0.3 from last month'}
-                      </p>
-                    </div>
-                    <div className="h-10 w-10 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
-                      <Target className="h-5 w-5 text-purple-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Charts Grid - Compact and Responsive */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-[calc(100vh-200px)]">
-              {/* Revenue Growth Chart */}
-              <Card className="card-elevated">
-                <CardHeader className="pb-1">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                    Revenue Growth
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-3">
-                  <ResponsiveContainer width="100%" height={120}>
-                    <AreaChart data={chartData.growthData}>
-                      <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                      <XAxis 
-                        dataKey="month" 
-                        axisLine={false}
-                        tickLine={false}
-                        className="text-xs text-muted-foreground"
-                        fontSize={10}
-                      />
-                      <YAxis 
-                        yAxisId="left"
-                        axisLine={false}
-                        tickLine={false}
-                        className="text-xs text-muted-foreground"
-                        tickFormatter={(value) => `$${value/1000}k`}
-                        fontSize={10}
-                      />
-                      <Tooltip 
-                        formatter={(value, name) => [
-                          name === 'mrr' ? `$${value.toLocaleString()}` : value,
-                          name === 'mrr' ? 'MRR' : 'Students'
-                        ]}
-                        labelClassName="text-foreground"
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px',
-                        }}
-                      />
-                      <Area 
-                        yAxisId="left"
-                        type="monotone" 
-                        dataKey="mrr" 
-                        stroke="hsl(var(--primary))" 
-                        fill="hsl(var(--primary))"
-                        fillOpacity={0.2}
-                        strokeWidth={1}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-              {/* Student Health Distribution */}
-              <Card className="card-elevated">
-                <CardHeader className="pb-1">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Heart className="h-4 w-4 text-muted-foreground" />
-                    Student Health Distribution
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-3">
-                  <ResponsiveContainer width="100%" height={120}>
-                    <PieChart>
-                      <Pie
-                        data={chartData.healthData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={15}
-                        outerRadius={25}
-                        paddingAngle={2}
-                        dataKey="value"
-                      >
-                        {chartData.healthData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        formatter={(value) => [`${value}%`, 'Percentage']}
-                        labelClassName="text-foreground"
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px',
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="grid grid-cols-3 gap-1 mt-1">
-                    {chartData.healthData.map((item, index) => (
-                      <div key={index} className="text-center">
-                        <div className="flex items-center justify-center space-x-1">
-                          <div 
-                            className="w-1.5 h-1.5 rounded-full" 
-                            style={{ backgroundColor: item.color }}
-                          ></div>
-                          <span className="text-xs font-medium">{item.value}%</span>
+          {/* Main Content */}
+          <main className={cn("flex-1 p-4 overflow-auto max-h-screen", layoutStyles[layout as keyof typeof layoutStyles])}>
+            {/* Show filter summary */}
+            {hasActiveFilters && (
+              <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  Showing {filteredData.length} of {allClients.length} clients with applied filters
+                </p>
+              </div>
+            )}
+            
+            {/* Render widgets based on customization */}
+            {visibleWidgets.map((widget) => {
+              if (widget.id === 'metrics') {
+                return (
+                  <div key={widget.id} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                    <Card className="card-metric hover-lift">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Total Students</p>
+                            <p className="text-xl font-bold text-foreground">{filteredMetrics.total}</p>
+                            <p className="text-xs text-green-600 flex items-center gap-1">
+                              <TrendingUp className="h-3 w-3" />
+                              {hasActiveFilters ? 'Filtered view' : '+12% from last month'}
+                            </p>
+                          </div>
+                          <div className="h-10 w-10 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
+                            <Users className="h-5 w-5 text-blue-600" />
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                      </CardContent>
+                    </Card>
 
-              {/* Offer Performance with Chart */}
-              <Card className="card-elevated">
-                <CardHeader>
-                  <div>
-                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                      <Target className="h-5 w-5 text-muted-foreground" />
-                      Offer Performance
+                    <Card className="card-metric hover-lift">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Active Students</p>
+                            <p className="text-xl font-bold text-foreground">{filteredMetrics.active}</p>
+                            <p className="text-xs text-green-600 flex items-center gap-1">
+                              <TrendingUp className="h-3 w-3" />
+                              {hasActiveFilters ? 'Filtered view' : '+5% from last month'}
+                            </p>
+                          </div>
+                          <div className="h-10 w-10 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
+                            <Heart className="h-5 w-5 text-green-600" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="card-metric hover-lift">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Monthly MRR</p>
+                            <p className="text-xl font-bold text-foreground">${Math.round(filteredMetrics.totalMRR / 1000)}K</p>
+                            <p className="text-xs text-green-600 flex items-center gap-1">
+                              <TrendingUp className="h-3 w-3" />
+                              {hasActiveFilters ? 'Filtered view' : '+8.2% from last month'}
+                            </p>
+                          </div>
+                          <div className="h-10 w-10 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg flex items-center justify-center">
+                            <DollarSign className="h-5 w-5 text-emerald-600" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="card-metric hover-lift">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Avg Health Score</p>
+                            <p className="text-xl font-bold text-foreground">{filteredMetrics.avgHealth.toFixed(1)}</p>
+                            <p className="text-xs text-green-600 flex items-center gap-1">
+                              <TrendingUp className="h-3 w-3" />
+                              {hasActiveFilters ? 'Filtered view' : '+0.3 from last month'}
+                            </p>
+                          </div>
+                          <div className="h-10 w-10 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
+                            <Target className="h-5 w-5 text-purple-600" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                );
+              }
+              
+              // Continue with other widgets...
+              return null;
+            })}
+            
+            {/* Charts Grid - Only show visible chart widgets */}
+            <div className={cn(
+              "grid gap-4",
+              layout === 'compact' ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1 lg:grid-cols-2",
+              layout === 'spacious' && "lg:grid-cols-1"
+            )}>
+
+              {/* Revenue Growth Chart - Only if visible */}
+              {visibleWidgets.find(w => w.id === 'revenue-chart')?.isVisible && (
+                <Card className="card-elevated">
+                  <CardHeader className="pb-1">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                      Revenue Growth {hasActiveFilters && '(Filtered)'}
                     </CardTitle>
-                    <p className="text-sm text-muted-foreground">Track offer success rates and revenue impact</p>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-2">
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <p className="text-sm text-muted-foreground">Revenue Won</p>
-                      <p className="text-2xl font-bold text-green-600">$0.00</p>
-                    </div>
-                    <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                      <p className="text-sm text-muted-foreground">Conversion Rate</p>
-                      <p className="text-2xl font-bold text-blue-600">0.0%</p>
-                    </div>
-                  </div>
-                  <div className="h-48">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={[
-                        { name: 'Sent', value: 0 },
-                        { name: 'Viewed', value: 0 },
-                        { name: 'Responded', value: 0 },
-                        { name: 'Accepted', value: 0 }
-                      ]}>
+                  </CardHeader>
+                  <CardContent className="p-3">
+                    <ResponsiveContainer width="100%" height={layout === 'compact' ? 120 : layout === 'spacious' ? 200 : 150}>
+                      <AreaChart data={chartData.growthData}>
                         <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                         <XAxis 
-                          dataKey="name"
+                          dataKey="month" 
                           axisLine={false}
                           tickLine={false}
                           className="text-xs text-muted-foreground"
+                          fontSize={10}
                         />
                         <YAxis 
+                          yAxisId="left"
                           axisLine={false}
                           tickLine={false}
                           className="text-xs text-muted-foreground"
+                          tickFormatter={(value) => `$${value/1000}k`}
+                          fontSize={10}
                         />
                         <Tooltip 
+                          formatter={(value, name) => [
+                            name === 'mrr' ? `$${value.toLocaleString()}` : value,
+                            name === 'mrr' ? 'MRR' : 'Students'
+                          ]}
+                          labelClassName="text-foreground"
                           contentStyle={{
                             backgroundColor: 'hsl(var(--card))',
                             border: '1px solid hsl(var(--border))',
                             borderRadius: '8px',
                           }}
                         />
-                        <Bar 
-                          dataKey="value" 
-                          fill="hsl(var(--primary))"
-                          radius={[4, 4, 0, 0]}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Renewal Forecast with Chart */}
-              <Card className="card-elevated">
-                <CardHeader>
-                  <div>
-                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                      <Calendar className="h-5 w-5 text-muted-foreground" />
-                      Renewal Forecast
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground">Upcoming renewals in the next 30 days</p>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-2">
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                      <p className="text-sm text-muted-foreground">Total Revenue</p>
-                      <p className="text-2xl font-bold text-blue-600">$0.00</p>
-                    </div>
-                    <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <p className="text-sm text-muted-foreground">Upsell Potential</p>
-                      <p className="text-2xl font-bold text-green-600">$0.00</p>
-                    </div>
-                  </div>
-                  <div className="h-48">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={[
-                        { month: 'Week 1', renewals: 0, revenue: 0 },
-                        { month: 'Week 2', renewals: 0, revenue: 0 },
-                        { month: 'Week 3', renewals: 0, revenue: 0 },
-                        { month: 'Week 4', renewals: 0, revenue: 0 }
-                      ]}>
-                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                        <XAxis 
-                          dataKey="month"
-                          axisLine={false}
-                          tickLine={false}
-                          className="text-xs text-muted-foreground"
-                        />
-                        <YAxis 
-                          axisLine={false}
-                          tickLine={false}
-                          className="text-xs text-muted-foreground"
-                        />
-                        <Tooltip 
-                          contentStyle={{
-                            backgroundColor: 'hsl(var(--card))',
-                            border: '1px solid hsl(var(--border))',
-                            borderRadius: '8px',
-                          }}
-                        />
-                        <Line 
+                        <Area 
+                          yAxisId="left"
                           type="monotone" 
-                          dataKey="renewals" 
+                          dataKey="mrr" 
                           stroke="hsl(var(--primary))" 
-                          strokeWidth={2}
-                          dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
+                          fill="hsl(var(--primary))"
+                          fillOpacity={0.2}
+                          strokeWidth={1}
                         />
-                      </LineChart>
+                      </AreaChart>
                     </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Student Health Distribution - Only if visible */}
+              {visibleWidgets.find(w => w.id === 'health-chart')?.isVisible && (
+                <Card className="card-elevated">
+                  <CardHeader className="pb-1">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Heart className="h-4 w-4 text-muted-foreground" />
+                      Student Health Distribution {hasActiveFilters && '(Filtered)'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-3">
+                    <ResponsiveContainer width="100%" height={layout === 'compact' ? 120 : layout === 'spacious' ? 200 : 150}>
+                      <PieChart>
+                        <Pie
+                          data={chartData.healthData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={15}
+                          outerRadius={layout === 'spacious' ? 40 : 25}
+                          paddingAngle={2}
+                          dataKey="value"
+                        >
+                          {chartData.healthData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          formatter={(value) => [`${value}%`, 'Percentage']}
+                          labelClassName="text-foreground"
+                          contentStyle={{
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px',
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="grid grid-cols-3 gap-1 mt-1">
+                      {chartData.healthData.map((item, index) => (
+                        <div key={index} className="text-center">
+                          <div className="flex items-center justify-center space-x-1">
+                            <div 
+                              className="w-1.5 h-1.5 rounded-full" 
+                              style={{ backgroundColor: item.color }}
+                            ></div>
+                            <span className="text-xs font-medium">{item.value}%</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </main>
         </div>
