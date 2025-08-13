@@ -8,15 +8,25 @@ import { Users, Heart, DollarSign, TrendingUp, Calendar, Target } from 'lucide-r
 import { SearchBar } from '@/components/Navigation/SearchBar';
 import { NotificationBell } from '@/components/Navigation/NotificationBell';
 import { Breadcrumbs } from '@/components/Navigation/Breadcrumbs';
+import { createTestNotifications } from '@/utils/testNotifications';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell, AreaChart, Area 
 } from 'recharts';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 export function CleanDashboard() {
   const { allClients, teamStatusCounts, teamMetrics, churnData, npsScore, isLoading, error } = useDashboardData({ enableAutoSync: true });
+  
+  // Create test notifications on first load (for demo purposes)
+  useEffect(() => {
+    const hasCreatedTestNotifications = localStorage.getItem('test-notifications-created');
+    if (!hasCreatedTestNotifications) {
+      createTestNotifications();
+      localStorage.setItem('test-notifications-created', 'true');
+    }
+  }, []);
   
   // Generate dynamic chart data from real database values
   const chartData = useMemo(() => {
