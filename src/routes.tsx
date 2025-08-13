@@ -24,6 +24,7 @@ const NotFound = lazy(() => import('@/pages/NotFound'));
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 const AuthTestingPage = lazy(() => import('@/pages/AuthTestingPage'));
 const PreLaunchChecklist = lazy(() => import('@/pages/PreLaunchChecklist'));
+const SystemAudit = lazy(() => import('@/pages/SystemAudit'));
 
 // Loading fallback for Suspense
 const PageLoader = () => (
@@ -97,6 +98,11 @@ export default function AppRoutes() {
         <Route path="/pre-launch" element={
           <ProtectedRoute>
             <PreLaunchChecklist />
+          </ProtectedRoute>
+        } />
+        <Route path="/system-audit" element={
+          <ProtectedRoute>
+            <SystemAudit />
           </ProtectedRoute>
         } />
         <Route path="/auth-callback" element={<AuthCallback />} />

@@ -11,8 +11,7 @@ import { logStartupPhase } from "@/utils/errorHandling";
 import { SessionValidator } from "@/components/SessionValidator";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { NavigationProgressBar } from "@/components/ui/progress-bar";
-// Performance monitoring disabled temporarily due to casing conflict
-// import { WebVitalsMonitor, PerformanceDebugger } from "@/components/Performance";
+import { WebVitalsMonitor, PerformanceDebugger } from "@/components/Performance";
 import { Suspense, useEffect, useState, useCallback } from "react";
 import { CriticalLoadingState } from "@/components/CriticalLoadingState";
 import AppRoutes from "./routes";
@@ -111,9 +110,8 @@ function App() {
           <AppInitializer>
             <Suspense fallback={<CriticalLoadingState message="Loading application..." timeout={3000} />}>
               <AuthErrorBoundary>
-                {/* Performance monitoring components disabled due to casing conflict */}
-                {/* <WebVitalsMonitor /> */}
-                {/* <PerformanceDebugger visible={process.env.NODE_ENV === 'development'} /> */}
+                <WebVitalsMonitor />
+                <PerformanceDebugger visible={process.env.NODE_ENV === 'development'} />
                 <NavigationProgressBar variant="brand" />
                 <BrowserCompatibilityCheck />
                 <OfflineDetector />

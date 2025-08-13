@@ -56,6 +56,111 @@ export type Database = {
         }
         Relationships: []
       }
+      clients: {
+        Row: {
+          backend_students: number | null
+          calls_booked: number | null
+          case_study_completed: boolean | null
+          case_study_conducted: boolean | null
+          case_study_notes: string | null
+          case_study_scheduled_date: string | null
+          contract_value: number
+          created_at: string
+          created_by: string | null
+          csm: string | null
+          deals_closed: number | null
+          end_date: string
+          growth: number | null
+          id: string
+          last_communication: string | null
+          last_payment_amount: number | null
+          last_payment_date: string | null
+          logo: string | null
+          mrr: number | null
+          name: string
+          notes: string | null
+          nps_score: number | null
+          progress: number | null
+          referral_count: number | null
+          referral_names: string[] | null
+          start_date: string
+          status: string
+          team: string | null
+          trustpilot_date: string | null
+          trustpilot_link: string | null
+          trustpilot_rating: number | null
+          updated_at: string
+        }
+        Insert: {
+          backend_students?: number | null
+          calls_booked?: number | null
+          case_study_completed?: boolean | null
+          case_study_conducted?: boolean | null
+          case_study_notes?: string | null
+          case_study_scheduled_date?: string | null
+          contract_value?: number
+          created_at?: string
+          created_by?: string | null
+          csm?: string | null
+          deals_closed?: number | null
+          end_date: string
+          growth?: number | null
+          id?: string
+          last_communication?: string | null
+          last_payment_amount?: number | null
+          last_payment_date?: string | null
+          logo?: string | null
+          mrr?: number | null
+          name: string
+          notes?: string | null
+          nps_score?: number | null
+          progress?: number | null
+          referral_count?: number | null
+          referral_names?: string[] | null
+          start_date: string
+          status: string
+          team?: string | null
+          trustpilot_date?: string | null
+          trustpilot_link?: string | null
+          trustpilot_rating?: number | null
+          updated_at?: string
+        }
+        Update: {
+          backend_students?: number | null
+          calls_booked?: number | null
+          case_study_completed?: boolean | null
+          case_study_conducted?: boolean | null
+          case_study_notes?: string | null
+          case_study_scheduled_date?: string | null
+          contract_value?: number
+          created_at?: string
+          created_by?: string | null
+          csm?: string | null
+          deals_closed?: number | null
+          end_date?: string
+          growth?: number | null
+          id?: string
+          last_communication?: string | null
+          last_payment_amount?: number | null
+          last_payment_date?: string | null
+          logo?: string | null
+          mrr?: number | null
+          name?: string
+          notes?: string | null
+          nps_score?: number | null
+          progress?: number | null
+          referral_count?: number | null
+          referral_names?: string[] | null
+          start_date?: string
+          status?: string
+          team?: string | null
+          trustpilot_date?: string | null
+          trustpilot_link?: string | null
+          trustpilot_rating?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       communications: {
         Row: {
           client_id: string

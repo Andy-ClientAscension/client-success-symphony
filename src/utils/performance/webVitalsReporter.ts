@@ -1,9 +1,9 @@
 
-import { Metric, ReportHandler, onCLS, onFCP, onFID, onINP, onLCP, onTTFB } from 'web-vitals';
+import { Metric, onCLS, onFCP, onINP, onLCP, onTTFB } from 'web-vitals';
 import { captureException } from '@/utils/sentry/config';
 import { toast } from '@/components/ui/use-toast';
 
-export type MetricName = 'CLS' | 'FCP' | 'FID' | 'INP' | 'LCP' | 'TTFB';
+export type MetricName = 'CLS' | 'FCP' | 'INP' | 'LCP' | 'TTFB';
 
 export interface WebVitalMetric extends Metric {
   name: MetricName;
@@ -70,16 +70,15 @@ export function reportWebVitals(metric: WebVitalMetric): void {
 /**
  * Measures all web vitals and reports them using the provided handler
  */
-export function measureWebVitals(onReport: ReportHandler = reportWebVitals): void {
+export function measureWebVitals(onReport = reportWebVitals): void {
   try {
     // Core Web Vitals
     onCLS(onReport);
-    onFID(onReport);
+    onINP(onReport);
     onLCP(onReport);
     
     // Additional metrics
     onFCP(onReport);
-    onINP(onReport);
     onTTFB(onReport);
   } catch (error) {
     console.error('Failed to measure web vitals:', error);
@@ -94,7 +93,6 @@ export function getWebVitalsThresholds(): Record<MetricName, { good: number; poo
   return {
     CLS: { good: 0.1, poor: 0.25 }, // Cumulative Layout Shift
     FCP: { good: 1800, poor: 3000 }, // First Contentful Paint (ms)
-    FID: { good: 100, poor: 300 }, // First Input Delay (ms)
     INP: { good: 200, poor: 500 }, // Interaction to Next Paint (ms)
     LCP: { good: 2500, poor: 4000 }, // Largest Contentful Paint (ms)
     TTFB: { good: 800, poor: 1800 }, // Time to First Byte (ms)

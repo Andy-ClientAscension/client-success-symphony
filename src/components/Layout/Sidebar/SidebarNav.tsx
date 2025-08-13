@@ -18,8 +18,9 @@ export const navLinks = [
   { to: '/communications', label: 'Communications', icon: MessageSquare },
   { to: '/payments', label: 'Payments', icon: CreditCard },
   { to: '/automations', label: 'Automations', icon: FileSliders },
-  { to: '/health-score', label: 'Health Score', icon: Brain },
+  { to: '/health-score-dashboard', label: 'Health Score', icon: Brain },
   { to: '/settings', label: 'Settings', icon: Settings },
+  { to: '/system-audit', label: 'System Audit', icon: Activity },
   { to: '/help', label: 'Help', icon: HelpCircle },
 ];
 
