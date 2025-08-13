@@ -49,8 +49,10 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
     dispatch({ type: 'NAVIGATE_COMPLETE' });
     
     // Perform initial session check only once after provider is mounted
-    // but only if not on auth-related paths
+    // but only if not on auth-related paths and not already checking
     if (!initialCheckDone && 
+        authStateMachine.state !== 'checking_session' &&
+        authStateMachine.state !== 'authenticated' &&
         location.pathname !== '/login' && 
         location.pathname !== '/signup' && 
         location.pathname !== '/auth-callback' &&
@@ -58,12 +60,24 @@ export function AuthStateMachineProvider({ children }: { children: React.ReactNo
       console.log("AuthStateMachineProvider: Performing initial session check");
       setInitialCheckDone(true);
       
-      // Short delay to avoid race conditions with other init processes
+      // Dispatch session check start to prevent multiple checks
+      dispatch({ type: 'SESSION_CHECK_START' });
+      
+      // Delay to avoid race conditions with other init processes
       setTimeout(() => {
-        authOperations.checkSession(false).catch(err => {
-          console.error("Initial session check error:", err);
-        });
-      }, 300);
+        authOperations.checkSession(false)
+          .then((result) => {
+            if (result) {
+              dispatch({ type: 'SESSION_CHECK_SUCCESS' });
+            } else {
+              dispatch({ type: 'SESSION_CHECK_FAILURE' });
+            }
+          })
+          .catch(err => {
+            console.error("Initial session check error:", err);
+            dispatch({ type: 'SESSION_CHECK_FAILURE', error: err });
+          });
+      }, 100); // Reduced delay for faster startup
     }
   }, [location, dispatch, initialCheckDone, authOperations]);
   

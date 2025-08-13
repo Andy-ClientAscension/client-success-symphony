@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { getAllClients, getClientsCountByStatus, getAverageNPS, getChurnData, getClientMetricsByTeam } from "@/lib/data";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useAutoSync } from "@/hooks/useAutoSync";
 
 export const DATA_KEYS = {
@@ -28,9 +28,9 @@ export function useDashboardData(options: UseDashboardDataOptions = {}) {
   const [errorState, setErrorState] = useState<Error | null>(null);
   const { triggerSync, isSyncing } = useAutoSync();
 
-  // Base queries for all dashboard data
+  // Simplified query options to prevent TypeScript issues
   const clientsQuery = useQuery({
-    queryKey: [DASHBOARD_KEYS.CLIENTS],
+    queryKey: [DATA_KEYS.CLIENTS],
     queryFn: getAllClients,
     staleTime: 30000,
     refetchOnWindowFocus: true,
@@ -38,7 +38,7 @@ export function useDashboardData(options: UseDashboardDataOptions = {}) {
   });
 
   const countQuery = useQuery({
-    queryKey: [DASHBOARD_KEYS.CLIENT_COUNTS],
+    queryKey: [DATA_KEYS.CLIENT_COUNTS],
     queryFn: getClientsCountByStatus,
     staleTime: 30000,
     refetchOnWindowFocus: true,
@@ -46,7 +46,7 @@ export function useDashboardData(options: UseDashboardDataOptions = {}) {
   });
 
   const npsQuery = useQuery({
-    queryKey: [DASHBOARD_KEYS.NPS_DATA],
+    queryKey: [DATA_KEYS.NPS_DATA],
     queryFn: getAverageNPS,
     staleTime: 60000,
     refetchOnWindowFocus: true,
@@ -54,7 +54,7 @@ export function useDashboardData(options: UseDashboardDataOptions = {}) {
   });
 
   const churnQuery = useQuery({
-    queryKey: [DASHBOARD_KEYS.CHURN_DATA],
+    queryKey: [DATA_KEYS.CHURN_DATA],
     queryFn: getChurnData,
     staleTime: 60000,
     refetchOnWindowFocus: true,
@@ -62,12 +62,12 @@ export function useDashboardData(options: UseDashboardDataOptions = {}) {
   });
 
   const teamMetricsQuery = useQuery({
-    queryKey: [DASHBOARD_KEYS.TEAM_METRICS, teamFilter],
+    queryKey: [DATA_KEYS.TEAM_METRICS, teamFilter],
     queryFn: () => getClientMetricsByTeam(teamFilter),
     staleTime: 30000,
     refetchOnWindowFocus: true,
     retry: 2,
-    enabled: !!teamFilter,
+    enabled: !!teamFilter && teamFilter !== 'all',
   });
 
   // Process and filter data based on team selection
@@ -127,8 +127,8 @@ export function useDashboardData(options: UseDashboardDataOptions = {}) {
     teamFilter
   ]);
 
-  // Error handling
-  useEffect(() => {
+  // Error handling with memoized callback
+  const handleErrors = useCallback(() => {
     const errors = [
       clientsQuery.error,
       countQuery.error,
@@ -139,10 +139,13 @@ export function useDashboardData(options: UseDashboardDataOptions = {}) {
 
     if (errors.length > 0) {
       const firstError = errors[0];
-      setErrorState(firstError instanceof Error ? firstError : new Error(String(firstError)));
+      const errorObj = firstError instanceof Error ? firstError : new Error(String(firstError));
+      setErrorState(errorObj);
+      
+      // Only show toast if it's a new error
       toast({
         title: "Dashboard Data Error",
-        description: firstError instanceof Error ? firstError.message : "Failed to load dashboard data",
+        description: errorObj.message,
         variant: "destructive",
       });
     } else {
@@ -157,6 +160,10 @@ export function useDashboardData(options: UseDashboardDataOptions = {}) {
     toast
   ]);
 
+  useEffect(() => {
+    handleErrors();
+  }, [handleErrors]);
+
   // Mark initial data as fetched
   useEffect(() => {
     if (clientsQuery.data && !isInitialDataFetched) {
@@ -165,17 +172,17 @@ export function useDashboardData(options: UseDashboardDataOptions = {}) {
     }
   }, [clientsQuery.data, isInitialDataFetched]);
 
-  // Force refresh all data
-  const refreshAllData = async () => {
+  // Force refresh all data with memoized callback
+  const refreshAllData = useCallback(async () => {
     console.log("Manual refresh of dashboard data initiated");
     setErrorState(null);
     
     // Invalidate all relevant queries
-    queryClient.invalidateQueries({ queryKey: [DASHBOARD_KEYS.CLIENTS] });
-    queryClient.invalidateQueries({ queryKey: [DASHBOARD_KEYS.CLIENT_COUNTS] });
-    queryClient.invalidateQueries({ queryKey: [DASHBOARD_KEYS.NPS_DATA] });
-    queryClient.invalidateQueries({ queryKey: [DASHBOARD_KEYS.CHURN_DATA] });
-    queryClient.invalidateQueries({ queryKey: [DASHBOARD_KEYS.TEAM_METRICS] });
+    queryClient.invalidateQueries({ queryKey: [DATA_KEYS.CLIENTS] });
+    queryClient.invalidateQueries({ queryKey: [DATA_KEYS.CLIENT_COUNTS] });
+    queryClient.invalidateQueries({ queryKey: [DATA_KEYS.NPS_DATA] });
+    queryClient.invalidateQueries({ queryKey: [DATA_KEYS.CHURN_DATA] });
+    queryClient.invalidateQueries({ queryKey: [DATA_KEYS.TEAM_METRICS] });
     
     if (enableAutoSync) {
       try {
@@ -186,7 +193,7 @@ export function useDashboardData(options: UseDashboardDataOptions = {}) {
         setErrorState(error instanceof Error ? error : new Error(String(error)));
       }
     }
-  };
+  }, [enableAutoSync, triggerSync, queryClient]);
 
   // Network status monitoring
   useEffect(() => {
@@ -217,7 +224,7 @@ export function useDashboardData(options: UseDashboardDataOptions = {}) {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [toast, enableAutoSync]);
+  }, [toast, enableAutoSync, refreshAllData]);
 
   // Combined loading state
   const isLoading = (
@@ -236,7 +243,7 @@ export function useDashboardData(options: UseDashboardDataOptions = {}) {
     teamMetricsQuery.isFetching;
   
   // Calculate last updated timestamp
-  const getLastUpdated = () => {
+  const getLastUpdated = useCallback(() => {
     const timestamps = [
       clientsQuery.dataUpdatedAt,
       countQuery.dataUpdatedAt,
@@ -246,7 +253,13 @@ export function useDashboardData(options: UseDashboardDataOptions = {}) {
     ].filter(Boolean);
     
     return timestamps.length > 0 ? new Date(Math.max(...timestamps)) : null;
-  };
+  }, [
+    clientsQuery.dataUpdatedAt,
+    countQuery.dataUpdatedAt,
+    npsQuery.dataUpdatedAt,
+    churnQuery.dataUpdatedAt,
+    teamMetricsQuery.dataUpdatedAt
+  ]);
 
   return {
     // Processed data

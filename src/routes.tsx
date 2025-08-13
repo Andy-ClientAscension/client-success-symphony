@@ -9,6 +9,7 @@ const Index = lazy(() => import('@/pages/Index'));
 const Login = lazy(() => import('@/pages/Login'));
 const SignUp = lazy(() => import('@/pages/SignUp'));
 const UnifiedDashboard = lazy(() => import('@/pages/UnifiedDashboard'));
+const AIDashboard = lazy(() => import('@/pages/AIDashboard'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Analytics = lazy(() => import('@/pages/Analytics'));
 const Clients = lazy(() => import('@/pages/Clients'));
@@ -46,6 +47,11 @@ export default function AppRoutes() {
         <Route path="/UnifiedDashboard" element={
           <ProtectedRoute>
             <UnifiedDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/ai-dashboard" element={
+          <ProtectedRoute>
+            <AIDashboard />
           </ProtectedRoute>
         } />
         <Route path="/analytics" element={
