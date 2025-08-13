@@ -6,7 +6,7 @@ import { Users, DollarSign, Heart, Gauge, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrency, calculateStatusCounts, calculateRates } from "@/utils/analyticsUtils";
 import { dataSyncService } from "@/utils/dataSyncService";
-import { useSyncedDashboard } from "@/hooks/useSyncedDashboard";
+import { useDashboardData } from "@/hooks/useDashboardData";
 
 interface HeroMetricsProps {
   className?: string;
@@ -14,7 +14,7 @@ interface HeroMetricsProps {
 
 export function HeroMetrics({ className }: HeroMetricsProps) {
   // Use the shared dashboard hook to ensure consistent data across components
-  const { clients, clientCounts, npsScore, isLoading, error } = useSyncedDashboard();
+  const { clients, clientCounts, npsScore, isLoading, error } = useDashboardData({});
   
   const { data, isLoading: isMetricsLoading } = useQuery({
     queryKey: ['hero-metrics'],

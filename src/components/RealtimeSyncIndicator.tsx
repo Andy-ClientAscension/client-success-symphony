@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Wifi, WifiOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { DATA_KEYS } from "@/hooks/useSyncedDashboard";
+import { DATA_KEYS } from "@/hooks/useDashboardData";
 
 // Mock WebSocket setup (since we don't have actual WebSocket endpoint)
 // In a real app, replace with actual WebSocket connection

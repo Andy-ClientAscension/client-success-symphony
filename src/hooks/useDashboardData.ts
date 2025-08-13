@@ -4,7 +4,7 @@ import { getAllClients, getClientsCountByStatus, getAverageNPS, getChurnData, ge
 import { useEffect, useState, useMemo } from "react";
 import { useAutoSync } from "@/hooks/useAutoSync";
 
-export const DASHBOARD_KEYS = {
+export const DATA_KEYS = {
   CLIENTS: 'clients',
   CLIENT_COUNTS: 'client-counts',
   NPS_DATA: 'nps-data',
@@ -12,6 +12,8 @@ export const DASHBOARD_KEYS = {
   TEAM_METRICS: 'team-metrics',
   ALL_DATA: 'all-dashboard-data'
 };
+
+export const DASHBOARD_KEYS = DATA_KEYS; // Alias for compatibility
 
 interface UseDashboardDataOptions {
   teamFilter?: string;

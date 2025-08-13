@@ -3,8 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { TeamAnalyticsHeader } from "./TeamAnalyticsHeader";
 import { TeamAnalyticsTabs } from "./TeamAnalyticsTabs";
-import { useTeamData } from "./hooks/useTeamData";
-import { useTeamMetrics } from "./hooks/useTeamMetrics";
+import { useDashboardData } from "@/hooks/useDashboardData";
 import { getAllClients } from "@/lib/data";
 import { ADDITIONAL_TEAMS } from "./constants";
 
@@ -21,9 +20,15 @@ export function TeamAnalytics({
 }: TeamAnalyticsProps) {
   const [selectedTeam, setSelectedTeam] = useState(initialTeam);
   const [activeTab, setActiveTab] = useState("overview");
-  const { teamData, loading, error, refetch } = useTeamData(selectedTeam);
-  const { metrics, rawData } = useTeamMetrics(selectedTeam);
+  const { teamMetrics: metrics, teamStatusCounts, isLoading: loading, error, refetchData: refetch } = useDashboardData({ teamFilter: selectedTeam });
   const allClients = getAllClients();
+  
+  // Mock data structure for compatibility
+  const teamData = {
+    statusCounts: teamStatusCounts,
+    trends: { retentionTrend: 2.5, atRiskTrend: -1.2, churnTrend: -0.8 },
+    metrics: { totalMRR: teamStatusCounts?.total * 5000 || 0, totalCallsBooked: allClients.length * 2, totalDealsClosed: allClients.length }
+  };
   
   // Filter clients for the selected team
   const teamClients = selectedTeam === 'all'

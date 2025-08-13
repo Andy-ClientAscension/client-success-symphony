@@ -1,8 +1,7 @@
 
 // Correct exports for TeamAnalytics components
 export { TeamAnalytics } from "./TeamAnalytics";
-export { useTeamData } from "./hooks/useTeamData";
-export { useTeamMetrics } from "./hooks/useTeamMetrics";
+// Removed deprecated hooks - use useDashboardData instead
 export { TeamAnalyticsTab } from "./TeamAnalyticsTab";
 export { TeamMetricsOverview } from "./TeamMetricsOverview";
 export * from "./constants";

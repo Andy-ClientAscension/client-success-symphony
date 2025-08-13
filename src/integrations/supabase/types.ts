@@ -269,6 +269,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_sales_access: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "manager" | "user"

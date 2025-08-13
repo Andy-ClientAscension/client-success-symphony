@@ -3,11 +3,11 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RealtimeSyncIndicator } from "@/components/RealtimeSyncIndicator";
 import { Progress } from "@/components/ui/progress";
-import { useSyncedDashboard } from "@/hooks/useSyncedDashboard";
+import { useDashboardData } from "@/hooks/useDashboardData";
 import { formatDistanceToNow } from "date-fns";
 
 export function DataSyncPanel() {
-  const { isRefreshing, lastUpdated } = useSyncedDashboard();
+  const { isRefreshing, lastUpdated } = useDashboardData({});
   
   return (
     <aside 
