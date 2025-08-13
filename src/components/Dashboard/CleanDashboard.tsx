@@ -11,6 +11,9 @@ import { Breadcrumbs } from '@/components/Navigation/Breadcrumbs';
 import { SyncIndicator } from '@/components/ui/sync-indicator';
 import { AdvancedFilters, useAdvancedFilters } from '@/components/Filters/AdvancedFilters';
 import { DashboardCustomizer, useDashboardCustomization, DashboardWidget } from './DashboardCustomizer';
+import UniversalErrorBoundary, { withErrorBoundary } from '@/components/ErrorBoundary/UniversalErrorBoundary';
+import { OfflineSupport } from '@/components/OfflineSupport/OfflineSupport';
+import { useAnalytics, usePerformanceTracking } from '@/services/analytics';
 import { createTestNotifications } from '@/utils/testNotifications';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { 
@@ -30,6 +33,18 @@ const defaultWidgets: DashboardWidget[] = [
 
 export function CleanDashboard() {
   const { allClients, teamStatusCounts, teamMetrics, churnData, npsScore, isLoading, error, lastUpdated, refreshData, isRefreshing } = useDashboardData({ enableAutoSync: true });
+  
+  // Analytics and performance tracking
+  const { trackFeatureUsage, trackClick, trackError } = useAnalytics();
+  usePerformanceTracking();
+  
+  // Track dashboard usage
+  useEffect(() => {
+    trackFeatureUsage('dashboard', 'view', { 
+      hasFilters: hasActiveFilters,
+      visibleWidgets: visibleWidgets.length 
+    });
+  }, [trackFeatureUsage]);
   
   // Advanced filtering
   const { filters, updateFilters, hasActiveFilters } = useAdvancedFilters();
@@ -139,8 +154,35 @@ export function CleanDashboard() {
     return Array.from(new Set(allClients.map(client => client.status)));
   }, [allClients]);
   
+  // Track errors in analytics
+  useEffect(() => {
+    if (error) {
+      trackError(error, 'dashboard', { 
+        hasFilters: hasActiveFilters,
+        dataLength: allClients.length 
+      });
+    }
+  }, [error, trackError, hasActiveFilters, allClients.length]);
+  
   // Visible widgets sorted by order
   const visibleWidgets = widgets.filter(widget => widget.isVisible).sort((a, b) => a.order - b.order);
+  
+  // Enhanced refresh function with analytics
+  const handleRefresh = () => {
+    trackClick('refresh_button', { context: 'dashboard_header' });
+    refreshData();
+  };
+  
+  // Enhanced filter function with analytics
+  const handleFiltersChange = (newFilters: any) => {
+    trackFeatureUsage('filters', 'change', { 
+      filterCount: Object.keys(newFilters).length,
+      hasDateRange: !!(newFilters.dateRange?.from || newFilters.dateRange?.to),
+      hasTeams: newFilters.teams?.length > 0,
+      hasStatuses: newFilters.statuses?.length > 0
+    });
+    updateFilters(newFilters);
+  };
   
   // Loading state
   if (isLoading) {
@@ -183,7 +225,9 @@ export function CleanDashboard() {
   }
   
   return (
-    <SidebarProvider>
+    <UniversalErrorBoundary level="page">
+      <OfflineSupport>
+        <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <DashboardSidebar />
         
@@ -221,13 +265,13 @@ export function CleanDashboard() {
                     isLoading={isLoading}
                     isRefreshing={isRefreshing}
                     lastUpdated={lastUpdated}
-                    onRefresh={refreshData}
+                    onRefresh={handleRefresh}
                     syncStatus={error ? 'error' : 'idle'}
                   />
                   
                   <AdvancedFilters
                     filters={filters}
-                    onFiltersChange={updateFilters}
+                    onFiltersChange={handleFiltersChange}
                     availableTeams={availableTeams}
                     availableStatuses={availableStatuses}
                   />
@@ -255,8 +299,9 @@ export function CleanDashboard() {
             )}
             
             {/* Render widgets based on customization */}
-            {visibleWidgets.map((widget) => {
-              if (widget.id === 'metrics') {
+            <UniversalErrorBoundary level="component">
+              {visibleWidgets.map((widget) => {
+                if (widget.id === 'metrics') {
                 return (
                   <div key={widget.id} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                     <Card className="card-metric hover-lift">
@@ -332,11 +377,12 @@ export function CleanDashboard() {
                     </Card>
                   </div>
                 );
-              }
-              
-              // Continue with other widgets...
-              return null;
-            })}
+                }
+                
+                // Continue with other widgets...
+                return null;
+              })}
+            </UniversalErrorBoundary>
             
             {/* Charts Grid - Only show visible chart widgets */}
             <div className={cn(
@@ -345,6 +391,7 @@ export function CleanDashboard() {
               layout === 'spacious' && "lg:grid-cols-1"
             )}>
 
+            <UniversalErrorBoundary level="component">
               {/* Revenue Growth Chart - Only if visible */}
               {visibleWidgets.find(w => w.id === 'revenue-chart')?.isVisible && (
                 <Card className="card-elevated">
@@ -452,10 +499,13 @@ export function CleanDashboard() {
                   </CardContent>
                 </Card>
               )}
+            </UniversalErrorBoundary>
             </div>
           </main>
         </div>
-      </div>
-    </SidebarProvider>
+        </div>
+      </SidebarProvider>
+      </OfflineSupport>
+    </UniversalErrorBoundary>
   );
 }
