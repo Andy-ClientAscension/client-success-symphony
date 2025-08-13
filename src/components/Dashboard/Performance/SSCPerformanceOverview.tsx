@@ -3,13 +3,13 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { ResponsiveGrid } from '../Shared/ResponsiveGrid';
 import { SSCPerformanceMetrics } from '../Metrics/SSCPerformanceMetrics';
-import { useDashboardData } from '@/hooks/use-dashboard-data';
+import { useDashboardData } from '@/hooks/useDashboardData';
 
 export function SSCPerformanceOverview() {
-  const { clients } = useDashboardData();
+  const { allClients } = useDashboardData();
   
   // Get unique CSMs from clients
-  const csms = Array.from(new Set(clients.map(client => client.csm)));
+  const csms = Array.from(new Set(allClients.map(client => client.csm)));
 
   return (
     <section 
@@ -30,7 +30,7 @@ export function SSCPerformanceOverview() {
               <SSCPerformanceMetrics
                 key={csm}
                 csm={csm}
-                clients={clients}
+                clients={allClients}
               />
             ))}
           </ResponsiveGrid>

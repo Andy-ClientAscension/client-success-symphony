@@ -5,6 +5,7 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { DashboardSidebar } from './Layout/DashboardSidebar';
 import { Search, Bell, Users, Heart, DollarSign, TrendingUp, Calendar, Target } from 'lucide-react';
+import { useDashboardData } from '@/hooks/useDashboardData';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell, AreaChart, Area 
@@ -44,6 +45,8 @@ const growthData = [
 
 export function CleanDashboard() {
   console.log('CleanDashboard component loading...');
+  
+  const { allClients, teamStatusCounts, teamMetrics, isLoading, error } = useDashboardData({ enableAutoSync: true });
   
   return (
     <SidebarProvider>
@@ -93,10 +96,10 @@ export function CleanDashboard() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Total Students</p>
-                      <p className="text-xl font-bold text-foreground">59</p>
+                      <p className="text-xl font-bold text-foreground">{teamStatusCounts?.total || 0}</p>
                       <p className="text-xs text-green-600 flex items-center gap-1">
                         <TrendingUp className="h-3 w-3" />
-                        +12% from last month
+                        {isLoading ? 'Loading...' : '+12% from last month'}
                       </p>
                     </div>
                     <div className="h-10 w-10 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
@@ -111,10 +114,10 @@ export function CleanDashboard() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Active Students</p>
-                      <p className="text-xl font-bold text-foreground">47</p>
+                      <p className="text-xl font-bold text-foreground">{teamStatusCounts?.active || 0}</p>
                       <p className="text-xs text-green-600 flex items-center gap-1">
                         <TrendingUp className="h-3 w-3" />
-                        +5% from last month
+                        {isLoading ? 'Loading...' : '+5% from last month'}
                       </p>
                     </div>
                     <div className="h-10 w-10 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
@@ -129,10 +132,10 @@ export function CleanDashboard() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Monthly MRR</p>
-                      <p className="text-xl font-bold text-foreground">$167K</p>
+                      <p className="text-xl font-bold text-foreground">${teamMetrics?.totalMRR ? Math.round(teamMetrics.totalMRR / 1000) : 0}K</p>
                       <p className="text-xs text-green-600 flex items-center gap-1">
                         <TrendingUp className="h-3 w-3" />
-                        +8.2% from last month
+                        {isLoading ? 'Loading...' : '+8.2% from last month'}
                       </p>
                     </div>
                     <div className="h-10 w-10 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg flex items-center justify-center">
@@ -147,10 +150,10 @@ export function CleanDashboard() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Avg Health Score</p>
-                      <p className="text-xl font-bold text-foreground">8.2</p>
+                      <p className="text-xl font-bold text-foreground">{teamMetrics?.averageHealth?.toFixed(1) || '0.0'}</p>
                       <p className="text-xs text-green-600 flex items-center gap-1">
                         <TrendingUp className="h-3 w-3" />
-                        +0.3 from last month
+                        {isLoading ? 'Loading...' : '+0.3 from last month'}
                       </p>
                     </div>
                     <div className="h-10 w-10 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">

@@ -3,14 +3,14 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useDashboardData } from '@/hooks/use-dashboard-data';
+import { useDashboardData } from '@/hooks/useDashboardData';
 
 export function HealthJourneyTracker() {
-  const { clients } = useDashboardData();
+  const { allClients } = useDashboardData();
   
   // Calculate average health score using npsScore instead of healthScore
   const avgHealthScore = Math.round(
-    clients.reduce((acc, client) => acc + (client.npsScore || 0), 0) / clients.length
+    allClients.reduce((acc, client) => acc + (client.npsScore || 0), 0) / (allClients.length || 1)
   );
 
   return (
@@ -34,7 +34,7 @@ export function HealthJourneyTracker() {
           
           <ScrollArea className="h-[400px]">
             <div className="space-y-4">
-              {clients.map((client) => (
+              {allClients.map((client) => (
                 <div 
                   key={client.id} 
                   className="space-y-2"

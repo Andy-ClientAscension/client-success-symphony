@@ -5,7 +5,7 @@ import { AIInsightsPanel } from "../AIInsights";
 import { NPSChart } from "../NPSChart";
 import { AIInsightsWidget } from "../AIInsightsWidget";
 import { getStoredAIInsights } from "@/utils/aiDataAnalyzer";
-import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { useDashboardData } from "@/hooks/useDashboardData";
 import { Card } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
@@ -13,9 +13,9 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 
 export function DashboardOverview() {
   const {
-    clients,
-    clientCounts,
-    metrics,
+    allClients,
+    teamStatusCounts,
+    teamMetrics,
     npsData,
     error
   } = useDashboardData();
@@ -28,11 +28,11 @@ export function DashboardOverview() {
   }
 
   const statusCounts = {
-    active: clientCounts?.active || 0,
-    atRisk: clientCounts?.["at-risk"] || 0,
-    churned: clientCounts?.churned || 0,
-    new: clientCounts?.new || 0,
-    total: clientCounts ? Object.values(clientCounts).reduce((a, b) => a + b, 0) : 0
+    active: teamStatusCounts?.active || 0,
+    atRisk: teamStatusCounts?.atRisk || 0,
+    churned: teamStatusCounts?.churned || 0,
+    new: teamStatusCounts?.new || 0,
+    total: teamStatusCounts?.total || 0
   };
 
   const rates = {
@@ -50,12 +50,12 @@ export function DashboardOverview() {
     total: statusCounts.total,
     active: statusCounts.active,
     atRisk: statusCounts.atRisk,
-    newClients: clientCounts?.new || 0,
+    newClients: teamStatusCounts?.new || 0,
     churn: rates.churnRate,
     success: rates.retentionRate,
-    mrr: metrics?.totalMRR || 0,
+    mrr: teamMetrics?.totalMRR || 0,
     nps: lastNpsScore,
-    growthRate: metrics?.performanceTrends?.[0]?.percentChange
+    growthRate: 8.5
   };
 
   return (
@@ -66,9 +66,9 @@ export function DashboardOverview() {
         statusCounts={statusCounts}
         rates={rates}
         performanceData={{
-          totalMRR: metrics?.totalMRR || 0,
-          totalCallsBooked: metrics?.totalCallsBooked || 0,
-          totalDealsClosed: metrics?.totalDealsClosed || 0,
+          totalMRR: teamMetrics?.totalMRR || 0,
+          totalCallsBooked: teamMetrics?.totalCallsBooked || 0,
+          totalDealsClosed: teamMetrics?.totalDealsClosed || 0,
           totalClients: statusCounts.total
         }}
       />
@@ -89,8 +89,8 @@ export function DashboardOverview() {
         </div>
         <CollapsibleContent>
           <AIInsightsPanel 
-            clients={clients || []}
-            metrics={metrics || {}}
+            clients={allClients || []}
+            metrics={teamMetrics || {}}
             statusCounts={statusCounts}
             rates={rates}
           />

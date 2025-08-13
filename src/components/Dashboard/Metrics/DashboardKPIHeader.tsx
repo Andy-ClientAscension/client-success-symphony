@@ -2,15 +2,15 @@
 import React from 'react';
 import { Users, Heart, DollarSign } from 'lucide-react';
 import { HeroMetric } from './HeroMetric';
-import { useDashboardData } from '@/hooks/use-dashboard-data';
+import { useDashboardData } from '@/hooks/useDashboardData';
 
 export function DashboardKPIHeader() {
-  const { clients, clientCounts, metrics } = useDashboardData();
+  const { allClients, teamStatusCounts, teamMetrics } = useDashboardData();
   
   const kpiMetrics = [
     {
       title: "Total Students",
-      value: clientCounts.active + clientCounts.new,
+      value: (teamStatusCounts?.active || 0) + (teamStatusCounts?.new || 0),
       icon: <Users className="h-5 w-5" />,
       trend: {
         value: 8,
@@ -20,7 +20,7 @@ export function DashboardKPIHeader() {
     },
     {
       title: "Retention Rate",
-      value: `${Math.round((clientCounts.active / (clientCounts.active + clientCounts.churned)) * 100)}%`,
+      value: `${Math.round(((teamStatusCounts?.active || 0) / ((teamStatusCounts?.active || 0) + (teamStatusCounts?.churned || 0) || 1)) * 100)}%`,
       icon: <Heart className="h-5 w-5" />,
       trend: {
         value: 5,
@@ -30,7 +30,7 @@ export function DashboardKPIHeader() {
     },
     {
       title: "Monthly Revenue",
-      value: `$${metrics.totalMRR.toLocaleString()}`,
+      value: `$${(teamMetrics?.totalMRR || 0).toLocaleString()}`,
       icon: <DollarSign className="h-5 w-5" />,
       trend: {
         value: 12,

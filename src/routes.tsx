@@ -8,6 +8,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 const Index = lazy(() => import('@/pages/Index'));
 const Login = lazy(() => import('@/pages/Login'));
 const SignUp = lazy(() => import('@/pages/SignUp'));
+const UnifiedDashboard = lazy(() => import('@/pages/UnifiedDashboard'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Analytics = lazy(() => import('@/pages/Analytics'));
 const Clients = lazy(() => import('@/pages/Clients'));
@@ -40,6 +41,11 @@ export default function AppRoutes() {
         <Route path="/dashboard" element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/UnifiedDashboard" element={
+          <ProtectedRoute>
+            <UnifiedDashboard />
           </ProtectedRoute>
         } />
         <Route path="/analytics" element={
