@@ -32,21 +32,18 @@ export function ThemeProvider({
     // Remove all theme classes first
     root.classList.remove("light", "dark");
     
-    // Set the data-theme attribute for CSS variables
-    root.setAttribute("data-theme", theme);
-
+    let appliedTheme = theme;
+    
     if (theme === "system") {
       const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
         ? "dark"
         : "light";
-      
-      root.classList.add(systemTheme);
-      // Also set data-theme to match the system preference
-      root.setAttribute("data-theme", systemTheme);
-      return;
+      appliedTheme = systemTheme;
     }
-
-    root.classList.add(theme);
+    
+    // Apply the theme class and data attribute consistently
+    root.classList.add(appliedTheme);
+    root.setAttribute("data-theme", appliedTheme);
   }, [theme]);
 
   const value = {

@@ -19,10 +19,8 @@ export function ThemeToggle() {
   // Apply theme data attribute when theme changes
   useEffect(() => {
     setMounted(true);
-    if (typeof document !== "undefined") {
-      document.documentElement.setAttribute('data-theme', theme);
-    }
-  }, [theme]);
+    // Remove duplicate theme setting - ThemeProvider handles this
+  }, []);
 
   const handleThemeChange = (newTheme: "light" | "dark" | "system") => {
     setTheme(newTheme);
