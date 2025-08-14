@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
-import { getAllClients, getClientsCountByStatus, getChurnData } from '@/lib/data';
+import { fetchDashboardData } from '@/services/api/supabase-dashboard-service';
+import { useSupabaseRealtimeData } from './useSupabaseRealtimeData';
 
 interface UseOptimizedDashboardDataOptions {
   teamFilter?: string;
@@ -26,13 +27,17 @@ export function useOptimizedDashboardData(options: UseOptimizedDashboardDataOpti
     }
   }, [priority]);
 
-  // Mock NPS data function
-  const getNPSData = async () => ({ current: 8.2, trend: [] });
+  // Use real-time Supabase client data
+  const realtimeClients = useSupabaseRealtimeData<any>({
+    table: 'clients',
+    orderBy: { column: 'created_at', ascending: false },
+    enableToasts: false
+  });
 
-  // Optimized parallel data fetching with intelligent caching
-  const clientsQuery = useQuery({
-    queryKey: ['dashboard-clients', teamFilter],
-    queryFn: getAllClients,
+  // Main dashboard data query using real Supabase data
+  const dashboardQuery = useQuery({
+    queryKey: ['dashboard-data-supabase', teamFilter],
+    queryFn: fetchDashboardData,
     staleTime: cacheConfig.staleTime,
     gcTime: cacheConfig.gcTime,
     refetchOnWindowFocus: false,
@@ -41,55 +46,40 @@ export function useOptimizedDashboardData(options: UseOptimizedDashboardDataOpti
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
-  const countsQuery = useQuery({
-    queryKey: ['dashboard-counts', teamFilter],
-    queryFn: getClientsCountByStatus,
-    staleTime: cacheConfig.staleTime,
-    gcTime: cacheConfig.gcTime,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    retry: 2,
-    enabled: !!clientsQuery.data, // Only fetch after clients are loaded
-  });
-
-  const npsQuery = useQuery({
-    queryKey: ['dashboard-nps', teamFilter],
-    queryFn: getNPSData,
-    staleTime: cacheConfig.staleTime * 2, // NPS data is less volatile
-    gcTime: cacheConfig.gcTime * 2,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    retry: 1,
-    enabled: !!clientsQuery.data,
-  });
-
-  const churnQuery = useQuery({
-    queryKey: ['dashboard-churn', teamFilter],
-    queryFn: getChurnData,
-    staleTime: cacheConfig.staleTime * 3, // Churn data is least volatile
-    gcTime: cacheConfig.gcTime * 3,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    retry: 1,
-    enabled: !!clientsQuery.data,
-  });
-
-  // Memoized processed data with efficient filtering
+  // Memoized processed data using real Supabase data
   const processedData = useMemo(() => {
-    const clients = clientsQuery.data || [];
-    const filteredClients = teamFilter 
+    const dashboardData = dashboardQuery.data;
+    if (!dashboardData) {
+      return {
+        allClients: [],
+        teamStatusCounts: { active: 0, 'at-risk': 0, new: 0, churned: 0 },
+        rawCounts: { active: 0, 'at-risk': 0, new: 0, churned: 0 },
+        teamMetrics: { totalMRR: 0, avgHealthScore: 0, retentionRate: 0 },
+        npsScore: 0,
+        churnData: []
+      };
+    }
+
+    const { clients, clientCounts, metrics, npsData, churnData } = dashboardData;
+    
+    // Apply team filter if specified
+    const filteredClients = teamFilter && teamFilter !== 'all'
       ? clients.filter(client => client.team === teamFilter)
       : clients;
 
-    // Calculate metrics efficiently
+    // Calculate team-specific counts
     const statusCounts = filteredClients.reduce((acc, client) => {
       acc[client.status] = (acc[client.status] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
-    const totalMRR = filteredClients.reduce((sum, client) => sum + (client.mrr || 0), 0);
+    // Calculate team metrics
     const avgHealthScore = filteredClients.length > 0 
-      ? filteredClients.reduce((sum, client) => sum + (client.npsScore || 0), 0) / filteredClients.length 
+      ? filteredClients.reduce((sum, client) => sum + (client.progress || 0), 0) / filteredClients.length
+      : 0;
+    
+    const retentionRate = filteredClients.length > 0
+      ? ((statusCounts.active || 0) / filteredClients.length) * 100
       : 0;
 
     return {
@@ -100,52 +90,44 @@ export function useOptimizedDashboardData(options: UseOptimizedDashboardDataOpti
         new: statusCounts.new || 0,
         churned: statusCounts.churned || 0,
       },
+      rawCounts: clientCounts,
       teamMetrics: {
-        totalMRR,
-        avgHealthScore,
-        retentionRate: filteredClients.length > 0 
-          ? ((statusCounts.active || 0) / filteredClients.length) * 100 
-          : 0,
+        totalMRR: metrics.totalMRR,
+        avgHealthScore: Math.round(avgHealthScore),
+        retentionRate: Math.round(retentionRate),
       },
-      rawCounts: countsQuery.data,
-      npsScore: (npsQuery.data as any)?.current || 0,
-      churnData: churnQuery.data || [],
+      npsScore: npsData.current,
+      churnData
     };
-  }, [clientsQuery.data, countsQuery.data, npsQuery.data, churnQuery.data, teamFilter]);
+  }, [dashboardQuery.data, teamFilter]);
 
-  // Optimized refresh function that only refreshes stale data
+  // Optimized refresh function for real-time data
   const refreshData = useCallback(async () => {
-    const queries = ['dashboard-clients', 'dashboard-counts', 'dashboard-nps', 'dashboard-churn'];
-    
-    await Promise.allSettled(
-      queries.map(queryKey => 
-        queryClient.invalidateQueries({ 
-          queryKey: [queryKey, teamFilter],
-          refetchType: 'active'
-        })
-      )
-    );
-  }, [queryClient, teamFilter]);
+    await Promise.allSettled([
+      queryClient.invalidateQueries({ 
+        queryKey: ['dashboard-data-supabase', teamFilter],
+        refetchType: 'active'
+      }),
+      realtimeClients.refresh()
+    ]);
+  }, [queryClient, teamFilter, realtimeClients]);
 
-  // Determine loading state more intelligently
-  const isInitialLoading = clientsQuery.isLoading;
-  const isRefreshing = clientsQuery.isFetching || countsQuery.isFetching || 
-                      npsQuery.isFetching || churnQuery.isFetching;
+  // Loading states with real-time data awareness
+  const isInitialLoading = dashboardQuery.isLoading || realtimeClients.isLoading;
+  const isRefreshing = dashboardQuery.isFetching;
 
-  // Combine errors more effectively
-  const error = clientsQuery.error || countsQuery.error || npsQuery.error || churnQuery.error;
+  // Aggregate errors from all sources
+  const error = dashboardQuery.error || realtimeClients.error;
 
-  // Get the most recent update time
+  // Get the most recent update timestamp
   const getLastUpdated = useCallback(() => {
     const times = [
-      clientsQuery.dataUpdatedAt,
-      countsQuery.dataUpdatedAt,
-      npsQuery.dataUpdatedAt,
-      churnQuery.dataUpdatedAt,
+      dashboardQuery.dataUpdatedAt,
+      realtimeClients.lastUpdated?.getTime()
     ].filter(Boolean);
     
     return times.length > 0 ? new Date(Math.max(...times)) : null;
-  }, [clientsQuery.dataUpdatedAt, countsQuery.dataUpdatedAt, npsQuery.dataUpdatedAt, churnQuery.dataUpdatedAt]);
+  }, [dashboardQuery.dataUpdatedAt, realtimeClients.lastUpdated]);
 
   return {
     // Processed data
@@ -166,10 +148,8 @@ export function useOptimizedDashboardData(options: UseOptimizedDashboardDataOpti
     
     // Raw query states for debugging
     queries: {
-      clients: clientsQuery,
-      counts: countsQuery,
-      nps: npsQuery,
-      churn: churnQuery,
+      dashboard: dashboardQuery,
+      realtime: realtimeClients,
     },
   };
 }

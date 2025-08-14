@@ -231,12 +231,12 @@ export function OptimizedCleanDashboard() {
 
   // Available options for filters
   const availableTeams = useMemo(() => 
-    Array.from(new Set(allClients.map(client => client.team).filter(Boolean))), 
+    Array.from(new Set(allClients.map(client => client.team).filter(Boolean))) as string[], 
     [allClients]
   );
   
   const availableStatuses = useMemo(() => 
-    Array.from(new Set(allClients.map(client => client.status))), 
+    Array.from(new Set(allClients.map(client => client.status))) as string[], 
     [allClients]
   );
 
