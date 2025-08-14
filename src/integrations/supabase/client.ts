@@ -25,8 +25,20 @@ export const getSupabaseClient = () => {
 
   // Validate credentials
   if (!supabaseUrl || !supabaseKey) {
-    console.error('Supabase credentials not configured!');
-    throw new Error('Authentication service unavailable. Please check .env configuration.');
+    console.error('Supabase credentials not configured! Dashboard will use fallback data.');
+    // Return a mock client to prevent errors
+    return {
+      from: () => ({
+        select: () => Promise.resolve({ data: [], error: { message: 'No API key found' } }),
+        insert: () => Promise.resolve({ data: null, error: { message: 'No API key found' } }),
+        update: () => Promise.resolve({ data: null, error: { message: 'No API key found' } }),
+        delete: () => Promise.resolve({ data: null, error: { message: 'No API key found' } })
+      }),
+      auth: {
+        getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+        signInWithPassword: () => Promise.resolve({ data: null, error: { message: 'No API key found' } })
+      }
+    } as any;
   }
 
   // Define the site URL for redirection handling
