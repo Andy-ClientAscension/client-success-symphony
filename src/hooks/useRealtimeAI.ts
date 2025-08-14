@@ -49,8 +49,8 @@ export function useRealtimeAI(
       if (criticalAnomalies.length > 0) {
         setAlertCount(prev => prev + criticalAnomalies.length);
         
-        // Show toast for high-priority alerts
-        criticalAnomalies.slice(0, 3).forEach(anomaly => {
+        // Show toast for high-priority alerts (limit to reduce spam)
+        criticalAnomalies.slice(0, 2).forEach(anomaly => {
           toast({
             title: `🚨 ${anomaly.anomalyType.replace('_', ' ').toUpperCase()}`,
             description: `${anomaly.clientName}: ${anomaly.description}`,
@@ -59,24 +59,39 @@ export function useRealtimeAI(
         });
       }
 
-      // Show insights toast
+      // Show insights toast (only once per session to avoid spam)
       if (results.insights.length > 0) {
-        const highImpactInsights = results.insights.filter(i => i.impact === 'high');
-        if (highImpactInsights.length > 0) {
-          toast({
-            title: "💡 New AI Insights Available",
-            description: `${highImpactInsights.length} high-impact insights generated from real-time data.`,
-          });
+        const lastToastTime = localStorage.getItem('last_insights_toast');
+        const now = Date.now();
+        const shouldShowToast = !lastToastTime || (now - parseInt(lastToastTime)) > 300000; // 5 minutes
+        
+        if (shouldShowToast) {
+          const highImpactInsights = results.insights.filter(i => i.impact === 'high');
+          if (highImpactInsights.length > 0) {
+            toast({
+              title: "💡 New AI Insights Available",
+              description: `${highImpactInsights.length} high-impact insights generated from real-time data.`,
+            });
+            localStorage.setItem('last_insights_toast', now.toString());
+          }
         }
       }
 
     } catch (error) {
       console.error('Error processing real-time AI data:', error);
-      toast({
-        title: "AI Processing Error",
-        description: "Failed to analyze real-time data. Please check your connection.",
-        variant: "destructive"
-      });
+      // Only show error toast if we haven't shown one recently
+      const lastErrorToast = localStorage.getItem('last_error_toast');
+      const now = Date.now();
+      const shouldShowErrorToast = !lastErrorToast || (now - parseInt(lastErrorToast)) > 120000; // 2 minutes
+      
+      if (shouldShowErrorToast) {
+        toast({
+          title: "AI Processing Error",
+          description: "AI insights temporarily unavailable. Dashboard data still available.",
+          variant: "destructive"
+        });
+        localStorage.setItem('last_error_toast', now.toString());
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -90,13 +105,14 @@ export function useRealtimeAI(
     setAnomalies(realtimeAIProcessor.getStoredAnomalies());
     setInsights(realtimeAIProcessor.getStoredInsights());
 
-    // Initial processing
-    processData();
+    // Initial processing with delay to avoid immediate errors on load
+    const initialTimeout = setTimeout(processData, 2000);
 
-    // Set up interval processing
-    const interval = setInterval(processData, processingInterval);
+    // Set up interval processing with longer intervals to reduce API calls
+    const interval = setInterval(processData, Math.max(processingInterval, 60000)); // Min 1 minute
 
     return () => {
+      clearTimeout(initialTimeout);
       clearInterval(interval);
     };
   }, [processData, enableAnomalyDetection, enableInsightGeneration, processingInterval]);

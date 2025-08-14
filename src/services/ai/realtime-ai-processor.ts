@@ -134,7 +134,43 @@ class RealTimeAIProcessor {
   private async generateRealtimeInsights(clients: Client[], anomalies: AnomalyDetection[]): Promise<RealTimeInsight[]> {
     const insights: RealTimeInsight[] = [];
 
-    // Generate AI-powered insights optimized for GPT-5-mini
+    // Always provide fallback insights first
+    this.generateFallbackInsights(clients, anomalies, insights);
+
+    // Only attempt AI generation if we have a reasonable chance of success
+    if (this.shouldAttemptAIGeneration()) {
+      try {
+        const aiInsights = await this.tryGenerateAIInsights(clients, anomalies);
+        insights.push(...aiInsights);
+      } catch (error) {
+        safeLogger.warn('AI insights unavailable, using fallback data:', error);
+        // Fallback insights already added above
+      }
+    }
+
+    return insights;
+  }
+
+  private shouldAttemptAIGeneration(): boolean {
+    const lastAttempt = localStorage.getItem('last_ai_attempt');
+    const lastError = localStorage.getItem('last_ai_error');
+    
+    // If we've had recent errors, back off for a while
+    if (lastError && lastAttempt) {
+      const timeSinceAttempt = Date.now() - parseInt(lastAttempt);
+      const backoffTime = 60000; // 1 minute backoff
+      
+      if (timeSinceAttempt < backoffTime) {
+        return false;
+      }
+    }
+    
+    return true;
+  }
+
+  private async tryGenerateAIInsights(clients: Client[], anomalies: AnomalyDetection[]): Promise<RealTimeInsight[]> {
+    localStorage.setItem('last_ai_attempt', Date.now().toString());
+    
     const systemPrompt: OpenAIMessage = {
       role: 'system',
       content: `AI Business Analyst for SaaS real-time monitoring. Generate actionable insights from client data and anomalies.
@@ -177,59 +213,101 @@ class RealTimeAIProcessor {
       })
     };
 
-    try {
-      const response = await generateAIResponse([systemPrompt, userPrompt]);
-      
-      // Handle potential error responses before JSON parsing
-      if (response.startsWith('Error:')) {
-        safeLogger.warn('AI service returned error:', response);
-        throw new Error(response.substring(7)); // Remove "Error: " prefix
-      }
-      
-      // Validate response is JSON-like before parsing
-      const trimmedResponse = response.trim();
-      if (!trimmedResponse.startsWith('[') && !trimmedResponse.startsWith('{')) {
-        safeLogger.warn('AI response is not valid JSON:', trimmedResponse);
-        throw new Error('Invalid JSON response from AI service');
-      }
-      
-      const parsedInsights = JSON.parse(trimmedResponse);
-      
-      if (Array.isArray(parsedInsights)) {
-        parsedInsights.forEach((insight, index) => {
-          insights.push({
-            id: `insight_${Date.now()}_${index}`,
-            type: insight.type || 'trend',
-            title: insight.title || 'Real-time Insight',
-            description: insight.description || '',
-            confidence: insight.confidence || 0.75,
-            impact: insight.impact || 'medium',
-            createdAt: new Date(),
-            affectedClients: insight.affectedClients || [],
-            data: insight.data || {}
-          });
+    const response = await generateAIResponse([systemPrompt, userPrompt]);
+    
+    // Handle potential error responses before JSON parsing
+    if (response.startsWith('Error:')) {
+      localStorage.setItem('last_ai_error', Date.now().toString());
+      throw new Error(response.substring(7)); // Remove "Error: " prefix
+    }
+    
+    // Validate response is JSON-like before parsing
+    const trimmedResponse = response.trim();
+    if (!trimmedResponse.startsWith('[') && !trimmedResponse.startsWith('{')) {
+      localStorage.setItem('last_ai_error', Date.now().toString());
+      throw new Error('Invalid JSON response from AI service');
+    }
+    
+    const parsedInsights = JSON.parse(trimmedResponse);
+    const aiInsights: RealTimeInsight[] = [];
+    
+    if (Array.isArray(parsedInsights)) {
+      parsedInsights.forEach((insight, index) => {
+        aiInsights.push({
+          id: `insight_${Date.now()}_${index}`,
+          type: insight.type || 'trend',
+          title: insight.title || 'Real-time Insight',
+          description: insight.description || '',
+          confidence: insight.confidence || 0.75,
+          impact: insight.impact || 'medium',
+          createdAt: new Date(),
+          affectedClients: insight.affectedClients || [],
+          data: insight.data || {}
         });
-      }
-    } catch (error) {
-      safeLogger.error('Error generating AI insights:', error);
-      
-      // Fallback insights based on anomalies
-      if (anomalies.length > 0) {
+      });
+    }
+
+    // Clear error flag on success
+    localStorage.removeItem('last_ai_error');
+    return aiInsights;
+  }
+
+  private generateFallbackInsights(clients: Client[], anomalies: AnomalyDetection[], insights: RealTimeInsight[]): void {
+    const totalMRR = clients.reduce((sum, c) => sum + (c.mrr || 0), 0);
+    const atRiskClients = clients.filter(c => c.status === 'at-risk');
+    const churnedClients = clients.filter(c => c.status === 'churned');
+    
+    // Revenue insight
+    if (totalMRR > 0) {
+      const revenueAtRisk = atRiskClients.reduce((sum, c) => sum + (c.mrr || 0), 0);
+      if (revenueAtRisk > totalMRR * 0.1) { // More than 10% at risk
         insights.push({
-          id: `insight_${Date.now()}_fallback`,
+          id: `insight_revenue_${Date.now()}`,
           type: 'alert',
-          title: `${anomalies.length} Critical Issues Detected`,
-          description: `Real-time monitoring detected ${anomalies.length} anomalies requiring immediate attention.`,
-          confidence: 0.90,
+          title: `$${revenueAtRisk.toLocaleString()} Revenue At Risk`,
+          description: `${atRiskClients.length} at-risk clients represent ${Math.round((revenueAtRisk/totalMRR)*100)}% of total MRR. Immediate retention focus needed.`,
+          confidence: 0.95,
           impact: 'high',
           createdAt: new Date(),
-          affectedClients: [...new Set(anomalies.map(a => a.clientName))],
-          data: { anomalyCount: anomalies.length, severityBreakdown: this.groupBySeverity(anomalies) }
+          affectedClients: atRiskClients.map(c => c.name),
+          data: { revenueAtRisk, percentageAtRisk: (revenueAtRisk/totalMRR)*100 }
         });
       }
     }
 
-    return insights;
+    // Anomaly insight
+    if (anomalies.length > 0) {
+      const criticalCount = anomalies.filter(a => a.severity === 'critical').length;
+      insights.push({
+        id: `insight_anomalies_${Date.now()}`,
+        type: 'alert',
+        title: `${anomalies.length} Issues Detected${criticalCount > 0 ? ` (${criticalCount} Critical)` : ''}`,
+        description: `Real-time monitoring found ${anomalies.length} anomalies requiring attention. Focus on critical issues first.`,
+        confidence: 0.90,
+        impact: criticalCount > 0 ? 'high' : 'medium',
+        createdAt: new Date(),
+        affectedClients: [...new Set(anomalies.map(a => a.clientName))],
+        data: { anomalyCount: anomalies.length, severityBreakdown: this.groupBySeverity(anomalies) }
+      });
+    }
+
+    // Health insight
+    const healthyClients = clients.filter(c => c.status === 'active').length;
+    const healthPercentage = (healthyClients / clients.length) * 100;
+    
+    if (healthPercentage < 80) {
+      insights.push({
+        id: `insight_health_${Date.now()}`,
+        type: 'trend',
+        title: `Client Health at ${Math.round(healthPercentage)}%`,
+        description: `Only ${healthyClients} of ${clients.length} clients are healthy. Review engagement strategies and identify improvement opportunities.`,
+        confidence: 0.85,
+        impact: healthPercentage < 60 ? 'high' : 'medium',
+        createdAt: new Date(),
+        affectedClients: [],
+        data: { healthPercentage, healthyCount: healthyClients, totalCount: clients.length }
+      });
+    }
   }
 
   private calculateSeverity(percentage: number): 'low' | 'medium' | 'high' | 'critical' {
