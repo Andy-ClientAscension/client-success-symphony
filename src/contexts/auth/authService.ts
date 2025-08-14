@@ -219,7 +219,16 @@ export const isSessionExpired = (session: any): boolean => {
   }
   
   // Default Supabase session expiry check
-  return session?.expires_at 
-    ? session.expires_at * 1000 < Date.now()
-    : false;
+  // Note: Supabase expires_at is already in seconds, so we need to convert to milliseconds
+  if (session?.expires_at) {
+    const expiresAtMs = session.expires_at * 1000;
+    const now = Date.now();
+    const bufferTime = 30000; // 30-second buffer to prevent edge cases
+    
+    console.log(`Session expiry check: expires at ${new Date(expiresAtMs).toISOString()}, now is ${new Date(now).toISOString()}, expired: ${expiresAtMs < (now + bufferTime)}`);
+    
+    return expiresAtMs < (now + bufferTime);
+  }
+  
+  return false;
 };
