@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { DashboardSidebar } from './Layout/DashboardSidebar';
+import { RealTimeAIPanel } from './RealTimeAI/RealTimeAIPanel';
 import { Users, Heart, DollarSign, TrendingUp, Target } from 'lucide-react';
 import { SearchBar } from '@/components/Navigation/SearchBar';
 import { NotificationBell } from '@/components/Navigation/NotificationBell';
@@ -364,6 +365,9 @@ export function OptimizedCleanDashboard() {
 
               {/* Main Content */}
               <main className="flex-1 p-4 overflow-auto space-y-4">
+                {/* Real-Time AI Panel */}
+                <RealTimeAIPanel clients={filteredData} />
+                
                 {/* Filter Summary */}
                 {hasActiveFilters && (
                   <div className="p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 rounded-lg">
