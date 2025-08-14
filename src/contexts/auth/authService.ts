@@ -191,6 +191,21 @@ export const logout = async (): Promise<void> => {
 
 // Check if a session is expired
 export const isSessionExpired = (session: any): boolean => {
+  if (!session) return true;
+  
+  // Check stored session persistence settings for custom expiry
+  const stored = localStorage.getItem('session_persistence');
+  if (stored) {
+    try {
+      const data = JSON.parse(stored);
+      // Use custom expiry time if remember me is enabled
+      return Date.now() > data.sessionExpiry;
+    } catch {
+      // Fallback to default behavior if parsing fails
+    }
+  }
+  
+  // Default Supabase session expiry check
   return session?.expires_at 
     ? session.expires_at * 1000 < Date.now()
     : false;

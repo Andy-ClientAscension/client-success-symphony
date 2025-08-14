@@ -22,22 +22,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Enhanced session management
+  // Enhanced session management with longer timeout
   const sessionManager = useSessionManager({
-    sessionTimeoutMinutes: 60, // 1 hour
+    sessionTimeoutMinutes: 240, // 4 hours instead of 1 hour
     onExpired: () => {
       toast({
         title: "Session Expired",
-        description: "Your session has expired. Please log in again."
+        description: "Your session has expired. Please log in again.",
+        variant: "default" // Less intrusive
       });
       handleLogout();
     },
     onInactive: () => {
-      toast({
-        title: "Inactivity Timeout",
-        description: "You've been logged out due to inactivity."
-      });
-      handleLogout();
+      // Remove inactivity timeout - too aggressive
+      console.log("User inactive but session still valid");
     }
   });
 
