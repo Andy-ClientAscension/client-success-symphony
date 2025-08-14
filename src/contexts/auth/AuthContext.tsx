@@ -419,13 +419,39 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     });
     
-    // Simplified session check to prevent loops
+    // Check for dev bypass first in development mode
     const checkSession = async () => {
       try {
         setIsLoading(true);
+        
+        // Check for dev auth bypass in development
+        if (process.env.NODE_ENV === 'development') {
+          const devBypass = localStorage.getItem('dev_auth_bypass');
+          if (devBypass) {
+            try {
+              const { user: devUser, timestamp } = JSON.parse(devBypass);
+              // Dev sessions last 24 hours
+              if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
+                console.log("Using dev auth bypass");
+                setUser(devUser);
+                setSession({ user: devUser } as any); // Mock session
+                setTokenValidationState('valid');
+                updateSentryUser(devUser);
+                return;
+              } else {
+                // Expired dev session
+                localStorage.removeItem('dev_auth_bypass');
+              }
+            } catch (e) {
+              console.error("Error parsing dev bypass:", e);
+              localStorage.removeItem('dev_auth_bypass');
+            }
+          }
+        }
+        
+        // Normal session check for production
         const { data: { session: currentSession } } = await getCachedUserSession();
         
-        // Just set what we get - no complex expiration logic here
         if (currentSession) {
           console.log("Found existing session");
           setSession(currentSession);

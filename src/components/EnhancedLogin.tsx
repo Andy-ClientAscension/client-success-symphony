@@ -273,13 +273,28 @@ export function EnhancedLogin() {
                 type="button"
                 variant="outline"
                 className="w-full mt-2 bg-yellow-50 border-yellow-300 text-yellow-800 hover:bg-yellow-100"
-                onClick={() => {
+                onClick={async () => {
+                  // Create a mock user session for development
+                  const mockUser = {
+                    id: 'dev-user-123',
+                    email: 'dev@clientascension.com',
+                    name: 'Dev User'
+                  };
+                  
+                  // Set dev user in localStorage to persist across refreshes
+                  localStorage.setItem('dev_auth_bypass', JSON.stringify({
+                    user: mockUser,
+                    timestamp: Date.now()
+                  }));
+                  
                   toast({
                     title: "Development Mode",
                     description: "Bypassing authentication for development",
                     variant: "default"
                   });
-                  navigate('/dashboard');
+                  
+                  // Force a page refresh to re-initialize auth with dev user
+                  window.location.href = '/dashboard';
                 }}
               >
                 🚧 DEV: Skip Login (Remove Before Launch)
