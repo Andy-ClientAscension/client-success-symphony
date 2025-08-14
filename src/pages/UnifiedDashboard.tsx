@@ -1,7 +1,7 @@
 
 import React from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { CleanDashboard } from "@/components/Dashboard/CleanDashboard";
+import { OptimizedCleanDashboard } from "@/components/Dashboard/OptimizedCleanDashboard";
 
 // Error fallback component
 function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
@@ -24,7 +24,7 @@ function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetError
 export default function UnifiedDashboard(): JSX.Element {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
-      <CleanDashboard />
+      <OptimizedCleanDashboard />
     </ErrorBoundary>
   );
 }
