@@ -8,7 +8,6 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { CheckCircle, RefreshCw, Workflow } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { apiIntegrations, isApiConnected } from "@/lib/api";
 import { AutomationWebhook } from "@/types/common";
 
 interface MakeIntegrationProps {
@@ -31,7 +30,7 @@ export function MakeIntegration({
   connectService
 }: MakeIntegrationProps) {
   const { toast } = useToast();
-  const makeConnected = isApiConnected("make");
+  const makeConnected = true; // Simplified for now
   
   const handleAddWebhook = () => {
     if (!webhookUrl.trim()) {
@@ -70,13 +69,17 @@ export function MakeIntegration({
     // Triggering webhook for automation service
 
     try {
-      const response = await apiIntegrations.make.triggerScenario(webhook.url, {
-        timestamp: new Date().toISOString(),
-        source: "Client Dashboard",
-        event: "manual_trigger"
+      const response = await fetch(webhook.url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          timestamp: new Date().toISOString(),
+          source: "Client Dashboard",
+          event: "manual_trigger"
+        })
       });
       
-      if (response && response.success) {
+      if (response && response.ok) {
         const updatedWebhooks = webhooks.map(w => 
           w.id === webhook.id ? {
             ...w, 
