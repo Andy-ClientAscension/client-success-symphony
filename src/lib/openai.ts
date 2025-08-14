@@ -79,10 +79,12 @@ export const generateAIResponse = async (
     let effectiveApiKey = apiKey;
     
     if (!effectiveApiKey) {
-      // First try to get from Supabase environment
-      const { data: secret } = await supabase.auth.getSession();
-      if (secret?.session) {
-        effectiveApiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+      // First try to get from Supabase secrets
+      try {
+        const { data: secrets } = await supabase.rpc('get_secret', { secret_name: 'OPENROUTER_API_KEY' });
+        effectiveApiKey = secrets;
+      } catch (error) {
+        console.warn('Could not fetch OpenRouter API key from Supabase:', error);
       }
       
       // Fallback to localStorage for local development
@@ -91,7 +93,7 @@ export const generateAIResponse = async (
       }
       
       if (!effectiveApiKey) {
-        throw new Error("OpenRouter API key not configured. Please contact administrator.");
+        return "Error: OpenRouter API key not configured. Please contact administrator.";
       }
     }
 
@@ -104,7 +106,7 @@ export const generateAIResponse = async (
         "X-Title": "AI Dashboard Assistant",
       },
       body: JSON.stringify({
-        model: "openai/gpt-5-mini-2025-08-07",
+        model: "gpt-5-mini-2025-08-07",
         messages,
         max_completion_tokens: 500,
       }),
@@ -119,7 +121,10 @@ export const generateAIResponse = async (
     const data: OpenAIResponse = await response.json();
     return data.choices[0]?.message?.content || "No response from AI";
   } catch (error) {
-    console.error("Error calling OpenRouter API:", error);
+    // Don't import safeLogger here to avoid circular dependency
+    if (process.env.NODE_ENV === 'development' || import.meta.env.DEV) {
+      console.error("Error calling OpenRouter API:", error);
+    }
     return "Error communicating with the AI service. Please try again later.";
   }
 };

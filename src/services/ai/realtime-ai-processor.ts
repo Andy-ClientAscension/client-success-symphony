@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { generateAIResponse, OpenAIMessage } from '@/lib/openai';
 import { Client } from '@/lib/data';
+import { safeLogger } from '@/utils/code-quality-fixes';
 
 export interface AnomalyDetection {
   id: string;
@@ -50,7 +51,7 @@ class RealTimeAIProcessor {
       
       return { anomalies, insights };
     } catch (error) {
-      console.error('Error processing realtime data:', error);
+      safeLogger.error('Error processing realtime data:', error);
       return { anomalies: [], insights: [] };
     }
   }
@@ -179,12 +180,20 @@ class RealTimeAIProcessor {
     try {
       const response = await generateAIResponse([systemPrompt, userPrompt]);
       
-      // Handle potential error responses
+      // Handle potential error responses before JSON parsing
       if (response.startsWith('Error:')) {
+        safeLogger.warn('AI service returned error:', response);
         throw new Error(response.substring(7)); // Remove "Error: " prefix
       }
       
-      const parsedInsights = JSON.parse(response);
+      // Validate response is JSON-like before parsing
+      const trimmedResponse = response.trim();
+      if (!trimmedResponse.startsWith('[') && !trimmedResponse.startsWith('{')) {
+        safeLogger.warn('AI response is not valid JSON:', trimmedResponse);
+        throw new Error('Invalid JSON response from AI service');
+      }
+      
+      const parsedInsights = JSON.parse(trimmedResponse);
       
       if (Array.isArray(parsedInsights)) {
         parsedInsights.forEach((insight, index) => {
@@ -202,7 +211,7 @@ class RealTimeAIProcessor {
         });
       }
     } catch (error) {
-      console.error('Error generating AI insights:', error);
+      safeLogger.error('Error generating AI insights:', error);
       
       // Fallback insights based on anomalies
       if (anomalies.length > 0) {

@@ -9,6 +9,7 @@ import { useRealtimeData } from '@/utils/dataSyncService';
 import { useSmartLoading } from '@/hooks/useSmartLoading';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { DataStabilizer } from '@/utils/dataStabilizer';
+import { safeLogger } from '@/utils/code-quality-fixes';
 
 interface UseClientListProps {
   statusFilter?: Client['status'];
@@ -22,11 +23,11 @@ export function useClientList({ statusFilter }: UseClientListProps = {}) {
   // Get default clients as a stable memoized value - fix re-render loop
   const defaultClients = useMemo(() => {
     try {
-      console.log("Loading default clients from data service");
+      safeLogger.debug("Loading default clients from data service");
       const allClients = getAllClients();
       return validateClients(allClients);
     } catch (error) {
-      console.error("Error loading default clients:", error);
+      safeLogger.error("Error loading default clients:", error);
       return [];
     }
   }, []); // Empty deps to prevent re-computation
@@ -52,8 +53,9 @@ export function useClientList({ statusFilter }: UseClientListProps = {}) {
   
   // Handle errors separately
   useEffect(() => {
-    const handleError = (error: any) => {
-      console.error("Error in realtime data hook:", error);
+    const handleError = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      safeLogger.error("Error in realtime data hook:", customEvent.detail);
       toast({
         title: "Data Sync Error",
         description: "There was a problem syncing client data.",
@@ -87,7 +89,7 @@ export function useClientList({ statusFilter }: UseClientListProps = {}) {
   // Create a stable function to update clients with deduplication
   const setClients = useStableCallback((updatedClients: Client[]) => {
     const validatedClients = validateClients(updatedClients);
-    console.log(`Saving ${validatedClients.length} clients to storage`);
+    safeLogger.debug(`Saving ${validatedClients.length} clients to storage`);
     
     // Use data stabilizer to prevent unnecessary updates
     if (DataStabilizer.hasDataChanged(STORAGE_KEYS.CLIENTS, validatedClients)) {
@@ -102,7 +104,7 @@ export function useClientList({ statusFilter }: UseClientListProps = {}) {
   // Clear initialization state once clients are loaded
   useEffect(() => {
     if (isInitializing && !isClientsLoading) {
-      console.log("useClientList: Finished initializing, clients loaded");
+      safeLogger.debug("useClientList: Finished initializing, clients loaded");
       setIsInitializing(false);
     }
   }, [isClientsLoading, isInitializing]);
@@ -110,12 +112,12 @@ export function useClientList({ statusFilter }: UseClientListProps = {}) {
   // Filter clients with stable dependencies to prevent re-render loops
   const filteredClientsStable = useMemo(() => {
     if (isInitializing) {
-      console.log("useClientList: Still initializing, returning empty array");
+      safeLogger.debug("useClientList: Still initializing, returning empty array");
       return [];
     }
     
     let filtered = validateClients(clients);
-    console.log(`useClientList: Filtering ${filtered.length} clients with statusFilter:`, statusFilter);
+    safeLogger.debug(`useClientList: Filtering ${filtered.length} clients with statusFilter:`, statusFilter);
     
     if (statusFilter) {
       filtered = filtered.filter(client => client.status === statusFilter);
@@ -136,7 +138,7 @@ export function useClientList({ statusFilter }: UseClientListProps = {}) {
       );
     }
 
-    console.log(`useClientList: Filtered to ${filtered.length} clients`);
+    safeLogger.debug(`useClientList: Filtered to ${filtered.length} clients`);
     return filtered;
   }, [clients, selectedTeam, statusFilter, searchQuery, isInitializing]);
 
