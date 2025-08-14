@@ -266,6 +266,25 @@ export function EnhancedLogin() {
                 'Sign In'
               )}
             </Button>
+
+            {/* TEMPORARY DEV BYPASS - REMOVE BEFORE LAUNCH */}
+            {process.env.NODE_ENV === 'development' && (
+              <Button 
+                type="button"
+                variant="outline"
+                className="w-full mt-2 bg-yellow-50 border-yellow-300 text-yellow-800 hover:bg-yellow-100"
+                onClick={() => {
+                  toast({
+                    title: "Development Mode",
+                    description: "Bypassing authentication for development",
+                    variant: "default"
+                  });
+                  navigate('/dashboard');
+                }}
+              >
+                🚧 DEV: Skip Login (Remove Before Launch)
+              </Button>
+            )}
           </form>
 
           <div className="text-center text-sm text-muted-foreground">
