@@ -19,6 +19,12 @@ export interface Client {
   backendStudents?: number;
   growth?: number;
   logo?: string;
+  // New SSC management fields
+  email?: string;
+  phone?: string;
+  service?: string;
+  health_score?: number;
+  assigned_ssc?: string;
   lastPayment?: {
     amount: number;
     date: string;

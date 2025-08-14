@@ -34,7 +34,7 @@ export function useClientData(): ClientDataHook {
         name: client.name,
         status: client.status as Client['status'],
         team: client.team,
-        csm: client.csm,
+        csm: client.csm || client.assigned_ssc,
         startDate: client.start_date,
         endDate: client.end_date,
         contractValue: Number(client.contract_value),
@@ -48,6 +48,12 @@ export function useClientData(): ClientDataHook {
         backendStudents: client.backend_students,
         growth: Number(client.growth),
         logo: client.logo,
+        // New SSC management fields
+        email: client.email,
+        phone: client.phone,
+        service: client.service,
+        health_score: client.health_score,
+        assigned_ssc: client.assigned_ssc,
         lastPayment: client.last_payment_amount && client.last_payment_date ? {
           amount: Number(client.last_payment_amount),
           date: client.last_payment_date

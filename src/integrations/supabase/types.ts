@@ -58,6 +58,7 @@ export type Database = {
       }
       clients: {
         Row: {
+          assigned_ssc: string | null
           backend_students: number | null
           calls_booked: number | null
           case_study_completed: boolean | null
@@ -69,8 +70,10 @@ export type Database = {
           created_by: string | null
           csm: string | null
           deals_closed: number | null
+          email: string | null
           end_date: string
           growth: number | null
+          health_score: number | null
           id: string
           last_communication: string | null
           last_payment_amount: number | null
@@ -80,9 +83,11 @@ export type Database = {
           name: string
           notes: string | null
           nps_score: number | null
+          phone: string | null
           progress: number | null
           referral_count: number | null
           referral_names: string[] | null
+          service: string | null
           start_date: string
           status: string
           team: string | null
@@ -92,6 +97,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_ssc?: string | null
           backend_students?: number | null
           calls_booked?: number | null
           case_study_completed?: boolean | null
@@ -103,8 +109,10 @@ export type Database = {
           created_by?: string | null
           csm?: string | null
           deals_closed?: number | null
+          email?: string | null
           end_date: string
           growth?: number | null
+          health_score?: number | null
           id?: string
           last_communication?: string | null
           last_payment_amount?: number | null
@@ -114,9 +122,11 @@ export type Database = {
           name: string
           notes?: string | null
           nps_score?: number | null
+          phone?: string | null
           progress?: number | null
           referral_count?: number | null
           referral_names?: string[] | null
+          service?: string | null
           start_date: string
           status: string
           team?: string | null
@@ -126,6 +136,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_ssc?: string | null
           backend_students?: number | null
           calls_booked?: number | null
           case_study_completed?: boolean | null
@@ -137,8 +148,10 @@ export type Database = {
           created_by?: string | null
           csm?: string | null
           deals_closed?: number | null
+          email?: string | null
           end_date?: string
           growth?: number | null
+          health_score?: number | null
           id?: string
           last_communication?: string | null
           last_payment_amount?: number | null
@@ -148,9 +161,11 @@ export type Database = {
           name?: string
           notes?: string | null
           nps_score?: number | null
+          phone?: string | null
           progress?: number | null
           referral_count?: number | null
           referral_names?: string[] | null
+          service?: string | null
           start_date?: string
           status?: string
           team?: string | null
