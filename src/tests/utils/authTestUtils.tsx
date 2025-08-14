@@ -3,6 +3,7 @@ import React, { ReactNode } from 'react';
 import { AuthContext } from '@/contexts/auth';
 import { BrowserRouter } from 'react-router-dom';
 import { vi } from 'vitest';
+import type { Session } from '@supabase/supabase-js';
 
 // Mock auth values
 export const mockAuthValues = {
@@ -11,11 +12,23 @@ export const mockAuthValues = {
     email: 'test@example.com',
     name: 'Test User'
   },
-  session: { 
+  session: {
     access_token: 'mock-access-token',
     refresh_token: 'mock-refresh-token',
-    expires_at: Date.now() / 1000 + 3600 // 1 hour from now
-  },
+    expires_at: Date.now() / 1000 + 3600, // 1 hour from now
+    expires_in: 3600,
+    token_type: 'bearer',
+    user: {
+      id: 'test-user-id',
+      email: 'test@example.com',
+      aud: 'authenticated',
+      role: 'authenticated',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      app_metadata: {},
+      user_metadata: { name: 'Test User' }
+    }
+  } as Session,
   isAuthenticated: true,
   isLoading: false,
   error: null,

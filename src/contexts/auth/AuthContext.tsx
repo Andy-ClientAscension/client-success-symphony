@@ -1,4 +1,5 @@
 import React, { createContext, useEffect, useState } from "react";
+import type { Session } from '@supabase/supabase-js';
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useSessionManager } from "@/hooks/use-session-manager";
@@ -13,7 +14,7 @@ export const AuthContext = createContext<Auth.AuthContextType | undefined>(undef
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<any | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [lastAuthEvent, setLastAuthEvent] = useState<string | null>(null);

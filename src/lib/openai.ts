@@ -1,5 +1,6 @@
 
-// OpenAI API service
+// OpenRouter API service
+import { supabase } from '@/integrations/supabase/client';
 
 export interface OpenAIMessage {
   role: "system" | "user" | "assistant";
@@ -71,14 +72,26 @@ const decryptKey = (encryptedKey: string): string => {
 
 export const generateAIResponse = async (
   messages: OpenAIMessage[],
-  apiKey: string
+  apiKey?: string
 ): Promise<string> => {
   try {
-    // Use OpenRouter API key from Supabase if not provided
-    if (!apiKey) {
-      apiKey = localStorage.getItem("openai_api_key") || "";
-      if (!apiKey) {
-        return "Please provide your OpenRouter API key in the settings.";
+    // Get OpenRouter API key from Supabase environment or localStorage
+    let effectiveApiKey = apiKey;
+    
+    if (!effectiveApiKey) {
+      // First try to get from Supabase environment
+      const { data: secret } = await supabase.auth.getSession();
+      if (secret?.session) {
+        effectiveApiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+      }
+      
+      // Fallback to localStorage for local development
+      if (!effectiveApiKey) {
+        effectiveApiKey = localStorage.getItem("openrouter-api-key") ? getOpenRouterKey() : "";
+      }
+      
+      if (!effectiveApiKey) {
+        throw new Error("OpenRouter API key not configured. Please contact administrator.");
       }
     }
 
@@ -86,7 +99,7 @@ export const generateAIResponse = async (
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
+        "Authorization": `Bearer ${effectiveApiKey}`,
         "HTTP-Referer": window.location.origin,
         "X-Title": "AI Dashboard Assistant",
       },

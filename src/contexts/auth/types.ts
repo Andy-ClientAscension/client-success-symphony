@@ -1,6 +1,7 @@
 
 // Instead of importing Auth, we'll use the original namespace
 import type { User } from '@/types/auth';
+import type { Session } from '@supabase/supabase-js';
 
 export interface AuthProviderProps {
   children: React.ReactNode;
@@ -21,7 +22,7 @@ export namespace Auth {
   export interface AuthResult {
     success: boolean;
     error: Error | null;
-    session: any | null;
+    session: Session | null;
     user: User | null;
   }
   
@@ -30,7 +31,7 @@ export namespace Auth {
   
   export interface AuthContextType {
     user: User | null;
-    session: any | null;
+    session: Session | null;
     isAuthenticated: boolean;
     isLoading: boolean;
     error: Error | null;

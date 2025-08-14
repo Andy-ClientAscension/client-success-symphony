@@ -177,7 +177,13 @@ class RealTimeAIProcessor {
     };
 
     try {
-      const response = await generateAIResponse([systemPrompt, userPrompt], '');
+      const response = await generateAIResponse([systemPrompt, userPrompt]);
+      
+      // Handle potential error responses
+      if (response.startsWith('Error:')) {
+        throw new Error(response.substring(7)); // Remove "Error: " prefix
+      }
+      
       const parsedInsights = JSON.parse(response);
       
       if (Array.isArray(parsedInsights)) {
