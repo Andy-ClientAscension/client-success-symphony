@@ -1,3 +1,4 @@
 
-export * from './PerformanceAlertSystem';
-export * from './DashboardErrorAlert';
+// Export all components with explicit exports
+export { PerformanceAlertSystem } from './PerformanceAlertSystem';
+export { DashboardErrorAlert } from './DashboardErrorAlert';

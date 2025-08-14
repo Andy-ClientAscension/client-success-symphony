@@ -1,2 +1,3 @@
 
-export * from './BackgroundTasksPanel';
+// Export all components with explicit exports
+export { BackgroundTasksPanel } from './BackgroundTasksPanel';

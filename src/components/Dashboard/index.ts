@@ -1,6 +1,7 @@
 
-export * from './Header';
-export * from './Metrics';
-export * from './Tabs';
-export * from './Alerts';
-export * from './BackgroundTasks';
+// Export all dashboard components with explicit exports
+export { DashboardHeader } from './Header';
+export { MetricsSummary, MetricsGrid, MetricCard } from './Metrics';
+export { DashboardTabs, UnifiedTabNavigation, RoleBasedTabs } from './Tabs';
+export { PerformanceAlertSystem, DashboardErrorAlert } from './Alerts';
+export { BackgroundTasksPanel } from './BackgroundTasks';

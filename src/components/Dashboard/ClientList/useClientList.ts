@@ -64,11 +64,13 @@ export function useClientList({ statusFilter }: UseClientListProps = {}) {
     };
 
     // Add error event listener
-    window.addEventListener('dataSync:error', handleError);
-    
-    return () => {
-      window.removeEventListener('dataSync:error', handleError);
-    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('dataSync:error', handleError);
+      
+      return () => {
+        window.removeEventListener('dataSync:error', handleError);
+      };
+    }
   }, [toast]);
   
   // UI state
@@ -95,9 +97,11 @@ export function useClientList({ statusFilter }: UseClientListProps = {}) {
     if (DataStabilizer.hasDataChanged(STORAGE_KEYS.CLIENTS, validatedClients)) {
       saveData(STORAGE_KEYS.CLIENTS, validatedClients);
       // Dispatch a custom event to notify other components of the change
-      window.dispatchEvent(new CustomEvent('storageUpdated', { 
-        detail: { key: STORAGE_KEYS.CLIENTS } 
-      }));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('storageUpdated', { 
+          detail: { key: STORAGE_KEYS.CLIENTS } 
+        }));
+      }
     }
   });
 

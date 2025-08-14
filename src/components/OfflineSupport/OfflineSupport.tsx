@@ -17,7 +17,7 @@ interface OfflineSupportProps {
 }
 
 export function OfflineSupport({ children }: OfflineSupportProps) {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [hasOfflineData, setHasOfflineData] = useState(false);
   const [offlineDataAge, setOfflineDataAge] = useState<number>(0);
   const [pendingSync, setPendingSync] = useState(false);
@@ -52,7 +52,7 @@ export function OfflineSupport({ children }: OfflineSupportProps) {
         title: "Back online",
         description: "Connection restored. Syncing data...",
       });
-      syncPendingData();
+      // syncPendingData will be called via useEffect dependency
     };
 
     const handleOffline = () => {
@@ -64,31 +64,16 @@ export function OfflineSupport({ children }: OfflineSupportProps) {
       });
     };
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
 
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, [toast]);
-
-  // Cache data for offline use
-  const cacheDataForOffline = useCallback((data: any) => {
-    try {
-      const offlineData: OfflineData = {
-        dashboardData: data.dashboard,
-        clientData: data.clients || [],
-        lastSync: new Date().toISOString()
+      return () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
       };
-      
-      localStorage.setItem('offline_dashboard_data', JSON.stringify(offlineData));
-      setHasOfflineData(true);
-      setOfflineDataAge(0);
-    } catch (error) {
-      console.error('Failed to cache data for offline use:', error);
     }
-  }, []);
+  }, [toast]);
 
   // Sync pending data when back online
   const syncPendingData = useCallback(async () => {
@@ -124,6 +109,31 @@ export function OfflineSupport({ children }: OfflineSupportProps) {
       setPendingSync(false);
     }
   }, [isOnline, toast]);
+
+  // Call syncPendingData when coming back online
+  useEffect(() => {
+    if (isOnline && pendingSync === false) {
+      syncPendingData();
+    }
+  }, [isOnline, syncPendingData, pendingSync]);
+
+  // Cache data for offline use
+  const cacheDataForOffline = useCallback((data: any) => {
+    try {
+      const offlineData: OfflineData = {
+        dashboardData: data.dashboard,
+        clientData: data.clients || [],
+        lastSync: new Date().toISOString()
+      };
+      
+      localStorage.setItem('offline_dashboard_data', JSON.stringify(offlineData));
+      setHasOfflineData(true);
+      setOfflineDataAge(0);
+    } catch (error) {
+      console.error('Failed to cache data for offline use:', error);
+    }
+  }, []);
+
 
   // Queue changes for later sync when offline
   const queueChange = useCallback((change: any) => {
@@ -245,19 +255,21 @@ export function OfflineSupport({ children }: OfflineSupportProps) {
 
 // Hook for offline-aware data operations
 export function useOfflineSupport() {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
     
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+      
+      return () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+      };
+    }
   }, []);
 
   const saveOfflineData = useCallback((key: string, data: any) => {
@@ -317,7 +329,7 @@ export function useOfflineSupport() {
 
 // Service Worker registration for advanced offline support
 export function registerServiceWorker() {
-  if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+  if (typeof window !== 'undefined' && 'serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
     window.addEventListener('load', async () => {
       try {
         const registration = await navigator.serviceWorker.register('/sw.js');

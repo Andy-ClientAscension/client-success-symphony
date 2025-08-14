@@ -80,15 +80,17 @@ class DataSyncService {
       clearInterval(this.autoSyncTimer);
     }
     
-    console.log(`Starting auto-sync with interval: ${this.syncInterval}ms`);
-    this.autoSyncTimer = setInterval(() => {
-      this.manualSync().catch(err => {
-        console.error("Error during auto-sync:", err);
-      });
-    }, this.syncInterval);
-    
-    // Log sync event
-    this.logSyncEvent('sync:config', { autoSync: true, interval: this.syncInterval });
+    if (typeof window !== 'undefined') {
+      console.log(`Starting auto-sync with interval: ${this.syncInterval}ms`);
+      this.autoSyncTimer = setInterval(() => {
+        this.manualSync().catch(err => {
+          console.error("Error during auto-sync:", err);
+        });
+      }, this.syncInterval);
+      
+      // Log sync event
+      this.logSyncEvent('sync:config', { autoSync: true, interval: this.syncInterval });
+    }
   }
   
   // Stop automatic synchronization
@@ -279,11 +281,18 @@ export function useSyncService() {
     setSyncState(dataSyncService.getSyncState());
     
     // Setup interval to refresh state
-    const intervalId = setInterval(() => {
-      setSyncState(dataSyncService.getSyncState());
-    }, 1000);
+    let intervalId: NodeJS.Timeout | null = null;
+    if (typeof window !== 'undefined') {
+      intervalId = setInterval(() => {
+        setSyncState(dataSyncService.getSyncState());
+      }, 1000);
+    }
     
-    return () => clearInterval(intervalId);
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
   }, []);
   
   return {

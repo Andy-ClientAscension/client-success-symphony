@@ -1,12 +1,12 @@
 
-// Export all components
-export * from './AIAssistant';
-export * from './AIAssistantContainer';
-export * from './AIAssistantContent';
-export * from './AIMessage';
-export * from './AIMessageInput';
-export * from './AIMessageList';
-export * from './APIKeyDialog';
-export * from './AIAutomationSuggestions';
-export * from './SystemHealthAlert';
-export * from './types';
+// Export all components with explicit exports to prevent circular imports
+export { AIAssistant } from './AIAssistant';
+export { AIAssistantContainer } from './AIAssistantContainer';
+export { AIAssistantContent } from './AIAssistantContent';
+export { AIMessage } from './AIMessage';
+export { AIMessageInput } from './AIMessageInput';
+export { AIMessageList } from './AIMessageList';
+export { APIKeyDialog } from './APIKeyDialog';
+export { AIAutomationSuggestions } from './AIAutomationSuggestions';
+export { SystemHealthAlert } from './SystemHealthAlert';
+export type { Message, SystemHealthCheck } from './types';
