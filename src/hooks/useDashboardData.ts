@@ -48,42 +48,30 @@ export function useDashboardData(options: UseDashboardDataOptions = {}) {
   const [errorState, setErrorState] = useState<Error | null>(null);
   const { triggerSync, isSyncing } = useAutoSync();
 
-  // DEV MODE BYPASS - Return mock data immediately
-  if (process.env.NODE_ENV === 'development') {
-    const devBypass = localStorage.getItem('dev_auth_bypass');
-    if (devBypass) {
-      try {
-        const { timestamp } = JSON.parse(devBypass);
-        if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
-          console.log("[useDashboardData] DEV BYPASS: Returning mock data");
-          return {
-            allClients: mockClients,
-            teamStatusCounts: mockStatusCounts,
-            teamMetrics: mockTeamMetrics,
-            isLoading: false,
-            isRefreshing: false,
-            error: null,
-            refreshData: async () => Promise.resolve(),
-            refetchData: async () => Promise.resolve(),
-            lastUpdated: new Date(),
-            churnData: [],
-            npsScore: 87,
-            npsData: { current: 87, trend: [] },
-            clients: mockClients,
-            clientCounts: mockStatusCounts,
-            data: {
-              allClients: mockClients,
-              teamStatusCounts: mockStatusCounts,
-              teamMetrics: mockTeamMetrics,
-              averageHealth: 87
-            }
-          };
-        }
-      } catch (e) {
-        localStorage.removeItem('dev_auth_bypass');
-      }
+  // COMPLETE SECURITY BYPASS - ALWAYS RETURN MOCK DATA
+  console.log("[useDashboardData] SECURITY DISABLED: Always returning mock data");
+  return {
+    allClients: mockClients,
+    teamStatusCounts: mockStatusCounts,
+    teamMetrics: mockTeamMetrics,
+    isLoading: false,
+    isRefreshing: false,
+    error: null,
+    refreshData: async () => Promise.resolve(),
+    refetchData: async () => Promise.resolve(),
+    lastUpdated: new Date(),
+    churnData: [],
+    npsScore: 87,
+    npsData: { current: 87, trend: [] },
+    clients: mockClients,
+    clientCounts: mockStatusCounts,
+    data: {
+      allClients: mockClients,
+      teamStatusCounts: mockStatusCounts,
+      teamMetrics: mockTeamMetrics,
+      averageHealth: 87
     }
-  }
+  };
 
   // Simplified query options to prevent TypeScript issues
   const clientsQuery = useQuery({

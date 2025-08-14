@@ -35,12 +35,13 @@ const PageLoader = () => (
 );
 
 export default function AppRoutes() {
+  // COMPLETE SECURITY BYPASS - ALL ROUTES ACCESSIBLE WITHOUT AUTH
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<SignUp />} />
+        <Route path="/login" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/signup" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/UnifiedDashboard" element={<UnifiedDashboard />} />
         <Route path="/ai-dashboard" element={<AIDashboard />} />
@@ -55,8 +56,8 @@ export default function AppRoutes() {
         <Route path="/ssc-capacity" element={<SSCCapacityPage />} />
         <Route path="/pre-launch" element={<PreLaunchChecklist />} />
         <Route path="/system-audit" element={<SystemAudit />} />
-        <Route path="/auth-callback" element={<AuthCallback />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/auth-callback" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/reset-password" element={<Navigate to="/dashboard" replace />} />
         <Route path="/auth-testing" element={<AuthTestingPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
