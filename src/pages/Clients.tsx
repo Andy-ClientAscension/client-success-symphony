@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users, Phone, Mail, DollarSign } from "lucide-react";
+import { ClientsErrorBoundary } from "@/features/clients/components/ClientsErrorBoundary";
 
 // Simple fallback data to prevent errors
 const DEMO_CLIENTS = [
@@ -65,8 +66,9 @@ const Clients = React.memo(() => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-        <div className="container mx-auto p-6">
+      <ClientsErrorBoundary>
+        <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+          <div className="container mx-auto p-6">
           {/* Page Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2">Clients</h1>
@@ -197,8 +199,9 @@ const Clients = React.memo(() => {
               </CardContent>
             </Card>
           </div>
+          </div>
         </div>
-      </div>
+      </ClientsErrorBoundary>
     </Layout>
   );
 });

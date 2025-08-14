@@ -17,6 +17,7 @@ import { CriticalLoadingState } from "@/components/CriticalLoadingState";
 import AppRoutes from "./routes";
 import { useToast } from "@/hooks/use-toast";
 import { AuthStateMachineProvider } from "@/contexts/auth-state-machine";
+import { setupGlobalErrorHandlers } from "@/utils/global-error-handlers-enhanced";
 
 logStartupPhase("App.tsx: Module loading started");
 
@@ -102,6 +103,10 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
 
 function App() {
   logStartupPhase("App component rendering");
+  
+  useEffect(() => {
+    setupGlobalErrorHandlers();
+  }, []);
 
   return (
     <SentryRouteErrorBoundary>
