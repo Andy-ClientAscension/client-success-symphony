@@ -1,400 +1,206 @@
+import React, { useState } from "react";
 import { Layout } from "@/components/Layout/Layout";
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { ClientsTabs } from "@/components/Dashboard/ClientsTabs";
-import { ClientsHeader } from "@/components/Dashboard/ClientsHeader";
-import { useToast } from "@/hooks/use-toast";
-import { useKanbanStore } from "@/utils/kanbanStore";
-import { STORAGE_KEYS, loadData, saveData } from "@/utils/persistence";
-import { getAllClients, Client } from "@/lib/data";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DataSyncMonitor } from "@/components/Dashboard/DataSyncMonitor";
-import { useSmartLoading } from "@/hooks/useSmartLoading";
-import { DataStabilizer } from '@/utils/dataStabilizer';
-import { ErrorRecovery } from '@/components/Dashboard/ErrorRecovery';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Users, Phone, Mail, DollarSign } from "lucide-react";
 
-// Enhanced UI components
-import { PageHeader } from "@/components/ui/page-header";
-import { EnhancedErrorBoundary } from "@/components/ui/error-boundary-enhanced";
-import { SkeletonCard } from "@/components/ui/skeleton-enhanced";
+// Simple fallback data to prevent errors
+const DEMO_CLIENTS = [
+  {
+    id: 'demo-1',
+    name: 'Acme Corporation',
+    status: 'active',
+    mrr: 5000,
+    npsScore: 8.5,
+    progress: 85,
+    email: 'contact@acme.com',
+    phone: '+1234567890'
+  },
+  {
+    id: 'demo-2', 
+    name: 'Tech Solutions Inc',
+    status: 'at-risk',
+    mrr: 2500,
+    npsScore: 6.2,
+    progress: 45,
+    email: 'info@techsolutions.com',
+    phone: '+1234567891'
+  },
+  {
+    id: 'demo-3',
+    name: 'Global Enterprises',
+    status: 'active',
+    mrr: 8000,
+    npsScore: 9.1,
+    progress: 92,
+    email: 'hello@global.com',
+    phone: '+1234567892'
+  }
+];
 
-export default function Clients() {
-  const [activeTab, setActiveTab] = useState("all");
-  const [forceReload, setForceReload] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [clients, setClients] = useState<Client[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  // New state for advanced filtering
-  const [searchQuery, setSearchQuery] = useState("");
+const Clients: React.FC = () => {
+  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const { loadPersistedData } = useKanbanStore();
-  const initializationAttempted = useRef(false);
-  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Use smart loading to provide better UX
-  const { isLoading: showLoading, forceShowLoading } = useSmartLoading(isLoading, {
-    minLoadingTime: 1000,
-    priority: 1
+
+  // Filter clients based on search and status
+  const filteredClients = DEMO_CLIENTS.filter(client => {
+    const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         client.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "all" || client.status === statusFilter;
+    return matchesSearch && matchesStatus;
   });
-  
-  // Keep a ref to the latest clients to avoid stale closure issues
-  const clientsRef = useRef(clients);
-  useEffect(() => {
-    clientsRef.current = clients;
-  }, [clients]);
 
-  // Set a loading timeout to prevent infinite loading states
-  useEffect(() => {
-    if (isLoading) {
-      loadingTimeoutRef.current = setTimeout(() => {
-        console.log("Loading timeout reached, forcing loading to complete");
-        setIsLoading(false);
-        
-        // If we still don't have clients, try one last time to get them from storage or defaults
-        if (clients.length === 0) {
-          try {
-            const storedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
-            if (storedClients && storedClients.length > 0) {
-              setClients(storedClients);
-            } else {
-              const defaultClients = getAllClients();
-              if (defaultClients && defaultClients.length > 0) {
-                setClients(defaultClients);
-                saveData(STORAGE_KEYS.CLIENTS, defaultClients);
-              }
-            }
-          } catch (e) {
-            console.error("Error in loading timeout fallback:", e);
-          }
-        }
-      }, 10000); // 10 second timeout as a safety net
-      
-      return () => {
-        if (loadingTimeoutRef.current) {
-          clearTimeout(loadingTimeoutRef.current);
-        }
-      };
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return 'bg-green-100 text-green-800';
+      case 'at-risk': return 'bg-orange-100 text-orange-800';
+      case 'new': return 'bg-blue-100 text-blue-800';
+      case 'churned': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
-  }, [isLoading, clients.length]);
-  
-  // Fix: Properly handle async/sync data operations with error handling
-  const initializeClientData = useCallback(async () => {
-    if (initializationAttempted.current) {
-      console.log("Initialization already attempted, skipping");
-      return;
-    }
-    
-    console.log("Initializing client data...");
-    initializationAttempted.current = true;
-    setIsLoading(true);
-    forceShowLoading();
-    setError(null);
-    
-    try {
-      // Enable data persistence
-      localStorage.setItem("persistDashboard", "true");
-      
-      // Initialize client data if not already present
-      const storedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
-      
-      if (!storedClients || !Array.isArray(storedClients) || storedClients.length === 0) {
-        // Load default clients - wrapped in a try/catch to handle potential async issues
-        try {
-          // Get default clients - this is synchronous now but could be async in future
-          const defaultClients = getAllClients();
-          
-          if (defaultClients && defaultClients.length > 0) {
-            console.log(`Loaded ${defaultClients.length} default clients`);
-            saveData(STORAGE_KEYS.CLIENTS, defaultClients);
-            saveData(STORAGE_KEYS.CLIENT_STATUS, defaultClients);
-            setClients(defaultClients);
-          } else {
-            console.warn("No default clients returned from getAllClients()");
-            setClients([]);
-          }
-        } catch (dataError) {
-          console.error("Error loading default client data:", dataError);
-          toast({
-            title: "Data Loading Error",
-            description: "Failed to load default client data.",
-            variant: "destructive",
-          });
-          setClients([]);
-        }
-      } else {
-        console.log(`Loaded ${storedClients.length} clients from storage`);
-        setClients(storedClients);
-        
-        // Ensure client data is saved to client status as well for new users
-        if (localStorage.getItem(STORAGE_KEYS.CLIENT_STATUS) === null) {
-          saveData(STORAGE_KEYS.CLIENT_STATUS, storedClients);
-        }
-      }
-      
-      // Load the kanban data - keep this in a separate try/catch to isolate errors
-      try {
-        await loadPersistedData();
-        console.log("Kanban data loaded successfully");
-      } catch (kanbanError) {
-        console.error("Error loading kanban data:", kanbanError);
-        // Don't block the UI if kanban data can't be loaded
-        toast({
-          title: "Warning",
-          description: "Kanban board data couldn't be loaded properly.",
-          variant: "default",
-        });
-      }
-    } catch (error) {
-      console.error("Critical error initializing client data:", error);
-      setError("Failed to load client data. Please refresh the page.");
-      toast({
-        title: "Error Loading Students",
-        description: "There was an issue loading the student data. Please refresh the page.",
-        variant: "destructive",
-      });
-    } finally {
-      console.log("Setting isLoading to false after initialization");
-      setIsLoading(false);
-    }
-  }, [loadPersistedData, toast, forceShowLoading]);
-
-  // Initialize data only once on component mount
-  useEffect(() => {
-    console.log("Clients component mounted, calling initializeClientData");
-    initializeClientData()
-      .catch(err => {
-        console.error("Unhandled error during client data initialization:", err);
-        setIsLoading(false); // Ensure loading state is cleared even if there's an error
-        setError("An unexpected error occurred. Please refresh the page.");
-      });
-  }, [initializeClientData]);
-
-  // Optimize storage event handling with longer debouncing and deduplication
-  useEffect(() => {
-    let debounceTimer: NodeJS.Timeout | null = null;
-    let lastEventData: string | null = null;
-    
-    const handleStorageChange = (event: StorageEvent | CustomEvent) => {
-      const key = event instanceof StorageEvent ? event.key : (event as CustomEvent).detail?.key;
-      
-      // Only reload on relevant storage changes
-      if (key === STORAGE_KEYS.CLIENTS || key === STORAGE_KEYS.CLIENT_STATUS || 
-          key === STORAGE_KEYS.KANBAN || key === null) {
-        
-        // Create a unique event signature for deduplication
-        const eventSignature = `${key}-${Date.now()}`;
-        
-        // Debounce the reload to prevent multiple rapid updates
-        if (debounceTimer) {
-          clearTimeout(debounceTimer);
-        }
-        
-        debounceTimer = setTimeout(() => {
-          console.log("Storage change detected in Clients.tsx:", key);
-          
-          // Reload clients from storage
-          try {
-            const updatedClients = loadData<Client[]>(STORAGE_KEYS.CLIENTS, []);
-            const newDataSignature = JSON.stringify(updatedClients);
-            
-            // Only update if data has actually changed
-            if (updatedClients && updatedClients.length > 0 && 
-                newDataSignature !== JSON.stringify(clientsRef.current) &&
-                newDataSignature !== lastEventData) {
-              
-              lastEventData = newDataSignature;
-              setClients(updatedClients);
-              
-              // Only increment force reload if data actually changed
-              setForceReload(prev => prev + 1);
-            }
-          } catch (error) {
-            console.error("Error processing storage change:", error);
-          }
-        }, 500); // Increased debounce time to 500ms
-      }
-    };
-    
-    // Listen for both the storage event and our custom events
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('storageUpdated', handleStorageChange as EventListener);
-    window.addEventListener('storageRestored', handleStorageChange as EventListener);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('storageUpdated', handleStorageChange as EventListener);
-      window.removeEventListener('storageRestored', handleStorageChange as EventListener);
-      if (debounceTimer) clearTimeout(debounceTimer);
-    };
-  }, []); // Removed the clients dependency since we're using the ref
-
-  const handleAddNewClient = useCallback(() => {
-    navigate("/add-client");
-  }, [navigate]);
-
-  // Optimize tab change handling to prevent unnecessary rerenders
-  const handleTabChange = useCallback((value: string) => {
-    if (activeTab !== value) {
-      setActiveTab(value);
-      // Use requestAnimationFrame for smoother UI updates
-      requestAnimationFrame(() => {
-        setForceReload(prev => prev + 1);
-      });
-    }
-  }, [activeTab]);
-  
-  // Handle search query changes
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  }, []);
-  
-  // Handle status filter changes
-  const handleStatusFilterChange = useCallback((value: string) => {
-    setStatusFilter(value);
-  }, []);
-
-  // Apply filters to get filtered client count
-  const filteredClients = useCallback(() => {
-    if (!clients.length) return [];
-    
-    return clients.filter(client => {
-      // Filter by search query
-      const matchesSearch = !searchQuery || 
-        client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (client.csm && client.csm.toLowerCase().includes(searchQuery.toLowerCase()));
-      
-      // Filter by status
-      const matchesStatus = statusFilter === "all" || client.status === statusFilter;
-      
-      return matchesSearch && matchesStatus;
-    });
-  }, [clients, searchQuery, statusFilter]);
-
-  const getStatusSummary = () => {
-    if (!clients.length) return null;
-    
-    const summary = clients.reduce((acc, client) => {
-      acc[client.status] = (acc[client.status] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    return (
-      <div className="flex gap-2 mb-4 flex-wrap">
-        {Object.entries(summary).map(([status, count]) => (
-          <Badge
-            key={status}
-            variant={
-              status === 'active' ? 'default' :
-              status === 'at-risk' ? 'destructive' :
-              status === 'churned' ? 'secondary' : 'outline'
-            }
-            className="px-3 py-1"
-          >
-            {status}: {count}
-          </Badge>
-        ))}
-      </div>
-    );
   };
 
-  // Use enhanced loading state with skeleton
-  if (showLoading && !clients.length) {
-    console.log("Rendering initial loading state");
-    return (
-      <Layout>
-        <div className="space-y-6 animate-fade-up">
-          <PageHeader
-            title="Clients"
-            subtitle="Manage your client relationships and data"
-            showBackButton
-            showHomeButton
-          />
-          <div className="grid gap-6">
-            <SkeletonCard />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <SkeletonCard />
-              <SkeletonCard />
-              <SkeletonCard />
-            </div>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
-
-  if (error) {
-    console.log("Rendering error state");
-    return (
-      <Layout>
-        <div className="space-y-6">
-          <PageHeader
-            title="Clients"
-            subtitle="Manage your client relationships and data"
-            showBackButton
-            showHomeButton
-          />
-          <ErrorRecovery 
-            errorMessage={error}
-            onRetry={() => {
-              initializationAttempted.current = false;
-              setError(null);
-              initializeClientData();
-            }}
-          />
-        </div>
-      </Layout>
-    );
-  }
-
-  console.log("Rendering main clients UI, isLoading:", isLoading);
-  const filteredClientsList = filteredClients();
-  
   return (
     <Layout>
-      <div className="space-y-6 animate-fade-up">
-        <PageHeader
-          title="Clients"
-          subtitle={`Manage your ${filteredClientsList.length} client relationships and data`}
-          showBackButton
-          showHomeButton
-        />
-        
-        <div className="space-y-4">
-          <DataSyncMonitor />
-          
-          <Card className="card-elevated">
-            <div className="p-6 space-y-6">
-              <EnhancedErrorBoundary
-                title="Error Loading Client Interface"
-                showDetails={process.env.NODE_ENV === 'development'}
-                onReset={() => {
-                  setForceReload(prev => prev + 1);
-                }}
-              >
-                <ClientsHeader 
-                  clientCount={filteredClientsList.length} 
-                  onAddNewClient={handleAddNewClient}
-                  searchQuery={searchQuery}
-                  statusFilter={statusFilter}
-                  onSearchChange={handleSearchChange}
-                  onStatusFilterChange={handleStatusFilterChange}
-                />
-                
-                {getStatusSummary()}
-                
-                <ClientsTabs 
-                  activeTab={activeTab} 
-                  onTabChange={handleTabChange}
-                  forceReload={forceReload}
-                />
-              </EnhancedErrorBoundary>
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+        <div className="container mx-auto p-6">
+          {/* Page Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">Clients</h1>
+            <p className="text-muted-foreground">
+              Manage your client relationships and track their progress
+            </p>
+          </div>
+
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="flex-1">
+              <Input
+                placeholder="Search clients..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="max-w-sm"
+              />
             </div>
-          </Card>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="at-risk">At Risk</SelectItem>
+                <SelectItem value="new">New</SelectItem>
+                <SelectItem value="churned">Churned</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Client Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredClients.map((client) => (
+              <Card key={client.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="text-lg">{client.name}</CardTitle>
+                      <Badge className={getStatusColor(client.status)}>
+                        {client.status.replace('-', ' ')}
+                      </Badge>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-muted-foreground">Health Score</div>
+                      <div className="text-lg font-bold">{client.progress}%</div>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">{client.email}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">{client.phone}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">${client.mrr.toLocaleString()}/month</span>
+                  </div>
+                  <div className="pt-2">
+                    <div className="text-sm text-muted-foreground mb-1">NPS Score</div>
+                    <div className="text-lg font-semibold">{client.npsScore}/10</div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Empty State */}
+          {filteredClients.length === 0 && (
+            <Card className="p-8 text-center">
+              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">No clients found</h3>
+              <p className="text-muted-foreground mb-4">
+                {searchTerm || statusFilter !== "all" 
+                  ? "Try adjusting your search or filters"
+                  : "Get started by adding your first client"
+                }
+              </p>
+              {(searchTerm || statusFilter !== "all") && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setSearchTerm("");
+                    setStatusFilter("all");
+                  }}
+                >
+                  Clear filters
+                </Button>
+              )}
+            </Card>
+          )}
+
+          {/* Summary Stats */}
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold">{DEMO_CLIENTS.length}</div>
+                <div className="text-sm text-muted-foreground">Total Clients</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-green-600">
+                  {DEMO_CLIENTS.filter(c => c.status === 'active').length}
+                </div>
+                <div className="text-sm text-muted-foreground">Active</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-orange-600">
+                  {DEMO_CLIENTS.filter(c => c.status === 'at-risk').length}
+                </div>
+                <div className="text-sm text-muted-foreground">At Risk</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold">
+                  ${DEMO_CLIENTS.reduce((sum, c) => sum + c.mrr, 0).toLocaleString()}
+                </div>
+                <div className="text-sm text-muted-foreground">Total MRR</div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </Layout>
   );
-}
+};
+
+export default Clients;

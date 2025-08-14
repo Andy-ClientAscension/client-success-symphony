@@ -1,7 +1,7 @@
 
 import React from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { OptimizedCleanDashboard } from "@/components/Dashboard/OptimizedCleanDashboard";
+import OptimizedCleanDashboard from "@/components/Dashboard/OptimizedCleanDashboard";
 
 // Error fallback component
 function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
