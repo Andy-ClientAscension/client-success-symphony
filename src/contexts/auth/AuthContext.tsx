@@ -353,165 +353,99 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Set up auth state listener for session management
   useEffect(() => {
     console.log("Setting up auth state listener");
-    const broadcastChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('auth_channel') : null;
-    
-    // Listen for auth events from other tabs
-    if (broadcastChannel) {
-      broadcastChannel.onmessage = (event) => {
-        const { type, data } = event.data;
-        console.log(`Received auth event from another tab: ${type}`);
-        
-        if (type === 'SIGNIN_SUCCESS') {
-          // Refresh auth state
-          handleRefreshAuthState();
-          setLastAuthEvent('signin_from_other_tab');
-        } else if (type === 'SIGNOUT') {
-          // Force logout on this tab too
-          setUser(null);
-          setSession(null);
-          setLastAuthEvent('signout_from_other_tab');
-          navigate('/login', { replace: true });
-        }
-      };
-    }
+    let isProcessingExpiration = false; // Prevent multiple concurrent expiration processes
     
     // First set up the auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       console.log("Auth state changed:", event);
       setLastAuthEvent(event);
       
+      // Skip processing if already handling expiration to prevent loops
+      if (isProcessingExpiration && (event === 'SIGNED_OUT' || !currentSession)) {
+        return;
+      }
+      
       // Handle token refresh events specifically
       if (event === 'TOKEN_REFRESHED') {
         console.log("Token refreshed, updating session state");
-        // Use setTimeout to prevent deadlocks in the supabase client
-        setTimeout(async () => {
-          try {
-            await handleRefreshAuthState();
-            toast({
-              title: "Session Refreshed",
-              description: "Your authentication has been updated successfully."
-            });
-          } catch (error) {
-            console.error("Failed to refresh authentication state:", error);
-            toast({
-              title: "Authentication Error",
-              description: "Failed to refresh your session. You may need to login again.",
-              variant: "destructive"
-            });
-          }
-        }, 0);
-        return; // Early return after handling token refresh
-      }
-      
-      // Broadcast auth events to other tabs
-      if (broadcastChannel) {
-        if (event === 'SIGNED_IN') {
-          broadcastChannel.postMessage({ type: 'SIGNIN_SUCCESS', data: { timestamp: Date.now() } });
-        } else if (event === 'SIGNED_OUT') {
-          broadcastChannel.postMessage({ type: 'SIGNOUT', data: { timestamp: Date.now() } });
-        }
-      }
-      
-      // Check session expiration
-      const sessionExpired = isSessionExpired(currentSession);
-      
-      // Use setTimeout to prevent deadlocks in the supabase client
-      setTimeout(() => {
-        if (currentSession && !sessionExpired) {
-          setSession(currentSession);
+        setSession(currentSession);
+        if (currentSession?.user) {
           setUser({
             id: currentSession.user.id,
             email: currentSession.user.email!,
             name: currentSession.user.user_metadata?.name
           });
           setTokenValidationState('valid');
-          
-          // Update Sentry user context
           updateSentryUser({
             id: currentSession.user.id,
             email: currentSession.user.email
           });
-        } else if (sessionExpired) {
-          console.log("Session expired, signing out user");
-          setTokenValidationState('expired');
-          // Will handle signout in the next tick to avoid potential deadlocks
-          setTimeout(async () => {
-            await supabase.auth.signOut();
-            setSession(null);
-            setUser(null);
-            updateSentryUser(null);
-            
-            toast({
-              title: "Session Expired",
-              description: "Your session has expired. Please log in again.",
-              variant: "destructive"
-            });
-            
-            navigate('/login', { replace: true });
-          }, 0);
-        } else {
+        }
+        return;
+      }
+      
+      // Simplified session handling - no complex expiration checking in the listener
+      if (currentSession) {
+        setSession(currentSession);
+        setUser({
+          id: currentSession.user.id,
+          email: currentSession.user.email!,
+          name: currentSession.user.user_metadata?.name
+        });
+        setTokenValidationState('valid');
+        updateSentryUser({
+          id: currentSession.user.id,
+          email: currentSession.user.email
+        });
+      } else if (event === 'SIGNED_OUT') {
+        // Only process sign out once
+        if (!isProcessingExpiration) {
+          isProcessingExpiration = true;
           setSession(null);
           setUser(null);
-          
-          // Update Sentry user context
+          setTokenValidationState('unknown');
           updateSentryUser(null);
+          // Reset the flag after a short delay
+          setTimeout(() => {
+            isProcessingExpiration = false;
+          }, 1000);
         }
-      }, 0);
+      }
     });
     
-    // Then check for existing session
+    // Simplified session check to prevent loops
     const checkSession = async () => {
       try {
         setIsLoading(true);
-        // Use cached session with fallback to API call
-        const { data: { session: currentSession }, error } = await getCachedUserSession();
+        const { data: { session: currentSession } } = await getCachedUserSession();
         
-        if (error) {
-          console.error("Error getting session:", error);
-          throw error;
-        }
-        
-        // Check session expiration
-        const sessionExpired = isSessionExpired(currentSession);
-        
-        if (currentSession && !sessionExpired) {
+        // Just set what we get - no complex expiration logic here
+        if (currentSession) {
           console.log("Found existing session");
-          setTokenValidationState('valid');
           setSession(currentSession);
           setUser({
             id: currentSession.user.id,
             email: currentSession.user.email!,
             name: currentSession.user.user_metadata?.name
           });
-          
-          // Update Sentry user context
+          setTokenValidationState('valid');
           updateSentryUser({
             id: currentSession.user.id,
             email: currentSession.user.email
           });
-        } else if (sessionExpired) {
-          console.log("Found expired session, signing out user");
-          setTokenValidationState('expired');
-          await supabase.auth.signOut();
-          setSession(null);
-          setUser(null);
-          updateSentryUser(null);
-          
-          toast({
-            title: "Session Expired",
-            description: "Your session has expired. Please log in again.",
-            variant: "destructive"
-          });
-          
-          navigate('/login', { replace: true });
         } else {
-          console.log("No active session found");
+          console.log("No existing session found");
           setSession(null);
           setUser(null);
+          setTokenValidationState('unknown');
+          updateSentryUser(null);
         }
       } catch (error) {
         console.error("Session check error:", error);
-        setError(error instanceof Error ? error : new Error("Failed to retrieve session"));
+        setSession(null);
+        setUser(null);
+        setTokenValidationState('unknown');
+        updateSentryUser(null);
       } finally {
         setIsLoading(false);
       }
@@ -519,13 +453,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     
     checkSession();
     
-    // Cleanup subscription and broadcast channel when component unmounts
     return () => {
-      console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
-      if (broadcastChannel) {
-        broadcastChannel.close();
-      }
     };
   }, [toast, navigate]); // Added toast and navigate to dependencies
 
