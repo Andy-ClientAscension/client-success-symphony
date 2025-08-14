@@ -21,21 +21,18 @@ class DataSyncService {
   private syncLog: SyncEvent[] = [];
   
   constructor() {
-    console.log("DataSyncService initialized");
+    // DataSyncService initialized
   }
   
   // Initialize the data sync service
   initializeDataSync(): void {
     try {
-      console.log("Initializing data sync with enhanced storage handling");
       // Check if we have any local data to sync
       const hasLocalData = this.checkForLocalData();
-      console.log(`Local data check: ${hasLocalData ? 'Data found' : 'No data found'}`);
-      
       // Log sync event
       this.logSyncEvent('sync:config', { initialized: true });
     } catch (error) {
-      console.error("Error in initializeDataSync:", error);
+      // Error in initializeDataSync
     }
   }
   
@@ -81,7 +78,7 @@ class DataSyncService {
     }
     
     if (typeof window !== 'undefined') {
-      console.log(`Starting auto-sync with interval: ${this.syncInterval}ms`);
+      // Starting auto-sync with interval
       this.autoSyncTimer = setInterval(() => {
         this.manualSync().catch(err => {
           console.error("Error during auto-sync:", err);
@@ -96,7 +93,7 @@ class DataSyncService {
   // Stop automatic synchronization
   stopAutoSync(): void {
     if (this.autoSyncTimer) {
-      console.log("Stopping auto-sync");
+      // Stopping auto-sync
       clearInterval(this.autoSyncTimer);
       this.autoSyncTimer = null;
       
@@ -109,12 +106,12 @@ class DataSyncService {
   async manualSync(): Promise<boolean> {
     try {
       if (this.isSyncing) {
-        console.log("Sync already in progress, skipping");
+        // Sync already in progress, skipping
         return false;
       }
       
       this.isSyncing = true;
-      console.log("Manual sync started");
+      // Manual sync started
       
       // Log sync event
       this.logSyncEvent('sync:started');
@@ -129,10 +126,10 @@ class DataSyncService {
       // Log sync event
       this.logSyncEvent('sync:completed');
       
-      console.log("Manual sync completed");
+      // Manual sync completed
       return true;
     } catch (error) {
-      console.error("Error in manualSync:", error);
+      // Error in manualSync
       
       // Log sync event
       this.logSyncEvent('sync:failed', { error: error instanceof Error ? error.message : 'Unknown error' });
@@ -196,7 +193,7 @@ class DataSyncService {
       this.notifySubscribers('clients', this.loadData('clients', []));
       this.notifySubscribers('settings', this.loadData('settings', {}));
     } catch (error) {
-      console.error("Error syncing data:", error);
+      // Error syncing data
     }
   }
   
@@ -211,7 +208,7 @@ class DataSyncService {
       
       return true;
     } catch (error) {
-      console.error(`Error saving data for key: ${key}`, error);
+      // Error saving data for key
       return false;
     }
   }
@@ -222,7 +219,7 @@ class DataSyncService {
       const data = enhancedStorage.getItem(key);
       return data ? JSON.parse(data) : defaultValue;
     } catch (error) {
-      console.error(`Error loading data for key: ${key}`, error);
+      // Error loading data for key
       return defaultValue;
     }
   }
@@ -234,7 +231,7 @@ class DataSyncService {
     }
     
     this.subscribers.get(key)?.push(callback);
-    console.log(`Subscribed to ${key}, total subscribers: ${this.subscribers.get(key)?.length}`);
+    // Subscribed to key
   }
   
   // Unsubscribe from data changes
@@ -248,7 +245,7 @@ class DataSyncService {
     
     if (index !== -1) {
       callbacks.splice(index, 1);
-      console.log(`Unsubscribed from ${key}, remaining subscribers: ${callbacks.length}`);
+      // Unsubscribed from key
     }
   }
   
@@ -263,7 +260,7 @@ class DataSyncService {
       try {
         callback(data);
       } catch (error) {
-        console.error(`Error in subscriber callback for ${key}:`, error);
+        // Error in subscriber callback for key
       }
     });
   }
@@ -345,7 +342,7 @@ export function useRealtimeData<T = any>(key: string, defaultValue: T = null as 
         }
       };
     } catch (error) {
-      console.error(`Error in useRealtimeData for key: ${key}`, error);
+      // Error in useRealtimeData for key
       if (isMounted) {
         setData(defaultValue);
         setIsLoading(false);

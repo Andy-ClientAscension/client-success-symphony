@@ -9,7 +9,7 @@ import { useRealtimeData } from '@/utils/dataSyncService';
 import { useSmartLoading } from '@/hooks/useSmartLoading';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { DataStabilizer } from '@/utils/dataStabilizer';
-import { safeLogger } from '@/utils/code-quality-fixes';
+import { handleError } from '@/services/errorService';
 
 interface UseClientListProps {
   statusFilter?: Client['status'];
@@ -23,11 +23,13 @@ export function useClientList({ statusFilter }: UseClientListProps = {}) {
   // Get default clients as a stable memoized value - fix re-render loop
   const defaultClients = useMemo(() => {
     try {
-      safeLogger.debug("Loading default clients from data service");
       const allClients = getAllClients();
       return validateClients(allClients);
     } catch (error) {
-      safeLogger.error("Error loading default clients:", error);
+      handleError(error as Error, { 
+        component: 'useClientList', 
+        action: 'loadDefaultClients' 
+      });
       return [];
     }
   }, []); // Empty deps to prevent re-computation
@@ -53,9 +55,12 @@ export function useClientList({ statusFilter }: UseClientListProps = {}) {
   
   // Handle errors separately
   useEffect(() => {
-    const handleError = (event: Event) => {
+    const handleErrorEvent = (event: Event) => {
       const customEvent = event as CustomEvent;
-      safeLogger.error("Error in realtime data hook:", customEvent.detail);
+      handleError(customEvent.detail, { 
+        component: 'useClientList', 
+        action: 'dataSync' 
+      });
       toast({
         title: "Data Sync Error",
         description: "There was a problem syncing client data.",
@@ -65,10 +70,10 @@ export function useClientList({ statusFilter }: UseClientListProps = {}) {
 
     // Add error event listener
     if (typeof window !== 'undefined') {
-      window.addEventListener('dataSync:error', handleError);
+      window.addEventListener('dataSync:error', handleErrorEvent);
       
       return () => {
-        window.removeEventListener('dataSync:error', handleError);
+        window.removeEventListener('dataSync:error', handleErrorEvent);
       };
     }
   }, [toast]);
@@ -91,7 +96,7 @@ export function useClientList({ statusFilter }: UseClientListProps = {}) {
   // Create a stable function to update clients with deduplication
   const setClients = useStableCallback((updatedClients: Client[]) => {
     const validatedClients = validateClients(updatedClients);
-    safeLogger.debug(`Saving ${validatedClients.length} clients to storage`);
+    // Saving clients to storage
     
     // Use data stabilizer to prevent unnecessary updates
     if (DataStabilizer.hasDataChanged(STORAGE_KEYS.CLIENTS, validatedClients)) {
@@ -108,7 +113,7 @@ export function useClientList({ statusFilter }: UseClientListProps = {}) {
   // Clear initialization state once clients are loaded
   useEffect(() => {
     if (isInitializing && !isClientsLoading) {
-      safeLogger.debug("useClientList: Finished initializing, clients loaded");
+      // Finished initializing, clients loaded
       setIsInitializing(false);
     }
   }, [isClientsLoading, isInitializing]);
@@ -116,12 +121,12 @@ export function useClientList({ statusFilter }: UseClientListProps = {}) {
   // Filter clients with stable dependencies to prevent re-render loops
   const filteredClientsStable = useMemo(() => {
     if (isInitializing) {
-      safeLogger.debug("useClientList: Still initializing, returning empty array");
+      // Still initializing, returning empty array
       return [];
     }
     
     let filtered = validateClients(clients);
-    safeLogger.debug(`useClientList: Filtering ${filtered.length} clients with statusFilter:`, statusFilter);
+    // Filtering clients with statusFilter
     
     if (statusFilter) {
       filtered = filtered.filter(client => client.status === statusFilter);
@@ -142,7 +147,7 @@ export function useClientList({ statusFilter }: UseClientListProps = {}) {
       );
     }
 
-    safeLogger.debug(`useClientList: Filtered to ${filtered.length} clients`);
+    // Filtered clients result
     return filtered;
   }, [clients, selectedTeam, statusFilter, searchQuery, isInitializing]);
 
