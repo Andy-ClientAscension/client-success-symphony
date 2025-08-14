@@ -22,15 +22,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
   
+  // Reduce auth notifications by using managed toast with proper categories
+  const showAuthToast = (title: string, description: string, isError = false) => {
+    // Only show critical auth notifications to reduce noise
+    if (title.includes("expired") || title.includes("error") || isError) {
+      toast({
+        title,
+        description,
+        variant: isError ? "destructive" : "default"
+      });
+    }
+  };
+  
   // Enhanced session management with longer timeout
   const sessionManager = useSessionManager({
     sessionTimeoutMinutes: 240, // 4 hours instead of 1 hour
     onExpired: () => {
-      toast({
-        title: "Session Expired",
-        description: "Your session has expired. Please log in again.",
-        variant: "default" // Less intrusive
-      });
+      // Only show session expired notification once, not repeatedly
+      showAuthToast(
+        "Session Expired",
+        "Your session has expired. Please log in again.",
+        true
+      );
       handleLogout();
     },
     onInactive: () => {
@@ -63,11 +76,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(null);
         updateSentryUser(null);
         
-        toast({
-          title: "Session Expired",
-          description: "Your session has expired. Please log in again.",
-          variant: "destructive"
-        });
+        // Reduce notification noise - only show if this is the first expiry in the session
+        if (!sessionStorage.getItem('session_expired_shown')) {
+          sessionStorage.setItem('session_expired_shown', 'true');
+          showAuthToast(
+            "Session Expired",
+            "Your session has expired. Please log in again.",
+            true
+          );
+        }
         
         navigate('/login', { replace: true });
         return Promise.resolve();

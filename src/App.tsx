@@ -15,6 +15,7 @@ import { WebVitalsMonitor, PerformanceDebugger } from "@/components/Performance"
 import { Suspense, useEffect, useState, useCallback } from "react";
 import { CriticalLoadingState } from "@/components/CriticalLoadingState";
 import AppRoutes from "./routes";
+import { NotificationCenter } from "@/components/NotificationCenter";
 import { useToast } from "@/hooks/use-toast";
 import { AuthStateMachineProvider } from "@/contexts/auth-state-machine";
 import { setupGlobalErrorHandlers } from "@/utils/global-error-handlers-enhanced";
@@ -122,6 +123,7 @@ function App() {
                 <OfflineDetector />
                 <OfflineBanner position="bottom" />
                 <Toaster />
+                <NotificationCenter />
                 <AppRoutes />
               </AuthErrorBoundary>
             </Suspense>
