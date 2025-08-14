@@ -1,5 +1,5 @@
 
-import React from 'react';
+import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Bot, AlertCircle, TrendingUp, TrendingDown } from "lucide-react";
@@ -11,9 +11,9 @@ interface AIInsightsWidgetProps {
 
 export function AIInsightsWidget({ insights }: AIInsightsWidgetProps) {
   // Validate inputs and provide defaults
-  const validInsights = React.useMemo(() => {
+  const validInsights = useMemo(() => {
     if (!insights || !Array.isArray(insights)) {
-      console.log("No valid insights array provided to AIInsightsWidget");
+      // No valid insights array provided - using defaults
       return [];
     }
     

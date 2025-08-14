@@ -83,7 +83,7 @@ export function AuthRedirectPage({
           message="Initializing authentication" 
           timeout={3000}
           fallbackAction={() => {
-            console.log("[AuthRedirectPage] Auth initialization timeout");
+            // Auth initialization timeout - handled gracefully
             // The useAuthRedirect hook will handle the fallback navigation
           }}
         />

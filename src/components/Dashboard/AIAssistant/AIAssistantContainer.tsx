@@ -1,24 +1,21 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Bot, X, Key } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
 import { getOpenAIKey, hasOpenAIKey } from "@/lib/openai";
 import { useSystemHealth } from '@/hooks/use-system-health';
-import { Message, SystemHealthCheck } from "./types";
-import { AIMessageList } from "./AIMessageList";
 import { APIKeyDialog } from "./APIKeyDialog";
 import { SystemHealthAlert } from "./SystemHealthAlert";
-import { AIMessageInput } from "./AIMessageInput";
 import { AIAssistantContent } from "./AIAssistantContent";
+import { STORAGE_KEYS } from "@/utils/constants/app-constants";
+import { secureStorage } from "@/utils/storage/secure-storage";
 
 export function AIAssistantContainer() {
   const { healthChecks } = useSystemHealth();
   const [isOpen, setIsOpen] = useState(false);
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
   const [apiKey, setApiKey] = useState("");
-  const { toast } = useToast();
   const [dismissedAlerts, setDismissedAlerts] = useState<Record<string, boolean>>({});
   
   useEffect(() => {
@@ -38,23 +35,23 @@ export function AIAssistantContainer() {
       [id]: true
     }));
     
-    // Store dismissed alerts in localStorage to persist across sessions
+    // Store dismissed alerts to persist across sessions
     try {
-      const storedDismissed = JSON.parse(localStorage.getItem('dismissedHealthAlerts') || '{}');
+      const storedDismissed = secureStorage.getItem<Record<string, boolean>>(STORAGE_KEYS.DISMISSED_ALERTS) || {};
       storedDismissed[id] = true;
-      localStorage.setItem('dismissedHealthAlerts', JSON.stringify(storedDismissed));
+      secureStorage.setItem(STORAGE_KEYS.DISMISSED_ALERTS, storedDismissed);
     } catch (e) {
-      console.error("Error storing dismissed alerts:", e);
+      // Error storing dismissed alerts - using fallback
     }
   };
 
-  // Load dismissed alerts from localStorage
+  // Load dismissed alerts from storage
   useEffect(() => {
     try {
-      const storedDismissed = JSON.parse(localStorage.getItem('dismissedHealthAlerts') || '{}');
+      const storedDismissed = secureStorage.getItem<Record<string, boolean>>(STORAGE_KEYS.DISMISSED_ALERTS) || {};
       setDismissedAlerts(storedDismissed);
     } catch (e) {
-      console.error("Error loading dismissed alerts:", e);
+      // Error loading dismissed alerts - using defaults
     }
   }, []);
 

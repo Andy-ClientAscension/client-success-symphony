@@ -76,7 +76,7 @@ export function StudentTeamEdit({
 
       saveData(notesKey, updatedNotes);
       
-      console.log(`Transferred ${studentNotes.length} bi-weekly notes from ${oldTeam} to ${newTeam}`);
+      // Notes transferred successfully
     }
   };
   

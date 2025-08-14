@@ -61,12 +61,12 @@ export function TeamAnalytics({
 
   const handleAddTeam = () => {
     // In a real app, this would open a modal to add a new team
-    console.log('Add team functionality would be implemented here');
+    // Add team functionality would be implemented here
   };
 
   const handleDeleteTeam = () => {
     // In a real app, this would open a modal to delete the selected team
-    console.log('Delete team functionality would be implemented here');
+    // Delete team functionality would be implemented here
   };
 
   return (

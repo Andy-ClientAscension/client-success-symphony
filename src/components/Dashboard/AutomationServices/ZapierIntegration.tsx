@@ -62,7 +62,7 @@ export function ZapierIntegration({
 
   const handleTriggerWebhook = async (webhook: any) => {
     setIsLoading(true);
-    console.log(`Triggering ${webhook.service} webhook:`, webhook.url);
+    // Triggering webhook for automation service
 
     try {
       const response = await apiIntegrations.zapier.triggerWebhook(webhook.url, {

@@ -62,7 +62,7 @@ export function MakeIntegration({
 
   const handleTriggerWebhook = async (webhook: any) => {
     setIsLoading(true);
-    console.log(`Triggering ${webhook.service} webhook:`, webhook.url);
+    // Triggering webhook for automation service
 
     try {
       const response = await apiIntegrations.make.triggerScenario(webhook.url, {

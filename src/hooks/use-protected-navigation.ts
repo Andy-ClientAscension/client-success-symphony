@@ -14,7 +14,7 @@ export function useProtectedNavigation() {
   const navigateWithLock = useCallback((path: string, options?: { replace?: boolean }) => {
     if (!navigationLockRef.current && isMountedRef.current) {
       navigationLockRef.current = true;
-      console.log(`[Navigation] Navigating to: ${path}`);
+      // Navigating to specified path
       navigate(path, options);
       
       // Release lock after a short delay
@@ -24,7 +24,7 @@ export function useProtectedNavigation() {
       
       return true;
     } else {
-      console.log(`[Navigation] Navigation to ${path} blocked by lock or unmount`);
+      // Navigation blocked by lock or unmount
       return false;
     }
   }, [navigate]);
