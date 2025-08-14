@@ -15,6 +15,26 @@ export const DATA_KEYS = {
 
 export const DASHBOARD_KEYS = DATA_KEYS; // Alias for compatibility
 
+// Mock data for development mode
+const mockClients = [
+  { id: '1', name: 'TechCorp Inc', status: 'active' as const, team: 'Alpha', csm: 'John Smith', startDate: '2024-01-15', endDate: '2024-12-15', contractValue: 50000, mrr: 4167, callsBooked: 25, dealsClosed: 12, progress: 85, npsScore: 9, lastCommunication: '2024-08-10', growth: 15, backendStudents: 45, notes: 'Great client', lastPayment: { amount: 4167, date: '2024-08-01' }, logo: null },
+  { id: '2', name: 'StartupX', status: 'at-risk' as const, team: 'Beta', csm: 'Sarah Johnson', startDate: '2024-02-01', endDate: '2024-11-30', contractValue: 25000, mrr: 2083, callsBooked: 12, dealsClosed: 5, progress: 60, npsScore: 6, lastCommunication: '2024-08-05', growth: -5, backendStudents: 20, notes: 'Needs attention', lastPayment: { amount: 2083, date: '2024-08-01' }, logo: null },
+  { id: '3', name: 'Enterprise Solutions', status: 'active' as const, team: 'Gamma', csm: 'Mike Davis', startDate: '2024-03-10', endDate: '2025-02-10', contractValue: 100000, mrr: 8333, callsBooked: 40, dealsClosed: 28, progress: 92, npsScore: 10, lastCommunication: '2024-08-12', growth: 25, backendStudents: 80, notes: 'Top performer', lastPayment: { amount: 8333, date: '2024-08-01' }, logo: null },
+  { id: '4', name: 'Digital Dynamics', status: 'new' as const, team: 'Alpha', csm: 'Lisa Wilson', startDate: '2024-08-01', endDate: '2025-07-31', contractValue: 75000, mrr: 6250, callsBooked: 8, dealsClosed: 2, progress: 30, npsScore: 8, lastCommunication: '2024-08-14', growth: 0, backendStudents: 35, notes: 'New client', lastPayment: { amount: 6250, date: '2024-08-01' }, logo: null }
+];
+
+const mockStatusCounts = { total: 42, active: 28, atRisk: 8, new: 4, churned: 2 };
+const mockTeamMetrics = { 
+  totalMRR: 125000, 
+  averageHealth: 87, 
+  totalCallsBooked: 156, 
+  totalDealsClosed: 89,
+  retentionRate: 85,
+  atRiskRate: 15,
+  churnRate: 5,
+  totalClients: 42
+};
+
 interface UseDashboardDataOptions {
   teamFilter?: string;
   enableAutoSync?: boolean;
@@ -27,6 +47,43 @@ export function useDashboardData(options: UseDashboardDataOptions = {}) {
   const [isInitialDataFetched, setIsInitialDataFetched] = useState(false);
   const [errorState, setErrorState] = useState<Error | null>(null);
   const { triggerSync, isSyncing } = useAutoSync();
+
+  // DEV MODE BYPASS - Return mock data immediately
+  if (process.env.NODE_ENV === 'development') {
+    const devBypass = localStorage.getItem('dev_auth_bypass');
+    if (devBypass) {
+      try {
+        const { timestamp } = JSON.parse(devBypass);
+        if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
+          console.log("[useDashboardData] DEV BYPASS: Returning mock data");
+          return {
+            allClients: mockClients,
+            teamStatusCounts: mockStatusCounts,
+            teamMetrics: mockTeamMetrics,
+            isLoading: false,
+            isRefreshing: false,
+            error: null,
+            refreshData: async () => Promise.resolve(),
+            refetchData: async () => Promise.resolve(),
+            lastUpdated: new Date(),
+            churnData: [],
+            npsScore: 87,
+            npsData: { current: 87, trend: [] },
+            clients: mockClients,
+            clientCounts: mockStatusCounts,
+            data: {
+              allClients: mockClients,
+              teamStatusCounts: mockStatusCounts,
+              teamMetrics: mockTeamMetrics,
+              averageHealth: 87
+            }
+          };
+        }
+      } catch (e) {
+        localStorage.removeItem('dev_auth_bypass');
+      }
+    }
+  }
 
   // Simplified query options to prevent TypeScript issues
   const clientsQuery = useQuery({
