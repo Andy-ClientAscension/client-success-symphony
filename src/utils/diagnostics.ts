@@ -84,14 +84,14 @@ export async function runComprehensiveDiagnostic(): Promise<DiagnosticReport> {
   }
 
   // 3. API Integration Checks
-  const hasAPIKey = !!localStorage.getItem("openai_api_key");
+  const hasAPIKey = !!localStorage.getItem("openrouter-api-key");
   if (!hasAPIKey) {
     results.push({
       category: 'API Integration',
       status: 'warning',
-      message: 'OpenAI API key not configured',
+      message: 'OpenRouter API key not configured',
       details: 'AI assistant functionality will be limited without an API key.',
-      remediation: 'Add your OpenAI API key in the AI Assistant settings.'
+      remediation: 'Add your OpenRouter API key in the AI Assistant settings.'
     });
   }
 

@@ -7,11 +7,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, Key } from "lucide-react";
 import { saveOpenAIKey, hasOpenAIKey } from '@/lib/openai';
 
-interface OpenAIKeyInputProps {
+interface OpenRouterKeyInputProps {
   onSubmit: () => void;
 }
 
-export function OpenAIKeyInput({ onSubmit }: OpenAIKeyInputProps) {
+export function OpenAIKeyInput({ onSubmit }: OpenRouterKeyInputProps) {
   const [apiKey, setApiKey] = useState('');
   const [error, setError] = useState('');
   
@@ -23,9 +23,9 @@ export function OpenAIKeyInput({ onSubmit }: OpenAIKeyInputProps) {
       return;
     }
     
-    // Simple validation - OpenAI keys typically start with "sk-"
+    // Simple validation - OpenRouter keys typically start with "sk-"
     if (!apiKey.trim().startsWith('sk-')) {
-      setError('API key seems invalid. OpenAI keys typically start with "sk-"');
+      setError('API key seems invalid. OpenRouter keys typically start with "sk-"');
       return;
     }
     
@@ -45,20 +45,20 @@ export function OpenAIKeyInput({ onSubmit }: OpenAIKeyInputProps) {
       <Alert className="bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800">
         <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
         <AlertDescription className="text-sm text-blue-800 dark:text-blue-300">
-          Enter your OpenAI API key to enable AI insights. Your key is stored locally and never sent to our servers.
+          Enter your OpenRouter API key to enable AI insights. Your key is stored locally and never sent to our servers.
         </AlertDescription>
       </Alert>
       
       <form onSubmit={handleSubmit} className="space-y-3">
         <div className="space-y-1">
-          <Label htmlFor="api-key">OpenAI API Key</Label>
+          <Label htmlFor="api-key">OpenRouter API Key</Label>
           <div className="flex space-x-2">
             <Input
               id="api-key"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               type="password"
-              placeholder="sk-..."
+              placeholder="sk-or-..."
               className="flex-1"
             />
             <Button type="submit">
@@ -70,7 +70,7 @@ export function OpenAIKeyInput({ onSubmit }: OpenAIKeyInputProps) {
         </div>
         
         <div className="text-xs text-muted-foreground">
-          <p>Don't have an API key? <a href="https://platform.openai.com/account/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Get one from OpenAI</a></p>
+          <p>Don't have an API key? <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Get one from OpenRouter</a></p>
           <p className="mt-1">Your data is processed securely using your own API key.</p>
         </div>
       </form>

@@ -74,59 +74,66 @@ export const generateAIResponse = async (
   apiKey: string
 ): Promise<string> => {
   try {
-    // Use a temporary API key from local storage if available
+    // Use OpenRouter API key from Supabase if not provided
     if (!apiKey) {
       apiKey = localStorage.getItem("openai_api_key") || "";
       if (!apiKey) {
-        return "Please provide your OpenAI API key in the settings.";
+        return "Please provide your OpenRouter API key in the settings.";
       }
     }
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
+        "Authorization": `Bearer ${apiKey}`,
+        "HTTP-Referer": window.location.origin,
+        "X-Title": "AI Dashboard Assistant",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "openai/gpt-5-mini-2025-08-07",
         messages,
-        temperature: 0.7,
-        max_tokens: 500,
+        max_completion_tokens: 500,
       }),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("OpenAI API error:", errorData);
+      console.error("OpenRouter API error:", errorData);
       return `Error: ${errorData.error?.message || "Failed to get response from AI"}`;
     }
 
     const data: OpenAIResponse = await response.json();
     return data.choices[0]?.message?.content || "No response from AI";
   } catch (error) {
-    console.error("Error calling OpenAI API:", error);
+    console.error("Error calling OpenRouter API:", error);
     return "Error communicating with the AI service. Please try again later.";
   }
 };
 
 // Updated functions to use encryption
 
-export const saveOpenAIKey = (apiKey: string): void => {
+export const saveOpenRouterKey = (apiKey: string): void => {
   const encryptedKey = encryptKey(apiKey);
-  localStorage.setItem('openai-api-key', encryptedKey);
+  localStorage.setItem('openrouter-api-key', encryptedKey);
 };
 
-export const getOpenAIKey = (): string => {
-  const encryptedKey = localStorage.getItem('openai-api-key') || '';
+export const getOpenRouterKey = (): string => {
+  const encryptedKey = localStorage.getItem('openrouter-api-key') || '';
   return decryptKey(encryptedKey);
 };
 
-export const hasOpenAIKey = (): boolean => {
-  const encryptedKey = localStorage.getItem('openai-api-key');
+export const hasOpenRouterKey = (): boolean => {
+  const encryptedKey = localStorage.getItem('openrouter-api-key');
   return !!encryptedKey && decryptKey(encryptedKey).length > 0;
 };
 
-export const clearOpenAIKey = (): void => {
-  localStorage.removeItem('openai-api-key');
+export const clearOpenRouterKey = (): void => {
+  localStorage.removeItem('openrouter-api-key');
 };
+
+// Legacy OpenAI key functions for backwards compatibility
+export const saveOpenAIKey = saveOpenRouterKey;
+export const getOpenAIKey = getOpenRouterKey;
+export const hasOpenAIKey = hasOpenRouterKey;
+export const clearOpenAIKey = clearOpenRouterKey;

@@ -26,7 +26,7 @@ export const APIKeyDialog = ({ open, onOpenChange, apiKey, setApiKey }: APIKeyDi
       onOpenChange(false);
       toast({
         title: "API Key Saved",
-        description: "Your OpenAI API key has been saved.",
+        description: "Your OpenRouter API key has been saved.",
       });
       setApiKeyValid(null); // Reset validation state when new key is saved
     }
@@ -62,7 +62,7 @@ export const APIKeyDialog = ({ open, onOpenChange, apiKey, setApiKey }: APIKeyDi
         setApiKeyValid(true);
         toast({
           title: "API Key Valid",
-          description: "Your OpenAI API key is working correctly!",
+          description: "Your OpenRouter API key is working correctly!",
         });
       }
     } catch (error) {
@@ -81,9 +81,9 @@ export const APIKeyDialog = ({ open, onOpenChange, apiKey, setApiKey }: APIKeyDi
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Enter OpenAI API Key</DialogTitle>
+          <DialogTitle>Enter OpenRouter API Key</DialogTitle>
           <DialogDescription>
-            Enter your OpenAI API key to power the AI assistant. Your key is stored locally in your browser and never sent to our servers.
+            Enter your OpenRouter API key to power the AI assistant. Your key is stored locally in your browser and never sent to our servers.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -127,7 +127,7 @@ export const APIKeyDialog = ({ open, onOpenChange, apiKey, setApiKey }: APIKeyDi
             </div>
           )}
           <div className="text-sm text-gray-500 col-span-4">
-            Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" className="underline text-blue-600">OpenAI's dashboard</a>. This application uses gpt-4o-mini which is cost-effective.
+            Get your API key from <a href="https://openrouter.ai/keys" target="_blank" rel="noreferrer" className="underline text-blue-600">OpenRouter's dashboard</a>. This application uses gpt-5-mini which is fast and cost-effective.
           </div>
         </div>
         <DialogFooter>

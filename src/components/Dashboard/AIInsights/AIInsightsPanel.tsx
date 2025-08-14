@@ -45,7 +45,7 @@ export function AIInsightsPanel({
 
   const generateInsights = async () => {
     if (!hasApiKey) {
-      setError("OpenAI API key is required to generate insights");
+      setError("OpenRouter API key is required to generate insights");
       return;
     }
     
@@ -142,7 +142,7 @@ export function AIInsightsPanel({
             AI Insights
           </CardTitle>
           <CardDescription>
-            Connect OpenAI API to analyze your client data and get actionable insights
+            Connect OpenRouter API to analyze your client data and get actionable insights
           </CardDescription>
         </CardHeader>
         <CardContent>
