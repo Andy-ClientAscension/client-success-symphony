@@ -108,9 +108,50 @@ export default {
         },
       },
       borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)'
+        sm: 'var(--radius-sm)',
+        DEFAULT: 'var(--radius)',
+        lg: 'var(--radius-lg)',
+        xl: 'var(--radius-xl)'
+      },
+      spacing: {
+        xs: 'var(--space-xs)',
+        sm: 'var(--space-sm)',
+        md: 'var(--space-md)',
+        lg: 'var(--space-lg)',
+        xl: 'var(--space-xl)',
+        '2xl': 'var(--space-2xl)',
+        '3xl': 'var(--space-3xl)'
+      },
+      boxShadow: {
+        xs: 'var(--shadow-xs)',
+        sm: 'var(--shadow-sm)',
+        md: 'var(--shadow-md)',
+        lg: 'var(--shadow-lg)',
+        xl: 'var(--shadow-xl)',
+        '2xl': 'var(--shadow-2xl)',
+        inner: 'var(--shadow-inner)',
+        glow: 'var(--shadow-glow)',
+        colored: 'var(--shadow-colored)'
+      },
+      backgroundImage: {
+        'gradient-primary': 'var(--gradient-primary)',
+        'gradient-secondary': 'var(--gradient-secondary)',
+        'gradient-success': 'var(--gradient-success)',
+        'gradient-warning': 'var(--gradient-warning)',
+        'gradient-surface': 'var(--gradient-surface)',
+        'gradient-glass': 'var(--gradient-glass)',
+        'gradient-overlay': 'var(--gradient-overlay)',
+        'pyramid-pattern': "url('/lovable-uploads/a675a82f-10a8-49bc-8279-059d639668b9.png')"
+      },
+      transitionTimingFunction: {
+        'ease-spring': 'var(--ease-spring)',
+        'ease-elastic': 'var(--ease-elastic)'
+      },
+      transitionDuration: {
+        fast: 'var(--duration-fast)',
+        normal: 'var(--duration-normal)',
+        slow: 'var(--duration-slow)',
+        slower: 'var(--duration-slower)'
       },
       keyframes: {
         'accordion-down': {
