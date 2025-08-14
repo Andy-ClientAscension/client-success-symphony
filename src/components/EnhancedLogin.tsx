@@ -272,7 +272,7 @@ export function EnhancedLogin() {
               <Button 
                 type="button"
                 variant="outline"
-                className="w-full mt-2 bg-yellow-50 border-yellow-300 text-yellow-800 hover:bg-yellow-100"
+                className="w-full mt-2 bg-green-50 border-green-300 text-green-800 hover:bg-green-100"
                 onClick={async () => {
                   // Create a mock user session for development
                   const mockUser = {
@@ -287,17 +287,19 @@ export function EnhancedLogin() {
                     timestamp: Date.now()
                   }));
                   
+                  console.log("DEV BYPASS: Auth bypass activated");
+                  
                   toast({
-                    title: "Development Mode",
-                    description: "Bypassing authentication for development",
+                    title: "🚧 Development Mode Active",
+                    description: "All authentication bypassed for 24 hours",
                     variant: "default"
                   });
                   
-                  // Force a page refresh to re-initialize auth with dev user
-                  window.location.href = '/dashboard';
+                  // Direct navigation without page refresh
+                  navigate('/dashboard');
                 }}
               >
-                🚧 DEV: Skip Login (Remove Before Launch)
+                🚧 INSTANT DEV ACCESS (24h bypass)
               </Button>
             )}
           </form>

@@ -149,6 +149,24 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
+  // AGGRESSIVE DEV BYPASS - Skip all auth checks in development
+  if (process.env.NODE_ENV === 'development') {
+    const devBypass = localStorage.getItem('dev_auth_bypass');
+    if (devBypass) {
+      try {
+        const { timestamp } = JSON.parse(devBypass);
+        // Check if dev session is still valid (24 hours)
+        if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
+          console.log("[ProtectedRoute] DEV BYPASS: Skipping all auth checks");
+          return <>{children}</>;
+        }
+      } catch (e) {
+        // Invalid dev bypass data, remove it
+        localStorage.removeItem('dev_auth_bypass');
+      }
+    }
+  }
+
   return (
     <ErrorBoundary
       fallback={
