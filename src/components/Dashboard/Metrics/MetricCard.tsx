@@ -82,30 +82,31 @@ export function MetricCard({
 
   return (
     <Card className={cn(
-      'bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow',
+      'bg-card border border-border rounded-lg p-6 hover:shadow-md transition-shadow',
+      variantStyles[variant],
       className
     )} style={style}>
       <CardContent className="p-0">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <div className={cn('w-12 h-12 rounded-lg flex items-center justify-center mb-4', iconColor)}>
+            <div className={cn(
+              'w-12 h-12 rounded-lg flex items-center justify-center mb-4',
+              iconBgStyles[variant],
+              iconColorStyles[variant]
+            )}>
               <div className="h-6 w-6">
                 {icon}
               </div>
             </div>
-            <h3 className="text-sm font-medium text-gray-600 mb-1">{title}</h3>
-            <p className="text-2xl font-bold text-gray-900 mb-2">{value}</p>
+            <h3 className="text-sm font-medium text-muted-foreground mb-1">{title}</h3>
+            <p className="text-2xl font-bold text-foreground mb-2">{value}</p>
             {trend && (
               <div className={cn(
                 'flex items-center text-sm',
-                trend.direction === 'up' ? 'text-green-600' : 'text-red-500'
+                getTrendColor()
               )}>
-                {trend.direction === 'up' ? (
-                  <ArrowUpIcon className="h-3 w-3 mr-1" />
-                ) : (
-                  <ArrowDownIcon className="h-3 w-3 mr-1" />
-                )}
-                <span className="font-medium">{trend.value}% {trend.label}</span>
+                {getTrendIcon()}
+                <span className="font-medium ml-1">{trend.value}% {trend.label}</span>
               </div>
             )}
           </div>

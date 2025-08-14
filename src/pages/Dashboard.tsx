@@ -1,5 +1,5 @@
-import OptimizedCleanDashboard from "@/components/Dashboard/OptimizedCleanDashboard";
+import { EnhancedDashboard } from "@/components/Dashboard/Enhanced";
 
 export default function Dashboard() {
-  return <OptimizedCleanDashboard />;
+  return <EnhancedDashboard />;
 }
