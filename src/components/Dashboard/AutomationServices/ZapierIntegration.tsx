@@ -9,10 +9,11 @@ import { Separator } from "@/components/ui/separator";
 import { CheckCircle, RefreshCw, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiIntegrations, isApiConnected } from "@/lib/api";
+import { AutomationWebhook } from "@/types/common";
 
 interface ZapierIntegrationProps {
-  webhooks: any[];
-  setWebhooks: (webhooks: any[]) => void;
+  webhooks: AutomationWebhook[];
+  setWebhooks: (webhooks: AutomationWebhook[]) => void;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
   webhookUrl: string;
@@ -42,14 +43,18 @@ export function ZapierIntegration({
       return;
     }
 
-    const newWebhooks = [...webhooks, {
+    const newWebhook: AutomationWebhook = {
       id: Date.now().toString(),
       url: webhookUrl,
       service: "zapier",
       name: `Zapier Webhook ${webhooks.filter(w => w.service === "zapier").length + 1}`,
       enabled: true,
+      events: ['trigger'],
+      status: 'active',
       lastTriggered: null
-    }];
+    };
+    
+    const newWebhooks = [...webhooks, newWebhook];
     
     setWebhooks(newWebhooks);
     localStorage.setItem("automationWebhooks", JSON.stringify(newWebhooks));
@@ -60,7 +65,7 @@ export function ZapierIntegration({
     });
   };
 
-  const handleTriggerWebhook = async (webhook: any) => {
+  const handleTriggerWebhook = async (webhook: AutomationWebhook) => {
     setIsLoading(true);
     // Triggering webhook for automation service
 
@@ -179,7 +184,7 @@ export function ZapierIntegration({
               filteredWebhooks.map((webhook) => (
                 <div key={webhook.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
-                    <div className="font-medium">{webhook.name}</div>
+                    <div className="font-medium">{webhook.name || 'Unnamed Webhook'}</div>
                     <div className="text-sm text-muted-foreground">
                       {webhook.url.substring(0, 40)}...
                     </div>

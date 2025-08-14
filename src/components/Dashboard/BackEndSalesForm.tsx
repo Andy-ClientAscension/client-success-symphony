@@ -20,11 +20,12 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useKanbanStore } from "@/utils/kanbanStore";
+import { FormSubmissionData } from "@/types/common";
 
 interface BackEndSalesFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: FormSubmissionData) => void;
   teams: string[];
 }
 

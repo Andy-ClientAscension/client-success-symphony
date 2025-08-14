@@ -5,6 +5,7 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { DashboardSidebar } from './Layout/DashboardSidebar';
 import { Users, Heart, DollarSign, TrendingUp, Calendar, Target } from 'lucide-react';
+import { FilterOptions } from '@/types/common';
 import { SearchBar } from '@/components/Navigation/SearchBar';
 import { NotificationBell } from '@/components/Navigation/NotificationBell';
 import { Breadcrumbs } from '@/components/Navigation/Breadcrumbs';
@@ -174,7 +175,7 @@ export function CleanDashboard() {
   };
   
   // Enhanced filter function with analytics
-  const handleFiltersChange = (newFilters: any) => {
+  const handleFiltersChange = (newFilters: FilterOptions) => {
     trackFeatureUsage('filters', 'change', { 
       filterCount: Object.keys(newFilters).length,
       hasDateRange: !!(newFilters.dateRange?.from || newFilters.dateRange?.to),

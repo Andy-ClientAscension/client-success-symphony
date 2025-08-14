@@ -9,10 +9,11 @@ import { Separator } from "@/components/ui/separator";
 import { CheckCircle, RefreshCw, Workflow } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiIntegrations, isApiConnected } from "@/lib/api";
+import { AutomationWebhook } from "@/types/common";
 
 interface MakeIntegrationProps {
-  webhooks: any[];
-  setWebhooks: (webhooks: any[]) => void;
+  webhooks: AutomationWebhook[];
+  setWebhooks: (webhooks: AutomationWebhook[]) => void;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
   webhookUrl: string;
@@ -42,14 +43,18 @@ export function MakeIntegration({
       return;
     }
 
-    const newWebhooks = [...webhooks, {
+    const newWebhook: AutomationWebhook = {
       id: Date.now().toString(),
       url: webhookUrl,
       service: "make",
       name: `Make Webhook ${webhooks.filter(w => w.service === "make").length + 1}`,
       enabled: true,
+      events: ['trigger'],
+      status: 'active',
       lastTriggered: null
-    }];
+    };
+    
+    const newWebhooks = [...webhooks, newWebhook];
     
     setWebhooks(newWebhooks);
     localStorage.setItem("automationWebhooks", JSON.stringify(newWebhooks));
@@ -60,7 +65,7 @@ export function MakeIntegration({
     });
   };
 
-  const handleTriggerWebhook = async (webhook: any) => {
+  const handleTriggerWebhook = async (webhook: AutomationWebhook) => {
     setIsLoading(true);
     // Triggering webhook for automation service
 
@@ -72,9 +77,12 @@ export function MakeIntegration({
       });
       
       if (response && response.success) {
-        // Update last triggered time
         const updatedWebhooks = webhooks.map(w => 
-          w.id === webhook.id ? {...w, lastTriggered: new Date().toISOString()} : w
+          w.id === webhook.id ? {
+            ...w, 
+            lastTriggered: new Date().toISOString(),
+            status: 'active' as const
+          } : w
         );
         setWebhooks(updatedWebhooks);
         localStorage.setItem("automationWebhooks", JSON.stringify(updatedWebhooks));
@@ -179,7 +187,7 @@ export function MakeIntegration({
               filteredWebhooks.map((webhook) => (
                 <div key={webhook.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
-                    <div className="font-medium">{webhook.name}</div>
+                    <div className="font-medium">{webhook.name || 'Unnamed Webhook'}</div>
                     <div className="text-sm text-muted-foreground">
                       {webhook.url.substring(0, 40)}...
                     </div>

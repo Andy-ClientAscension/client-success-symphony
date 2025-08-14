@@ -5,6 +5,7 @@ import { StatusGroup, getDefaultColumnOrder } from "./ClientStatusHelper";
 import { saveData, STORAGE_KEYS, loadData } from "@/utils/persistence";
 import { useToast } from "@/hooks/use-toast";
 import { validateClients } from "@/utils/clientValidation";
+import { DragEndResult } from "@/types/common";
 
 export function useClientStatus(initialClients: Client[]) {
   const [localClients, setLocalClients] = useState<Client[]>([]);
@@ -88,7 +89,7 @@ export function useClientStatus(initialClients: Client[]) {
   }, [localClients, isInitialized]);
   
   // Handle drag end event
-  const handleDragEnd = useCallback((result: any) => {
+  const handleDragEnd = useCallback((result: DragEndResult) => {
     const { destination, source, draggableId } = result;
     
     // If there's no destination or user dropped back in same position
