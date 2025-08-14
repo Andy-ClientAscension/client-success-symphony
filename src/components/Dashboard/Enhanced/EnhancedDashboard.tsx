@@ -18,6 +18,36 @@ import { ErrorBoundary } from 'react-error-boundary';
 const ChartComponents = React.lazy(() => import('./ChartComponents'));
 const RealTimeAIPanel = React.lazy(() => import('../RealTimeAI/RealTimeAIPanel').then(m => ({ default: m.RealTimeAIPanel })));
 
+// Mock dev dashboard component
+const DevDashboard = () => (
+  <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+    <div className="p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">🚧 Development Dashboard</h1>
+        <div className="text-sm text-muted-foreground bg-yellow-100 px-3 py-1 rounded-full">
+          DEV MODE ACTIVE
+        </div>
+      </div>
+      
+      {/* Mock Metrics */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card><CardContent className="p-4"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-muted-foreground">Total Clients</p><p className="text-xl font-bold">42</p><p className="text-xs text-success">+12% from last month</p></div><div className="h-10 w-10 bg-primary/10 text-primary rounded-lg flex items-center justify-center"><Users className="h-5 w-5" /></div></div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-muted-foreground">Health Score</p><p className="text-xl font-bold">87%</p><p className="text-xs text-success">+5% from last month</p></div><div className="h-10 w-10 bg-success/10 text-success rounded-lg flex items-center justify-center"><Heart className="h-5 w-5" /></div></div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-muted-foreground">Total MRR</p><p className="text-xl font-bold">$125,000</p><p className="text-xs text-success">+18% from last month</p></div><div className="h-10 w-10 bg-primary/10 text-primary rounded-lg flex items-center justify-center"><DollarSign className="h-5 w-5" /></div></div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-muted-foreground">NPS Score</p><p className="text-xl font-bold">8.7</p><p className="text-xs text-success">+0.3 from last month</p></div><div className="h-10 w-10 bg-primary/10 text-primary rounded-lg flex items-center justify-center"><Target className="h-5 w-5" /></div></div></CardContent></Card>
+      </div>
+      
+      <Card>
+        <CardContent className="p-6 text-center">
+          <h3 className="text-lg font-semibold mb-2">🚧 Development Mode</h3>
+          <p className="text-muted-foreground">All authentication bypassed. Mock data is being displayed.</p>
+          <p className="text-sm text-muted-foreground mt-2">Navigate to any page without login restrictions.</p>
+        </CardContent>
+      </Card>
+    </div>
+  </div>
+);
+
 // Loading skeleton component
 const MetricSkeleton = () => (
   <Card className="animate-pulse">
@@ -137,6 +167,24 @@ const DashboardEmptyState = () => (
 );
 
 const EnhancedDashboard = React.memo(() => {
+  // AGGRESSIVE DEV BYPASS - Check immediately at the start
+  if (process.env.NODE_ENV === 'development') {
+    const devBypass = localStorage.getItem('dev_auth_bypass');
+    if (devBypass) {
+      try {
+        const { timestamp } = JSON.parse(devBypass);
+        // Check if dev session is still valid (24 hours)  
+        if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
+          console.log("[EnhancedDashboard] DEV BYPASS: Using mock data");
+          // Return mock dashboard for dev mode
+          return <DevDashboard />;
+        }
+      } catch (e) {
+        localStorage.removeItem('dev_auth_bypass');
+      }
+    }
+  }
+
   const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Use the proper data hook with error handling

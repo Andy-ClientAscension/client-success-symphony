@@ -15,6 +15,24 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
+  // AGGRESSIVE DEV BYPASS - Check immediately at the start
+  if (process.env.NODE_ENV === 'development') {
+    const devBypass = localStorage.getItem('dev_auth_bypass');
+    if (devBypass) {
+      try {
+        const { timestamp } = JSON.parse(devBypass);
+        // Check if dev session is still valid (24 hours)
+        if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
+          console.log("[DashboardLayout] DEV BYPASS: Skipping all auth checks");
+          return <Layout>{children}</Layout>;
+        }
+      } catch (e) {
+        // Invalid dev bypass data, remove it
+        localStorage.removeItem('dev_auth_bypass');
+      }
+    }
+  }
+
   const { isAuthenticated: legacyIsAuthenticated, isLoading: legacyIsLoading } = useAuth();
   const { toast } = useToast();
   const [showLoading, setShowLoading] = useState(false);
