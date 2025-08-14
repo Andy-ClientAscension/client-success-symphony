@@ -25,6 +25,7 @@ const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 const AuthTestingPage = lazy(() => import('@/pages/AuthTestingPage'));
 const PreLaunchChecklist = lazy(() => import('@/pages/PreLaunchChecklist'));
 const SystemAudit = lazy(() => import('@/pages/SystemAudit'));
+const SSCCapacityPage = lazy(() => import('@/pages/SSCCapacityPage').then(m => ({ default: m.SSCCapacityPage })));
 
 // Loading fallback for Suspense
 const PageLoader = () => (
@@ -51,6 +52,7 @@ export default function AppRoutes() {
         <Route path="/payments" element={<Payments />} />
         <Route path="/automations" element={<Automations />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/ssc-capacity" element={<SSCCapacityPage />} />
         <Route path="/pre-launch" element={<PreLaunchChecklist />} />
         <Route path="/system-audit" element={<SystemAudit />} />
         <Route path="/auth-callback" element={<AuthCallback />} />

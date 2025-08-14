@@ -311,6 +311,42 @@ export type Database = {
         }
         Relationships: []
       }
+      ssc_capacities: {
+        Row: {
+          available_capacity: number | null
+          capacity_percentage: number | null
+          created_at: string
+          current_students: number
+          id: string
+          max_capacity: number
+          ssc_name: string
+          team: string
+          updated_at: string
+        }
+        Insert: {
+          available_capacity?: number | null
+          capacity_percentage?: number | null
+          created_at?: string
+          current_students?: number
+          id?: string
+          max_capacity?: number
+          ssc_name: string
+          team: string
+          updated_at?: string
+        }
+        Update: {
+          available_capacity?: number | null
+          capacity_percentage?: number | null
+          created_at?: string
+          current_students?: number
+          id?: string
+          max_capacity?: number
+          ssc_name?: string
+          team?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           assigned_by: string
