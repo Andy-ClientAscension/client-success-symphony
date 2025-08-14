@@ -30,14 +30,14 @@ const PRIORITY_WEIGHTS: Record<NotificationPriority, number> = {
   critical: 4
 };
 
-// Default configs for different categories
+// Default configs for different categories - made more restrictive
 const DEFAULT_CONFIGS: Record<NotificationCategory, Partial<NotificationConfig>> = {
-  auth: { priority: 'high', cooldown: 5000, maxPerMinute: 3, deduplicate: true },
-  error: { priority: 'high', cooldown: 3000, maxPerMinute: 5, deduplicate: true },
-  system: { priority: 'medium', cooldown: 10000, maxPerMinute: 2, deduplicate: true },
-  data: { priority: 'medium', cooldown: 5000, maxPerMinute: 3, deduplicate: true },
-  user_action: { priority: 'low', cooldown: 2000, maxPerMinute: 10, deduplicate: false },
-  success: { priority: 'low', cooldown: 3000, maxPerMinute: 5, deduplicate: true }
+  auth: { priority: 'medium', cooldown: 30000, maxPerMinute: 1, deduplicate: true }, // Very restrictive
+  error: { priority: 'high', cooldown: 10000, maxPerMinute: 2, deduplicate: true }, // Keep errors but limit
+  system: { priority: 'low', cooldown: 60000, maxPerMinute: 1, deduplicate: true }, // Very restrictive
+  data: { priority: 'low', cooldown: 30000, maxPerMinute: 1, deduplicate: true }, // Very restrictive
+  user_action: { priority: 'low', cooldown: 5000, maxPerMinute: 3, deduplicate: true }, // Limit user actions
+  success: { priority: 'low', cooldown: 10000, maxPerMinute: 2, deduplicate: true } // Limit success
 };
 
 export function useManagedToast() {

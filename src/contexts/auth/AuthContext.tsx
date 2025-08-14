@@ -22,9 +22,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Reduce auth notifications by using managed toast with proper categories
+  // Use managed toast to reduce auth notification noise
   const showAuthToast = (title: string, description: string, isError = false) => {
-    // Only show critical auth notifications to reduce noise
+    // Skip most auth notifications during development to reduce noise
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[AUTH] ${title}: ${description}`);
+      return; // Just log instead of showing toast in dev
+    }
+    
+    // In production, only show critical auth notifications
     if (title.includes("expired") || title.includes("error") || isError) {
       toast({
         title,

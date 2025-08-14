@@ -20,13 +20,13 @@ interface NotificationSettings {
 
 const DEFAULT_SETTINGS: NotificationSettings = {
   enabled: true,
-  showAuth: true,
-  showSystem: true,
-  showErrors: true,
-  showSuccess: false, // Disable success by default to reduce noise
-  showDataUpdates: false, // Disable data updates by default
-  priority: 'high',
-  maxPerMinute: 5
+  showAuth: false, // Disable auth notifications by default - too noisy in dev
+  showSystem: false, // Disable system notifications by default
+  showErrors: true, // Keep errors - important for debugging
+  showSuccess: false, // Disable success - too noisy
+  showDataUpdates: false, // Disable data updates
+  priority: 'critical', // Only show critical notifications by default
+  maxPerMinute: 2 // Very low rate limit
 };
 
 export function NotificationCenter() {
