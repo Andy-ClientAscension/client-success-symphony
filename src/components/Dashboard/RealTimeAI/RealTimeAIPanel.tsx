@@ -25,6 +25,7 @@ interface RealTimeAIPanelProps {
 
 export function RealTimeAIPanel({ clients }: RealTimeAIPanelProps) {
   const [activeTab, setActiveTab] = useState('anomalies');
+  const [showAllAnomalies, setShowAllAnomalies] = useState(false);
   
   const {
     anomalies,
@@ -46,6 +47,35 @@ export function RealTimeAIPanel({ clients }: RealTimeAIPanelProps) {
 
   const criticalAlerts = getCriticalAlerts();
   const recentInsights = getRecentInsights(24);
+
+  // Group and condense anomalies
+  const groupedAnomalies = React.useMemo(() => {
+    const groups: { [key: string]: typeof anomalies } = {};
+    
+    anomalies.forEach(anomaly => {
+      const key = `${anomaly.anomalyType}_${anomaly.severity}`;
+      if (!groups[key]) {
+        groups[key] = [];
+      }
+      groups[key].push(anomaly);
+    });
+
+    return Object.entries(groups)
+      .map(([key, groupAnomalies]) => ({
+        type: groupAnomalies[0].anomalyType,
+        severity: groupAnomalies[0].severity,
+        count: groupAnomalies.length,
+        clients: groupAnomalies.map(a => a.clientName),
+        sample: groupAnomalies[0],
+        allItems: groupAnomalies
+      }))
+      .sort((a, b) => {
+        const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
+        return severityOrder[b.severity as keyof typeof severityOrder] - severityOrder[a.severity as keyof typeof severityOrder];
+      });
+  }, [anomalies]);
+
+  const displayedAnomalies = showAllAnomalies ? groupedAnomalies : groupedAnomalies.slice(0, 5);
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -170,34 +200,60 @@ export function RealTimeAIPanel({ clients }: RealTimeAIPanelProps) {
               </Alert>
             ) : (
               <div className="space-y-3">
-                {anomalies.map((anomaly) => (
-                  <Alert key={anomaly.id} variant={getSeverityColor(anomaly.severity) as any}>
+                {displayedAnomalies.map((group, index) => (
+                  <Alert key={`${group.type}_${group.severity}_${index}`} variant={getSeverityColor(group.severity) as any}>
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-3">
-                        {getAnomalyIcon(anomaly.anomalyType)}
+                        {getAnomalyIcon(group.type)}
                         <div className="flex-1">
                           <AlertTitle className="text-sm">
-                            {anomaly.clientName} - {anomaly.anomalyType.replace('_', ' ').toUpperCase()}
+                            {group.type.replace('_', ' ').toUpperCase()}
+                            {group.count > 1 && (
+                              <Badge variant="outline" className="ml-2 text-xs">
+                                {group.count} clients
+                              </Badge>
+                            )}
                           </AlertTitle>
                           <AlertDescription className="text-xs mt-1">
-                            {anomaly.description}
+                            {group.sample.description}
+                            {group.count > 1 && (
+                              <div className="mt-1 text-xs text-muted-foreground">
+                                <strong>Affected:</strong> {group.clients.slice(0, 3).join(', ')}
+                                {group.clients.length > 3 && ` and ${group.clients.length - 3} more`}
+                              </div>
+                            )}
                           </AlertDescription>
                           <div className="text-xs text-muted-foreground mt-2">
-                            <strong>Action:</strong> {anomaly.suggestedAction}
+                            <strong>Action:</strong> {group.sample.suggestedAction}
                           </div>
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-1">
-                        <Badge variant={getSeverityColor(anomaly.severity) as any} className="text-xs">
-                          {anomaly.severity}
+                        <Badge variant={getSeverityColor(group.severity) as any} className="text-xs">
+                          {group.severity}
                         </Badge>
                         <div className="text-xs text-muted-foreground">
-                          {Math.round(anomaly.confidence * 100)}% confident
+                          {Math.round(group.sample.confidence * 100)}% confident
                         </div>
                       </div>
                     </div>
                   </Alert>
                 ))}
+                
+                {groupedAnomalies.length > 5 && (
+                  <div className="flex justify-center pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowAllAnomalies(!showAllAnomalies)}
+                    >
+                      {showAllAnomalies 
+                        ? `Show Less (${groupedAnomalies.length - 5} hidden)` 
+                        : `Show All ${groupedAnomalies.length} Issue Types`
+                      }
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </TabsContent>
