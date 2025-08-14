@@ -7,30 +7,30 @@
     /* === ENHANCED DESIGN SYSTEM === */
     
     /* Core Layout */
-    --background: 0 0% 100%;
-    --foreground: 222 84% 4.9%;
+    --background: 0 0% 98%;
+    --foreground: 0 0% 10%;
     
     /* Surface Colors */
     --surface: 0 0% 100%;
     --surface-elevated: 0 0% 99%;
-    --surface-hover: 0 0% 97%;
+    --surface-hover: 0 0% 96%;
     
     /* Card System */
-    --card: 0 0% 100%;
-    --card-foreground: 222 84% 4.9%;
-    --card-elevated: 0 0% 99%;
+    --card: 0 0% 99%;
+    --card-foreground: 0 0% 10%;
+    --card-elevated: 0 0% 100%;
     --card-hover: 0 0% 97%;
     
     /* Popover */
     --popover: 0 0% 100%;
     --popover-foreground: 222 84% 4.9%;
     
-    /* Premium Brand Colors */
-    --primary: 0 84% 60%;
-    --primary-hover: 0 84% 65%;
-    --primary-active: 0 84% 55%;
-    --primary-foreground: 210 40% 98%;
-    --primary-muted: 0 84% 95%;
+    /* CLIENT ASCENSION Brand Colors */
+    --primary: 0 100% 50%;
+    --primary-hover: 0 100% 55%;
+    --primary-active: 0 100% 45%;
+    --primary-foreground: 0 0% 100%;
+    --primary-muted: 0 100% 95%;
     
     /* Sophisticated Gray Scale */
     --secondary: 210 40% 98%;
