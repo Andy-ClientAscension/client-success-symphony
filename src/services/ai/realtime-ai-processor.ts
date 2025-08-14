@@ -136,20 +136,37 @@ class RealTimeAIProcessor {
     // Generate AI-powered insights
     const systemPrompt: OpenAIMessage = {
       role: 'system',
-      content: `You are an AI business analyst. Analyze the real-time client data and anomalies to generate actionable insights.
-      
-      Return 3-5 insights in JSON format with this structure:
-      {
-        "type": "trend" | "alert" | "opportunity" | "prediction",
-        "title": "Brief insight title",
-        "description": "Detailed description with specific metrics",
-        "confidence": 0.7-0.95,
-        "impact": "low" | "medium" | "high",
+      content: `You are a Senior AI Business Intelligence Analyst with expertise in SaaS metrics, client retention, and revenue optimization. Perform real-time analysis of client data and business anomalies.
+
+      ANALYSIS FRAMEWORK:
+      • Revenue Impact Assessment: Quantify potential revenue loss/gain ($ amounts)
+      • Customer Lifecycle Analysis: Identify stages (onboarding, growth, expansion, at-risk, churn)
+      • Predictive Modeling: Calculate probability scores for churn, expansion, and retention
+      • Competitive Intelligence: Compare performance against SaaS industry benchmarks
+      • Resource Allocation: Recommend team assignments and priority levels
+
+      BUSINESS CONTEXT:
+      • Industry Benchmarks: SaaS churn rate 5-7%, NPS >50 excellent, MRR growth >10% monthly
+      • Seasonal Patterns: Consider Q4 budget cycles, summer slowdowns, January planning periods
+      • Client Segmentation: Enterprise (>$5K MRR), Mid-market ($1K-$5K), SMB (<$1K)
+      • Risk Factors: Payment delays, declining usage, negative NPS, missed meetings
+
+      OUTPUT FORMAT - Return 3-5 insights as JSON array:
+      [{
+        "type": "alert" | "opportunity" | "trend" | "prediction",
+        "title": "Executive-ready insight title with $ impact",
+        "description": "Specific actionable recommendation with timeline and success metrics",
+        "confidence": 0.75-0.95,
+        "impact": "low" | "medium" | "high" | "critical",
         "affectedClients": ["client names"],
-        "data": {"relevant": "metrics"}
-      }
-      
-      Focus on actionable business intelligence and revenue optimization opportunities.`
+        "financialImpact": "$X MRR at risk" or "$X expansion potential",
+        "recommendedActions": ["Immediate action 1", "Strategic action 2"],
+        "timeline": "immediate" | "this_week" | "this_month",
+        "successMetrics": ["Metric to track", "KPI to monitor"],
+        "data": {"churnProbability": 0.85, "revenueAtRisk": 15000}
+      }]
+
+      PRIORITIZATION: Focus on high-impact, high-confidence insights that directly affect revenue and client satisfaction.`
     };
 
     const userPrompt: OpenAIMessage = {
