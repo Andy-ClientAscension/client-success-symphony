@@ -155,9 +155,9 @@ describe('Accessibility Utilities', () => {
         configurable: true
       });
       
-      const shortcut = getKeyboardShortcut('s', { meta: true });
+      const shortcut = getKeyboardShortcut('s', true);
       
-      expect(shortcut).toBe('⌘S');
+      expect(shortcut).toBe('⌘+S');
     });
 
     it('should return Windows/Linux shortcuts when not on Mac', () => {
@@ -166,9 +166,9 @@ describe('Accessibility Utilities', () => {
         configurable: true
       });
       
-      const shortcut = getKeyboardShortcut('s', { meta: true });
+      const shortcut = getKeyboardShortcut('s', true);
       
-      expect(shortcut).toBe('CtrlS');
+      expect(shortcut).toBe('Ctrl+S');
     });
 
     it('should handle multiple modifiers', () => {
@@ -177,9 +177,9 @@ describe('Accessibility Utilities', () => {
         configurable: true
       });
       
-      const shortcut = getKeyboardShortcut('s', { meta: true, alt: true, shift: true });
+      const shortcut = getKeyboardShortcut('s', true, true, true);
       
-      expect(shortcut).toBe('CtrlAltShiftS');
+      expect(shortcut).toBe('Ctrl+Shift+Alt+S');
     });
   });
 
