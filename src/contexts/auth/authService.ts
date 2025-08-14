@@ -85,7 +85,20 @@ export const register = async (
   try {
     console.log("Registration attempt for:", email);
 
-    // Validate invite code first
+    // Import organization validation
+    const { validateOrganizationEmail } = await import('@/utils/organizationAccess');
+    
+    // Validate organization domain first
+    if (!validateOrganizationEmail(email)) {
+      return {
+        success: false,
+        message: "Only users with @clientascension.com email addresses can register.",
+        session: null,
+        user: null
+      };
+    }
+
+    // Validate invite code
     const isValidCode = await validateInviteCode(inviteCode);
     if (!isValidCode) {
       return {
