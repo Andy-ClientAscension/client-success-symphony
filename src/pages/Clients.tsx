@@ -41,7 +41,7 @@ const DEMO_CLIENTS = [
   }
 ];
 
-const Clients: React.FC = () => {
+const Clients = React.memo(() => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -201,6 +201,6 @@ const Clients: React.FC = () => {
       </div>
     </Layout>
   );
-};
+});
 
 export default Clients;

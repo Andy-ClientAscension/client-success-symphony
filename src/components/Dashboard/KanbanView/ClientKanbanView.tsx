@@ -29,17 +29,17 @@ export const ClientKanbanView = memo(function ClientKanbanView({
   const { toast } = useToast();
   
   const handleViewDetails = useCallback((client: Client) => {
-    console.log("Navigating to client details:", client.id);
+    // Navigate to client details
     navigate(`/clients/${client.id}`);
   }, [navigate]);
 
   const handleEditMetricsWrapper = useCallback((client: Client) => {
-    console.log("Edit metrics for client:", client.name);
+    // Edit metrics for client
     onEditMetrics(client);
   }, [onEditMetrics]);
 
   const handleUpdateNPSWrapper = useCallback((client: Client) => {
-    console.log("Update NPS for client:", client.name);
+    // Update NPS for client
     onUpdateNPS(client);
   }, [onUpdateNPS]);
   

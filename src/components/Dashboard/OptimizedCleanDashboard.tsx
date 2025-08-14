@@ -99,7 +99,7 @@ const MetricCard = React.memo(({ title, value, change, icon: Icon, colorClass }:
   </Card>
 ));
 
-const OptimizedCleanDashboard: React.FC = () => {
+const OptimizedCleanDashboard = React.memo(() => {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Chart data for pie chart
@@ -301,6 +301,6 @@ const OptimizedCleanDashboard: React.FC = () => {
       </div>
     </UniversalErrorBoundary>
   );
-};
+});
 
 export default OptimizedCleanDashboard;

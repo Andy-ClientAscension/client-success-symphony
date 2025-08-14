@@ -37,13 +37,13 @@ export function EnhancedKanbanBoard({ fullScreen = false, clients = [] }: Enhanc
   
   // Improved handlers for button actions
   const handleEditMetrics = useCallback((client: Client) => {
-    console.log("Opening metrics modal for:", client.name);
+    // Opening metrics modal for client
     setSelectedClient(client);
     setIsMetricsModalOpen(true);
   }, []);
   
   const handleUpdateNPS = useCallback((client: Client) => {
-    console.log("Opening NPS modal for:", client.name);
+    // Opening NPS modal for client
     setSelectedClient(client);
     setIsNPSModalOpen(true);
   }, []);

@@ -9,10 +9,10 @@ interface SystemHealthAlertProps {
   onDismiss?: () => void;
 }
 
-export const SystemHealthAlert: React.FC<SystemHealthAlertProps> = ({ 
+export const SystemHealthAlert = React.memo(({ 
   healthCheck, 
   onDismiss 
-}) => {
+}: SystemHealthAlertProps) => {
   const { type, message, severity } = healthCheck;
   
   const getIcon = () => {
@@ -92,4 +92,5 @@ export const SystemHealthAlert: React.FC<SystemHealthAlertProps> = ({
       )}
     </div>
   );
-};
+});
+export default SystemHealthAlert;

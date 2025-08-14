@@ -51,12 +51,12 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
   }, [toast]);
   
   useEffect(() => {
-    console.log("AppInitializer: Starting initialization");
+    // App initialization starting
     
     // Mark as initialized soon to avoid loading flicker for simple cases
     // Increased to 500ms to allow more time for auth state to stabilize
     const timer = setTimeout(() => {
-      console.log("AppInitializer: Setting isInitialized to true");
+      // Setting isInitialized to true
       setIsInitialized(true);
     }, 500);
     

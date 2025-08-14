@@ -13,11 +13,7 @@ export function WebVitalsMonitor() {
   useEffect(() => {
     const handleMetric = (metric: WebVitalMetric) => {
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[Web Vitals] ${metric.name}:`, {
-          value: metric.value,
-          rating: metric.rating,
-          delta: metric.delta
-        });
+        // Log Web Vitals metric in development
       }
       
       // Send to analytics in production

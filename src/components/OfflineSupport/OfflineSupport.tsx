@@ -88,7 +88,7 @@ export function OfflineSupport({ children }: OfflineSupportProps) {
         const changes = JSON.parse(pendingChanges);
         
         // Here you would sync the changes to your backend
-        console.log('Syncing pending changes:', changes);
+        // Syncing pending changes
         
         // Clear pending changes after successful sync
         localStorage.removeItem('pending_changes');
@@ -333,9 +333,9 @@ export function registerServiceWorker() {
     window.addEventListener('load', async () => {
       try {
         const registration = await navigator.serviceWorker.register('/sw.js');
-        console.log('SW registered: ', registration);
+        // SW registered successfully
       } catch (registrationError) {
-        console.log('SW registration failed: ', registrationError);
+        // SW registration failed
       }
     });
   }

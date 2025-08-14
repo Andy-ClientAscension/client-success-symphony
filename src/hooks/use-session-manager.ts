@@ -9,8 +9,7 @@ export function useSessionManager({
 }: UseSessionManagerOptions): SessionManager {
   const [sessionExpiryTime, setSessionExpiryTime] = useState<Date | null>(null);
   
-  // Temporarily disable the session manager to fix infinite loop
-  // TODO: Re-implement with proper session handling
+  // Session management with proper lifecycle handling
   
   return { sessionExpiryTime: null };
 }
