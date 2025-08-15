@@ -44,23 +44,25 @@ export const getStatusLabel = (status: string): string => {
 export const getStatusColor = (status: string): string => {
   switch (status) {
     case 'new':
-      return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
+      return 'bg-[hsl(var(--client-new))] text-white';
     case 'active':
-      return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+      return 'bg-[hsl(var(--client-active))] text-white';
     case 'backend':
-      return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400';
+      return 'bg-[hsl(var(--client-active))] text-white'; // Use active color for backend
     case 'olympia':
-      return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
+      return 'bg-[hsl(var(--client-active))] text-white'; // Use active color for olympia
     case 'at-risk':
-      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400';
+    case 'caution':
+      return 'bg-[hsl(var(--client-caution))] text-white';
     case 'churned':
-      return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+    case 'not-active':
+      return 'bg-[hsl(var(--client-not-active))] text-white';
     case 'paused':
-      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+      return 'bg-[hsl(var(--client-caution))] text-white'; // Use caution color for paused
     case 'graduated':
-      return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400';
+      return 'bg-[hsl(var(--client-active))] text-white'; // Use active color for graduated
     default:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400';
+      return 'bg-muted text-muted-foreground';
   }
 };
 
