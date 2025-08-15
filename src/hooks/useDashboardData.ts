@@ -87,30 +87,36 @@ export function useDashboardData(options: UseDashboardDataOptions = {}) {
   const [errorState, setErrorState] = useState<Error | null>(null);
   const { triggerSync, isSyncing } = useAutoSync();
 
-  // COMPLETE SECURITY BYPASS - ALWAYS RETURN MOCK DATA
-  console.log("[useDashboardData] SECURITY DISABLED: Always returning mock data");
-  return {
-    allClients: mockClients,
-    teamStatusCounts: mockStatusCounts,
-    teamMetrics: mockTeamMetrics,
-    isLoading: false,
-    isRefreshing: false,
-    error: null,
-    refreshData: async () => Promise.resolve(),
-    refetchData: async () => Promise.resolve(),
-    lastUpdated: new Date(),
-    churnData: [],
-    npsScore: 87,
-    npsData: { current: 87, trend: [] },
-    clients: mockClients,
-    clientCounts: mockStatusCounts,
-    data: {
+  // Check if we should use real data from Supabase
+  const shouldUseRealData = true; // Enable real data
+  
+  console.log("[useDashboardData] Real data enabled");
+  
+  // If we want to use real data, let's continue with the normal flow
+  if (!shouldUseRealData) {
+    return {
       allClients: mockClients,
       teamStatusCounts: mockStatusCounts,
       teamMetrics: mockTeamMetrics,
-      averageHealth: 87
-    }
-  };
+      isLoading: false,
+      isRefreshing: false,
+      error: null,
+      refreshData: async () => Promise.resolve(),
+      refetchData: async () => Promise.resolve(),
+      lastUpdated: new Date(),
+      churnData: [],
+      npsScore: 87,
+      npsData: { current: 87, trend: [] },
+      clients: mockClients,
+      clientCounts: mockStatusCounts,
+      data: {
+        allClients: mockClients,
+        teamStatusCounts: mockStatusCounts,
+        teamMetrics: mockTeamMetrics,
+        averageHealth: 87
+      }
+    };
+  }
 
   // Simplified query options to prevent TypeScript issues
   const clientsQuery = useQuery({

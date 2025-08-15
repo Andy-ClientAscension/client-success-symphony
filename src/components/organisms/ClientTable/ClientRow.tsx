@@ -24,6 +24,18 @@ export function ClientRow({ client, style }: ClientRowProps) {
   const { selectedClientIds, onSelectClient, onViewDetails, onEditMetrics, onUpdateNPS } = useClientTable();
   const isSelected = selectedClientIds.includes(client.id);
 
+  const getStatusColorClass = (status: string) => {
+    switch (status) {
+      case 'new': return 'bg-client-new text-white';
+      case 'active': return 'bg-client-active text-white';
+      case 'caution': return 'bg-client-caution text-white';
+      case 'at-risk': return 'bg-client-caution text-white';
+      case 'not-active': return 'bg-client-not-active text-white';
+      case 'churned': return 'bg-client-not-active text-white';
+      default: return 'bg-muted text-muted-foreground';
+    }
+  };
+
   return (
     <TableRow 
       className="absolute w-full" 
@@ -65,13 +77,9 @@ export function ClientRow({ client, style }: ClientRowProps) {
       </TableCell>
       <TableCell>
         <Badge 
-          variant={
-            client.status === 'active' ? 'default' :
-            client.status === 'at-risk' ? 'destructive' :
-            client.status === 'churned' ? 'secondary' : 'outline'
-          }
+          className={`${getStatusColorClass(client.status)} capitalize border-0`}
         >
-          {client.status}
+          {client.status.replace('-', ' ')}
         </Badge>
       </TableCell>
       <TableCell>

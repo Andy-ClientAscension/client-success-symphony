@@ -45,16 +45,21 @@ export function ClientListContent({
   isLoading = false
 }: ClientListContentProps) {
   const getStatusBadge = (status: Client['status']) => {
-    const colorMap = {
-      'active': "badge-success",
-      'at-risk': "badge-warning",
-      'churned': "badge-danger",
-      'new': "badge-info"
+    const getStatusColorClass = (status: string) => {
+      switch (status) {
+        case 'new': return 'bg-client-new text-white border-0';
+        case 'active': return 'bg-client-active text-white border-0';
+        case 'caution': return 'bg-client-caution text-white border-0';
+        case 'at-risk': return 'bg-client-caution text-white border-0';
+        case 'not-active': return 'bg-client-not-active text-white border-0';
+        case 'churned': return 'bg-client-not-active text-white border-0';
+        default: return 'bg-muted text-muted-foreground border-0';
+      }
     };
 
     return (
       <Badge 
-        className={colorMap[status] || ""}
+        className={`${getStatusColorClass(status)} capitalize`}
         role="status"
         aria-label={`Client status: ${status}`}
       >
