@@ -60,6 +60,7 @@ export function SidebarNav({ collapsed, closeSidebar }: SidebarNavProps) {
             onClick={(e) => handleNavigation(link.to, e)}
             className="w-full" 
             key={link.to}
+            data-testid={`nav-${link.label.toLowerCase().replace(/\s+/g, '-')}`}
           >
             <Button
               variant="ghost"

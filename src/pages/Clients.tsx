@@ -4,8 +4,10 @@ import { SSCClientManagement } from '@/components/SSCClientManagement';
 
 export default function Clients() {
   return (
-    <DashboardLayout>
-      <SSCClientManagement />
-    </DashboardLayout>
+    <div data-testid="clients-page">
+      <DashboardLayout>
+        <SSCClientManagement />
+      </DashboardLayout>
+    </div>
   );
 }

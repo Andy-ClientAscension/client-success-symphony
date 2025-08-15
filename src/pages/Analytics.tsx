@@ -59,7 +59,8 @@ export default function Analytics() {
   }, [queryClient]);
 
   return (
-    <Layout>
+    <div data-testid="analytics-page">
+      <Layout>
       <div className="flex-1 space-y-6 animate-fade-up">
         <PageHeader
           title="Analytics Dashboard"
@@ -273,6 +274,7 @@ export default function Analytics() {
           </EnhancedErrorBoundary>
         </div>
       </div>
-    </Layout>
+      </Layout>
+    </div>
   );
 }
