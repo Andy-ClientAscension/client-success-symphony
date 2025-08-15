@@ -27,6 +27,7 @@ export function SSCClientCard({ client }: SSCClientCardProps) {
     email: client.email || '',
     phone: client.phone || '',
     service: client.service || '',
+    other_service_details: client.service?.startsWith('Other:') ? client.service.replace('Other: ', '') : '',
     mrr: client.mrr?.toString() || '',
     health_score: client.health_score?.toString() || '',
     nps_score: client.npsScore?.toString() || '',
@@ -41,6 +42,21 @@ export function SSCClientCard({ client }: SSCClientCardProps) {
   };
 
   const handleSaveEdit = () => {
+    // Validate Other service details if "Other" is selected
+    if (editForm.service === 'Other' && !editForm.other_service_details.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please specify the service details for 'Other' service type.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Prepare service value - combine "Other" with details if needed
+    const serviceValue = editForm.service === 'Other' 
+      ? `Other: ${editForm.other_service_details}` 
+      : editForm.service;
+
     // In a real app, this would make an API call to update the client
     toast({
       title: "Client Updated",
@@ -49,6 +65,7 @@ export function SSCClientCard({ client }: SSCClientCardProps) {
     console.log('Updated client data:', {
       id: client.id,
       ...editForm,
+      service: serviceValue,
       mrr: parseFloat(editForm.mrr) || 0,
       health_score: parseInt(editForm.health_score) || 0,
       nps_score: parseInt(editForm.nps_score) || 0,
@@ -64,6 +81,7 @@ export function SSCClientCard({ client }: SSCClientCardProps) {
       email: client.email || '',
       phone: client.phone || '',
       service: client.service || '',
+      other_service_details: client.service?.startsWith('Other:') ? client.service.replace('Other: ', '') : '',
       mrr: client.mrr?.toString() || '',
       health_score: client.health_score?.toString() || '',
       nps_score: client.npsScore?.toString() || '',
@@ -495,6 +513,7 @@ export function SSCClientCard({ client }: SSCClientCardProps) {
                     <SelectItem value="Social Media Management">Social Media Management</SelectItem>
                     <SelectItem value="PPC Advertising">PPC Advertising</SelectItem>
                     <SelectItem value="Analytics & Reporting">Analytics & Reporting</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </FormWrapper>
@@ -517,6 +536,21 @@ export function SSCClientCard({ client }: SSCClientCardProps) {
                 </Select>
               </FormWrapper>
             </div>
+
+            {/* Other Service Details - Conditional Field */}
+            {editForm.service === 'Other' && (
+              <div className="grid grid-cols-1 gap-4">
+                <FormWrapper id="other_service_details" label="Other Service Details" required>
+                  <Input
+                    id="other_service_details"
+                    value={editForm.other_service_details}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, other_service_details: e.target.value }))}
+                    placeholder="Please specify the service details"
+                    required={editForm.service === 'Other'}
+                  />
+                </FormWrapper>
+              </div>
+            )}
 
             {/* Financial Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
