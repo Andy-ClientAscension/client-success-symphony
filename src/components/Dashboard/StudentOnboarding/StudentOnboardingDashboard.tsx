@@ -19,6 +19,7 @@ export function StudentOnboardingDashboard() {
   const newStudents = clients.filter(c => c.status === 'new');
   const graduatedStudents = clients.filter(c => c.status === 'graduated');
   const atRiskStudents = clients.filter(c => c.status === 'at-risk');
+  const noSSCStudents = clients.filter(c => !c.csm || c.csm.trim() === '');
 
   return (
     <div className="space-y-6">
@@ -62,10 +63,11 @@ export function StudentOnboardingDashboard() {
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="active">Active ({activeStudents.length})</TabsTrigger>
           <TabsTrigger value="new">New ({newStudents.length})</TabsTrigger>
+          <TabsTrigger value="no-ssc">No SSC ({noSSCStudents.length})</TabsTrigger>
           <TabsTrigger value="alumni">Alumni ({graduatedStudents.length})</TabsTrigger>
         </TabsList>
 
@@ -159,6 +161,18 @@ export function StudentOnboardingDashboard() {
             </CardHeader>
             <CardContent>
               <StudentList students={newStudents} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="no-ssc" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>No SSC Assigned</CardTitle>
+              <CardDescription>Students without a Student Success Consultant</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <StudentList students={noSSCStudents} />
             </CardContent>
           </Card>
         </TabsContent>
