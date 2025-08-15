@@ -65,6 +65,17 @@
     --info-foreground: 210 40% 98%;
     --info-muted: 221 83% 95%;
     
+    /* Risk Level Colors */
+    --risk-high: 0 84% 60%;        /* Red - at risk */
+    --risk-medium: 25 95% 53%;     /* Orange - medium risk */
+    --risk-low: 142 71% 45%;       /* Green - no risk */
+    --risk-none: 142 71% 45%;      /* Green - no risk */
+    
+    /* Payment Status Colors */
+    --payment-paid: 217 91% 60%;   /* Blue - paid */
+    --payment-unpaid: 0 84% 60%;   /* Red - not paid */
+    --payment-overdue: 0 84% 60%;  /* Red - overdue */
+    
     /* Interface Elements */
     --border: 214 32% 91%;
     --border-hover: 214 32% 88%;

@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FormWrapper } from '@/components/ui/form-wrapper';
 import { DaysRemaining } from '@/components/ui/days-remaining';
+import { RiskIndicator, PaymentIndicator, calculateRiskLevel, calculatePaymentStatus } from '@/components/ui/status-indicators';
 import { Client } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 
@@ -153,6 +154,19 @@ export function SSCClientCard({ client }: SSCClientCardProps) {
           </div>
         )}
 
+        {/* Risk and Payment Status Indicators */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          <RiskIndicator 
+            riskLevel={calculateRiskLevel(client)} 
+            size="sm"
+          />
+          <PaymentIndicator 
+            paymentStatus={calculatePaymentStatus(client)}
+            lastPaymentDate={client.lastPayment?.date}
+            size="sm"
+          />
+        </div>
+
         {/* Key Metrics */}
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="text-center p-3 bg-muted/50 rounded-lg">
@@ -253,6 +267,23 @@ export function SSCClientCard({ client }: SSCClientCardProps) {
           </DialogHeader>
 
           <div className="space-y-6">
+            {/* Status Indicators */}
+            <div className="flex flex-wrap gap-3 p-4 bg-muted/30 rounded-lg">
+              <RiskIndicator 
+                riskLevel={calculateRiskLevel(client)} 
+                size="default"
+              />
+              <PaymentIndicator 
+                paymentStatus={calculatePaymentStatus(client)}
+                lastPaymentDate={client.lastPayment?.date}
+                size="default"
+              />
+              <DaysRemaining 
+                endDate={client.endDate} 
+                contractType={client.contract_type}
+              />
+            </div>
+
             {/* Basic Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
