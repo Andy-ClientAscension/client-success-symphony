@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { Mail, Phone, DollarSign, Heart, TrendingUp, Calendar, Edit, Eye } from 'lucide-react';
+import { Mail, Phone, DollarSign, Heart, TrendingUp, Calendar, Edit, Eye, Save, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FormWrapper } from '@/components/ui/form-wrapper';
 import { Client } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 
@@ -15,14 +19,58 @@ interface SSCClientCardProps {
 export function SSCClientCard({ client }: SSCClientCardProps) {
   const { toast } = useToast();
   const [isViewDetailsOpen, setIsViewDetailsOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: client.name,
+    email: client.email || '',
+    phone: client.phone || '',
+    service: client.service || '',
+    mrr: client.mrr?.toString() || '',
+    health_score: client.health_score?.toString() || '',
+    nps_score: client.npsScore?.toString() || '',
+    contract_value: client.contractValue?.toString() || '',
+    status: client.status as "new" | "active" | "backend" | "olympia" | "at-risk" | "churned" | "paused" | "graduated",
+    csm: client.csm || '',
+    notes: client.notes || ''
+  });
 
   const handleEdit = () => {
+    setIsEditOpen(true);
+  };
+
+  const handleSaveEdit = () => {
+    // In a real app, this would make an API call to update the client
     toast({
-      title: "Edit Client",
-      description: `Opening edit form for ${client.name}`,
+      title: "Client Updated",
+      description: `${editForm.name} has been successfully updated.`,
     });
-    // In a real app, this would navigate to edit page or open edit modal
-    console.log('Edit client:', client.id);
+    console.log('Updated client data:', {
+      id: client.id,
+      ...editForm,
+      mrr: parseFloat(editForm.mrr) || 0,
+      health_score: parseInt(editForm.health_score) || 0,
+      nps_score: parseInt(editForm.nps_score) || 0,
+      contract_value: parseFloat(editForm.contract_value) || 0
+    });
+    setIsEditOpen(false);
+  };
+
+  const handleCancelEdit = () => {
+    // Reset form to original values
+    setEditForm({
+      name: client.name,
+      email: client.email || '',
+      phone: client.phone || '',
+      service: client.service || '',
+      mrr: client.mrr?.toString() || '',
+      health_score: client.health_score?.toString() || '',
+      nps_score: client.npsScore?.toString() || '',
+      contract_value: client.contractValue?.toString() || '',
+      status: client.status,
+      csm: client.csm || '',
+      notes: client.notes || ''
+    });
+    setIsEditOpen(false);
   };
 
   const handleViewDetails = () => {
@@ -292,6 +340,209 @@ export function SSCClientCard({ client }: SSCClientCardProps) {
                 </p>
               </div>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Client Modal */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <Edit className="h-5 w-5" />
+              Edit Client - {client.name}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormWrapper id="name" label="Client Name" required>
+                <Input
+                  id="name"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Enter client name"
+                />
+              </FormWrapper>
+
+              <FormWrapper id="status" label="Status">
+                <Select
+                  value={editForm.status}
+                  onValueChange={(value) => setEditForm(prev => ({ ...prev, status: value as "new" | "active" | "backend" | "olympia" | "at-risk" | "churned" | "paused" | "graduated" }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="at-risk">At Risk</SelectItem>
+                    <SelectItem value="new">New</SelectItem>
+                    <SelectItem value="churned">Churned</SelectItem>
+                    <SelectItem value="backend">Backend</SelectItem>
+                    <SelectItem value="olympia">Olympia</SelectItem>
+                    <SelectItem value="paused">Paused</SelectItem>
+                    <SelectItem value="graduated">Graduated</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormWrapper>
+            </div>
+
+            {/* Contact Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormWrapper id="email" label="Email">
+                <Input
+                  id="email"
+                  type="email"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="client@example.com"
+                />
+              </FormWrapper>
+
+              <FormWrapper id="phone" label="Phone">
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="+1 (555) 123-4567"
+                />
+              </FormWrapper>
+            </div>
+
+            {/* Service & CSM */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormWrapper id="service" label="Service">
+                <Select
+                  value={editForm.service}
+                  onValueChange={(value) => setEditForm(prev => ({ ...prev, service: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select service" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Cold Email Agency">Cold Email Agency</SelectItem>
+                    <SelectItem value="Email Marketing">Email Marketing</SelectItem>
+                    <SelectItem value="Paid Ads">Paid Ads</SelectItem>
+                    <SelectItem value="Funnel Build">Funnel Build</SelectItem>
+                    <SelectItem value="AI Automation">AI Automation</SelectItem>
+                    <SelectItem value="Coaching">Coaching</SelectItem>
+                    <SelectItem value="Finance">Finance</SelectItem>
+                    <SelectItem value="Content Creation">Content Creation</SelectItem>
+                    <SelectItem value="Growth Partner">Growth Partner</SelectItem>
+                    <SelectItem value="Coach">Coach</SelectItem>
+                    <SelectItem value="Info Owner">Info Owner</SelectItem>
+                    <SelectItem value="Digital Marketing">Digital Marketing</SelectItem>
+                    <SelectItem value="Web Development">Web Development</SelectItem>
+                    <SelectItem value="SEO Optimization">SEO Optimization</SelectItem>
+                    <SelectItem value="Social Media Management">Social Media Management</SelectItem>
+                    <SelectItem value="PPC Advertising">PPC Advertising</SelectItem>
+                    <SelectItem value="Analytics & Reporting">Analytics & Reporting</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormWrapper>
+
+              <FormWrapper id="csm" label="CSM/SSC">
+                <Select
+                  value={editForm.csm}
+                  onValueChange={(value) => setEditForm(prev => ({ ...prev, csm: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select CSM" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Andy">Andy</SelectItem>
+                    <SelectItem value="Nick">Nick</SelectItem>
+                    <SelectItem value="Chris">Chris</SelectItem>
+                    <SelectItem value="Cillin">Cillin</SelectItem>
+                    <SelectItem value="Stephen">Stephen</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormWrapper>
+            </div>
+
+            {/* Financial Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormWrapper id="mrr" label="MRR ($)">
+                <Input
+                  id="mrr"
+                  type="number"
+                  value={editForm.mrr}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, mrr: e.target.value }))}
+                  placeholder="5000"
+                  min="0"
+                />
+              </FormWrapper>
+
+              <FormWrapper id="contract_value" label="Contract Value ($)">
+                <Input
+                  id="contract_value"
+                  type="number"
+                  value={editForm.contract_value}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, contract_value: e.target.value }))}
+                  placeholder="50000"
+                  min="0"
+                />
+              </FormWrapper>
+            </div>
+
+            {/* Performance Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormWrapper id="health_score" label="Health Score (0-100)">
+                <Input
+                  id="health_score"
+                  type="number"
+                  value={editForm.health_score}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, health_score: e.target.value }))}
+                  placeholder="85"
+                  min="0"
+                  max="100"
+                />
+              </FormWrapper>
+
+              <FormWrapper id="nps_score" label="NPS Score (-100 to 100)">
+                <Input
+                  id="nps_score"
+                  type="number"
+                  value={editForm.nps_score}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, nps_score: e.target.value }))}
+                  placeholder="50"
+                  min="-100"
+                  max="100"
+                />
+              </FormWrapper>
+            </div>
+
+            {/* Notes */}
+            <FormWrapper id="notes" label="Notes">
+              <Textarea
+                id="notes"
+                value={editForm.notes}
+                onChange={(e) => setEditForm(prev => ({ ...prev, notes: e.target.value }))}
+                placeholder="Add any notes about this client..."
+                rows={3}
+              />
+            </FormWrapper>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={handleCancelEdit}
+                className="flex-1 gap-2"
+              >
+                <X className="h-4 w-4" />
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveEdit}
+                className="flex-1 gap-2"
+              >
+                <Save className="h-4 w-4" />
+                Save Changes
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
