@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useNavigationGuard } from './use-navigation-guard';
+import { navTelemetry } from '@/utils/navigation-telemetry';
 
 /**
  * Hook that ensures immediate navigation without blocking on data fetching
@@ -16,15 +17,23 @@ export function useImmediateNavigation() {
    * This ensures first-click navigation works regardless of network latency
    */
   const navigateImmediately = useCallback((path: string, replace = false) => {
+    // Log navigation click for telemetry
+    const clickId = navTelemetry.logNavClick(path);
+    
     // Use guarded navigation to prevent double-clicks but don't block on data
-    const success = guardedNavigate(path, replace);
+    const success = guardedNavigate(path, replace, clickId);
     
     if (success) {
       // Dispatch event to notify components that navigation occurred
       // This allows components to start data loading AFTER navigation
       window.dispatchEvent(new CustomEvent('navigation:completed', {
-        detail: { from: location.pathname, to: path, timestamp: Date.now() }
+        detail: { from: location.pathname, to: path, timestamp: Date.now(), clickId }
       }));
+      
+      // Log completion after a brief delay to ensure DOM has updated
+      setTimeout(() => {
+        navTelemetry.logNavComplete(path, clickId);
+      }, 50);
     }
     
     return success;

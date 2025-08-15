@@ -1,9 +1,11 @@
 import { useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { navTelemetry } from '@/utils/navigation-telemetry';
 
 interface NavigationGuardOptions {
   preventDoubleClick?: boolean;
   debounceMs?: number;
+  clickId?: string; // For telemetry tracking
 }
 
 /**
@@ -16,7 +18,7 @@ export function useNavigationGuard(options: NavigationGuardOptions = {}) {
   const navigationLockRef = useRef<boolean>(false);
   const lastNavigationRef = useRef<{ path: string; timestamp: number } | null>(null);
 
-  const guardedNavigate = useCallback((path: string, replace?: boolean) => {
+  const guardedNavigate = useCallback((path: string, replace?: boolean, clickId?: string) => {
     const now = Date.now();
     
     // Prevent navigation to same route
