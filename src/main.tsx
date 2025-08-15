@@ -11,6 +11,8 @@ import { SessionValidatorProvider } from '@/contexts/SessionValidatorContext';
 import { Toaster } from '@/components/ui/toaster';
 import { TimeoutCoordinatorProvider } from './hooks/use-timeout-coordinator';
 import { BrowserRouter } from 'react-router-dom';
+import { initializeMonitoring } from '@/utils/monitoring';
+import { validateEnvironment } from '@/utils/environment';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,6 +22,16 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Initialize production monitoring
+const monitoringConfig = initializeMonitoring();
+console.log('Monitoring initialized:', monitoringConfig);
+
+// Validate environment configuration
+const envValidation = validateEnvironment();
+if (!envValidation.isValid) {
+  console.warn('Environment validation failed:', envValidation.missingVars);
+}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

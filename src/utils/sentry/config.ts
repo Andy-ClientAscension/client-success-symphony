@@ -1,22 +1,22 @@
 
 import * as Sentry from '@sentry/react';
-import { supabase } from '@/integrations/supabase/client';
+import { getEnvironmentConfig } from '@/utils/environment';
 
 // Initialize Sentry with proper configuration
 export async function initializeSentry() {
   try {
-    // Try to get Sentry DSN from Supabase secrets first
-    const { data, error } = await supabase
-      .from('secrets')
-      .select('value')
-      .eq('name', 'SENTRY_DSN')
-      .single();
+    const config = getEnvironmentConfig();
     
-    // If we can't get it from Supabase, use a fallback DSN
-    const dsn = data?.value || process.env.SENTRY_DSN;
+    // Only initialize Sentry in production or if explicitly enabled
+    if (config.environment !== 'production' && !config.enableErrorTracking) {
+      console.log('Sentry disabled for development environment');
+      return;
+    }
+    
+    const dsn = config.sentryDsn;
     
     if (!dsn) {
-      console.warn('No valid Sentry DSN found. Error tracking is disabled.');
+      console.warn('No Sentry DSN configured. Error tracking is disabled.');
       return;
     }
 
@@ -33,31 +33,25 @@ export async function initializeSentry() {
         Sentry.replayIntegration(),
       ],
       // Performance Monitoring
-      tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+      tracesSampleRate: config.environment === 'production' ? 0.1 : 1.0,
       // Session Replay
       replaysSessionSampleRate: 0.1,
       replaysOnErrorSampleRate: 1.0,
       // Only send errors in production environment
       beforeSend(event) {
-        if (process.env.NODE_ENV !== 'production') {
+        if (config.environment !== 'production') {
           return null;
         }
         return event;
       },
       // Set environment
-      environment: process.env.NODE_ENV || 'development',
+      environment: config.environment,
     });
 
     console.log('Sentry has been initialized successfully');
 
-    // Set user information if available
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      Sentry.setUser({
-        id: session.user.id,
-        email: session.user.email,
-      });
-    }
+    // Note: User context will be set when auth state changes
+    // This avoids dependency on supabase client here
 
     // Set up Sentry routing instrumentation if using React Router
     if (window.location.pathname) {

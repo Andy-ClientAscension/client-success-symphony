@@ -8,10 +8,9 @@ import { isAborted } from '@/utils/abortUtils';
 // Singleton instance
 let supabaseInstance = null;
 
-// Get environment variables or fallbacks for development
-const envVars = import.meta.env.MODE === 'development' 
-  ? { ...getDevelopmentFallbacks(), ...import.meta.env } 
-  : import.meta.env;
+// Get environment variables with production configuration
+import { getEnvironmentConfig } from '@/utils/environment';
+const envConfig = getEnvironmentConfig();
 
 // Memoized client creation function
 export const getSupabaseClient = () => {
@@ -20,8 +19,8 @@ export const getSupabaseClient = () => {
   }
 
   // Initialize the Supabase client with environment variables
-  const supabaseUrl = envVars.VITE_SUPABASE_URL;
-  const supabaseKey = envVars.VITE_SUPABASE_KEY;
+  const supabaseUrl = envConfig.supabaseUrl;
+  const supabaseKey = envConfig.supabaseAnonKey;
 
   // Validate credentials
   if (!supabaseUrl || !supabaseKey) {
@@ -135,7 +134,7 @@ async function fetchWithCorsOriginal(url: string, options: RequestInit = {}) {
       headers: {
         ...(options.headers || {}),
         ...corsHeaders,
-        'apikey': envVars.VITE_SUPABASE_KEY // Fixed: Using envVars.VITE_SUPABASE_KEY instead of supabaseKey
+        'apikey': envConfig.supabaseAnonKey // Using environment config
       },
       signal,
       mode: 'cors'

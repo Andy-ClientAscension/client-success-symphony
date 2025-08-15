@@ -63,6 +63,18 @@ export default function AppRoutes() {
         <Route path="/pre-launch" element={<ProtectedRoute><PreLaunchChecklist /></ProtectedRoute>} />
         <Route path="/system-audit" element={<ProtectedRoute><SystemAudit /></ProtectedRoute>} />
         
+        {/* Legal Pages */}
+        <Route path="/privacy" element={
+          <Suspense fallback={<PageLoader />}>
+            {React.createElement(lazy(() => import('@/pages/PrivacyPolicy')))}
+          </Suspense>
+        } />
+        <Route path="/terms" element={
+          <Suspense fallback={<PageLoader />}>
+            {React.createElement(lazy(() => import('@/pages/TermsOfService')))}
+          </Suspense>
+        } />
+        
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
