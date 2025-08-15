@@ -81,11 +81,25 @@ export function SSCClientCard({ client }: SSCClientCardProps) {
 
   const getStatusVariant = (status: string) => {
     switch (status) {
-      case 'active': return 'default';
-      case 'at-risk': return 'destructive';
-      case 'churned': return 'secondary';
       case 'new': return 'default';
+      case 'active': return 'default';
+      case 'caution': return 'destructive'; 
+      case 'at-risk': return 'destructive';
+      case 'not-active': return 'destructive';
+      case 'churned': return 'destructive';
       default: return 'outline';
+    }
+  };
+
+  const getStatusColorClass = (status: string) => {
+    switch (status) {
+      case 'new': return 'bg-client-new text-white';
+      case 'active': return 'bg-client-active text-white';
+      case 'caution': return 'bg-client-caution text-white';
+      case 'at-risk': return 'bg-client-caution text-white';
+      case 'not-active': return 'bg-client-not-active text-white';
+      case 'churned': return 'bg-client-not-active text-white';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -122,7 +136,7 @@ export function SSCClientCard({ client }: SSCClientCardProps) {
               <p className="text-sm text-muted-foreground">{client.csm}</p>
             </div>
           </div>
-          <Badge variant={getStatusVariant(client.status)} className="capitalize">
+          <Badge className={`${getStatusColorClass(client.status)} capitalize border-0`}>
             {client.status.replace('-', ' ')}
           </Badge>
         </div>
@@ -293,7 +307,7 @@ export function SSCClientCard({ client }: SSCClientCardProps) {
                   <div><strong>CSM:</strong> {client.csm}</div>
                   <div><strong>Team:</strong> {client.team || 'N/A'}</div>
                   <div><strong>Status:</strong> 
-                    <Badge variant={getStatusVariant(client.status)} className="ml-2 capitalize">
+                    <Badge className={`${getStatusColorClass(client.status)} ml-2 capitalize border-0`}>
                       {client.status.replace('-', ' ')}
                     </Badge>
                   </div>
