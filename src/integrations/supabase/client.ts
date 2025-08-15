@@ -41,10 +41,12 @@ export const getSupabaseClient = () => {
       }, timeout);
     }
     
-    // Merge existing headers with CORS headers
+    // Merge existing headers with CORS headers and API key
     const headers = {
       ...(options?.headers || {}),
       ...corsHeaders,
+      'apikey': supabaseKey,
+      'Authorization': `Bearer ${supabaseKey}`,
     };
     
     // Execute the fetch with our custom signal
