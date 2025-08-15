@@ -18,11 +18,24 @@ export function useRenewals() {
     try {
       const forecastsResponse = await supabase
         .from('renewal_forecasts')
-        .select('*');
+        .select(`
+          *,
+          clients:client_id (
+            id,
+            name,
+            contract_value
+          )
+        `);
       
       const offersResponse = await supabase
         .from('backend_offers')
-        .select('*');
+        .select(`
+          *,
+          clients:client_id (
+            id,
+            name
+          )
+        `);
       
       if (forecastsResponse.error) throw forecastsResponse.error;
       if (offersResponse.error) throw offersResponse.error;
