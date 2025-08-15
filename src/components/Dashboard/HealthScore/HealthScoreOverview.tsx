@@ -106,7 +106,18 @@ export function HealthScoreOverview({ clients }: HealthScoreOverviewProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <h3 className="text-sm font-medium mb-4">Score Distribution</h3>
-            <div className="h-[300px]" onClick={handleChartClick}>
+            <button 
+              className="h-[300px] w-full p-4 rounded-lg border border-border hover:bg-accent/50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors"
+              onClick={handleChartClick}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleChartClick();
+                }
+              }}
+              aria-label="View health score distribution details"
+              type="button"
+            >
               {hasDistributionData ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -135,10 +146,10 @@ export function HealthScoreOverview({ clients }: HealthScoreOverviewProps) {
               ) : (
                 <div className="flex items-center justify-center h-full">
                   <p className="text-muted-foreground text-sm">No health score data available</p>
-                </div>
-              )}
-            </div>
-          </div>
+                 </div>
+               )}
+             </button>
+           </div>
           
           <div>
             <h3 className="text-sm font-medium mb-4">Team Comparison</h3>

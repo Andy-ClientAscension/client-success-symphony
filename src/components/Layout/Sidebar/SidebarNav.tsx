@@ -1,6 +1,5 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import {
   Home, Users, Settings, HelpCircle, LayoutDashboard,
   Activity, CreditCard, MessageSquare, FileSliders,
@@ -8,6 +7,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigationGuard } from "@/hooks/use-navigation-guard";
+import { useFocusManager } from "@/hooks/use-focus-manager";
+import { useDoubleActivationPrevention } from "@/hooks/use-double-activation-prevention";
 import { useState, useEffect } from "react";
 
 export const navLinks = [
@@ -33,6 +34,8 @@ export function SidebarNav({ collapsed, closeSidebar }: SidebarNavProps) {
   const location = useLocation();
   const activeLinkStyle = "bg-secondary text-secondary-foreground";
   const { guardedNavigate } = useNavigationGuard();
+  const { containerRef } = useFocusManager({ autoFocus: false });
+  const { createProtectedHandler } = useDoubleActivationPrevention();
 
   const handleNavigation = (path: string, event: React.MouseEvent) => {
     // Prevent default link behavior to use guarded navigation
@@ -49,33 +52,47 @@ export function SidebarNav({ collapsed, closeSidebar }: SidebarNavProps) {
   };
 
   return (
-    <div className="flex-1 space-y-1">
+    <nav 
+      className="flex-1 space-y-1" 
+      role="navigation" 
+      aria-label="Main navigation"
+      ref={containerRef}
+    >
       {navLinks.map((link) => {
         const Icon = link.icon;
         const isActive = location.pathname === link.to;
+        const protectedHandler = createProtectedHandler(
+          `nav-${link.to}`,
+          (e) => handleNavigation(link.to, e)
+        );
 
         return (
           <Link 
             to={link.to} 
-            onClick={(e) => handleNavigation(link.to, e)}
-            className="w-full" 
+            onClick={protectedHandler}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                protectedHandler(e as any);
+              }
+            }}
+            className={cn(
+              "w-full flex items-center gap-3 rounded-lg px-4 py-2 text-sm transition-all",
+              "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
+              "hover:bg-secondary hover:text-foreground",
+              isActive ? activeLinkStyle : "text-muted-foreground",
+              collapsed && "justify-center px-2"
+            )}
             key={link.to}
             data-testid={`nav-${link.label.toLowerCase().replace(/\s+/g, '-')}`}
+            aria-label={`Navigate to ${link.label}`}
+            aria-current={isActive ? 'page' : undefined}
           >
-            <Button
-              variant="ghost"
-              className={cn(
-                "justify-start px-4 py-2 w-full font-normal",
-                isActive ? activeLinkStyle : "hover:bg-secondary",
-                collapsed && "justify-center"
-              )}
-            >
-              <Icon className="h-4 w-4 mr-2" />
-              {!collapsed && <span>{link.label}</span>}
-            </Button>
+            <Icon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+            {!collapsed && <span>{link.label}</span>}
           </Link>
         );
       })}
-    </div>
+    </nav>
   );
 }
