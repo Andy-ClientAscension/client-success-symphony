@@ -20,18 +20,9 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
   const location = useLocation();
   const { toast } = useToast();
   
-  // Get auth state from both legacy and new systems
-  const { isAuthenticated: legacyIsAuthenticated, isLoading: legacyIsLoading } = useAuth();
-  const authContext = useAuthStateMachineContext();
-  const { state: authState, processingAuth, isAuthenticated: newIsAuthenticated } = authContext;
-  const { checkSession, shouldRefreshSession } = useSessionCoordination();
+  // Use primary auth system only to avoid conflicts
+  const { isAuthenticated, isLoading } = useAuth();
   const [error] = useAuthError();
-  
-  // Merge authentication state for compatibility during migration
-  // Use OR logic to be more permissive during transition
-  const isAuthenticated = legacyIsAuthenticated || newIsAuthenticated === true;
-  // Use OR logic for loading to be more cautious during transition
-  const isLoading = legacyIsLoading || processingAuth || authState === 'initializing';
   
   // Setup preloading resources
   useEffect(() => {
@@ -51,26 +42,7 @@ function ProtectedRouteContent({ children }: ProtectedRouteProps) {
     }
   }, [location.pathname]);
   
-  // Single-attempt session check (if needed)
-  useEffect(() => {
-    // Skip if already authenticated or loading
-    if (isAuthenticated || isLoading) return;
-
-    // Skip if we shouldn't refresh
-    if (!shouldRefreshSession()) return;
-    
-    // Wait a tiny bit to avoid race conditions with other auth checks
-    const timer = setTimeout(() => {
-      if (!isAuthenticated && !isLoading) {
-        console.log("[ProtectedRoute] Initiating session check");
-        checkSession().catch(err => 
-          console.error("[ProtectedRoute] Session check error:", err)
-        );
-      }
-    }, 50);
-    
-    return () => clearTimeout(timer);
-  }, [isAuthenticated, isLoading, checkSession, shouldRefreshSession]);
+  // Removed complex session coordination to prevent navigation loops
   
   // When auth status changes, announce to screen readers
   useEffect(() => {
