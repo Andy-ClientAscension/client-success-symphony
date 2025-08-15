@@ -23,12 +23,16 @@ const SERVICE_OPTIONS = [
   'Coaching',
   'Finance',
   'Content Creation',
+  'Growth Partner',
+  'Coach',
+  'Info Owner',
   'Digital Marketing',
   'Web Development', 
   'SEO Optimization',
   'Social Media Management',
   'PPC Advertising',
-  'Analytics & Reporting'
+  'Analytics & Reporting',
+  'Other'
 ];
 
 export function AddClientDialog({ open, onOpenChange, selectedSSC }: AddClientDialogProps) {
@@ -39,6 +43,7 @@ export function AddClientDialog({ open, onOpenChange, selectedSSC }: AddClientDi
     email: '',
     phone: '',
     service: '',
+    other_service_details: '',
     mrr: '',
     health_score: '',
     nps_score: '',
@@ -55,6 +60,7 @@ export function AddClientDialog({ open, onOpenChange, selectedSSC }: AddClientDi
       email: '',
       phone: '',
       service: '',
+      other_service_details: '',
       mrr: '',
       health_score: '',
       nps_score: '',
@@ -81,12 +87,26 @@ export function AddClientDialog({ open, onOpenChange, selectedSSC }: AddClientDi
         return;
       }
 
+      // Validate Other service details if "Other" is selected
+      if (formData.service === 'Other' && !formData.other_service_details.trim()) {
+        toast({
+          title: "Validation Error",
+          description: "Please specify the service details for 'Other' service type.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       // Prepare data for insertion
+      const serviceValue = formData.service === 'Other' 
+        ? `Other: ${formData.other_service_details}` 
+        : formData.service;
+        
       const clientData = {
         name: formData.name,
         email: formData.email,
         phone: formData.phone || null,
-        service: formData.service || null,
+        service: serviceValue || null,
         mrr: formData.mrr ? Number(formData.mrr) : 0,
         health_score: formData.health_score ? Number(formData.health_score) : null,
         nps_score: formData.nps_score ? Number(formData.nps_score) : null,
@@ -226,6 +246,21 @@ export function AddClientDialog({ open, onOpenChange, selectedSSC }: AddClientDi
               />
             </FormWrapper>
           </div>
+
+          {/* Other Service Details - Conditional Field */}
+          {formData.service === 'Other' && (
+            <div className="grid grid-cols-1 gap-4">
+              <FormWrapper id="other_service_details" label="Other Service Details" required>
+                <Input
+                  id="other_service_details"
+                  value={formData.other_service_details}
+                  onChange={(e) => handleInputChange('other_service_details', e.target.value)}
+                  placeholder="Please specify the service details"
+                  required={formData.service === 'Other'}
+                />
+              </FormWrapper>
+            </div>
+          )}
 
           {/* Financial Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
