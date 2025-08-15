@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -7,19 +7,56 @@ import { ImportStudentData } from "./ImportStudentData";
 import { StudentList } from "./StudentList";
 import { GoogleFormIntegration } from "./GoogleFormIntegration";
 import { StudentStats } from "./StudentStats";
+import { StudentFilters } from "./StudentFilters";
 import { UserPlus, FileText, Users, Download, Settings } from "lucide-react";
 import { getAllClients } from "@/lib/data";
 
 export function StudentOnboardingDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
+  const [selectedTeam, setSelectedTeam] = useState("all");
+  const [selectedSSC, setSelectedSSC] = useState("all");
+  
   const clients = getAllClients();
   
-  // Filter students by status
-  const activeStudents = clients.filter(c => c.status === 'active');
-  const newStudents = clients.filter(c => c.status === 'new');
-  const graduatedStudents = clients.filter(c => c.status === 'graduated');
-  const atRiskStudents = clients.filter(c => c.status === 'at-risk');
-  const noSSCStudents = clients.filter(c => !c.csm || c.csm.trim() === '');
+  // Extract unique teams and SSCs for filter options
+  const { teams, sscs, filteredClients } = useMemo(() => {
+    const uniqueTeams = [...new Set(clients.map(c => c.team).filter(Boolean))].sort();
+    const uniqueSSCs = [...new Set(clients.map(c => c.csm || c.assigned_ssc).filter(Boolean))].sort();
+    
+    let filtered = clients;
+    
+    // Apply team filter
+    if (selectedTeam !== "all") {
+      filtered = filtered.filter(c => c.team === selectedTeam);
+    }
+    
+    // Apply SSC filter
+    if (selectedSSC !== "all") {
+      if (selectedSSC === "none") {
+        filtered = filtered.filter(c => !c.csm && !c.assigned_ssc);
+      } else {
+        filtered = filtered.filter(c => c.csm === selectedSSC || c.assigned_ssc === selectedSSC);
+      }
+    }
+    
+    return {
+      teams: uniqueTeams,
+      sscs: uniqueSSCs,
+      filteredClients: filtered
+    };
+  }, [clients, selectedTeam, selectedSSC]);
+  
+  // Filter students by status using filtered data
+  const activeStudents = filteredClients.filter(c => c.status === 'active');
+  const newStudents = filteredClients.filter(c => c.status === 'new');
+  const graduatedStudents = filteredClients.filter(c => c.status === 'graduated');
+  const atRiskStudents = filteredClients.filter(c => c.status === 'at-risk');
+  const noSSCStudents = filteredClients.filter(c => !c.csm && !c.assigned_ssc);
+
+  const handleClearFilters = () => {
+    setSelectedTeam("all");
+    setSelectedSSC("all");
+  };
 
   return (
     <div className="space-y-6">
@@ -54,8 +91,18 @@ export function StudentOnboardingDashboard() {
         </div>
       </div>
 
+      <StudentFilters
+        teams={teams}
+        sscs={sscs}
+        selectedTeam={selectedTeam}
+        selectedSSC={selectedSSC}
+        onTeamChange={setSelectedTeam}
+        onSSCChange={setSelectedSSC}
+        onClearFilters={handleClearFilters}
+      />
+
       <StudentStats 
-        totalStudents={clients.length}
+        totalStudents={filteredClients.length}
         activeStudents={activeStudents.length}
         newStudents={newStudents.length}
         graduatedStudents={graduatedStudents.length}
@@ -133,7 +180,7 @@ export function StudentOnboardingDashboard() {
             </CardHeader>
             <CardContent>
               <StudentList 
-                students={clients.slice(0, 10)} 
+                students={filteredClients.slice(0, 10)} 
                 showActions={false}
                 compact={true}
               />
