@@ -3,6 +3,7 @@ import React, { Suspense, lazy, useCallback } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { LoadingState } from '@/components/LoadingState';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { AuthProvider } from '@/contexts/auth';
 
 // Lazy load page components
 const Index = lazy(() => import('@/pages/Index'));
@@ -37,8 +38,9 @@ const PageLoader = () => (
 
 export default function AppRoutes() {
   return (
-    <Suspense fallback={<PageLoader />}>
-      <Routes>
+    <AuthProvider>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
@@ -75,9 +77,10 @@ export default function AppRoutes() {
           </Suspense>
         } />
         
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Suspense>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
+    </AuthProvider>
   );
 }
 

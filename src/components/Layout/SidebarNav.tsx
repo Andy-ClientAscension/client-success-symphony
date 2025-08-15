@@ -2,7 +2,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useImmediateNavigation } from "@/hooks/use-immediate-navigation";
+// Removed immediate navigation to prevent auth loops
 import { 
   Home, 
   Users, 
@@ -58,20 +58,12 @@ const navItems = [
 ];
 
 export function SidebarNav() {
-  const { navigateImmediately } = useImmediateNavigation();
-
-  const handleNavClick = (href: string, event: React.MouseEvent) => {
-    event.preventDefault();
-    navigateImmediately(href);
-  };
-
   return (
     <nav className="space-y-1">
       {navItems.map((item) => (
         <NavLink
           key={item.href}
           to={item.href}
-          onClick={(e) => handleNavClick(item.href, e)}
           className={({ isActive }) =>
             cn(
               "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent",

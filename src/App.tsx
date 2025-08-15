@@ -8,7 +8,7 @@ import { OfflineDetector } from "@/components/OfflineDetector";
 import { AuthProvider } from "@/contexts/auth";
 import { AuthErrorBoundary } from "@/components/AuthErrorBoundary";
 import { logStartupPhase } from "@/utils/errorHandling";
-import { SessionValidator } from "@/components/SessionValidator";
+// Removed SessionValidator to prevent logout loops
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { NavigationProgressBar } from "@/components/ui/progress-bar";
 import { WebVitalsMonitor, PerformanceDebugger } from "@/components/Performance";
@@ -17,7 +17,7 @@ import { CriticalLoadingState } from "@/components/CriticalLoadingState";
 import AppRoutes from "./routes";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { useToast } from "@/hooks/use-toast";
-import { AuthStateMachineProvider } from "@/contexts/auth-state-machine";
+// Removed auth state machine to prevent conflicts
 import { setupGlobalErrorHandlers } from "@/utils/global-error-handlers-enhanced";
 
 logStartupPhase("App.tsx: Module loading started");
