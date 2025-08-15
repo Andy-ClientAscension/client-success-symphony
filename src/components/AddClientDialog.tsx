@@ -15,13 +15,19 @@ interface AddClientDialogProps {
 
 const SSC_OPTIONS = ['Andy', 'Nick', 'Chris', 'Cillin', 'Stephen'];
 const SERVICE_OPTIONS = [
+  'Cold Email Agency',
+  'Email Marketing',
+  'Paid Ads',
+  'Funnel Build',
+  'AI Automation',
+  'Coaching',
+  'Finance',
+  'Content Creation',
   'Digital Marketing',
   'Web Development', 
   'SEO Optimization',
   'Social Media Management',
-  'Content Marketing',
   'PPC Advertising',
-  'Email Marketing',
   'Analytics & Reporting'
 ];
 
