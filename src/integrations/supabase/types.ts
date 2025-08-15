@@ -215,6 +215,54 @@ export type Database = {
         }
         Relationships: []
       }
+      contract_notifications: {
+        Row: {
+          acknowledged: boolean
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          assigned_ssc: string
+          client_id: string
+          client_name: string
+          contract_end_date: string
+          created_at: string
+          days_remaining: number
+          id: string
+          notification_type: string
+          sent_at: string
+          team: string | null
+        }
+        Insert: {
+          acknowledged?: boolean
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          assigned_ssc: string
+          client_id: string
+          client_name: string
+          contract_end_date: string
+          created_at?: string
+          days_remaining: number
+          id?: string
+          notification_type: string
+          sent_at?: string
+          team?: string | null
+        }
+        Update: {
+          acknowledged?: boolean
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          assigned_ssc?: string
+          client_id?: string
+          client_name?: string
+          contract_end_date?: string
+          created_at?: string
+          days_remaining?: number
+          id?: string
+          notification_type?: string
+          sent_at?: string
+          team?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
