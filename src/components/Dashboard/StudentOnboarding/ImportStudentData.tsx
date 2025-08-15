@@ -4,6 +4,7 @@ import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTit
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { FileUp, AlertCircle, FileCheck, Copy, ExternalLink } from "lucide-react";
 import { saveAnalyticsData, STORAGE_KEYS, saveData } from "@/utils/persistence";
@@ -21,6 +22,8 @@ interface ImportedStudent {
   startDate?: string;
   contractValue?: string | number;
   csm?: string;
+  contract_type?: string;
+  contract_duration_months?: string | number;
 }
 
 export function ImportStudentData() {
@@ -95,7 +98,9 @@ Jane Smith,jane@example.com,(555) 987-6543,Full Stack,Team B,2024-01-20`;
         team: student.team || student.cohort || 'Default',
         startDate: student['start date'] || student.startdate || new Date().toISOString().split('T')[0],
         contractValue: student['contract value'] || student.price || 10000,
-        csm: student.csm || student.manager || 'Unassigned'
+        csm: student.csm || student.manager || 'Unassigned',
+        contract_type: student['contract type'] || student.contract_type || student.contract,
+        contract_duration_months: student['contract duration'] || student.contract_duration_months || student.duration
       };
       
       if (mapped.name && mapped.email) {
@@ -119,6 +124,10 @@ Jane Smith,jane@example.com,(555) 987-6543,Full Stack,Team B,2024-01-20`;
       ? parseInt(student.contractValue.replace(/[^\d]/g, ''), 10) || 10000
       : student.contractValue || 10000;
 
+    const contractDurationMonths = typeof student.contract_duration_months === 'string'
+      ? parseInt(student.contract_duration_months, 10)
+      : student.contract_duration_months;
+
     return {
       id: `student-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       name: student.name,
@@ -129,13 +138,16 @@ Jane Smith,jane@example.com,(555) 987-6543,Full Stack,Team B,2024-01-20`;
       startDate: student.startDate || new Date().toISOString().split('T')[0],
       endDate: (() => {
         const start = new Date(student.startDate || new Date());
-        start.setMonth(start.getMonth() + 6);
+        const months = contractDurationMonths || 6; // Default to 6 months
+        start.setMonth(start.getMonth() + months);
         return start.toISOString().split('T')[0];
       })(),
       contractValue,
       service: student.service || 'General Program',
       team: student.team || 'Default',
       csm: student.csm || 'Unassigned',
+      contract_type: student.contract_type,
+      contract_duration_months: contractDurationMonths,
       callsBooked: 0,
       dealsClosed: 0,
       mrr: 0,

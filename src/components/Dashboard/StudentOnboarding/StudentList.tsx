@@ -119,6 +119,7 @@ export function StudentList({ students, showActions = true, compact = false }: S
               <TableHead>Student</TableHead>
               <TableHead>Contact</TableHead>
               <TableHead>Program</TableHead>
+              <TableHead>Contract</TableHead>
               <TableHead>Team</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Health Score</TableHead>
@@ -158,6 +159,21 @@ export function StudentList({ students, showActions = true, compact = false }: S
                 </TableCell>
                 <TableCell>
                   <span className="text-sm">{student.service || 'General Program'}</span>
+                </TableCell>
+                <TableCell>
+                  <div className="space-y-1">
+                    {student.contract_type && (
+                      <div className="text-sm font-medium">{student.contract_type}</div>
+                    )}
+                    {student.contract_duration_months && (
+                      <div className="text-xs text-muted-foreground">
+                        {student.contract_duration_months} month{student.contract_duration_months !== 1 ? 's' : ''}
+                      </div>
+                    )}
+                    {!student.contract_type && !student.contract_duration_months && (
+                      <span className="text-sm text-muted-foreground">-</span>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell>
                   <span className="text-sm">{student.team || 'Default'}</span>

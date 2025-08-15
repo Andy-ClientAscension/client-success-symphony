@@ -25,6 +25,9 @@ export interface Client {
   service?: string;
   health_score?: number;
   assigned_ssc?: string;
+  // Contract fields
+  contract_type?: string;
+  contract_duration_months?: number;
   lastPayment?: {
     amount: number;
     date: string;

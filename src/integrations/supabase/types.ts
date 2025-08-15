@@ -65,6 +65,8 @@ export type Database = {
           case_study_conducted: boolean | null
           case_study_notes: string | null
           case_study_scheduled_date: string | null
+          contract_duration_months: number | null
+          contract_type: string | null
           contract_value: number
           created_at: string
           created_by: string | null
@@ -104,6 +106,8 @@ export type Database = {
           case_study_conducted?: boolean | null
           case_study_notes?: string | null
           case_study_scheduled_date?: string | null
+          contract_duration_months?: number | null
+          contract_type?: string | null
           contract_value?: number
           created_at?: string
           created_by?: string | null
@@ -143,6 +147,8 @@ export type Database = {
           case_study_conducted?: boolean | null
           case_study_notes?: string | null
           case_study_scheduled_date?: string | null
+          contract_duration_months?: number | null
+          contract_type?: string | null
           contract_value?: number
           created_at?: string
           created_by?: string | null
