@@ -7,7 +7,7 @@ import {
   Brain, BarChart2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { usePrefetchRoutes } from "@/routes";
+import { useNavigationGuard } from "@/hooks/use-navigation-guard";
 import { useState, useEffect } from "react";
 
 export const navLinks = [
@@ -32,25 +32,19 @@ interface SidebarNavProps {
 export function SidebarNav({ collapsed, closeSidebar }: SidebarNavProps) {
   const location = useLocation();
   const activeLinkStyle = "bg-secondary text-secondary-foreground";
-  const { prefetchRoute } = usePrefetchRoutes();
-  const [prefetchedRoutes, setPrefetchedRoutes] = useState<Set<string>>(new Set());
+  const { guardedNavigate } = useNavigationGuard();
 
-  // Prefetch initially visible routes when component mounts
-  useEffect(() => {
-    // Prefetch the first 3 routes that would be visible
-    const initialPrefetchRoutes = navLinks.slice(0, 3).map(link => link.to);
-    initialPrefetchRoutes.forEach(route => {
-      if (!prefetchedRoutes.has(route)) {
-        prefetchRoute(route);
-        setPrefetchedRoutes(prev => new Set([...prev, route]));
-      }
-    });
-  }, [prefetchRoute, prefetchedRoutes]);
-
-  const handlePrefetch = (route: string) => {
-    if (!prefetchedRoutes.has(route)) {
-      prefetchRoute(route);
-      setPrefetchedRoutes(prev => new Set([...prev, route]));
+  const handleNavigation = (path: string, event: React.MouseEvent) => {
+    // Prevent default link behavior to use guarded navigation
+    event.preventDefault();
+    
+    const success = guardedNavigate(path);
+    if (success) {
+      closeSidebar();
+      console.log(`🔍 [SidebarNav] Guarded navigation to: ${path}`, {
+        timestamp: Date.now(),
+        currentPath: location.pathname
+      });
     }
   };
 
@@ -63,24 +57,9 @@ export function SidebarNav({ collapsed, closeSidebar }: SidebarNavProps) {
         return (
           <Link 
             to={link.to} 
-            onClick={(e) => {
-              console.log(`🔍 [SidebarNav] Link clicked: ${link.to}`, {
-                timestamp: Date.now(),
-                currentPath: location.pathname,
-                isActive,
-                eventDetails: {
-                  button: e.button,
-                  ctrlKey: e.ctrlKey,
-                  metaKey: e.metaKey,
-                  shiftKey: e.shiftKey
-                }
-              });
-              closeSidebar();
-            }}
+            onClick={(e) => handleNavigation(link.to, e)}
             className="w-full" 
             key={link.to}
-            onMouseEnter={() => handlePrefetch(link.to)}
-            onFocus={() => handlePrefetch(link.to)}
           >
             <Button
               variant="ghost"

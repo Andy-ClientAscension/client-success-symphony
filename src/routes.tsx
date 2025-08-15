@@ -35,30 +35,32 @@ const PageLoader = () => (
 );
 
 export default function AppRoutes() {
-  // COMPLETE SECURITY BYPASS - ALL ROUTES ACCESSIBLE WITHOUT AUTH
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/login" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/signup" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/UnifiedDashboard" element={<UnifiedDashboard />} />
-        <Route path="/ai-dashboard" element={<AIDashboard />} />
-        <Route path="/analytics" element={<Analytics />} />
-        <Route path="/clients" element={<Clients />} />
-        <Route path="/renewals" element={<Renewals />} />
-        <Route path="/health-score-dashboard" element={<HealthScoreDashboard />} />
-        <Route path="/communications" element={<Communications />} />
-        <Route path="/payments" element={<Payments />} />
-        <Route path="/automations" element={<Automations />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/ssc-capacity" element={<SSCCapacityPage />} />
-        <Route path="/pre-launch" element={<PreLaunchChecklist />} />
-        <Route path="/system-audit" element={<SystemAudit />} />
-        <Route path="/auth-callback" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/reset-password" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<Index />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/auth-callback" element={<AuthCallback />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/auth-testing" element={<AuthTestingPage />} />
+        
+        {/* Protected Routes */}
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/UnifiedDashboard" element={<ProtectedRoute><UnifiedDashboard /></ProtectedRoute>} />
+        <Route path="/ai-dashboard" element={<ProtectedRoute><AIDashboard /></ProtectedRoute>} />
+        <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+        <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
+        <Route path="/renewals" element={<ProtectedRoute><Renewals /></ProtectedRoute>} />
+        <Route path="/health-score-dashboard" element={<ProtectedRoute><HealthScoreDashboard /></ProtectedRoute>} />
+        <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
+        <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
+        <Route path="/automations" element={<ProtectedRoute><Automations /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+        <Route path="/ssc-capacity" element={<ProtectedRoute><SSCCapacityPage /></ProtectedRoute>} />
+        <Route path="/pre-launch" element={<ProtectedRoute><PreLaunchChecklist /></ProtectedRoute>} />
+        <Route path="/system-audit" element={<ProtectedRoute><SystemAudit /></ProtectedRoute>} />
+        
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
