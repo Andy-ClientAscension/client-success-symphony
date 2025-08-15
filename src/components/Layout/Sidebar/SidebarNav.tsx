@@ -6,7 +6,7 @@ import {
   Brain, BarChart2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useNavigationGuard } from "@/hooks/use-navigation-guard";
+import { useImmediateNavigation } from "@/hooks/use-immediate-navigation";
 import { useFocusManager } from "@/hooks/use-focus-manager";
 import { useDoubleActivationPrevention } from "@/hooks/use-double-activation-prevention";
 import { useState, useEffect } from "react";
@@ -33,18 +33,18 @@ interface SidebarNavProps {
 export function SidebarNav({ collapsed, closeSidebar }: SidebarNavProps) {
   const location = useLocation();
   const activeLinkStyle = "bg-secondary text-secondary-foreground";
-  const { guardedNavigate } = useNavigationGuard();
+  const { navigateImmediately } = useImmediateNavigation();
   const { containerRef } = useFocusManager({ autoFocus: false });
   const { createProtectedHandler } = useDoubleActivationPrevention();
 
   const handleNavigation = (path: string, event: React.MouseEvent) => {
-    // Prevent default link behavior to use guarded navigation
+    // Prevent default link behavior to use immediate navigation
     event.preventDefault();
     
-    const success = guardedNavigate(path);
+    const success = navigateImmediately(path);
     if (success) {
       closeSidebar();
-      console.log(`🔍 [SidebarNav] Guarded navigation to: ${path}`, {
+      console.log(`⚡ [SidebarNav] Immediate navigation to: ${path}`, {
         timestamp: Date.now(),
         currentPath: location.pathname
       });
