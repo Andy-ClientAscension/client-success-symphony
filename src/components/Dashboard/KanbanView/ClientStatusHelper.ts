@@ -44,23 +44,23 @@ export const getStatusLabel = (status: string): string => {
 export const getStatusColor = (status: string): string => {
   switch (status) {
     case 'new':
-      return 'bg-[hsl(var(--client-new))] text-white';
+      return 'bg-client-new text-white';
     case 'active':
-      return 'bg-[hsl(var(--client-active))] text-white';
+      return 'bg-client-active text-white';
     case 'backend':
-      return 'bg-[hsl(var(--client-active))] text-white'; // Use active color for backend
+      return 'bg-client-active text-white'; // Use active color for backend
     case 'olympia':
-      return 'bg-[hsl(var(--client-active))] text-white'; // Use active color for olympia
+      return 'bg-client-active text-white'; // Use active color for olympia
     case 'at-risk':
     case 'caution':
-      return 'bg-[hsl(var(--client-caution))] text-white';
+      return 'bg-client-caution text-white';
     case 'churned':
     case 'not-active':
-      return 'bg-[hsl(var(--client-not-active))] text-white';
+      return 'bg-client-not-active text-white';
     case 'paused':
-      return 'bg-[hsl(var(--client-caution))] text-white'; // Use caution color for paused
+      return 'bg-client-caution text-white'; // Use caution color for paused
     case 'graduated':
-      return 'bg-[hsl(var(--client-active))] text-white'; // Use active color for graduated
+      return 'bg-client-active text-white'; // Use active color for graduated
     default:
       return 'bg-muted text-muted-foreground';
   }

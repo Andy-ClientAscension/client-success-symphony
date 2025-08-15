@@ -62,6 +62,23 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))'
         },
+        client: {
+          new: 'hsl(var(--client-new))',
+          active: 'hsl(var(--client-active))',
+          caution: 'hsl(var(--client-caution))',
+          'not-active': 'hsl(var(--client-not-active))'
+        },
+        risk: {
+          high: 'hsl(var(--risk-high))',
+          medium: 'hsl(var(--risk-medium))',
+          low: 'hsl(var(--risk-low))',
+          none: 'hsl(var(--risk-none))'
+        },
+        payment: {
+          paid: 'hsl(var(--payment-paid))',
+          unpaid: 'hsl(var(--payment-unpaid))',
+          overdue: 'hsl(var(--payment-overdue))'
+        },
         brand: {
           red: "#FF0000",
           black: "#000000",

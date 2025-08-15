@@ -10,12 +10,12 @@ interface StatusBadgeProps {
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
   const colorMap = {
-    'new': "bg-[hsl(var(--client-new))] text-white",
-    'active': "bg-[hsl(var(--client-active))] text-white", 
-    'caution': "bg-[hsl(var(--client-caution))] text-white",
-    'at-risk': "bg-[hsl(var(--client-caution))] text-white", // Map at-risk to caution
-    'not-active': "bg-[hsl(var(--client-not-active))] text-white",
-    'churned': "bg-[hsl(var(--client-not-active))] text-white" // Map churned to not-active
+    'new': "bg-client-new text-white",
+    'active': "bg-client-active text-white", 
+    'caution': "bg-client-caution text-white",
+    'at-risk': "bg-client-caution text-white", // Map at-risk to caution
+    'not-active': "bg-client-not-active text-white",
+    'churned': "bg-client-not-active text-white" // Map churned to not-active
   };
 
   return (
