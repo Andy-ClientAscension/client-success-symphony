@@ -86,11 +86,6 @@ export function usePrefetchRoutes() {
     switch (route) {
       case '/dashboard':
         prefetchLink.href = '/src/pages/Dashboard.tsx';
-        console.log('🔍 [PrefetchRoutes] Attempting to prefetch /clients from /dashboard');
-        // Also prefetch clients as it's likely to be visited next
-        setTimeout(() => {
-          prefetchRoute('/clients');
-        }, 100);
         break;
       case '/analytics':
         prefetchLink.href = '/src/pages/Analytics.tsx';
