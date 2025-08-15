@@ -18,10 +18,12 @@ export function StudentOnboardingDashboard() {
   
   const clients = getAllClients();
   
-  // Extract unique teams and SSCs for filter options
-  const { teams, sscs, filteredClients } = useMemo(() => {
+  // Main SSCs
+  const mainSSCs = ["Andy", "Chris", "Cillin", "Nick", "Stephen"];
+  
+  // Extract unique teams and filter clients
+  const { teams, filteredClients } = useMemo(() => {
     const uniqueTeams = [...new Set(clients.map(c => c.team).filter(Boolean))].sort();
-    const uniqueSSCs = [...new Set(clients.map(c => c.csm || c.assigned_ssc).filter(Boolean))].sort();
     
     let filtered = clients;
     
@@ -41,7 +43,6 @@ export function StudentOnboardingDashboard() {
     
     return {
       teams: uniqueTeams,
-      sscs: uniqueSSCs,
       filteredClients: filtered
     };
   }, [clients, selectedTeam, selectedSSC]);
@@ -93,7 +94,7 @@ export function StudentOnboardingDashboard() {
 
       <StudentFilters
         teams={teams}
-        sscs={sscs}
+        sscs={mainSSCs}
         selectedTeam={selectedTeam}
         selectedSSC={selectedSSC}
         onTeamChange={setSelectedTeam}
