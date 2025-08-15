@@ -4,6 +4,7 @@ import { HealthScoreSummary } from "@/components/Dashboard/HealthScore/HealthSco
 import { HealthScoreOverview } from "@/components/Dashboard/HealthScore/HealthScoreOverview";
 import { HealthScoreSheet } from "@/components/Dashboard/HealthScoreSheet";
 import { HealthScoreHistory } from "@/components/Dashboard/HealthScoreHistory";
+import { StudentOnboardingDashboard } from "@/components/Dashboard/StudentOnboarding/StudentOnboardingDashboard";
 import { getAllClients } from "@/lib/data";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
@@ -39,7 +40,7 @@ export default function HealthScoreDashboard() {
                 onValueChange={setActiveTab} 
                 className="w-full"
               >
-                <TabsList className="grid w-full grid-cols-3 mb-6">
+                <TabsList className="grid w-full grid-cols-4 mb-6">
                   <TabsTrigger 
                     value="summary"
                     className="text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
@@ -57,6 +58,12 @@ export default function HealthScoreDashboard() {
                     className="text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                   >
                     Trends
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="onboarding"
+                    className="text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  >
+                    Student Management
                   </TabsTrigger>
                 </TabsList>
                 
@@ -79,6 +86,12 @@ export default function HealthScoreDashboard() {
                   <TabsContent value="trends" className="mt-0 space-y-4">
                     <EnhancedErrorBoundary title="Error Loading Health Score Trends">
                       <HealthScoreHistory />
+                    </EnhancedErrorBoundary>
+                  </TabsContent>
+                  
+                  <TabsContent value="onboarding" className="mt-0 space-y-4">
+                    <EnhancedErrorBoundary title="Error Loading Student Management">
+                      <StudentOnboardingDashboard />
                     </EnhancedErrorBoundary>
                   </TabsContent>
                 </div>
