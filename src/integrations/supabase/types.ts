@@ -472,6 +472,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_assigned_ssc: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_user_team: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
