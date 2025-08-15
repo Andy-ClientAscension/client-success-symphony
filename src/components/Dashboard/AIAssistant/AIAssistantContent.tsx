@@ -44,6 +44,12 @@ export function AIAssistantContent({ isOpen, dismissedAlerts }: AIAssistantConte
 
     try {
       if (!hasOpenAIKey()) {
+        const errorMessage: Message = {
+          role: "assistant",
+          content: "API key not configured. Please set up your OpenRouter API key in the settings (gear icon) to use AI features.",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
         setIsLoading(false);
         return;
       }
