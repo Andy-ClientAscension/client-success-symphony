@@ -18,7 +18,13 @@ import {
   SortAsc,
   SortDesc,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  BarChart3,
+  Users,
+  AlertTriangle
 } from "lucide-react";
 import { format } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -27,6 +33,7 @@ import { HealthScoreHistory } from "./HealthScoreHistory";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Progress } from "@/components/ui/progress";
 
 interface HealthScoreEntry {
   id: string;
@@ -43,6 +50,65 @@ interface HealthScoreEntry {
 type SortField = 'clientName' | 'team' | 'csm' | 'score' | 'date';
 type SortDirection = 'asc' | 'desc';
 
+// Enhanced color coding functions
+const getScoreColorClass = (score: number) => {
+  if (score < 5) return "text-red-600 dark:text-red-400";
+  if (score < 7) return "text-orange-600 dark:text-orange-400";
+  if (score < 8) return "text-yellow-600 dark:text-yellow-400";
+  return "text-green-600 dark:text-green-400";
+};
+
+const getScoreBgClass = (score: number) => {
+  if (score < 5) return "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800";
+  if (score < 7) return "bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800";
+  if (score < 8) return "bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-800";
+  return "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800";
+};
+
+const getScoreLabel = (score: number) => {
+  if (score < 5) return { label: "Critical", icon: AlertTriangle };
+  if (score < 7) return { label: "At Risk", icon: TrendingDown };
+  if (score < 8) return { label: "Healthy", icon: Minus };
+  return { label: "Excellent", icon: TrendingUp };
+};
+
+// Enhanced health score badge component
+const HealthScoreBadge = ({ score, previousScore, showLabel = false }: { 
+  score: number; 
+  previousScore?: number; 
+  showLabel?: boolean;
+}) => {
+  const scoreInfo = getScoreLabel(score);
+  const Icon = scoreInfo.icon;
+  
+  const trend = previousScore !== undefined ? (
+    score > previousScore ? 'up' : score < previousScore ? 'down' : 'stable'
+  ) : null;
+  
+  return (
+    <div className="flex items-center gap-2">
+      <div className={`px-3 py-1.5 rounded-lg border ${getScoreBgClass(score)} flex items-center gap-2`}>
+        <Icon className={`h-4 w-4 ${getScoreColorClass(score)}`} />
+        <span className={`font-bold text-lg ${getScoreColorClass(score)}`}>
+          {score}/10
+        </span>
+        {showLabel && (
+          <span className={`text-xs font-medium ${getScoreColorClass(score)}`}>
+            {scoreInfo.label}
+          </span>
+        )}
+      </div>
+      {trend && (
+        <div className="flex items-center">
+          {trend === 'up' && <TrendingUp className="h-4 w-4 text-green-500" />}
+          {trend === 'down' && <TrendingDown className="h-4 w-4 text-red-500" />}
+          {trend === 'stable' && <Minus className="h-4 w-4 text-gray-500" />}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export function HealthScoreSheet({ clients }: { clients: Client[] }) {
   const [selectedTeam, setSelectedTeam] = useState<string>("all");
   const [healthScores, setHealthScores] = useState<HealthScoreEntry[]>([]);
@@ -52,12 +118,12 @@ export function HealthScoreSheet({ clients }: { clients: Client[] }) {
   const [activeTab, setActiveTab] = useState<"table" | "trends">("table");
   const { toast } = useToast();
 
-  // New states for filtering and sorting
+  // Enhanced filtering states
   const [searchTerm, setSearchTerm] = useState("");
   const [scoreFilter, setScoreFilter] = useState<string>("all");
   const [csmFilter, setCsmFilter] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<SortField>("clientName");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [sortBy, setSortBy] = useState<SortField>("score");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   // Get unique CSM list from clients
   const uniqueCsms = Array.from(new Set(clients.map(client => client.csm).filter(Boolean)));
@@ -67,25 +133,23 @@ export function HealthScoreSheet({ clients }: { clients: Client[] }) {
     setHealthScores(storedScores);
   }, []);
 
-  // Apply filters and sorting
+  // Enhanced filtering logic
   const filterScores = (scores: HealthScoreEntry[]) => {
     return scores.filter(score => {
-      // Team filter
       if (selectedTeam !== "all" && score.team !== selectedTeam) return false;
       
-      // Search term filter
       if (searchTerm && !score.clientName.toLowerCase().includes(searchTerm.toLowerCase()) && 
           !score.team.toLowerCase().includes(searchTerm.toLowerCase()) && 
           !score.csm.toLowerCase().includes(searchTerm.toLowerCase())) {
         return false;
       }
       
-      // Score range filter
-      if (scoreFilter === "high" && score.score < 8) return false;
-      if (scoreFilter === "medium" && (score.score < 5 || score.score > 7)) return false;
-      if (scoreFilter === "low" && score.score > 4) return false;
+      // Enhanced score filtering based on new color scheme
+      if (scoreFilter === "excellent" && score.score < 8) return false;
+      if (scoreFilter === "healthy" && (score.score < 7 || score.score >= 8)) return false;
+      if (scoreFilter === "at-risk" && (score.score < 5 || score.score >= 7)) return false;
+      if (scoreFilter === "critical" && score.score >= 5) return false;
       
-      // CSM filter
       if (csmFilter !== "all" && score.csm !== csmFilter) return false;
       
       return true;
@@ -118,7 +182,7 @@ export function HealthScoreSheet({ clients }: { clients: Client[] }) {
     });
   };
 
-  // Apply filters and get latest scores for each client
+  // Process scores to get latest for each client
   const filteredScores = healthScores.reduce<Record<string, HealthScoreEntry[]>>(
     (acc, score) => {
       if (!acc[score.clientId]) {
@@ -142,36 +206,31 @@ export function HealthScoreSheet({ clients }: { clients: Client[] }) {
     return latest;
   });
 
-  // Apply filters and sorting
   const filteredAndSortedScores = sortScores(filterScores(latestScores));
 
-  // Get clients without scores (filtered by team if applicable)
+  // Calculate summary statistics
+  const summaryStats = {
+    total: filteredAndSortedScores.length,
+    excellent: filteredAndSortedScores.filter(s => s.score >= 8).length,
+    healthy: filteredAndSortedScores.filter(s => s.score >= 7 && s.score < 8).length,
+    atRisk: filteredAndSortedScores.filter(s => s.score >= 5 && s.score < 7).length,
+    critical: filteredAndSortedScores.filter(s => s.score < 5).length,
+    average: filteredAndSortedScores.length > 0 
+      ? filteredAndSortedScores.reduce((sum, score) => sum + score.score, 0) / filteredAndSortedScores.length
+      : 0
+  };
+
+  // Get clients without scores
   const clientsWithoutScores = clients
     .filter(client => {
       if (selectedTeam !== "all" && client.team !== selectedTeam) return false;
-      
-      // Apply CSM filter if active
       if (csmFilter !== "all" && client.csm !== csmFilter) return false;
-      
-      // Apply search filter if active
       if (searchTerm && !client.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-      
       return !healthScores.some(score => score.clientId === client.id);
-    })
-    .map(client => ({
-      id: `placeholder-${client.id}`,
-      clientId: client.id,
-      clientName: client.name,
-      team: client.team || "",
-      csm: client.csm || "",
-      score: 0,
-      notes: "",
-      date: "",
-      isPlaceholder: true
-    }));
+    });
 
   const handleExportCsv = () => {
-    const headers = ["Client Name", "Team", "CSM", "Health Score", "Notes", "Date"];
+    const headers = ["Client Name", "Team", "CSM", "Health Score", "Status", "Notes", "Date"];
     const csvRows = [headers];
     
     filteredAndSortedScores.forEach(score => {
@@ -180,6 +239,7 @@ export function HealthScoreSheet({ clients }: { clients: Client[] }) {
         score.team,
         score.csm,
         score.score.toString(),
+        getScoreLabel(score.score).label,
         score.notes.replace(/,/g, ";"),
         format(new Date(score.date), "yyyy-MM-dd")
       ]);
@@ -203,13 +263,6 @@ export function HealthScoreSheet({ clients }: { clients: Client[] }) {
     });
   };
 
-  const handleImportCsv = () => {
-    toast({
-      title: "Import Feature",
-      description: "CSV import functionality will be available in a future update",
-    });
-  };
-
   const handleAddHealthScore = (client: Client) => {
     setSelectedClient(client);
     setEditingScore(null);
@@ -230,346 +283,339 @@ export function HealthScoreSheet({ clients }: { clients: Client[] }) {
     setHealthScores(updatedScores);
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 8) return "text-green-600";
-    if (score >= 5) return "text-amber-600";
-    return "text-red-600";
-  };
-
-  const getTrendIndicator = (current: number, previous?: number) => {
-    if (previous === undefined) return null;
-    
-    if (current > previous) return <span className="text-green-500">↑</span>;
-    if (current < previous) return <span className="text-red-500">↓</span>;
-    return <span className="text-gray-500">→</span>;
-  };
-
   const handleSort = (field: SortField) => {
     if (sortBy === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
       setSortBy(field);
-      setSortDirection('asc');
+      setSortDirection(field === 'score' ? 'desc' : 'asc'); // Default to desc for scores
     }
   };
 
   const renderSortIcon = (field: SortField) => {
     if (sortBy !== field) return null;
-    
     return sortDirection === 'asc' ? 
       <ChevronUp className="inline h-4 w-4 ml-1" /> : 
       <ChevronDown className="inline h-4 w-4 ml-1" />;
   };
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            <CardTitle className="text-lg font-semibold">Health Score Sheet</CardTitle>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-                </TooltipTrigger>
-                <TooltipContent className="max-w-sm p-3">
-                  <p className="text-xs">
-                    This sheet tracks client health scores across all teams. 
-                    Health scores range from 1 (poor) to 10 (excellent) and are 
-                    gathered during bi-weekly notes.
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <div className="flex items-center gap-2">
-            <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-              <SelectTrigger className="w-[180px] h-8 text-xs">
-                <SelectValue placeholder="Select Team" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Teams</SelectItem>
-                {CSM_TEAMS.filter(team => team.id !== "all").map((team) => (
-                  <SelectItem key={team.id} value={team.id}>{team.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="text-xs" 
-              onClick={handleExportCsv}
-            >
-              <FileDown className="h-3 w-3 mr-1" /> Export
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="text-xs" 
-              onClick={handleImportCsv}
-            >
-              <FileUp className="h-3 w-3 mr-1" /> Import
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-      
-      <CardContent className="pb-4">
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "table" | "trends")} className="mb-6">
-          <TabsList>
-            <TabsTrigger value="table">Data Table</TabsTrigger>
-            <TabsTrigger value="trends">Score Trends</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="table" className="mt-4">
-            {/* New filtering and search controls */}
-            <div className="flex flex-col md:flex-row gap-3 mb-4">
-              <div className="flex-1">
-                <Input
-                  placeholder="Search clients, teams or CSMs..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="h-9"
-                />
+    <div className="space-y-6">
+      {/* Enhanced Header with Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="border-l-4 border-l-blue-500">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Clients</p>
+                <p className="text-2xl font-bold">{summaryStats.total}</p>
               </div>
-              <div className="flex gap-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-9">
-                      <Filter className="h-4 w-4 mr-2" /> 
-                      Score Filter: {scoreFilter === 'all' ? 'All' : scoreFilter === 'high' ? '8-10' : scoreFilter === 'medium' ? '5-7' : '1-4'}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => setScoreFilter('all')}>
-                      All Scores
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setScoreFilter('high')}>
-                      <span className="text-green-600 font-medium mr-2">●</span> High (8-10)
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setScoreFilter('medium')}>
-                      <span className="text-amber-600 font-medium mr-2">●</span> Medium (5-7)
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setScoreFilter('low')}>
-                      <span className="text-red-600 font-medium mr-2">●</span> Low (1-4)
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                <Select value={csmFilter} onValueChange={setCsmFilter}>
-                  <SelectTrigger className="w-[180px] h-9 text-xs">
-                    <SelectValue placeholder="Filter by CSM" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All CSMs</SelectItem>
-                    {uniqueCsms.map((csm) => (
-                      <SelectItem key={csm} value={csm}>{csm}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-9">
-                      {sortDirection === 'asc' ? <SortAsc className="h-4 w-4 mr-2" /> : <SortDesc className="h-4 w-4 mr-2" />}
-                      Sort
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => handleSort('clientName')}>
-                      Client Name {renderSortIcon('clientName')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleSort('team')}>
-                      Team {renderSortIcon('team')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleSort('csm')}>
-                      CSM {renderSortIcon('csm')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleSort('score')}>
-                      Health Score {renderSortIcon('score')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleSort('date')}>
-                      Last Updated {renderSortIcon('date')}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              <Users className="h-8 w-8 text-blue-500" />
             </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-l-4 border-l-green-500">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Excellent (8-10)</p>
+                <p className="text-2xl font-bold text-green-600">{summaryStats.excellent}</p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-l-4 border-l-red-500">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">At Risk (&lt;7)</p>
+                <p className="text-2xl font-bold text-red-600">{summaryStats.atRisk + summaryStats.critical}</p>
+              </div>
+              <AlertTriangle className="h-8 w-8 text-red-500" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-l-4 border-l-purple-500">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Average Score</p>
+                <p className="text-2xl font-bold">{summaryStats.average.toFixed(1)}</p>
+              </div>
+              <BarChart3 className="h-8 w-8 text-purple-500" />
+            </div>
+            <Progress value={summaryStats.average * 10} className="mt-2" />
+          </CardContent>
+        </Card>
+      </div>
 
-            {/* Data summary */}
-            <div className="flex gap-3 mb-4 text-xs text-muted-foreground">
-              <div>
-                Total: <span className="font-medium">{filteredAndSortedScores.length + clientsWithoutScores.length} clients</span>
-              </div>
-              <div>
-                With scores: <span className="font-medium">{filteredAndSortedScores.length}</span>
-              </div>
-              <div>
-                Without scores: <span className="font-medium">{clientsWithoutScores.length}</span>
-              </div>
-              {filteredAndSortedScores.length > 0 && (
-                <div>
-                  Avg score: <span className="font-medium">
-                    {(filteredAndSortedScores.reduce((sum, score) => sum + score.score, 0) / filteredAndSortedScores.length).toFixed(1)}
-                  </span>
+      {/* Main Health Score Table */}
+      <Card className="shadow-lg">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-3">
+              <CardTitle className="text-xl font-bold">Health Score Dashboard</CardTitle>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-5 w-5 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-sm p-4">
+                    <div className="space-y-2">
+                      <p className="font-medium">Health Score Color Coding:</p>
+                      <div className="space-y-1 text-xs">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-red-500 rounded"></div>
+                          <span>Critical (0-4): Immediate attention required</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-orange-500 rounded"></div>
+                          <span>At Risk (5-6): Needs improvement</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-yellow-500 rounded"></div>
+                          <span>Healthy (7): Good condition</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-green-500 rounded"></div>
+                          <span>Excellent (8-10): Outstanding performance</span>
+                        </div>
+                      </div>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <div className="flex items-center gap-3">
+              <Select value={selectedTeam} onValueChange={setSelectedTeam}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select Team" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Teams</SelectItem>
+                  {CSM_TEAMS.filter(team => team.id !== "all").map((team) => (
+                    <SelectItem key={team.id} value={team.id}>{team.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button variant="outline" onClick={handleExportCsv}>
+                <FileDown className="h-4 w-4 mr-2" /> Export CSV
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        
+        <CardContent>
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "table" | "trends")}>
+            <TabsList className="mb-6">
+              <TabsTrigger value="table" className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Health Score Table
+              </TabsTrigger>
+              <TabsTrigger value="trends" className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" />
+                Score Trends
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="table" className="space-y-4">
+              {/* Enhanced Filters */}
+              <div className="flex flex-col lg:flex-row gap-4">
+                <div className="flex-1">
+                  <Input
+                    placeholder="Search clients, teams, or CSMs..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full"
+                  />
                 </div>
-              )}
-            </div>
+                <div className="flex gap-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="min-w-[140px]">
+                        <Filter className="h-4 w-4 mr-2" /> 
+                        Score: {scoreFilter === 'all' ? 'All' : 
+                                scoreFilter === 'excellent' ? 'Excellent' : 
+                                scoreFilter === 'healthy' ? 'Healthy' : 
+                                scoreFilter === 'at-risk' ? 'At Risk' : 'Critical'}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => setScoreFilter('all')}>
+                        All Scores
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setScoreFilter('excellent')}>
+                        <TrendingUp className="h-4 w-4 mr-2 text-green-600" /> Excellent (8-10)
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setScoreFilter('healthy')}>
+                        <Minus className="h-4 w-4 mr-2 text-yellow-600" /> Healthy (7)
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setScoreFilter('at-risk')}>
+                        <TrendingDown className="h-4 w-4 mr-2 text-orange-600" /> At Risk (5-6)
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setScoreFilter('critical')}>
+                        <AlertTriangle className="h-4 w-4 mr-2 text-red-600" /> Critical (0-4)
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
 
-            <div className="border rounded-lg overflow-hidden bg-white overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-gray-50">
-                    <TableHead 
-                      className="w-[200px] cursor-pointer" 
-                      onClick={() => handleSort('clientName')}
-                    >
-                      Client {renderSortIcon('clientName')}
-                    </TableHead>
-                    <TableHead 
-                      className="cursor-pointer"
-                      onClick={() => handleSort('team')}
-                    >
-                      Team {renderSortIcon('team')}
-                    </TableHead>
-                    <TableHead 
-                      className="cursor-pointer"
-                      onClick={() => handleSort('csm')}
-                    >
-                      CSM {renderSortIcon('csm')}
-                    </TableHead>
-                    <TableHead 
-                      className="cursor-pointer"
-                      onClick={() => handleSort('score')}
-                    >
-                      Health Score {renderSortIcon('score')}
-                    </TableHead>
-                    <TableHead 
-                      className="cursor-pointer"
-                      onClick={() => handleSort('date')}
-                    >
-                      Last Updated {renderSortIcon('date')}
-                    </TableHead>
-                    <TableHead>Notes</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAndSortedScores.length > 0 ? (
-                    filteredAndSortedScores.map((score) => (
-                      <TableRow key={score.id} className="hover:bg-gray-50">
-                        <TableCell className="font-medium">{score.clientName}</TableCell>
-                        <TableCell>{score.team}</TableCell>
-                        <TableCell>{score.csm}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <span className={`font-bold ${getScoreColor(score.score)}`}>
-                              {score.score}/10
-                            </span>
-                            {getTrendIndicator(score.score, score.previousScore)}
+                  <Select value={csmFilter} onValueChange={setCsmFilter}>
+                    <SelectTrigger className="w-[150px]">
+                      <SelectValue placeholder="Filter by CSM" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All CSMs</SelectItem>
+                      {uniqueCsms.map((csm) => (
+                        <SelectItem key={csm} value={csm}>{csm}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Enhanced Data Table */}
+              <div className="rounded-lg border bg-card overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/70 transition-colors" 
+                        onClick={() => handleSort('clientName')}
+                      >
+                        <div className="flex items-center">
+                          Client {renderSortIcon('clientName')}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/70 transition-colors"
+                        onClick={() => handleSort('team')}
+                      >
+                        <div className="flex items-center">
+                          Team {renderSortIcon('team')}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/70 transition-colors"
+                        onClick={() => handleSort('csm')}
+                      >
+                        <div className="flex items-center">
+                          CSM {renderSortIcon('csm')}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/70 transition-colors"
+                        onClick={() => handleSort('score')}
+                      >
+                        <div className="flex items-center">
+                          Health Score {renderSortIcon('score')}
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/70 transition-colors"
+                        onClick={() => handleSort('date')}
+                      >
+                        <div className="flex items-center">
+                          Last Updated {renderSortIcon('date')}
+                        </div>
+                      </TableHead>
+                      <TableHead>Notes</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredAndSortedScores.length > 0 ? (
+                      filteredAndSortedScores.map((score) => (
+                        <TableRow key={score.id} className="hover:bg-muted/30 transition-colors">
+                          <TableCell className="font-medium">{score.clientName}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{score.team}</Badge>
+                          </TableCell>
+                          <TableCell>{score.csm}</TableCell>
+                          <TableCell>
+                            <HealthScoreBadge 
+                              score={score.score} 
+                              previousScore={score.previousScore}
+                              showLabel
+                            />
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {score.date ? format(new Date(score.date), "MMM dd, yyyy") : "Not recorded"}
+                          </TableCell>
+                          <TableCell className="max-w-[200px]">
+                            <div className="truncate text-sm">
+                              {score.notes || <span className="text-muted-foreground">No notes</span>}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleEditHealthScore(score)}
+                              className="hover:bg-primary/10"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={7} className="h-32 text-center">
+                          <div className="flex flex-col items-center gap-2">
+                            <BarChart3 className="h-8 w-8 text-muted-foreground" />
+                            <p className="text-muted-foreground">No health scores found</p>
+                            <p className="text-sm text-muted-foreground">
+                              Health scores are recorded during bi-weekly client notes
+                            </p>
                           </div>
                         </TableCell>
+                      </TableRow>
+                    )}
+                    
+                    {/* Clients without scores */}
+                    {clientsWithoutScores.map((client) => (
+                      <TableRow key={`no-score-${client.id}`} className="bg-muted/20 hover:bg-muted/40 transition-colors">
+                        <TableCell className="font-medium">{client.name}</TableCell>
                         <TableCell>
-                          {score.date ? format(new Date(score.date), "MMM dd, yyyy") : "Not yet recorded"}
+                          <Badge variant="outline">{client.team}</Badge>
                         </TableCell>
-                        <TableCell className="max-w-[300px] truncate">
-                          {score.notes || "No notes"}
+                        <TableCell>{client.csm}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="text-muted-foreground">
+                            Not recorded
+                          </Badge>
                         </TableCell>
+                        <TableCell className="text-muted-foreground">-</TableCell>
+                        <TableCell className="text-muted-foreground">-</TableCell>
                         <TableCell className="text-right">
                           <Button 
                             variant="ghost" 
                             size="sm"
-                            className="h-8 w-8 p-0"
-                            onClick={() => handleEditHealthScore(score)}
+                            onClick={() => handleAddHealthScore(client)}
+                            className="hover:bg-primary/10"
                           >
-                            <Edit className="h-4 w-4" />
-                            <span className="sr-only">Edit</span>
+                            <Plus className="h-4 w-4" />
                           </Button>
                         </TableCell>
                       </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={7} className="h-32 text-center">
-                        No health scores found for {selectedTeam === "all" ? "any team" : selectedTeam}.
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Health scores are recorded in bi-weekly notes for each client.
-                        </p>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  
-                  {clientsWithoutScores.map((client) => (
-                    <TableRow key={client.id} className="hover:bg-gray-50 bg-gray-50/30">
-                      <TableCell className="font-medium">{client.clientName}</TableCell>
-                      <TableCell>{client.team}</TableCell>
-                      <TableCell>{client.csm}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">Not recorded</Badge>
-                      </TableCell>
-                      <TableCell>-</TableCell>
-                      <TableCell>-</TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                          onClick={() => {
-                            const actualClient = clients.find(c => c.id === client.clientId);
-                            if (actualClient) {
-                              handleAddHealthScore(actualClient);
-                            }
-                          }}
-                        >
-                          <Plus className="h-4 w-4" />
-                          <span className="sr-only">Add</span>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="trends" className="mt-4">
-            {selectedClient ? (
-              <HealthScoreHistory 
-                clientId={selectedClient.id} 
-                clientName={selectedClient.name} 
-              />
-            ) : (
-              <HealthScoreHistory />
-            )}
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </TabsContent>
             
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {filteredAndSortedScores.slice(0, 4).map((score) => (
-                <Card 
-                  key={score.id} 
-                  className="cursor-pointer hover:shadow-md transition-all"
-                  onClick={() => {
-                    const client = clients.find(c => c.id === score.clientId);
-                    if (client) {
-                      setSelectedClient(client);
-                    }
-                  }}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-medium truncate">{score.clientName}</h3>
-                      <span className={`font-bold ${getScoreColor(score.score)}`}>{score.score}/10</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {score.date ? format(new Date(score.date), "MMM dd, yyyy") : "Not recorded"}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-      
+            <TabsContent value="trends">
+              <HealthScoreHistory />
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      {/* Health Score Editor Modal */}
       {selectedClient && (
         <HealthScoreEditor
           isOpen={isEditorOpen}
@@ -586,6 +632,6 @@ export function HealthScoreSheet({ clients }: { clients: Client[] }) {
           } : undefined}
         />
       )}
-    </Card>
+    </div>
   );
 }
