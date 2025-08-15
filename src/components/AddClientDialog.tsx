@@ -49,8 +49,9 @@ export function AddClientDialog({ open, onOpenChange, selectedSSC }: AddClientDi
     nps_score: '',
     assigned_ssc: selectedSSC || '',
     contract_value: '',
-    start_date: '',
-    end_date: '',
+    start_date: new Date().toISOString().split('T')[0],
+    contract_type: '',
+    contract_duration_months: '',
     status: 'new'
   });
 
@@ -66,10 +67,23 @@ export function AddClientDialog({ open, onOpenChange, selectedSSC }: AddClientDi
       nps_score: '',
       assigned_ssc: selectedSSC || '',
       contract_value: '',
-      start_date: '',
-      end_date: '',
+      start_date: new Date().toISOString().split('T')[0],
+      contract_type: '',
+      contract_duration_months: '',
       status: 'new'
     });
+  };
+
+  // Calculate end date automatically when start date or duration changes
+  const calculateEndDate = (startDate: string, durationMonths: string) => {
+    if (!startDate || !durationMonths) return '';
+    
+    const start = new Date(startDate);
+    const duration = parseInt(durationMonths);
+    const endDate = new Date(start);
+    endDate.setMonth(endDate.getMonth() + duration);
+    
+    return endDate.toISOString().split('T')[0];
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -114,7 +128,9 @@ export function AddClientDialog({ open, onOpenChange, selectedSSC }: AddClientDi
         csm: formData.assigned_ssc, // Keep both for compatibility
         contract_value: formData.contract_value ? Number(formData.contract_value) : 0,
         start_date: formData.start_date || new Date().toISOString().split('T')[0],
-        end_date: formData.end_date || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        end_date: calculateEndDate(formData.start_date, formData.contract_duration_months) || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        contract_type: formData.contract_type || null,
+        contract_duration_months: formData.contract_duration_months ? Number(formData.contract_duration_months) : null,
         status: formData.status,
         progress: 0,
         calls_booked: 0,
@@ -300,26 +316,81 @@ export function AddClientDialog({ open, onOpenChange, selectedSSC }: AddClientDi
             </FormWrapper>
           </div>
 
-          {/* Contract Dates */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormWrapper id="start_date" label="Start Date">
+          {/* Contract Information */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <FormWrapper id="start_date" label="Contract Start Date" required>
               <Input
                 id="start_date"
                 type="date"
                 value={formData.start_date}
                 onChange={(e) => handleInputChange('start_date', e.target.value)}
+                required
               />
             </FormWrapper>
 
-            <FormWrapper id="end_date" label="End Date">
-              <Input
-                id="end_date"
-                type="date"
-                value={formData.end_date}
-                onChange={(e) => handleInputChange('end_date', e.target.value)}
-              />
+            <FormWrapper id="contract_type" label="Contract Type">
+              <Select
+                value={formData.contract_type}
+                onValueChange={(value) => handleInputChange('contract_type', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select contract type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Front End">Front End</SelectItem>
+                  <SelectItem value="GCC">GCC</SelectItem>
+                  <SelectItem value="Olympia">Olympia</SelectItem>
+                  <SelectItem value="Recovery">Recovery</SelectItem>
+                  <SelectItem value="Backend">Backend</SelectItem>
+                  <SelectItem value="Custom">Custom</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormWrapper>
+
+            <FormWrapper id="contract_duration_months" label="Duration (Months)" required>
+              <Select
+                value={formData.contract_duration_months}
+                onValueChange={(value) => handleInputChange('contract_duration_months', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select duration" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 Month</SelectItem>
+                  <SelectItem value="3">3 Months</SelectItem>
+                  <SelectItem value="6">6 Months</SelectItem>
+                  <SelectItem value="12">12 Months</SelectItem>
+                  <SelectItem value="18">18 Months</SelectItem>
+                  <SelectItem value="24">24 Months</SelectItem>
+                </SelectContent>
+              </Select>
             </FormWrapper>
           </div>
+
+          {/* Calculated End Date Display */}
+          {formData.start_date && formData.contract_duration_months && (
+            <div className="bg-muted/50 p-4 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Contract End Date:</p>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(calculateEndDate(formData.start_date, formData.contract_duration_months)).toLocaleDateString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="font-medium">Days Remaining:</p>
+                  <p className="text-sm text-muted-foreground">
+                    {(() => {
+                      const endDate = new Date(calculateEndDate(formData.start_date, formData.contract_duration_months));
+                      const today = new Date();
+                      const daysLeft = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                      return daysLeft > 0 ? `${daysLeft} days` : 'Expired';
+                    })()}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex gap-3 pt-4">

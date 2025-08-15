@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FormWrapper } from '@/components/ui/form-wrapper';
+import { DaysRemaining } from '@/components/ui/days-remaining';
 import { Client } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 
@@ -190,7 +191,7 @@ export function SSCClientCard({ client }: SSCClientCardProps) {
         </div>
 
         {/* Contract Info */}
-        <div className="border-t pt-4 space-y-2">
+        <div className="border-t pt-4 space-y-3">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Contract Value:</span>
             <span className="font-medium">{formatCurrency(client.contractValue)}</span>
@@ -200,6 +201,16 @@ export function SSCClientCard({ client }: SSCClientCardProps) {
             <span className="font-medium">
               {new Date(client.endDate).toLocaleDateString()}
             </span>
+          </div>
+          
+          {/* Days Remaining Display */}
+          <div className="flex justify-between items-center">
+            <span className="text-muted-foreground text-sm">Contract Status:</span>
+            <DaysRemaining 
+              endDate={client.endDate} 
+              contractType={client.contract_type}
+              className="justify-end"
+            />
           </div>
         </div>
 
