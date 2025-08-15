@@ -45,3 +45,32 @@ export function formatDate(date: Date | string | number, formatString: string = 
 export function timeAgo(date: Date | string | number): string {
   return formatDistanceToNow(date instanceof Date ? date : new Date(date), { addSuffix: true });
 }
+
+/**
+ * Calculate days remaining until a contract expires
+ * @param endDate The contract end date
+ * @returns Number of days remaining (negative if expired)
+ */
+export function calculateDaysRemaining(endDate: Date | string | number): number {
+  const endDateObj = endDate instanceof Date ? endDate : new Date(endDate);
+  const today = new Date();
+  const diffTime = endDateObj.getTime() - today.getTime();
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+}
+
+/**
+ * Format days remaining with appropriate messaging
+ * @param daysRemaining Number of days remaining
+ * @returns Formatted string with status
+ */
+export function formatDaysRemaining(daysRemaining: number): string {
+  if (daysRemaining < 0) {
+    return `Expired ${Math.abs(daysRemaining)} days ago`;
+  } else if (daysRemaining === 0) {
+    return 'Expires today';
+  } else if (daysRemaining === 1) {
+    return '1 day left';
+  } else {
+    return `${daysRemaining} days left`;
+  }
+}

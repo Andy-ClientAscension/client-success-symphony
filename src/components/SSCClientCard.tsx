@@ -13,6 +13,7 @@ import { DaysRemaining } from '@/components/ui/days-remaining';
 import { RiskIndicator, PaymentIndicator, calculateRiskLevel, calculatePaymentStatus } from '@/components/ui/status-indicators';
 import { Client } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
+import { calculateDaysRemaining, formatDaysRemaining } from '@/utils/dateUtils';
 
 interface SSCClientCardProps {
   client: Client;
@@ -239,8 +240,8 @@ export function SSCClientCard({ client }: SSCClientCardProps) {
         {/* Contract Info */}
         <div className="border-t pt-4 space-y-3">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Contract Value:</span>
-            <span className="font-medium">{formatCurrency(client.contractValue)}</span>
+            <span className="text-muted-foreground">Days Left:</span>
+            <span className="font-medium">{formatDaysRemaining(calculateDaysRemaining(client.endDate))}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">End Date:</span>
@@ -354,9 +355,9 @@ export function SSCClientCard({ client }: SSCClientCardProps) {
                 </div>
                 <div className="text-center p-3 bg-muted/50 rounded-lg">
                   <div className="text-lg font-bold">
-                    {formatCurrency(client.contractValue)}
+                    {formatDaysRemaining(calculateDaysRemaining(client.endDate))}
                   </div>
-                  <div className="text-sm text-muted-foreground">Contract Value</div>
+                  <div className="text-sm text-muted-foreground">Days Left</div>
                 </div>
                 <div className="text-center p-3 bg-muted/50 rounded-lg">
                   <div className="text-lg font-bold">{client.callsBooked || 0}</div>
