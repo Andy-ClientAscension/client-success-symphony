@@ -5,7 +5,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserCompatibilityCheck } from "@/components/BrowserCompatibilityCheck";
 import { OfflineDetector } from "@/components/OfflineDetector";
-import { AuthProvider } from "@/contexts/auth";
+// Auth completely disabled for development
 import { AuthErrorBoundary } from "@/components/AuthErrorBoundary";
 import { logStartupPhase } from "@/utils/errorHandling";
 // Removed SessionValidator to prevent logout loops

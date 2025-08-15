@@ -5,9 +5,7 @@ import App from './App';
 import './index.css';
 import { ThemeProvider } from "@/components/ThemeProvider"
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider } from '@/contexts/auth';
-import { AuthStateMachineProvider } from '@/contexts/auth-state-machine';
-import { SessionValidatorProvider } from '@/contexts/SessionValidatorContext';
+// All authentication providers disabled for development
 import { Toaster } from '@/components/ui/toaster';
 import { TimeoutCoordinatorProvider } from './hooks/use-timeout-coordinator';
 import { BrowserRouter } from 'react-router-dom';
@@ -39,14 +37,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <TimeoutCoordinatorProvider>
         <BrowserRouter>
           <QueryClientProvider client={queryClient}>
-            <AuthStateMachineProvider>
-              <AuthProvider>
-                <SessionValidatorProvider>
-                  <Toaster />
-                  <App />
-                </SessionValidatorProvider>
-              </AuthProvider>
-            </AuthStateMachineProvider>
+            <Toaster />
+            <App />
           </QueryClientProvider>
         </BrowserRouter>
       </TimeoutCoordinatorProvider>
