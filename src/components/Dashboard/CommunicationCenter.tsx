@@ -8,11 +8,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tasks } from '@/types/tasks';
 import { format } from 'date-fns';
-import { useAuth } from '@/hooks/use-auth';
-
+// Auth completely disabled - hardcode user
 export function CommunicationCenter() {
   const { communications, createCommunication } = useCommunications();
-  const { user } = useAuth();
+  const user = { id: 'dev-user' }; // Hardcoded for development
   const [newCommunication, setNewCommunication] = useState<Partial<Tasks.Communication>>({
     type: 'note',
     subject: '',

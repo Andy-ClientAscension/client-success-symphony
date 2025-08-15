@@ -11,11 +11,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { Tasks } from '@/types/tasks';
-import { useAuth } from '@/hooks/use-auth';
-
+// Auth disabled - hardcode user
 export function TaskManager() {
   const { tasks, createTask, updateTask } = useTasks();
-  const { user } = useAuth();
+  const user = { id: 'dev-user' }; // Hardcoded for development
   const [newTask, setNewTask] = useState<Partial<Tasks.Task>>({
     title: '',
     description: '',

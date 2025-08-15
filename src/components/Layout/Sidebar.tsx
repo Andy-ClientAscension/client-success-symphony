@@ -13,7 +13,7 @@ import { Link } from "react-router-dom";
 import { Building2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth } from "@/hooks/use-auth";
+// Auth disabled - hardcode user
 import { LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -26,7 +26,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isMobile, closeSidebar, collapsed, toggleCollapse }: SidebarProps) {
-  const { user, logout: signOut } = useAuth();
+  const user = { name: 'Dev User', email: 'dev@example.com', id: 'dev-user' };
+  const signOut = () => console.log('Sign out disabled');
   const { toast } = useToast();
   const navigate = useNavigate();
   

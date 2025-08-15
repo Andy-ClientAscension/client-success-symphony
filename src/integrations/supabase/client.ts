@@ -8,36 +8,14 @@ import { isAborted } from '@/utils/abortUtils';
 // Singleton instance
 let supabaseInstance = null;
 
-// Get environment variables with production configuration
-import { getEnvironmentConfig } from '@/utils/environment';
-const envConfig = getEnvironmentConfig();
+// Use direct hardcoded configuration for development
+const supabaseUrl = 'https://bajfdvphpoopkmpgzyeo.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhamZkdnBocG9vcGttcGd6eWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ3MTM5NTYsImV4cCI6MjA2MDI4OTk1Nn0.QJ7M2iBALcCy_bvJXAIbwFZ8JDh0G3O-t_IgBfDTikE';
 
 // Memoized client creation function
 export const getSupabaseClient = () => {
   if (supabaseInstance) {
     return supabaseInstance;
-  }
-
-  // Initialize the Supabase client with environment variables
-  const supabaseUrl = envConfig.supabaseUrl;
-  const supabaseKey = envConfig.supabaseAnonKey;
-
-  // Validate credentials
-  if (!supabaseUrl || !supabaseKey) {
-    console.error('Supabase credentials not configured! Dashboard will use fallback data.');
-    // Return a mock client to prevent errors
-    return {
-      from: () => ({
-        select: () => Promise.resolve({ data: [], error: { message: 'No API key found' } }),
-        insert: () => Promise.resolve({ data: null, error: { message: 'No API key found' } }),
-        update: () => Promise.resolve({ data: null, error: { message: 'No API key found' } }),
-        delete: () => Promise.resolve({ data: null, error: { message: 'No API key found' } })
-      }),
-      auth: {
-        getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-        signInWithPassword: () => Promise.resolve({ data: null, error: { message: 'No API key found' } })
-      }
-    } as any;
   }
 
   // Define the site URL for redirection handling
@@ -134,7 +112,7 @@ async function fetchWithCorsOriginal(url: string, options: RequestInit = {}) {
       headers: {
         ...(options.headers || {}),
         ...corsHeaders,
-        'apikey': envConfig.supabaseAnonKey // Using environment config
+        'apikey': supabaseKey // Using hardcoded key
       },
       signal,
       mode: 'cors'

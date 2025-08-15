@@ -2,13 +2,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tasks } from '@/types/tasks';
-import { useAuth } from './use-auth';
-
+// Auth disabled - hardcode user
 export function useCommunications() {
   const [communications, setCommunications] = useState<Tasks.Communication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
+  const user = { id: 'dev-user' }; // Hardcoded for development
 
   const fetchCommunications = async () => {
     if (!user) return;
