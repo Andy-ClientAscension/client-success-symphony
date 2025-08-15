@@ -24,20 +24,20 @@ export function RiskIndicator({ riskLevel, className, showIcon = true, size = 'd
       case 'high':
         return {
           label: 'At Risk',
-          color: 'bg-[hsl(var(--risk-high))] text-white',
+          color: 'bg-risk-high text-white',
           icon: <AlertTriangle className="h-3 w-3" />
         };
       case 'medium':
         return {
           label: 'Medium Risk',
-          color: 'bg-[hsl(var(--risk-medium))] text-white',
+          color: 'bg-risk-medium text-white',
           icon: <ShieldAlert className="h-3 w-3" />
         };
       case 'low':
       case 'none':
         return {
           label: 'No Risk',
-          color: 'bg-[hsl(var(--risk-low))] text-white',
+          color: 'bg-risk-low text-white',
           icon: <ShieldCheck className="h-3 w-3" />
         };
       default:
@@ -77,19 +77,19 @@ export function PaymentIndicator({ paymentStatus, lastPaymentDate, className, sh
       case 'paid':
         return {
           label: 'Paid',
-          color: 'bg-[hsl(var(--payment-paid))] text-white',
+          color: 'bg-payment-paid text-white',
           icon: <DollarSign className="h-3 w-3" />
         };
       case 'unpaid':
         return {
           label: 'Not Paid',
-          color: 'bg-[hsl(var(--payment-unpaid))] text-white',
+          color: 'bg-payment-unpaid text-white',
           icon: <XCircle className="h-3 w-3" />
         };
       case 'overdue':
         return {
           label: 'Overdue',
-          color: 'bg-[hsl(var(--payment-overdue))] text-white animate-pulse',
+          color: 'bg-payment-overdue text-white animate-pulse',
           icon: <AlertTriangle className="h-3 w-3" />
         };
       default:
