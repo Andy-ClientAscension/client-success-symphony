@@ -64,14 +64,18 @@ export const getSupabaseClient = () => {
   // Create the singleton instance
   supabaseInstance = createClient(supabaseUrl, supabaseKey, {
     auth: {
-      autoRefreshToken: true,
-      persistSession: true,
+      autoRefreshToken: false,
+      persistSession: false,
       storage: localStorage,
-      detectSessionInUrl: true,
+      detectSessionInUrl: false,
       flowType: 'pkce'
     },
     global: {
-      headers: corsHeaders,
+      headers: {
+        ...corsHeaders,
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`
+      },
       fetch: fetchWithCors
     }
   });
