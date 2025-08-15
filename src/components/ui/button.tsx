@@ -40,8 +40,7 @@ const buttonVariants = cva(
         ghost: cn(
           "text-foreground",
           "hover:bg-accent hover:text-accent-foreground",
-          "active:scale-[0.98]",
-          "duration-200 ease-out",
+          "duration-150 ease-out",
           focusRingClasses
         ),
         link: cn(

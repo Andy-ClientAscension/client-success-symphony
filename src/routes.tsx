@@ -27,10 +27,10 @@ const PreLaunchChecklist = lazy(() => import('@/pages/PreLaunchChecklist'));
 const SystemAudit = lazy(() => import('@/pages/SystemAudit'));
 const SSCCapacityPage = lazy(() => import('@/pages/SSCCapacityPage').then(m => ({ default: m.SSCCapacityPage })));
 
-// Loading fallback for Suspense
+// Optimized loading fallback for faster navigation
 const PageLoader = () => (
   <div className="flex items-center justify-center h-screen">
-    <LoadingState message="Loading page..." showProgress />
+    <LoadingState message="Loading..." />
   </div>
 );
 
