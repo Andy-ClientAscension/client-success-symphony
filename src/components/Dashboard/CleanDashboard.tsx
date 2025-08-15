@@ -17,6 +17,8 @@ import { OfflineSupport } from '@/components/OfflineSupport/OfflineSupport';
 import { useAnalytics, usePerformanceTracking } from '@/services/analytics';
 import { createTestNotifications } from '@/utils/testNotifications';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { ContractNotifications } from '@/components/ContractNotifications';
+import { ContractNotificationsTrigger } from './ContractNotificationsTrigger';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell, AreaChart, Area 
@@ -501,6 +503,16 @@ export function CleanDashboard() {
                 </Card>
               )}
             </UniversalErrorBoundary>
+            </div>
+
+            {/* Contract Notifications Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
+              <div className="lg:col-span-2">
+                <ContractNotifications />
+              </div>
+              <div>
+                <ContractNotificationsTrigger />
+              </div>
             </div>
           </main>
         </div>
