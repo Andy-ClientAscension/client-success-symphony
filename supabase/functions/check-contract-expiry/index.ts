@@ -27,16 +27,18 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Notification thresholds in days
+    // Notification thresholds in days for SSC renewal reminders
     const notificationThresholds = [
       { days: 80, type: '80_days' },
+      { days: 60, type: '60_days' },
       { days: 45, type: '45_days' },
       { days: 30, type: '30_days' },
-      { days: 14, type: '2_weeks' },
-      { days: 7, type: '1_week' },
+      { days: 20, type: '20_days' },
+      { days: 14, type: '14_days' },
+      { days: 10, type: '10_days' },
+      { days: 7, type: '7_days' },
       { days: 5, type: '5_days' },
       { days: 3, type: '3_days' },
-      { days: 2, type: '2_days' },
       { days: 1, type: '24_hours' },
       { days: 0, type: 'contract_ended' }
     ];
