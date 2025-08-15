@@ -63,7 +63,20 @@ export function SidebarNav({ collapsed, closeSidebar }: SidebarNavProps) {
         return (
           <Link 
             to={link.to} 
-            onClick={closeSidebar} 
+            onClick={(e) => {
+              console.log(`🔍 [SidebarNav] Link clicked: ${link.to}`, {
+                timestamp: Date.now(),
+                currentPath: location.pathname,
+                isActive,
+                eventDetails: {
+                  button: e.button,
+                  ctrlKey: e.ctrlKey,
+                  metaKey: e.metaKey,
+                  shiftKey: e.shiftKey
+                }
+              });
+              closeSidebar();
+            }}
             className="w-full" 
             key={link.to}
             onMouseEnter={() => handlePrefetch(link.to)}
@@ -76,6 +89,14 @@ export function SidebarNav({ collapsed, closeSidebar }: SidebarNavProps) {
                 isActive ? activeLinkStyle : "hover:bg-secondary",
                 collapsed && "justify-center"
               )}
+              onClick={(e) => {
+                console.log(`🔍 [SidebarNav] Button clicked inside Link: ${link.to}`, {
+                  timestamp: Date.now(),
+                  eventTarget: e.currentTarget,
+                  willPreventDefault: false
+                });
+                // Don't prevent default here - let the Link handle navigation
+              }}
             >
               <Icon className="h-4 w-4 mr-2" />
               {!collapsed && <span>{link.label}</span>}

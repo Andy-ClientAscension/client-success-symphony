@@ -67,7 +67,17 @@ export default function AppRoutes() {
 
 // Function to prefetch routes for use in navigation components
 export function usePrefetchRoutes() {
+  const prefetchInProgress = new Set<string>();
+  
   const prefetchRoute = useCallback((route: string) => {
+    // Prevent recursive prefetching
+    if (prefetchInProgress.has(route)) {
+      console.log(`🔍 [PrefetchRoutes] Skipping ${route} - already in progress`);
+      return;
+    }
+    
+    prefetchInProgress.add(route);
+    
     // Create a link rel=prefetch for the JavaScript bundle
     const prefetchLink = document.createElement('link');
     prefetchLink.rel = 'prefetch';
@@ -76,7 +86,11 @@ export function usePrefetchRoutes() {
     switch (route) {
       case '/dashboard':
         prefetchLink.href = '/src/pages/Dashboard.tsx';
-        prefetchRoute('/clients'); // Also prefetch clients as it's likely to be visited next
+        console.log('🔍 [PrefetchRoutes] Attempting to prefetch /clients from /dashboard');
+        // Also prefetch clients as it's likely to be visited next
+        setTimeout(() => {
+          prefetchRoute('/clients');
+        }, 100);
         break;
       case '/analytics':
         prefetchLink.href = '/src/pages/Analytics.tsx';
@@ -108,7 +122,10 @@ export function usePrefetchRoutes() {
         if (prefetchLink.parentNode) {
           prefetchLink.parentNode.removeChild(prefetchLink);
         }
+        prefetchInProgress.delete(route);
       }, 10000);
+    } else {
+      prefetchInProgress.delete(route);
     }
   }, []);
 
