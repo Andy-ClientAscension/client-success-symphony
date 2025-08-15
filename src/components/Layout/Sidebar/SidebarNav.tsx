@@ -89,14 +89,6 @@ export function SidebarNav({ collapsed, closeSidebar }: SidebarNavProps) {
                 isActive ? activeLinkStyle : "hover:bg-secondary",
                 collapsed && "justify-center"
               )}
-              onClick={(e) => {
-                console.log(`🔍 [SidebarNav] Button clicked inside Link: ${link.to}`, {
-                  timestamp: Date.now(),
-                  eventTarget: e.currentTarget,
-                  willPreventDefault: false
-                });
-                // Don't prevent default here - let the Link handle navigation
-              }}
             >
               <Icon className="h-4 w-4 mr-2" />
               {!collapsed && <span>{link.label}</span>}
