@@ -10,7 +10,8 @@ import {
   Calendar, 
   MessageSquare, 
   Settings,
-  HelpCircle
+  HelpCircle,
+  Shield
 } from "lucide-react";
 
 const navItems = [
@@ -38,6 +39,11 @@ const navItems = [
     title: "Communications",
     href: "/communications",
     icon: <MessageSquare className="h-5 w-5" />,
+  },
+  {
+    title: "Admin Panel",
+    href: "/admin",
+    icon: <Shield className="h-5 w-5" />,
   },
   {
     title: "Settings",

@@ -26,6 +26,7 @@ const AuthTestingPage = lazy(() => import('@/pages/AuthTestingPage'));
 const PreLaunchChecklist = lazy(() => import('@/pages/PreLaunchChecklist'));
 const SystemAudit = lazy(() => import('@/pages/SystemAudit'));
 const SSCCapacityPage = lazy(() => import('@/pages/SSCCapacityPage').then(m => ({ default: m.SSCCapacityPage })));
+const AdminPanel = lazy(() => import('@/pages/AdminPanel'));
 
 // Optimized loading fallback for faster navigation
 const PageLoader = () => (
@@ -58,6 +59,7 @@ export default function AppRoutes() {
         <Route path="/automations" element={<ProtectedRoute><Automations /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="/ssc-capacity" element={<ProtectedRoute><SSCCapacityPage /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
         <Route path="/pre-launch" element={<ProtectedRoute><PreLaunchChecklist /></ProtectedRoute>} />
         <Route path="/system-audit" element={<ProtectedRoute><SystemAudit /></ProtectedRoute>} />
         
