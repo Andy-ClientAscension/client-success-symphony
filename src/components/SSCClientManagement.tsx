@@ -7,16 +7,27 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { SSCClientCard } from './SSCClientCard';
 import { AddClientDialog } from './AddClientDialog';
-import { useClientData } from '@/hooks/useClientData';
+import { useClients, useClientMutations } from '@/hooks/useUnifiedClientData';
+import { useSupabaseRealtime } from '@/hooks/useSupabaseRealtime';
 import { Client } from '@/lib/data';
 
 const SSC_LIST = ['All SSCs', 'Andy', 'Nick', 'Chris', 'Cillin', 'Stephen'];
 
 export function SSCClientManagement() {
-  const { clients, loading, error } = useClientData();
   const [selectedSSC, setSelectedSSC] = useState('All SSCs');
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddClientOpen, setIsAddClientOpen] = useState(false);
+
+  // Use unified client data
+  const { data: clients = [], isLoading: loading, error } = useClients({
+    search: searchTerm,
+  });
+
+  // Enable real-time updates
+  useSupabaseRealtime();
+
+  // Client mutations
+  const { updateClient } = useClientMutations();
 
   const filteredClients = useMemo(() => {
     let filtered = clients;
@@ -68,7 +79,7 @@ export function SSCClientManagement() {
       <div className="p-6">
         <Card>
           <CardContent className="p-6 text-center">
-            <p className="text-destructive">Error loading clients: {error}</p>
+            <p className="text-destructive">Error loading clients: {error?.message || 'Unknown error'}</p>
           </CardContent>
         </Card>
       </div>
