@@ -15,6 +15,7 @@ import {
   LineChart, Line, PieChart, Pie, Cell, AreaChart, Area 
 } from 'recharts';
 import { cn } from '@/lib/utils';
+import { useDashboardData } from '@/hooks/useDashboardData';
 
 // Guaranteed fallback data that always renders
 const DASHBOARD_DATA = {
@@ -101,22 +102,54 @@ const MetricCard = React.memo(({ title, value, change, icon: Icon, colorClass }:
 
 const OptimizedCleanDashboard = React.memo(() => {
   const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // Use real dashboard data instead of hardcoded demo data
+  const { 
+    allClients, 
+    teamStatusCounts, 
+    teamMetrics, 
+    isLoading, 
+    error, 
+    refreshData 
+  } = useDashboardData();
 
-  // Chart data for pie chart
+  // Use real data or fallback to demo data structure
+  const dashboardData = useMemo(() => ({
+    allClients: allClients || DASHBOARD_DATA.allClients,
+    metrics: {
+      totalClients: teamStatusCounts.total || 0,
+      totalMRR: teamMetrics.totalMRR || 0,
+      avgHealthScore: teamMetrics.averageHealth || 0,
+      avgNPS: teamMetrics.avgNPS || 0
+    },
+    statusCounts: {
+      active: teamStatusCounts.active || 0,
+      'at-risk': teamStatusCounts['at-risk'] || 0,
+      new: teamStatusCounts.new || 0,
+      churned: teamStatusCounts.churned || 0
+    },
+    chartData: DASHBOARD_DATA.chartData // Keep demo chart data for now
+  }), [allClients, teamStatusCounts, teamMetrics]);
+
+  // Chart data for pie chart using real data
   const pieData = useMemo(() => [
-    { name: 'Active', value: DASHBOARD_DATA.statusCounts.active, color: 'hsl(var(--chart-1))' },
-    { name: 'At Risk', value: DASHBOARD_DATA.statusCounts['at-risk'], color: 'hsl(var(--chart-2))' },
-    { name: 'New', value: DASHBOARD_DATA.statusCounts.new, color: 'hsl(var(--chart-3))' },
-    { name: 'Churned', value: DASHBOARD_DATA.statusCounts.churned, color: 'hsl(var(--chart-4))' }
-  ].filter(item => item.value > 0), []);
+    { name: 'Active', value: dashboardData.statusCounts.active, color: 'hsl(var(--chart-1))' },
+    { name: 'At Risk', value: dashboardData.statusCounts['at-risk'], color: 'hsl(var(--chart-2))' },
+    { name: 'New', value: dashboardData.statusCounts.new, color: 'hsl(var(--chart-3))' },
+    { name: 'Churned', value: dashboardData.statusCounts.churned, color: 'hsl(var(--chart-4))' }
+  ].filter(item => item.value > 0), [dashboardData.statusCounts]);
 
   // Handle refresh action
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    // Simulate refresh delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsRefreshing(false);
-  }, []);
+    try {
+      await refreshData();
+    } catch (error) {
+      console.error('Failed to refresh data:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refreshData]);
 
   return (
     <UniversalErrorBoundary>
@@ -161,28 +194,28 @@ const OptimizedCleanDashboard = React.memo(() => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <MetricCard
                     title="Total Clients"
-                    value={DASHBOARD_DATA.metrics.totalClients}
+                    value={dashboardData.metrics.totalClients}
                     change="+12% from last month"
                     icon={Users}
                     colorClass="bg-primary/10 text-primary"
                   />
                   <MetricCard
                     title="Health Score"
-                    value={`${DASHBOARD_DATA.metrics.avgHealthScore}%`}
+                    value={`${dashboardData.metrics.avgHealthScore}%`}
                     change="+5% from last month"
                     icon={Heart}
                     colorClass="bg-green-500/10 text-green-600"
                   />
                   <MetricCard
                     title="Total MRR"
-                    value={`$${DASHBOARD_DATA.metrics.totalMRR.toLocaleString()}`}
+                    value={`$${dashboardData.metrics.totalMRR.toLocaleString()}`}
                     change="+18% from last month"
                     icon={DollarSign}
                     colorClass="bg-blue-500/10 text-blue-600"
                   />
                   <MetricCard
                     title="NPS Score"
-                    value={DASHBOARD_DATA.metrics.avgNPS}
+                    value={dashboardData.metrics.avgNPS}
                     change="+0.3 from last month"
                     icon={Target}
                     colorClass="bg-purple-500/10 text-purple-600"
@@ -192,7 +225,7 @@ const OptimizedCleanDashboard = React.memo(() => {
                 {/* AI Insights and Quick Stats */}
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                   <div className="xl:col-span-2">
-                    <RealTimeAIPanel clients={DASHBOARD_DATA.allClients as any} />
+                    <RealTimeAIPanel clients={dashboardData.allClients as any} />
                   </div>
                   
                   {/* Quick Stats */}
@@ -203,19 +236,19 @@ const OptimizedCleanDashboard = React.memo(() => {
                     <CardContent className="space-y-3">
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-muted-foreground">Active</span>
-                        <span className="font-medium text-green-600">{DASHBOARD_DATA.statusCounts.active}</span>
+                        <span className="font-medium text-green-600">{dashboardData.statusCounts.active}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-muted-foreground">At Risk</span>
-                        <span className="font-medium text-orange-600">{DASHBOARD_DATA.statusCounts['at-risk']}</span>
+                        <span className="font-medium text-orange-600">{dashboardData.statusCounts['at-risk']}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-muted-foreground">New</span>
-                        <span className="font-medium text-blue-600">{DASHBOARD_DATA.statusCounts.new}</span>
+                        <span className="font-medium text-blue-600">{dashboardData.statusCounts.new}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-muted-foreground">Churned</span>
-                        <span className="font-medium text-red-600">{DASHBOARD_DATA.statusCounts.churned}</span>
+                        <span className="font-medium text-red-600">{dashboardData.statusCounts.churned}</span>
                       </div>
                     </CardContent>
                   </Card>
@@ -230,7 +263,7 @@ const OptimizedCleanDashboard = React.memo(() => {
                     </CardHeader>
                     <CardContent>
                       <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={DASHBOARD_DATA.chartData}>
+                        <LineChart data={dashboardData.chartData}>
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="month" />
                           <YAxis />
