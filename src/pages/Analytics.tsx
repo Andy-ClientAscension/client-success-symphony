@@ -19,6 +19,7 @@ import { TeamAnalytics } from "@/components/Dashboard/TeamAnalytics";
 import { ClientAnalytics } from "@/components/Dashboard/ClientAnalytics";
 import { MetricsCards } from "@/components/Dashboard/MetricsCards";
 import { NPSChart } from "@/components/Dashboard/NPSChart";
+import { SSCAnalytics } from "@/components/Dashboard/Analytics/SSCAnalytics";
 
 export default function Analytics() {
   const queryClient = useQueryClient();
@@ -264,6 +265,14 @@ export default function Analytics() {
               </div>
             </CardContent>
           </Card>
+          
+          <EnhancedErrorBoundary 
+            onReset={handleNPSErrorReset}
+            title="Error Loading SSC Analytics"
+            showDetails={process.env.NODE_ENV === 'development'}
+          >
+            <SSCAnalytics />
+          </EnhancedErrorBoundary>
           
           <EnhancedErrorBoundary 
             onReset={handleNPSErrorReset}
