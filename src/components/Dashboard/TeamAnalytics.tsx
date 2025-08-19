@@ -110,7 +110,12 @@ export function TeamAnalytics({
         return (
           <TeamMetricsOverview
             metrics={rawData.metrics}
-            statusCounts={rawData.statusCounts}
+            statusCounts={{
+              active: rawData.statusCounts.active || 0,
+              atRisk: rawData.statusCounts['at-risk'] || 0,
+              churned: rawData.statusCounts.churned || 0,
+              total: Object.values(rawData.statusCounts).reduce((sum, count) => sum + count, 0)
+            }}
             rates={{
               retentionRate: metrics.retentionRate,
               atRiskRate: metrics.atRiskRate,

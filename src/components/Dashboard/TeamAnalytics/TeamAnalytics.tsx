@@ -49,7 +49,12 @@ export function TeamAnalytics({
   // Prepare performance data for tabs
   const performanceData = {
     teamClients,
-    statusCounts: teamData.statusCounts,
+    statusCounts: {
+      active: teamData.statusCounts.active || 0,
+      atRisk: teamData.statusCounts['at-risk'] || 0,
+      churned: teamData.statusCounts.churned || 0,
+      total: Object.values(teamData.statusCounts).reduce((sum, count) => sum + count, 0)
+    },
     rates: {
       retentionRate: metrics.retentionRate,
       atRiskRate: metrics.atRiskRate,

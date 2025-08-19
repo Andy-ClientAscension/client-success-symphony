@@ -5,7 +5,7 @@ interface ClientDataHook {
   clients: Client[];
   loading: boolean;
   error: string | null;
-  refetch: () => Promise<void>;
+  refetch: () => void;
 }
 
 export function useClientData(): ClientDataHook {

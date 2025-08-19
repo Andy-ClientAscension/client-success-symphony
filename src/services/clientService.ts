@@ -179,6 +179,11 @@ export class ClientService {
     avgHealthScore: number;
     retentionRate: number;
     avgNPS: number;
+    averageHealth: number;
+    totalCallsBooked: number;
+    totalDealsClosed: number;
+    atRiskRate: number;
+    churnRate: number;
   }> {
     try {
       const clients = await this.getClients();
@@ -188,16 +193,29 @@ export class ClientService {
         ? clients.reduce((sum, client) => sum + (client.progress || 0), 0) / clients.length
         : 0;
       const activeClients = clients.filter(client => client.status === 'active').length;
+      const atRiskClients = clients.filter(client => client.status === 'at-risk').length;
+      const churnedClients = clients.filter(client => client.status === 'churned').length;
+      const totalClients = clients.length || 1;
+      
       const retentionRate = clients.length > 0 ? (activeClients / clients.length) * 100 : 0;
       const avgNPS = clients.length > 0
         ? clients.reduce((sum, client) => sum + (client.npsScore || 0), 0) / clients.length
         : 0;
+      const totalCallsBooked = clients.reduce((sum, client) => sum + (client.callsBooked || 0), 0);
+      const totalDealsClosed = clients.reduce((sum, client) => sum + (client.dealsClosed || 0), 0);
+      const atRiskRate = (atRiskClients / totalClients) * 100;
+      const churnRate = (churnedClients / totalClients) * 100;
 
       return {
         totalMRR,
         avgHealthScore: Math.round(avgHealthScore),
         retentionRate: Math.round(retentionRate),
-        avgNPS: Math.round(avgNPS * 10) / 10
+        avgNPS: Math.round(avgNPS * 10) / 10,
+        averageHealth: Math.round(avgHealthScore),
+        totalCallsBooked,
+        totalDealsClosed,
+        atRiskRate: Math.round(atRiskRate * 10) / 10,
+        churnRate: Math.round(churnRate * 10) / 10
       };
     } catch (error) {
       console.error('Error fetching client metrics:', error);

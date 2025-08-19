@@ -95,7 +95,7 @@ export function HeroMetrics({ className }: HeroMetricsProps) {
     {
       title: "NPS Score",
       // Ensure we only pass a number, not a complex object
-      value: typeof npsScore === 'object' ? (npsScore?.current || 0) : (data?.npsAverage ?? npsScore ?? 0),
+      value: data?.npsAverage ?? 0,
       icon: <TrendingUp />,
       trend: {
         value: 2,

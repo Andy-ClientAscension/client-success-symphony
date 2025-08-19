@@ -22,13 +22,42 @@ export function useDashboardData(options: UseDashboardDataOptions = {}) {
   // Use unified client data
   const { clients, metrics, counts, isLoading, error, refetch } = useDashboardClientData(teamFilter);
 
+  // Ensure consistent data structure for backward compatibility
+  const statusCounts = counts || { active: 0, 'at-risk': 0, new: 0, churned: 0 };
+  const teamMetrics = metrics || { 
+    totalMRR: 0, 
+    avgHealthScore: 0, 
+    retentionRate: 0,
+    avgNPS: 0,
+    averageHealth: 0,
+    totalCallsBooked: 0,
+    totalDealsClosed: 0,
+    atRiskRate: 0,
+    churnRate: 0
+  };
+
   return {
+    // New structure
     allClients: clients,
-    teamStatusCounts: counts || { active: 0, 'at-risk': 0, new: 0, churned: 0 },
-    teamMetrics: metrics || { totalMRR: 0, avgHealthScore: 0, retentionRate: 0 },
+    teamStatusCounts: statusCounts,
+    teamMetrics,
     isLoading,
     error,
     refreshData: refetch,
     lastUpdated: new Date(),
+    
+    // Legacy compatibility fields
+    clients,
+    clientCounts: {
+      active: statusCounts.active || 0,
+      atRisk: statusCounts['at-risk'] || 0,
+      churned: statusCounts.churned || 0,
+      total: Object.values(statusCounts).reduce((sum, count) => sum + count, 0)
+    },
+    npsScore: teamMetrics.avgNPS || 0,
+    npsData: { current: teamMetrics.avgNPS || 0, trend: [] },
+    churnData: [],
+    isRefreshing: isLoading,
+    refetchData: refetch
   };
 }
