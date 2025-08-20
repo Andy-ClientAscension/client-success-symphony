@@ -1,52 +1,62 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MetricCardEnhanced } from '@/components/ui/metric-card-enhanced';
+import { UnifiedFilter } from '../Shared/UnifiedFilter';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { TrendingUp, TrendingDown, Star, MessageSquare, Users, DollarSign } from 'lucide-react';
 
 export function SSCAnalytics() {
+  const [selectedTeam, setSelectedTeam] = useState('all');
   const { allClients, teamMetrics } = useDashboardData();
+
+  // Get unique teams from client data
+  const teams = Array.from(new Set(allClients.map(client => client.team).filter(Boolean)));
+  
+  // Filter clients based on selected team
+  const filteredClients = selectedTeam === 'all' 
+    ? allClients 
+    : allClients.filter(client => client.team === selectedTeam);
 
   // Calculate SSC-specific metrics from client data
   const calculateSSCMetrics = () => {
-    const totalClients = allClients.length;
-    const activeClients = allClients.filter(client => client.status === 'active').length;
-    const backendStudents = allClients.reduce((sum, client) => sum + (client.backendStudents || 0), 0);
+    const totalClients = filteredClients.length;
+    const activeClients = filteredClients.filter(client => client.status === 'active').length;
+    const backendStudents = filteredClients.reduce((sum, client) => sum + (client.backendStudents || 0), 0);
     
     // Backend percentage (retention in program)
     const backendPercentage = totalClients > 0 ? (backendStudents / totalClients) * 100 : 0;
     
     // Average metrics
-    const avgHealthScore = allClients.length > 0 
-      ? allClients.reduce((sum, client) => sum + (client.health_score || 0), 0) / allClients.length 
+    const avgHealthScore = filteredClients.length > 0 
+      ? filteredClients.reduce((sum, client) => sum + (client.health_score || 0), 0) / filteredClients.length 
       : 0;
     
-    const avgNPS = allClients.length > 0 
-      ? allClients.reduce((sum, client) => sum + (client.npsScore || 0), 0) / allClients.length 
+    const avgNPS = filteredClients.length > 0 
+      ? filteredClients.reduce((sum, client) => sum + (client.npsScore || 0), 0) / filteredClients.length 
       : 0;
     
     // LTV calculation (average contract value * average duration)
-    const avgContractValue = allClients.length > 0 
-      ? allClients.reduce((sum, client) => sum + (client.contractValue || 0), 0) / allClients.length 
+    const avgContractValue = filteredClients.length > 0 
+      ? filteredClients.reduce((sum, client) => sum + (client.contractValue || 0), 0) / filteredClients.length 
       : 0;
     
-    const avgDuration = allClients.length > 0 
-      ? allClients.reduce((sum, client) => sum + (client.contract_duration_months || 12), 0) / allClients.length 
+    const avgDuration = filteredClients.length > 0 
+      ? filteredClients.reduce((sum, client) => sum + (client.contract_duration_months || 12), 0) / filteredClients.length 
       : 12;
     
     const ltv = (avgContractValue / (avgDuration || 12)) * (avgDuration || 12);
     
     // Churn rate
-    const churnedClients = allClients.filter(client => client.status === 'churned').length;
+    const churnedClients = filteredClients.filter(client => client.status === 'churned').length;
     const churnRate = totalClients > 0 ? (churnedClients / totalClients) * 100 : 0;
     
     // Reviews and case studies
-    const reviewsCollected = allClients.filter(client => client.trustPilotReview?.rating).length;
-    const caseStudiesCompleted = allClients.filter(client => client.caseStudyInterview?.completed).length;
-    const referralsCollected = allClients.reduce((sum, client) => sum + (client.referrals?.count || 0), 0);
+    const reviewsCollected = filteredClients.filter(client => client.trustPilotReview?.rating).length;
+    const caseStudiesCompleted = filteredClients.filter(client => client.caseStudyInterview?.completed).length;
+    const referralsCollected = filteredClients.reduce((sum, client) => sum + (client.referrals?.count || 0), 0);
     
     // Olympia Upsells (using growth as proxy)
-    const olympiaUpsells = allClients.filter(client => (client.growth || 0) > 0).length;
+    const olympiaUpsells = filteredClients.filter(client => (client.growth || 0) > 0).length;
     
     return {
       backendPercentage: Math.round(backendPercentage),
@@ -69,10 +79,22 @@ export function SSCAnalytics() {
       <CardHeader className="pb-4">
         <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
           <Users className="h-5 w-5 text-primary" />
-          SSC/CSM Analytics
+          SSC Analytics
         </CardTitle>
       </CardHeader>
       <CardContent>
+        <div className="mb-4">
+          <UnifiedFilter
+            selectedTeam={selectedTeam}
+            teams={['all', ...teams]}
+            onTeamChange={setSelectedTeam}
+            showTeamFilter={true}
+            showDateFilter={false}
+            showSearch={false}
+            showSort={false}
+          />
+        </div>
+        
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           <MetricCardEnhanced
             title="Backend Retention"
