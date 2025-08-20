@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   Home, Users, Settings, HelpCircle, LayoutDashboard,
   Activity, CreditCard, MessageSquare, FileSliders,
-  Brain, BarChart2
+  Brain, BarChart2, Shield
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useImmediateNavigation } from "@/hooks/use-immediate-navigation";
@@ -20,6 +20,7 @@ export const navLinks = [
   { to: '/payments', label: 'Payments', icon: CreditCard },
   { to: '/automations', label: 'Automations', icon: FileSliders },
   { to: '/health-score-dashboard', label: 'Health Score', icon: Brain },
+  { to: '/admin', label: 'Admin Panel', icon: Shield },
   { to: '/settings', label: 'Settings', icon: Settings },
   { to: '/system-audit', label: 'System Audit', icon: Activity },
   { to: '/help', label: 'Help', icon: HelpCircle },
