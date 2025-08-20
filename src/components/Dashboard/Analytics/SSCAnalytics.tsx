@@ -6,16 +6,16 @@ import { useDashboardData } from '@/hooks/useDashboardData';
 import { TrendingUp, TrendingDown, Star, MessageSquare, Users, DollarSign } from 'lucide-react';
 
 export function SSCAnalytics() {
-  const [selectedTeam, setSelectedTeam] = useState('all');
+  const [selectedSSC, setSelectedSSC] = useState('all');
   const { allClients, teamMetrics } = useDashboardData();
 
-  // Get unique teams from client data
-  const teams = Array.from(new Set(allClients.map(client => client.team).filter(Boolean)));
+  // Specific SSC names
+  const sscs = ['Andy', 'Chris', 'Nick', 'Stephen', 'Cillin'];
   
-  // Filter clients based on selected team
-  const filteredClients = selectedTeam === 'all' 
+  // Filter clients based on selected SSC
+  const filteredClients = selectedSSC === 'all' 
     ? allClients 
-    : allClients.filter(client => client.team === selectedTeam);
+    : allClients.filter(client => client.csm === selectedSSC);
 
   // Calculate SSC-specific metrics from client data
   const calculateSSCMetrics = () => {
@@ -85,9 +85,9 @@ export function SSCAnalytics() {
       <CardContent>
         <div className="mb-4">
           <UnifiedFilter
-            selectedTeam={selectedTeam}
-            teams={['all', ...teams]}
-            onTeamChange={setSelectedTeam}
+            selectedTeam={selectedSSC}
+            teams={['all', ...sscs]}
+            onTeamChange={setSelectedSSC}
             showTeamFilter={true}
             showDateFilter={false}
             showSearch={false}
