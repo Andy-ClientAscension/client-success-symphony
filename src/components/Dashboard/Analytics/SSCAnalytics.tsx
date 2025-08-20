@@ -1,16 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MetricCardEnhanced } from '@/components/ui/metric-card-enhanced';
 import { UnifiedFilter } from '../Shared/UnifiedFilter';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { supabase } from '@/integrations/supabase/client';
 import { TrendingUp, TrendingDown, Star, MessageSquare, Users, DollarSign } from 'lucide-react';
 
 export function SSCAnalytics() {
   const [selectedSSC, setSelectedSSC] = useState('all');
+  const [sscs, setSSCs] = useState<string[]>([]);
   const { allClients, teamMetrics } = useDashboardData();
 
-  // Specific SSC names
-  const sscs = ['Andy', 'Chris', 'Nick', 'Stephen', 'Cillin'];
+  useEffect(() => {
+    fetchSSCs();
+  }, []);
+
+  const fetchSSCs = async () => {
+    try {
+      // Get users with SSC role from database
+      const { data: sscRoles, error } = await supabase
+        .from('user_roles')
+        .select(`
+          profiles (
+            first_name,
+            last_name,
+            email
+          )
+        `)
+        .eq('role', 'ssc');
+
+      if (error) throw error;
+
+      const sscNames = sscRoles?.map(role => {
+        const profile = role.profiles;
+        return profile?.first_name || profile?.email?.split('@')[0] || 'Unknown';
+      }).filter(Boolean) || [];
+
+      setSSCs(sscNames);
+    } catch (error) {
+      console.error('Error fetching SSCs:', error);
+      // Fallback to hardcoded SSCs if database fetch fails
+      setSSCs(['Andy', 'Chris', 'Nick', 'Stephen', 'Cillin']);
+    }
+  };
   
   // Filter clients based on selected SSC
   const filteredClients = selectedSSC === 'all' 

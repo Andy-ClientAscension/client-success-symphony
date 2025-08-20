@@ -1,32 +1,28 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { Search, UserPlus, Edit2, Trash2, Shield, User, Crown } from "lucide-react";
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { User2, Mail, Calendar, Shield } from 'lucide-react';
 
-interface User {
+interface Profile {
   id: string;
   email: string;
-  first_name?: string;
-  last_name?: string;
+  first_name: string | null;
+  last_name: string | null;
   created_at: string;
   roles: string[];
 }
 
 export function UserManagement() {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRole, setSelectedRole] = useState("all");
-  const [editingUser, setEditingUser] = useState<User | null>(null);
   const { toast } = useToast();
+
+  const roles = ['user', 'ssc', 'manager', 'admin'];
 
   useEffect(() => {
     fetchUsers();
@@ -36,25 +32,25 @@ export function UserManagement() {
     try {
       setLoading(true);
       
-      // Fetch profiles with user roles
+      // Get profiles with their roles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          email,
-          first_name,
-          last_name,
-          created_at,
-          user_roles (
-            role
-          )
-        `);
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (profilesError) throw profilesError;
 
+      // Get user roles
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+
+      if (rolesError) throw rolesError;
+
+      // Combine profiles with roles
       const usersWithRoles = profiles?.map(profile => ({
         ...profile,
-        roles: profile.user_roles?.map(ur => ur.role) || []
+        roles: userRoles?.filter(ur => ur.user_id === profile.id).map(ur => ur.role) || []
       })) || [];
 
       setUsers(usersWithRoles);
@@ -70,260 +66,146 @@ export function UserManagement() {
     }
   };
 
-  const updateUserRole = async (userId: string, newRole: string) => {
+  const assignRole = async (userId: string, role: string) => {
     try {
-      // First, remove existing roles
-      await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', userId);
-
-      // Then add the new role
-      if (newRole !== 'none') {
-        const { error } = await supabase
-          .from('user_roles')
-          .insert({
-            user_id: userId,
-            role: newRole
-          });
-
-        if (error) throw error;
-      }
-
-      toast({
-        title: "Success",
-        description: "User role updated successfully"
-      });
-
-      fetchUsers();
-    } catch (error) {
-      console.error('Error updating user role:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update user role",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const deleteUser = async (userId: string) => {
-    try {
-      // Delete user roles first
-      await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', userId);
-
-      // Delete profile
       const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId);
+        .from('user_roles')
+        .insert([{ user_id: userId, role }]);
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "User deleted successfully"
+        description: `Role ${role} assigned successfully`
       });
 
-      fetchUsers();
+      fetchUsers(); // Refresh data
     } catch (error) {
-      console.error('Error deleting user:', error);
+      console.error('Error assigning role:', error);
       toast({
         title: "Error",
-        description: "Failed to delete user",
+        description: "Failed to assign role",
         variant: "destructive"
       });
     }
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesRole = selectedRole === "all" || 
-                       (selectedRole === "none" && user.roles.length === 0) ||
-                       user.roles.includes(selectedRole);
-    
-    return matchesSearch && matchesRole;
-  });
+  const removeRole = async (userId: string, role: string) => {
+    try {
+      const { error } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId)
+        .eq('role', role);
 
-  const getRoleIcon = (roles: string[]) => {
-    if (roles.includes('admin')) return <Crown className="h-4 w-4 text-yellow-500" />;
-    if (roles.includes('manager')) return <Shield className="h-4 w-4 text-blue-500" />;
-    return <User className="h-4 w-4 text-gray-500" />;
-  };
+      if (error) throw error;
 
-  const getRoleBadge = (roles: string[]) => {
-    if (roles.length === 0) return <Badge variant="outline">No Role</Badge>;
-    return roles.map(role => (
-      <Badge key={role} variant={role === 'admin' ? 'default' : 'secondary'}>
-        {role}
-      </Badge>
-    ));
+      toast({
+        title: "Success",
+        description: `Role ${role} removed successfully`
+      });
+
+      fetchUsers(); // Refresh data
+    } catch (error) {
+      console.error('Error removing role:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove role",
+        variant: "destructive"
+      });
+    }
   };
 
   if (loading) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle>User Management</CardTitle>
-          <CardDescription>Loading users...</CardDescription>
-        </CardHeader>
+        <CardContent className="p-6">
+          <div className="text-center">Loading users...</div>
+        </CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            User Management
-          </CardTitle>
-          <CardDescription>
-            Manage user accounts, roles, and permissions
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search users..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <User2 className="h-5 w-5" />
+          User Management
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {users.map((user) => (
+            <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center gap-4">
+                <Avatar>
+                  <AvatarFallback>
+                    {user.first_name?.[0] || user.email[0]?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                
+                <div className="space-y-1">
+                  <div className="font-medium">
+                    {user.first_name && user.last_name 
+                      ? `${user.first_name} ${user.last_name}`
+                      : user.email
+                    }
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Mail className="h-3 w-3" />
+                    {user.email}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Calendar className="h-3 w-3" />
+                    Joined {new Date(user.created_at).toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div className="flex flex-wrap gap-1">
+                  {user.roles.map((role) => (
+                    <Badge key={role} variant="secondary" className="flex items-center gap-1">
+                      <Shield className="h-3 w-3" />
+                      {role}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                        onClick={() => removeRole(user.id, role)}
+                      >
+                        ×
+                      </Button>
+                    </Badge>
+                  ))}
+                </div>
+
+                <Select onValueChange={(role) => assignRole(user.id, role)}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Add role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roles
+                      .filter(role => !user.roles.includes(role))
+                      .map(role => (
+                        <SelectItem key={role} value={role}>
+                          {role}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <Select value={selectedRole} onValueChange={setSelectedRole}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter by role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="none">No Role</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          ))}
 
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="flex items-center gap-2">
-                      {getRoleIcon(user.roles)}
-                      <span className="font-medium">
-                        {user.first_name && user.last_name 
-                          ? `${user.first_name} ${user.last_name}`
-                          : user.email
-                        }
-                      </span>
-                    </TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        {getRoleBadge(user.roles)}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(user.created_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex gap-2 justify-end">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              <Edit2 className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Edit User Role</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div>
-                                <label className="text-sm font-medium">User</label>
-                                <p className="text-sm text-muted-foreground">{user.email}</p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium">Current Role</label>
-                                <div className="flex gap-1 mt-1">
-                                  {getRoleBadge(user.roles)}
-                                </div>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium">New Role</label>
-                                <Select onValueChange={(value) => updateUserRole(user.id, value)}>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select new role" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="admin">Admin</SelectItem>
-                                    <SelectItem value="manager">Manager</SelectItem>
-                                    <SelectItem value="user">User</SelectItem>
-                                    <SelectItem value="none">Remove Role</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete User</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete {user.email}? This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => deleteUser(user.id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-
-          {filteredUsers.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              No users found matching your criteria.
+          {users.length === 0 && (
+            <div className="text-center text-muted-foreground py-8">
+              No users found
             </div>
           )}
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
