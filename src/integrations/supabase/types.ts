@@ -54,7 +54,15 @@ export type Database = {
           updated_at?: string
           viewed_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_backend_offers_client_id"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       clients: {
         Row: {
@@ -363,7 +371,15 @@ export type Database = {
           potential_upsell_value?: number | null
           renewal_date?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_renewal_forecasts_client_id"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ssc_capacities: {
         Row: {
