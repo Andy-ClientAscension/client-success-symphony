@@ -236,7 +236,7 @@ export function CleanDashboard() {
         
         <div className="flex-1 flex flex-col min-h-screen">
           {/* Client Ascension Header */}
-          <header className="bg-card border-b border-border shrink-0">
+          <header className="bg-card border-b border-border shrink-0 sticky top-0 z-20">
             <div className="flex h-16 items-center justify-between px-6">
               <div className="flex items-center gap-4">
                 <SidebarTrigger />
@@ -260,10 +260,10 @@ export function CleanDashboard() {
             
             {/* Breadcrumbs and Filters */}
             <div className="px-6 py-3 border-t border-border/50">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <Breadcrumbs />
                 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <SyncIndicator
                     isLoading={isLoading}
                     isRefreshing={isRefreshing}
@@ -291,10 +291,10 @@ export function CleanDashboard() {
           </header>
 
           {/* Main Content */}
-          <main className={cn("flex-1 p-4 overflow-auto max-h-screen", layoutStyles[layout as keyof typeof layoutStyles])}>
+          <main className={cn("flex-1 p-6 overflow-y-auto min-h-0", layoutStyles[layout as keyof typeof layoutStyles])}>
             {/* Show filter summary */}
             {hasActiveFilters && (
-              <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 rounded-lg">
+              <div className="mb-6 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-800 dark:text-blue-200">
                   Showing {filteredData.length} of {allClients.length} clients with applied filters
                 </p>
@@ -306,74 +306,74 @@ export function CleanDashboard() {
               {visibleWidgets.map((widget) => {
                 if (widget.id === 'metrics') {
                 return (
-                  <div key={widget.id} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                    <Card className="card-metric hover-lift">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
+                  <div key={widget.id} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                    <Card className="card-metric hover-lift min-h-[120px]">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between h-full">
+                          <div className="space-y-2">
                             <p className="text-sm font-medium text-muted-foreground">Total Students</p>
-                            <p className="text-xl font-bold text-foreground">{filteredMetrics.total}</p>
+                            <p className="text-2xl font-bold text-foreground">{filteredMetrics.total}</p>
                             <p className="text-xs text-green-600 flex items-center gap-1">
                               <TrendingUp className="h-3 w-3" />
                               {hasActiveFilters ? 'Filtered view' : '+12% from last month'}
                             </p>
                           </div>
-                          <div className="h-10 w-10 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
-                            <Users className="h-5 w-5 text-blue-600" />
+                          <div className="h-12 w-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
+                            <Users className="h-6 w-6 text-blue-600" />
                           </div>
                         </div>
                       </CardContent>
                     </Card>
 
-                    <Card className="card-metric hover-lift">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
+                    <Card className="card-metric hover-lift min-h-[120px]">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between h-full">
+                          <div className="space-y-2">
                             <p className="text-sm font-medium text-muted-foreground">Active Students</p>
-                            <p className="text-xl font-bold text-foreground">{filteredMetrics.active}</p>
+                            <p className="text-2xl font-bold text-foreground">{filteredMetrics.active}</p>
                             <p className="text-xs text-green-600 flex items-center gap-1">
                               <TrendingUp className="h-3 w-3" />
                               {hasActiveFilters ? 'Filtered view' : '+5% from last month'}
                             </p>
                           </div>
-                          <div className="h-10 w-10 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-                            <Heart className="h-5 w-5 text-green-600" />
+                          <div className="h-12 w-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
+                            <Heart className="h-6 w-6 text-green-600" />
                           </div>
                         </div>
                       </CardContent>
                     </Card>
 
-                    <Card className="card-metric hover-lift">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
+                    <Card className="card-metric hover-lift min-h-[120px]">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between h-full">
+                          <div className="space-y-2">
                             <p className="text-sm font-medium text-muted-foreground">Monthly MRR</p>
-                            <p className="text-xl font-bold text-foreground">${Math.round(filteredMetrics.totalMRR / 1000)}K</p>
+                            <p className="text-2xl font-bold text-foreground">${Math.round(filteredMetrics.totalMRR / 1000)}K</p>
                             <p className="text-xs text-green-600 flex items-center gap-1">
                               <TrendingUp className="h-3 w-3" />
                               {hasActiveFilters ? 'Filtered view' : '+8.2% from last month'}
                             </p>
                           </div>
-                          <div className="h-10 w-10 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg flex items-center justify-center">
-                            <DollarSign className="h-5 w-5 text-emerald-600" />
+                          <div className="h-12 w-12 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg flex items-center justify-center">
+                            <DollarSign className="h-6 w-6 text-emerald-600" />
                           </div>
                         </div>
                       </CardContent>
                     </Card>
 
-                    <Card className="card-metric hover-lift">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
+                    <Card className="card-metric hover-lift min-h-[120px]">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between h-full">
+                          <div className="space-y-2">
                             <p className="text-sm font-medium text-muted-foreground">Avg Health Score</p>
-                            <p className="text-xl font-bold text-foreground">{filteredMetrics.avgHealth.toFixed(1)}</p>
+                            <p className="text-2xl font-bold text-foreground">{filteredMetrics.avgHealth.toFixed(1)}</p>
                             <p className="text-xs text-green-600 flex items-center gap-1">
                               <TrendingUp className="h-3 w-3" />
                               {hasActiveFilters ? 'Filtered view' : '+0.3 from last month'}
                             </p>
                           </div>
-                          <div className="h-10 w-10 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
-                            <Target className="h-5 w-5 text-purple-600" />
+                          <div className="h-12 w-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
+                            <Target className="h-6 w-6 text-purple-600" />
                           </div>
                         </div>
                       </CardContent>
@@ -389,9 +389,9 @@ export function CleanDashboard() {
             
             {/* Charts Grid - Only show visible chart widgets */}
             <div className={cn(
-              "grid gap-4",
-              layout === 'compact' ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1 lg:grid-cols-2",
-              layout === 'spacious' && "lg:grid-cols-1"
+              "grid gap-6",
+              layout === 'compact' ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1 md:grid-cols-2",
+              layout === 'spacious' && "md:grid-cols-1"
             )}>
 
             <UniversalErrorBoundary level="component">

@@ -6,7 +6,7 @@ import { AutomationIdeas } from "@/components/Dashboard/AutomationIdeas";
 export function AutomationsTabContent() {
   return (
     <div className="grid grid-cols-1 gap-6">
-      <Card>
+      <Card className="min-h-[200px]">
         <CardContent className="p-6">
           <AutomationManager />
         </CardContent>

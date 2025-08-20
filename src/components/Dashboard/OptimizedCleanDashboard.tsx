@@ -81,19 +81,19 @@ const MetricCard = React.memo(({ title, value, change, icon: Icon, colorClass }:
   icon: React.ComponentType<any>;
   colorClass: string;
 }) => (
-  <Card className="hover:shadow-md transition-shadow">
-    <CardContent className="p-4">
-      <div className="flex items-center justify-between">
-        <div>
+  <Card className="hover:shadow-md transition-shadow min-h-[120px]">
+    <CardContent className="p-6">
+      <div className="flex items-center justify-between h-full">
+        <div className="space-y-2">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <p className="text-xl font-bold text-foreground">{value}</p>
+          <p className="text-2xl font-bold text-foreground">{value}</p>
           <p className="text-xs text-green-600 flex items-center gap-1">
             <TrendingUp className="h-3 w-3" />
             {change}
           </p>
         </div>
-        <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center", colorClass)}>
-          <Icon className="h-5 w-5" />
+        <div className={cn("h-12 w-12 rounded-lg flex items-center justify-center", colorClass)}>
+          <Icon className="h-6 w-6" />
         </div>
       </div>
     </CardContent>
@@ -159,9 +159,9 @@ const OptimizedCleanDashboard = React.memo(() => {
             <DashboardSidebar />
             
             {/* Main Content */}
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 flex flex-col min-h-0">
               {/* Header */}
-              <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-10">
+              <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-20">
                 <div className="flex h-16 items-center justify-between px-6">
                   <div className="flex items-center gap-4">
                     <SidebarTrigger />
@@ -177,7 +177,7 @@ const OptimizedCleanDashboard = React.memo(() => {
               </header>
 
               {/* Dashboard Content */}
-              <main className="p-6 space-y-6">
+              <main className="flex-1 p-6 space-y-6 overflow-y-auto min-h-0">
                 {/* Controls */}
                 <div className="flex justify-between items-center">
                   <h1 className="text-2xl font-bold">Dashboard Overview</h1>
@@ -191,7 +191,7 @@ const OptimizedCleanDashboard = React.memo(() => {
                 </div>
 
                 {/* Key Metrics */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <MetricCard
                     title="Total Clients"
                     value={dashboardData.metrics.totalClients}
@@ -255,7 +255,7 @@ const OptimizedCleanDashboard = React.memo(() => {
                 </div>
 
                 {/* Charts */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Churn Trend Chart */}
                   <Card>
                     <CardHeader className="pb-3">

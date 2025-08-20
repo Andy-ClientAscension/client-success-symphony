@@ -122,18 +122,14 @@ export function Layout({ children }: LayoutProps) {
           />
         )}
         
-        <div className={cn(
-          "flex-1 flex flex-col w-full min-w-0 transition-all duration-300 ease-in-out",
-          !isMobile && sidebarOpen && !sidebarCollapsed && "md:ml-0",
-          !isMobile && sidebarOpen && sidebarCollapsed && "md:ml-0"
-        )}>
+        <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out">
           <Header 
             toggleSidebar={toggleSidebar} 
             sidebarVisible={sidebarOpen} 
             sidebarCollapsed={sidebarCollapsed} 
           />
           <main 
-            className="flex-1 w-full overflow-auto bg-gradient-to-br from-background to-background/95 rounded-tl-xl" 
+            className="flex-1 w-full overflow-y-auto min-h-0 bg-gradient-to-br from-background to-background/95 rounded-tl-xl" 
             role="main"
             aria-label="Main Content"
           >
