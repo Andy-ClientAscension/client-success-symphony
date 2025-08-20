@@ -2,7 +2,7 @@
 import React from "react";
 import { Layout } from "@/components/Layout/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RenewalForecastPanel } from "@/components/Dashboard/RenewalForecastPanel";
+import { RenewalPipelineOverview } from "@/components/Dashboard/RenewalPipeline/RenewalPipelineOverview";
 import { BackendOffersTracker } from "@/components/Dashboard/BackendOffersTracker";
 import { RenewalsSummary } from "@/components/Dashboard/RenewalsSummary";
 import { TaskManager } from "@/components/Dashboard/TaskManager";
@@ -42,7 +42,7 @@ export default function Renewals() {
                     value="forecasts"
                     className="text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                   >
-                    Forecasts
+                    Pipeline
                   </TabsTrigger>
                   <TabsTrigger 
                     value="offers"
@@ -72,8 +72,8 @@ export default function Renewals() {
                 
                 <div className="space-y-4">
                   <TabsContent value="forecasts" className="mt-0 space-y-4">
-                    <EnhancedErrorBoundary title="Error Loading Renewal Forecasts">
-                      <RenewalForecastPanel />
+                    <EnhancedErrorBoundary title="Error Loading Renewal Pipeline">
+                      <RenewalPipelineOverview />
                     </EnhancedErrorBoundary>
                   </TabsContent>
                   
