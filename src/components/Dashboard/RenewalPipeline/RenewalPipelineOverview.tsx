@@ -68,20 +68,16 @@ export function RenewalPipelineOverview() {
     
     return {
       pastDue: {
-        count: pastDue.length,
-        value: pastDue.reduce((sum, r) => sum + r.contract_value, 0)
+        count: pastDue.length
       },
       upcoming: {
-        count: upcoming.length,
-        value: upcoming.reduce((sum, r) => sum + r.contract_value, 0)
+        count: upcoming.length
       },
       pipeline: {
-        count: pipeline.length,
-        value: pipeline.reduce((sum, r) => sum + r.contract_value, 0)
+        count: pipeline.length
       },
       total: {
-        count: renewals.length,
-        value: renewals.reduce((sum, r) => sum + r.contract_value, 0)
+        count: renewals.length
       }
     };
   }, [renewals]);
@@ -145,9 +141,6 @@ export function RenewalPipelineOverview() {
               <div>
                 <p className="text-sm font-medium">Past Due</p>
                 <p className="text-2xl font-bold">{stats.pastDue.count}</p>
-                <p className="text-xs text-muted-foreground">
-                  ${stats.pastDue.value.toLocaleString()}
-                </p>
               </div>
             </div>
           </CardContent>
@@ -160,9 +153,6 @@ export function RenewalPipelineOverview() {
               <div>
                 <p className="text-sm font-medium">Next 30 Days</p>
                 <p className="text-2xl font-bold">{stats.upcoming.count}</p>
-                <p className="text-xs text-muted-foreground">
-                  ${stats.upcoming.value.toLocaleString()}
-                </p>
               </div>
             </div>
           </CardContent>
@@ -175,9 +165,6 @@ export function RenewalPipelineOverview() {
               <div>
                 <p className="text-sm font-medium">Pipeline (90d)</p>
                 <p className="text-2xl font-bold">{stats.pipeline.count}</p>
-                <p className="text-xs text-muted-foreground">
-                  ${stats.pipeline.value.toLocaleString()}
-                </p>
               </div>
             </div>
           </CardContent>
@@ -190,9 +177,6 @@ export function RenewalPipelineOverview() {
               <div>
                 <p className="text-sm font-medium">Total Pipeline</p>
                 <p className="text-2xl font-bold">{stats.total.count}</p>
-                <p className="text-xs text-muted-foreground">
-                  ${stats.total.value.toLocaleString()}
-                </p>
               </div>
             </div>
           </CardContent>
@@ -237,10 +221,6 @@ export function RenewalPipelineOverview() {
                   <Badge variant={getCategoryColor(renewal.renewal_category)}>
                     {renewal.renewal_category.replace('_', ' ')}
                   </Badge>
-                  
-                  <div className="text-right font-medium">
-                    ${renewal.contract_value.toLocaleString()}
-                  </div>
                 </div>
               </div>
             ))}
